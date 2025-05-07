@@ -20,14 +20,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 // Validation schemas
-const signupSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
+const signupSchema = z
+  .object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(8, "Passwords must match"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords must match",
+    path: ["confirmPassword"],
+  });
 
 const loginSchema = z.object({
   loginEmail: z.string().email("Invalid email address"),
@@ -39,6 +46,8 @@ export default function AuthPage() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const router = useRouter();
+
   // Sign-Up form
   const signupForm = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
@@ -47,6 +56,7 @@ export default function AuthPage() {
       lastName: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
@@ -89,6 +99,7 @@ export default function AuthPage() {
     } else {
       loginForm.reset();
     }
+    router.push("/dashboard/home");
   };
 
   return (
@@ -102,15 +113,12 @@ export default function AuthPage() {
         {/* Header */}
         <header className="text-center mb-6">
           <Image
-            width={100}
+            width={300}
             height={100}
-            src="/placeholder-logo.png"
+            src="/logo.png"
             alt="IUL Calculator Pro Logo"
-            className="h-16 w-16 mx-auto mb-2 object-contain"
+            className="h-16 w-full mx-auto mb-2 object-contain"
           />
-          <h1 className="text-3xl font-bold text-gray-900">
-            IUL Calculator Pro
-          </h1>
         </header>
 
         {/* Tabs */}
@@ -202,6 +210,47 @@ export default function AuthPage() {
                           <div className="relative">
                             <Input
                               id="password"
+                              type={showSignupPassword ? "text" : "password"}
+                              placeholder="••••••••"
+                              className="mt-1 pr-10"
+                              {...field}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-2 top-1/2 -translate-y-1/2"
+                              onClick={() =>
+                                setShowSignupPassword(!showSignupPassword)
+                              }
+                              aria-label={
+                                showSignupPassword
+                                  ? "Hide password"
+                                  : "Show password"
+                              }
+                            >
+                              {showSignupPassword ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={signupForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label htmlFor="confirmPassword">confirmPassword</Label>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              id="confirmPassword"
                               type={showSignupPassword ? "text" : "password"}
                               placeholder="••••••••"
                               className="mt-1 pr-10"
@@ -337,7 +386,9 @@ export default function AuthPage() {
 
         {/* Footer */}
         <footer className="mt-6 text-center text-sm text-gray-600">
-          <p>Steven Johnson, 760-846-0436</p>
+          <p>
+            Copyright &copy; {new Date().getFullYear()} - IUL Calculator Pro
+          </p>
         </footer>
       </motion.div>
     </div>
