@@ -1,0 +1,43 @@
+iul-calculator-pro/
+├── app/
+│   ├── api/                    # API routes for backend integration
+│   │   └── auth/               # Signup and passcode generation
+│   ├── page.tsx                # Root page (redirects to login or dashboard)
+│   ├── layout.tsx              # Root layout with global styles
+│   ├── globals.css             # Tailwind and custom styles
+│   ├── dashboard/              # Main app pages
+│   │   ├── page.tsx            # Page 1: Primary Dashboard
+│   │   ├── calculator/         # Page 2: Calculator Comparison
+│   │   │   └── page.tsx
+│   │   ├── pdf-import/         # Page 3: PDF Import
+│   │   │   └── page.tsx
+│   │   ├── data-table/         # Page 4: Numerical Data
+│   │   │   └── page.tsx
+│   ├── signup/                 # Subscription Signup Page
+│   │   └── page.tsx
+├── components/                 # Reusable UI components
+│   ├── ui/                     # Shadcn components (e.g., Button, Input)
+│   ├── LogoUploader.tsx        # Logo/photo upload with size adjuster
+│   ├── HideablePanel.tsx       # Left panel with hide/show toggle
+│   ├── ClientList.tsx          # Draggable client list
+│   ├── NumberedButtons.tsx     # Pop-up buttons with drag-to-rearrange
+│   ├── CalculatorForm.tsx      # Page 2 input form
+│   ├── PdfImporter.tsx         # Drag-and-drop PDF import
+│   ├── DataTable.tsx           # Page 4 data grid
+│   ├── GraphChart.tsx          # S&P/IUL graph
+├── lib/                        # Utilities and helpers
+│   ├── pdf-parser.ts           # PDF data extraction logic
+│   ├── calculations.ts         # 401k/IUL math functions
+│   ├── auth.ts                 # Authentication utils
+├── public/                     # Static assets
+│   ├── logo-placeholder.png    # Default logo
+│   ├── sample-pdfs/            # Sample PDF illustrations
+├── store/                      # Zustand state management
+│   └── appStore.ts             # Global state for clients, UI toggles
+├── styles/                     # Additional CSS modules (if needed)
+├── types/                      # TypeScript interfaces
+│   └── index.ts                # Types for clients, PDFs, calculations
+├── next.config.js              # Next.js config
+├── tailwind.config.js          # Tailwind config
+├── tsconfig.json               # TypeScript config
+├── package.json                # Dependencies
