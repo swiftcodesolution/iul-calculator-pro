@@ -1,23 +1,26 @@
-// src/components/ClientColumn.tsx
 "use client";
 
 import { useDrop } from "react-dnd";
-import { useRef } from "react";
 import ClientItem from "./ClientItem";
+import { useRef } from "react";
 
 type Client = {
   id: string;
   name: string;
   status: "Active" | "Closed";
   date: string;
+  category:
+    | "Pro Sample Files"
+    | "Your Sample Files"
+    | "Your Prospect Files"
+    | "Your Closed Sales";
 };
 
 type ClientColumnProps = {
-  status: string;
+  status: Client["category"];
   clients: Client[];
-  moveClient: (id: string, toColumn: string) => void;
+  moveClient: (id: string, toColumn: Client["category"]) => void;
   onClientClick: (client: Client) => void;
-  allowDrop?: boolean;
 };
 
 export default function ClientColumn({
@@ -25,16 +28,18 @@ export default function ClientColumn({
   clients,
   moveClient,
   onClientClick,
-  allowDrop = true,
 }: ClientColumnProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [{ isOver }, drop] = useDrop({
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  const [{ isOver, canDrop }, drop] = useDrop({
     accept: "client",
     drop: (item: { id: string }) => {
-      if (allowDrop) moveClient(item.id, status);
+      moveClient(item.id, status);
     },
-    collect: (monitor) => ({ isOver: monitor.isOver() }),
-    canDrop: () => allowDrop,
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+    }),
   });
 
   drop(ref);
@@ -42,9 +47,11 @@ export default function ClientColumn({
   return (
     <div
       ref={ref}
-      className={`p-2 ${
-        isOver && allowDrop ? "bg-gray-200" : "bg-gray-100"
-      } rounded`}
+      className={`transition-all duration-300 p-2 rounded flex flex-col gap-2 grow border-2 ${
+        isOver && canDrop
+          ? "bg-gray-100 border-gray-100"
+          : "bg-gray-100 border-gray-100"
+      }`}
     >
       <div className="space-y-2">
         {clients.map((client) => (

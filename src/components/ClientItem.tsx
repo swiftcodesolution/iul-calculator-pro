@@ -1,4 +1,3 @@
-// src/components/ClientItem.tsx
 "use client";
 
 import { useDrag } from "react-dnd";
@@ -9,16 +8,24 @@ type Client = {
   name: string;
   status: "Active" | "Closed";
   date: string;
+  category:
+    | "Pro Sample Files"
+    | "Your Sample Files"
+    | "Your Prospect Files"
+    | "Your Closed Sales";
 };
 
 type ClientItemProps = { client: Client };
 
 export default function ClientItem({ client }: ClientItemProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement | null>(null);
+
   const [{ isDragging }, drag] = useDrag({
     type: "client",
     item: { id: client.id },
-    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
   });
 
   drag(ref);

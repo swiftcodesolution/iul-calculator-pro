@@ -1,4 +1,3 @@
-// src/app/dashboard/layout.tsx
 "use client";
 
 import * as motion from "motion/react-client";
@@ -7,12 +6,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Home, Calculator, Upload, Database } from "lucide-react";
 import Image from "next/image";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
-export default function DashboardLayout({
-  children,
-}: {
+type DashboardLayoutProps = {
   children: React.ReactNode;
-}) {
+};
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const navItems = [
     { label: "Home", href: "/dashboard/home", icon: Home },
@@ -22,51 +23,49 @@ export default function DashboardLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Image
-              width={300}
-              height={300}
-              src="/logo.png"
-              alt="IUL Calculator Pro Logo"
-              className="h-15 w-full object-contain"
-            />
-            {/* <h1 className="text-xl font-bold text-gray-900">Company Name</h1> */}
+    <DndProvider backend={HTML5Backend}>
+      <div className="min-h-screen bg-gray-100">
+        <header className="bg-white shadow-sm">
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Image
+                width={150}
+                height={50}
+                src="/logo.png"
+                alt="IUL Calculator Pro Logo"
+                className="object-contain"
+              />
+            </div>
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/" aria-label="Log out">
+                <LogOut className="h-5 w-5 text-gray-600" />
+              </Link>
+            </Button>
           </div>
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/" aria-label="Log out">
-              <LogOut className="h-5 w-5 text-gray-600" />
+        </header>
+
+        <main className="container mx-auto p-4">{children}</main>
+
+        <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-label={`Navigate to ${item.label}`}
+            >
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button
+                  variant={pathname === item.href ? "default" : "outline"}
+                  size="icon"
+                  className="rounded-none"
+                >
+                  <item.icon className="h-5 w-5" />
+                </Button>
+              </motion.div>
             </Link>
-          </Button>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto p-4">{children}</main>
-
-      {/* Navigation */}
-      <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-label={`Navigate to ${item.label}`}
-          >
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-              <Button
-                variant={pathname === item.href ? "default" : "outline"}
-                size="icon"
-                className="rounded-none"
-              >
-                <item.icon className="h-5 w-5" />
-              </Button>
-            </motion.div>
-          </Link>
-        ))}
-      </nav>
-    </div>
+          ))}
+        </nav>
+      </div>
+    </DndProvider>
   );
 }

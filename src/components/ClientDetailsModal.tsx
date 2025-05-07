@@ -7,6 +7,7 @@ type Client = {
   name: string;
   status: "Active" | "Closed";
   date: string;
+  category: string;
 };
 
 type ClientDetailsModalProps = {
@@ -36,6 +37,9 @@ export default function ClientDetailsModal({
             </p>
             <p>
               <strong>Date:</strong> {client.date}
+            </p>
+            <p>
+              <strong>Category:</strong> {client.category}
             </p>
           </div>
           <div className="mt-4 flex gap-2">
