@@ -175,8 +175,8 @@ export default function HomePage() {
   return (
     <div className="flex min-h-[calc(100vh-8rem)]">
       <motion.aside
-        animate={{ width: isCollapsed ? "4rem" : "30%" }}
-        className="bg-white shadow-md p-4 rounded-xl"
+        animate={{ width: isCollapsed ? "4rem" : "20%" }}
+        className="bg-white shadow-md p-4 rounded"
       >
         <Button
           variant="ghost"

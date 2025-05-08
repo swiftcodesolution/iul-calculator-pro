@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Home, Calculator, Upload, Database } from "lucide-react";
-import Image from "next/image";
+// import Image from "next/image";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
@@ -24,8 +24,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen bg-gray-100">
-        <header className="bg-white shadow-sm">
+      <div className="h-screen flex items-center justify-center bg-gray-100">
+        {/* <header className="bg-white shadow-sm">
           <div className="container mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Image
@@ -42,7 +42,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </Link>
             </Button>
           </div>
-        </header>
+        </header> */}
 
         <main className="container mx-auto p-4">{children}</main>
 
@@ -65,6 +65,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </Link>
           ))}
         </nav>
+
+        <Button
+          variant="outline"
+          size="icon"
+          className="fixed bottom-4 right-0 -translate-x-1/2 rounded-none"
+        >
+          <LogOut />
+        </Button>
       </div>
     </DndProvider>
   );
