@@ -2,9 +2,17 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -58,12 +66,11 @@ type Results = {
   yearsRunOutOfMoney: number;
 };
 
-// Define type for tab content
 type TabContent = {
   id: string;
   name: string;
   file?: File;
-  src?: string; // Data URL for preview
+  src?: string;
   type: "image" | "video" | "pdf" | "other" | "totalAdvantage";
 };
 
@@ -128,12 +135,11 @@ const totalAdvantage = {
   deathBenefits: 786000,
 };
 
-// Hardcoded company/agent details (same as Home Page)
 const companyDetails = {
-  businessName: "Acme Insurance",
+  businessName: "IUL Calculator PRO",
   agentName: "Steven Johnson",
   email: "steve@iulcalculatorpro.com",
-  phone: "760-517-8105",
+  phone: "(760) 517-8105",
 };
 const defaultLogo = { src: "/logo.png", name: "Company Logo" };
 const defaultProfile = { src: "/profile.jpg", name: "Agent Profile" };
@@ -142,11 +148,7 @@ export default function CalculatorPage() {
   const [data, setData] = useState<CalculatorData>(defaultData);
   const [futureAge, setFutureAge] = useState(data.futureAgeYears);
   const [tabs, setTabs] = useState<TabContent[]>([
-    {
-      id: "total-advantage",
-      name: "Total Advantage",
-      type: "totalAdvantage",
-    },
+    { id: "total-advantage", name: "Total Advantage", type: "totalAdvantage" },
   ]);
   const [activeTab, setActiveTab] = useState<string | null>("total-advantage");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -155,7 +157,6 @@ export default function CalculatorPage() {
   const [newTabName, setNewTabName] = useState("");
   const [newTabFile, setNewTabFile] = useState<File | null>(null);
 
-  // Update future age and recalculate (simplified for now)
   const handleFutureAgeChange = (value: string) => {
     const newAge = parseInt(value);
     setFutureAge(newAge);
@@ -168,7 +169,6 @@ export default function CalculatorPage() {
     setData((prev) => ({ ...prev, futureAgeYears: newAge }));
   };
 
-  // Tab Management
   const handleAddTab = () => {
     if (newTabName && newTabFile) {
       const reader = new FileReader();
@@ -201,7 +201,6 @@ export default function CalculatorPage() {
   const handleEditTab = () => {
     if (editTabId && newTabName) {
       if (editTabId === "total-advantage") {
-        // Only update name for Total Advantage tab
         setTabs((prev) =>
           prev.map((tab) =>
             tab.id === editTabId ? { ...tab, name: newTabName } : tab
@@ -252,7 +251,7 @@ export default function CalculatorPage() {
   };
 
   const handleDeleteTab = (id: string) => {
-    if (id === "total-advantage") return; // Prevent deletion of Total Advantage tab
+    if (id === "total-advantage") return;
     setTabs((prev) => prev.filter((tab) => tab.id !== id));
     if (activeTab === id) {
       setActiveTab(tabs.length > 1 ? tabs[0].id : null);
@@ -260,139 +259,271 @@ export default function CalculatorPage() {
   };
 
   return (
-    <div className="p-4">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Input Section (Left) */}
+    <div className="container mx-auto p-4 grid grid-cols-2 gap-4">
+      {/* Left Column - Input Parameters */}
+      <div className="flex flex-col gap-4">
         <Card>
-          <CardHeader>
-            <CardTitle>Input Parameters</CardTitle>
-          </CardHeader>
+          {/* top numbers start */}
+          <CardContent className="grid grid-cols-3 gap-2">
+            <div className="flex flex-col space-y-2">
+              <div className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md">
+                <Label>Current Age</Label>
+                <p>{data.currentAge}</p>
+              </div>
+              <div className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md">
+                <Label>Stop Saving Age</Label>
+                <p>{data.stopSavingAge}</p>
+              </div>
+              <div className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md">
+                <Label>Retirement Age</Label>
+                <p>{data.retirementAge}</p>
+              </div>
+            </div>
+            <div className="flex flex-col space-y-2">
+              <div className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md">
+                <Label>Working Tax Rate</Label>
+                <p>{data.workingTaxRate}</p>
+              </div>
+              <div className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md">
+                <Label>Retirement Tax Rate</Label>
+                <p>{data.retirementTaxRate}</p>
+              </div>
+              <div className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md">
+                <Label>Inflation Rate</Label>
+                <p>{data.inflationRate}</p>
+              </div>
+            </div>
+            <div className="flex flex-col space-y-2">
+              <div className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md">
+                <Label>Current Plan Fees</Label>
+                <p>{data.currentPlanFees}</p>
+              </div>
+              <div className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md">
+                <Label>Current Plan ROR</Label>
+                <p>{"6.3%"}</p>
+              </div>
+              <div className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md">
+                <Label>Tax Free Plan ROR</Label>
+                <p>{"6.3%"}</p>
+              </div>
+            </div>
+          </CardContent>
+          {/* top numbers end */}
+        </Card>
+        <Card>
+          {/* comparision table start */}
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    <div className="flex items-center gap-2">
+                      <Button variant="default" size="sm" className="grow">
+                        Options
+                      </Button>
+                      <Button variant="default" size="sm" className="grow">
+                        Show/Hide
+                      </Button>
+                    </div>
+                  </TableHead>
+                  <TableHead className="bg-red-200">
+                    Current Plan <br></br> TSP, 401k, 403b, IRA
+                  </TableHead>
+                  <TableHead className="bg-yellow-200">Taxes</TableHead>
+                  <TableHead className="bg-green-200">
+                    IRS (IRC) 7702 <br></br> Tax Free Plan
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="border">Starting Balance</TableCell>
+                  <TableCell className="border">0</TableCell>
+                  <TableCell className="border text-red-600">10%</TableCell>
+                  <TableCell className="border">0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="border">Annual Contributions</TableCell>
+                  <TableCell className="border">$25,641</TableCell>
+                  <TableCell className="border text-red-600">22%</TableCell>
+                  <TableCell className="border">$20,000</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="border">
+                    Annual Employer Match
+                  </TableCell>
+                  <TableCell className="border">$0</TableCell>
+                  <TableCell className="border text-red-600"></TableCell>
+                  <TableCell className="border">N/A</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="border">Annual Fees</TableCell>
+                  <TableCell className="border">2%</TableCell>
+                  <TableCell className="border text-red-600"></TableCell>
+                  <TableCell className="border">Included</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="border">
+                    Gross Retirement Income
+                  </TableCell>
+                  <TableCell className="border">
+                    ${defaultResults.grossRetirementIncome.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="border text-red-600">28%</TableCell>
+                  <TableCell className="border">
+                    ${taxFreeResults.grossRetirementIncome.toLocaleString()}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="border">Income Tax</TableCell>
+                  <TableCell className="border text-red-600">
+                    ${defaultResults.incomeTax.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="border text-red-600">28%</TableCell>
+                  <TableCell className="border">
+                    ${taxFreeResults.incomeTax.toLocaleString()}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="border">
+                    Net Retirement Income
+                  </TableCell>
+                  <TableCell className="border">
+                    ${defaultResults.netRetirementIncome.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="border text-red-600">28%</TableCell>
+                  <TableCell className="border text-green-600">
+                    ${taxFreeResults.netRetirementIncome.toLocaleString()}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="border">
+                    Cumulative Taxes Deferred
+                  </TableCell>
+                  <TableCell className="border">
+                    ${defaultResults.cumulativeTaxesDeferred.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="border" />
+                  <TableCell className="border">
+                    ${taxFreeResults.cumulativeTaxesDeferred.toLocaleString()}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="border">
+                    Cumulative Taxes Paid
+                  </TableCell>
+                  <TableCell className="border text-red-600">
+                    ${defaultResults.cumulativeTaxesPaid.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="border text-red-600">10%</TableCell>
+                  <TableCell className="border">
+                    ${taxFreeResults.cumulativeTaxesPaid.toLocaleString()}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="border">Cumulative Fees Paid</TableCell>
+                  <TableCell className="border">
+                    ${defaultResults.cumulativeFeesPaid.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="border" />
+                  <TableCell className="border">
+                    ${taxFreeResults.cumulativeFeesPaid.toLocaleString()}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="border">
+                    Cumulative Net Income
+                  </TableCell>
+                  <TableCell className="border">
+                    ${defaultResults.cumulativeNetIncome.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="border" />
+                  <TableCell className="border">
+                    ${taxFreeResults.cumulativeNetIncome.toLocaleString()}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="border">
+                    Cumulative Account Balance
+                  </TableCell>
+                  <TableCell className="border">
+                    ${defaultResults.cumulativeAccountBalance.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="border" />
+                  <TableCell className="border">
+                    ${taxFreeResults.cumulativeAccountBalance.toLocaleString()}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="border">Taxes Due</TableCell>
+                  <TableCell className="border text-red-600">
+                    {defaultResults.taxesDue}%
+                  </TableCell>
+                  <TableCell className="border text-red-600">28%</TableCell>
+                  <TableCell className="border">
+                    {taxFreeResults.taxesDue}%
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="border">Death Benefits</TableCell>
+                  <TableCell className="border">
+                    ${defaultResults.deathBenefits.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="border" />
+                  <TableCell className="border">
+                    ${taxFreeResults.deathBenefits.toLocaleString()}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="border">
+                    Years You Run Out of Money
+                  </TableCell>
+                  <TableCell className="border">
+                    {defaultResults.yearsRunOutOfMoney}
+                  </TableCell>
+                  <TableCell className="border" />
+                  <TableCell className="border text-green-600">
+                    {taxFreeResults.yearsRunOutOfMoney}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+          {/* comparision table end */}
+        </Card>
+      </div>
+
+      {/* Right Column - Company Info and Tabs */}
+      <div className="flex flex-col gap-4">
+        {/* company details start */}
+        <Card>
+          <CardContent className="flex items-center space-x-4">
+            <div className="w-2/5">
+              <h3 className="font-bold">{companyDetails.businessName}</h3>
+              <p>{companyDetails.agentName}</p>
+              <p>{companyDetails.phone}</p>
+            </div>
+            <Image
+              src={defaultLogo.src}
+              alt="Logo"
+              width={300}
+              height={300}
+              className="object-contain w-1/3"
+            />
+            <Image
+              src={defaultProfile.src}
+              width={200}
+              height={200}
+              alt={defaultProfile.name}
+              className="w-[120px] h-[120px] object-cover rounded-full"
+            />
+          </CardContent>
+        </Card>
+        {/* company details end */}
+        <Card>
           <CardContent>
             <div className="grid grid-cols-2 gap-2">
-              {/* Age and Rates */}
-              <div className="bg-gray-200 p-2">
-                <Label>Current Age</Label>
-                <Input type="number" value={data.currentAge} readOnly />
-              </div>
-              <div className="bg-gray-200 p-2">
-                <Label>Working Tax Rate</Label>
-                <Input type="number" value={data.workingTaxRate} readOnly />
-              </div>
-              <div className="bg-gray-200 p-2">
-                <Label>Stop Saving Age</Label>
-                <Input type="number" value={data.stopSavingAge} readOnly />
-              </div>
-              <div className="bg-gray-200 p-2">
-                <Label>Retirement Tax Rate</Label>
-                <Input type="number" value={data.retirementTaxRate} readOnly />
-              </div>
-              <div className="bg-gray-200 p-2">
-                <Label>Retirement Age</Label>
-                <Input type="number" value={data.retirementAge} readOnly />
-              </div>
-              <div className="bg-gray-200 p-2">
-                <Label>Inflation Rate</Label>
-                <Input type="number" value={data.inflationRate} readOnly />
-              </div>
-              <div className="bg-gray-200 p-2">
-                <Label>Current Plan Fees</Label>
-                <Input type="number" value={data.currentPlanFees} readOnly />
-              </div>
-              <div className="bg-gray-200 p-2">
-                <Label>Current Plan ROR</Label>
-                <Input
-                  type="number"
-                  value={data.currentPlan.rateOfReturn}
-                  readOnly
-                />
-              </div>
-              <div className="bg-gray-200 p-2">
-                <Label>Tax Free Plan ROR</Label>
-                <Input
-                  type="number"
-                  value={data.taxFreePlan.rateOfReturn}
-                  readOnly
-                />
-              </div>
-
-              {/* Plan Details */}
-              <div className="col-span-2 bg-red-200 p-2">
-                <Label>Current Plan</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label>Starting Balance</Label>
-                    <Input
-                      type="number"
-                      value={data.currentPlan.startingBalance}
-                      readOnly
-                    />
-                  </div>
-                  <div>
-                    <Label>Annual Contributions</Label>
-                    <Input
-                      type="number"
-                      value={data.currentPlan.annualContribution}
-                      readOnly
-                    />
-                  </div>
-                  <div>
-                    <Label>Annual Employer Match</Label>
-                    <Input
-                      type="number"
-                      value={data.currentPlan.annualEmployerMatch}
-                      readOnly
-                    />
-                  </div>
-                  <div>
-                    <Label>Annual Fees</Label>
-                    <Input
-                      type="number"
-                      value={data.currentPlan.annualFees}
-                      readOnly
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="col-span-2 bg-green-200 p-2">
-                <Label>Tax Free Plan</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label>Starting Balance</Label>
-                    <Input
-                      type="number"
-                      value={data.taxFreePlan.startingBalance}
-                      readOnly
-                    />
-                  </div>
-                  <div>
-                    <Label>Annual Contributions</Label>
-                    <Input
-                      type="number"
-                      value={data.taxFreePlan.annualContribution}
-                      readOnly
-                    />
-                  </div>
-                  <div>
-                    <Label>Annual Employer Match</Label>
-                    <Input
-                      type="number"
-                      value={data.taxFreePlan.annualEmployerMatch}
-                      readOnly
-                    />
-                  </div>
-                  <div>
-                    <Label>Annual Fees</Label>
-                    <Input
-                      type="text"
-                      value={data.taxFreePlan.annualFees}
-                      readOnly
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Future Age Selector */}
-              <div className="col-span-2 bg-gray-200 p-2 flex items-center justify-between">
+              <div className="col-span-2 bg-gray-200 p-2 flex items-center justify-between rounded-md">
                 <Label>Future Age</Label>
                 <div className="flex gap-2">
                   <Select
@@ -403,7 +534,7 @@ export default function CalculatorPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Array.from({ length: 14 }, (_, i) => i + 1).map(
+                      {Array.from({ length: 40 }, (_, i) => i + 80).map(
                         (year) => (
                           <SelectItem key={year} value={year.toString()}>
                             {year}
@@ -417,235 +548,75 @@ export default function CalculatorPage() {
                   </Button>
                 </div>
               </div>
-              <div className="col-span-2">
-                <Button variant="secondary" className="w-full">
-                  Options Show / Hide
-                </Button>
-              </div>
             </div>
           </CardContent>
         </Card>
-
-        {/* Results Table (Center) */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Comparison Results</CardTitle>
-          </CardHeader>
+        <Card className="grow">
           <CardContent>
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr>
-                  <th className="border p-2"></th>
-                  <th className="border p-2 bg-red-200">Current Plan</th>
-                  <th className="border p-2 bg-green-200">Tax Free Plan</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border p-2">Gross Retirement Income</td>
-                  <td className="border p-2">
-                    ${defaultResults.grossRetirementIncome.toLocaleString()}
-                  </td>
-                  <td className="border p-2">
-                    ${taxFreeResults.grossRetirementIncome.toLocaleString()}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border p-2">Income Tax</td>
-                  <td className="border p-2 text-red-600">
-                    ${defaultResults.incomeTax.toLocaleString()}
-                  </td>
-                  <td className="border p-2">
-                    ${taxFreeResults.incomeTax.toLocaleString()}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border p-2">Net Retirement Income</td>
-                  <td className="border p-2">
-                    ${defaultResults.netRetirementIncome.toLocaleString()}
-                  </td>
-                  <td className="border p-2">
-                    ${taxFreeResults.netRetirementIncome.toLocaleString()}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border p-2">Cumulative Taxes Deferred</td>
-                  <td className="border p-2">
-                    ${defaultResults.cumulativeTaxesDeferred.toLocaleString()}
-                  </td>
-                  <td className="border p-2">
-                    ${taxFreeResults.cumulativeTaxesDeferred.toLocaleString()}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border p-2">Cumulative Taxes Paid</td>
-                  <td className="border p-2 text-red-600">
-                    ${defaultResults.cumulativeTaxesPaid.toLocaleString()}
-                  </td>
-                  <td className="border p-2">
-                    ${taxFreeResults.cumulativeTaxesPaid.toLocaleString()}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border p-2">Cumulative Fees Paid</td>
-                  <td className="border p-2">
-                    ${defaultResults.cumulativeFeesPaid.toLocaleString()}
-                  </td>
-                  <td className="border p-2">
-                    ${taxFreeResults.cumulativeFeesPaid.toLocaleString()}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border p-2">Cumulative Net Income</td>
-                  <td className="border p-2">
-                    ${defaultResults.cumulativeNetIncome.toLocaleString()}
-                  </td>
-                  <td className="border p-2">
-                    ${taxFreeResults.cumulativeNetIncome.toLocaleString()}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border p-2">Cumulative Account Balance</td>
-                  <td className="border p-2">
-                    ${defaultResults.cumulativeAccountBalance.toLocaleString()}
-                  </td>
-                  <td className="border p-2">
-                    ${taxFreeResults.cumulativeAccountBalance.toLocaleString()}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border p-2">Taxes Due</td>
-                  <td className="border p-2 text-red-600">
-                    {defaultResults.taxesDue}%
-                  </td>
-                  <td className="border p-2">{taxFreeResults.taxesDue}%</td>
-                </tr>
-                <tr>
-                  <td className="border p-2">Death Benefits</td>
-                  <td className="border p-2">
-                    ${defaultResults.deathBenefits.toLocaleString()}
-                  </td>
-                  <td className="border p-2">
-                    ${taxFreeResults.deathBenefits.toLocaleString()}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border p-2">Years You Run Out of Money</td>
-                  <td className="border p-2">
-                    {defaultResults.yearsRunOutOfMoney}
-                  </td>
-                  <td className="border p-2 text-green-600">
-                    {taxFreeResults.yearsRunOutOfMoney}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
-
-        {/* Right Column: Two Cards */}
-        <div className="col-span-2 flex flex-col gap-4">
-          {/* Top Card: Company/Agent Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Agent Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-center">
-                <div className="grow">
-                  <p className="text-gray-500">{companyDetails.businessName}</p>
-                  <p className="text-gray-500">{companyDetails.agentName}</p>
-                  <p className="text-gray-500">{companyDetails.email}</p>
-                  <p className="text-gray-500">{companyDetails.phone}</p>
-                </div>
-                <Image
-                  src={defaultLogo.src}
-                  alt="Company Logo"
-                  width={300}
-                  height={100}
-                  className="object-contain w-1/3 h-32"
-                />
-                <Image
-                  src={defaultProfile.src}
-                  alt="Agent Profile"
-                  width={128}
-                  height={128}
-                  className="object-cover w-32 h-32 rounded-full"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Bottom Card: Tabbed Interface */}
-          <Card className="flex-1 flex flex-col">
-            <CardHeader>
-              <CardTitle>Details</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col">
-              {/* Tabs */}
-              <div className="flex gap-2 mb-4 overflow-x-auto">
-                {tabs.map((tab) => (
-                  <Button
-                    key={tab.id}
-                    variant={activeTab === tab.id ? "default" : "outline"}
-                    onClick={() => setActiveTab(tab.id)}
-                  >
-                    {tab.name}
-                  </Button>
-                ))}
-                <Dialog
-                  open={isAddDialogOpen}
-                  onOpenChange={setIsAddDialogOpen}
+            <div className="flex gap-2 mb-4 overflow-x-auto">
+              {tabs.map((tab) => (
+                <Button
+                  key={tab.id}
+                  variant={activeTab === tab.id ? "default" : "outline"}
+                  onClick={() => setActiveTab(tab.id)}
                 >
-                  <DialogTrigger asChild>
-                    <Button variant="outline">Add</Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add New Tab</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <Input
-                        placeholder="Tab Name"
-                        value={newTabName}
-                        onChange={(e) => setNewTabName(e.target.value)}
-                      />
-                      <Button asChild>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          Upload File
-                          <Upload className="h-4 w-4" />
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept="image/*,video/*,application/pdf"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) setNewTabFile(file);
-                            }}
-                          />
-                        </label>
-                      </Button>
-                      {newTabFile && <p>Selected: {newTabFile.name}</p>}
-                      <Button
-                        onClick={handleAddTab}
-                        disabled={!newTabName || !newTabFile}
-                      >
-                        Add Tab
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              {/* Tab Content */}
-              {activeTab && (
-                <div className="flex-1 border p-4 rounded">
-                  {tabs.map(
-                    (tab) =>
-                      tab.id === activeTab && (
-                        <div key={tab.id} className="space-y-4">
-                          {tab.type === "totalAdvantage" && (
-                            <div className="text-center">
+                  {tab.name}
+                </Button>
+              ))}
+              {/* {[...Array(14).keys()].slice(1, 14).map((i) => (
+                <Button key={`tab-${i + 1}`} variant="outline" disabled>
+                  {i + 1}
+                </Button>
+              ))} */}
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">Add</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Tab</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 space-x-2">
+                    <Input
+                      placeholder="Tab Name"
+                      value={newTabName}
+                      onChange={(e) => setNewTabName(e.target.value)}
+                    />
+                    <Button asChild>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        Upload File
+                        <Upload className="h-4 w-4" />
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*,video/*,application/pdf"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) setNewTabFile(file);
+                          }}
+                        />
+                      </label>
+                    </Button>
+                    {newTabFile && <p>Selected: {newTabFile.name}</p>}
+                    <Button
+                      onClick={handleAddTab}
+                      disabled={!newTabName || !newTabFile}
+                    >
+                      Add Tab
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            {activeTab && (
+              <div className="p-4 min-h-[200px]">
+                {tabs.map(
+                  (tab) =>
+                    tab.id === activeTab && (
+                      <div key={tab.id} className="space-y-4">
+                        {tab.type === "totalAdvantage" && (
+                          <div className="h-[400px] flex items-center justify-center gap-4 text-center">
+                            <div>
                               <h2 className="text-2xl font-bold">
                                 ${totalAdvantage.total.toLocaleString()}
                               </h2>
@@ -664,110 +635,108 @@ export default function CalculatorPage() {
                                 {totalAdvantage.deathBenefits.toLocaleString()}
                               </p>
                             </div>
-                          )}
-                          {tab.type === "image" && tab.src && (
-                            <Image
-                              src={tab.src}
-                              alt={tab.name}
-                              width={300}
-                              height={200}
-                              className="object-contain w-full h-auto"
-                            />
-                          )}
-                          {tab.type === "video" && tab.src && (
-                            <video
-                              src={tab.src}
-                              controls
-                              className="w-full h-auto max-h-64"
-                            />
-                          )}
-                          {tab.type === "pdf" && tab.src && (
-                            <embed
-                              src={tab.src}
-                              type="application/pdf"
-                              className="w-full h-64"
-                            />
-                          )}
-                          {tab.type === "other" && tab.src && (
-                            <p>Unsupported file type: {tab.name}</p>
-                          )}
-                          {tab.id !== "total-advantage" && (
-                            <div className="flex gap-2">
-                              <Dialog
-                                open={isEditDialogOpen}
-                                onOpenChange={setIsEditDialogOpen}
-                              >
-                                <DialogTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setEditTabId(tab.id);
-                                      setNewTabName(tab.name);
-                                      setNewTabFile(null);
-                                    }}
-                                  >
-                                    <Pencil className="h-4 w-4 mr-2" />
-                                    Edit
+                          </div>
+                        )}
+                        {tab.type === "image" && tab.src && (
+                          <Image
+                            src={tab.src}
+                            alt={tab.name}
+                            width={300}
+                            height={200}
+                            className="object-contain w-full h-[400px]"
+                          />
+                        )}
+                        {tab.type === "video" && tab.src && (
+                          <video
+                            src={tab.src}
+                            controls
+                            className="w-full h-auto max-h-64"
+                          />
+                        )}
+                        {tab.type === "pdf" && tab.src && (
+                          <embed
+                            src={tab.src}
+                            type="application/pdf"
+                            className="w-full h-64"
+                          />
+                        )}
+                        {tab.type === "other" && tab.src && (
+                          <p>Unsupported file type: {tab.name}</p>
+                        )}
+                        {tab.id !== "total-advantage" && (
+                          <div className="flex gap-2">
+                            <Dialog
+                              open={isEditDialogOpen}
+                              onOpenChange={setIsEditDialogOpen}
+                            >
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditTabId(tab.id);
+                                    setNewTabName(tab.name);
+                                    setNewTabFile(null);
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4 mr-2" /> Edit
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Edit Tab</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 space-x-2">
+                                  <Input
+                                    placeholder="Tab Name"
+                                    value={newTabName}
+                                    onChange={(e) =>
+                                      setNewTabName(e.target.value)
+                                    }
+                                  />
+                                  <Button asChild>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                      Upload New File (Optional)
+                                      <Upload className="h-4 w-4" />
+                                      <input
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/*,video/*,application/pdf"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) setNewTabFile(file);
+                                        }}
+                                      />
+                                    </label>
                                   </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Edit Tab</DialogTitle>
-                                  </DialogHeader>
-                                  <div className="space-y-4">
-                                    <Input
-                                      placeholder="Tab Name"
-                                      value={newTabName}
-                                      onChange={(e) =>
-                                        setNewTabName(e.target.value)
-                                      }
-                                    />
-                                    <Button asChild>
-                                      <label className="flex items-center gap-2 cursor-pointer">
-                                        Upload New File (Optional)
-                                        <Upload className="h-4 w-4" />
-                                        <input
-                                          type="file"
-                                          className="hidden"
-                                          accept="image/*,video/*,application/pdf"
-                                          onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) setNewTabFile(file);
-                                          }}
-                                        />
-                                      </label>
-                                    </Button>
-                                    {newTabFile && (
-                                      <p>Selected: {newTabFile.name}</p>
-                                    )}
-                                    <Button
-                                      onClick={handleEditTab}
-                                      disabled={!newTabName}
-                                    >
-                                      Save
-                                    </Button>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDeleteTab(tab.id)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      )
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                                  {newTabFile && (
+                                    <p>Selected: {newTabFile.name}</p>
+                                  )}
+                                  <Button
+                                    onClick={handleEditTab}
+                                    disabled={!newTabName}
+                                  >
+                                    Save
+                                  </Button>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteTab(tab.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -66,13 +66,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           ))}
         </nav>
 
-        <Button
-          variant="outline"
-          size="icon"
-          className="fixed bottom-4 right-0 -translate-x-1/2 rounded-none"
-        >
-          <LogOut />
-        </Button>
+        <Link href="/" aria-label="Logout">
+          <motion.div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="fixed bottom-4 right-0 -translate-x-1/2 rounded-none"
+            >
+              <LogOut />
+            </Button>
+          </motion.div>
+        </Link>
       </div>
     </DndProvider>
   );
