@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import { Trash2, ArrowLeft, ArrowRight, Upload } from "lucide-react";
 
@@ -59,9 +59,6 @@ const insuranceCompanies = [
   "Lincoln",
   "Midland",
   "Minnesota",
-  "National Life",
-  "National Life",
-  "National Life",
   "National Life",
 ];
 const trainingResources = ["View the Training Page", "Downloads"];
@@ -142,28 +139,48 @@ export default function DashboardPage() {
     console.log(`Clicked on insurance company: ${company}`); // Placeholder for click action
   };
 
-  // Updated animation variants
+  // Animation Variants
   const sidebarVariants = {
     open: {
       x: 0,
       opacity: 1,
-      transition: { duration: 0.4, ease: "easeInOut" },
+      transition: {
+        duration: 0.5,
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
     },
     collapsed: {
-      x: "-100%", // Slide out to the left
+      x: "-100%",
       opacity: 0,
-      transition: { duration: 0.4, ease: "easeInOut" },
+      transition: {
+        duration: 0.5,
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
     },
   };
 
   const contentVariants = {
     open: {
-      marginLeft: "0px", // Fixed sidebar width when open
-      transition: { duration: 0.4, ease: "easeInOut" },
+      marginLeft: "0px",
+      transition: {
+        duration: 0.5,
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
     },
     collapsed: {
-      marginLeft: "50px", // Fixed sidebar width when collapsed
-      transition: { duration: 0.4, ease: "easeInOut" },
+      marginLeft: "50px",
+      transition: {
+        duration: 0.5,
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
     },
   };
 
@@ -171,45 +188,57 @@ export default function DashboardPage() {
     open: {
       opacity: 1,
       display: "block",
-      transition: { delay: 0.1, duration: 0.3 },
+      transition: { delay: 0.1, duration: 0.3, ease: "easeInOut" },
     },
     collapsed: {
       opacity: 0,
-      transition: { duration: 0.3 },
+      transition: { duration: 0.3, ease: "easeInOut" },
       transitionEnd: { display: "none" },
     },
   };
 
   const newClientVariant = {
-    hidden: { opacity: 0, scale: 0.8 },
+    hidden: { opacity: 0, scale: 0.8, y: 10 },
     visible: {
       opacity: 1,
       scale: 1,
-      transition: { duration: 0.3, ease: "easeOut" },
+      y: 0,
+      transition: { duration: 0.3, type: "spring", stiffness: 120 },
     },
   };
 
   const imageUploadVariant = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.3, ease: "easeOut" } },
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: { duration: 0.4, type: "spring", stiffness: 120 },
+    },
   };
 
   return (
     <div className="container mx-auto p-4 flex gap-4" style={{}}>
+      {/* Sidebar */}
       <div
         className={`relative ${!isSidebarCollapsed ? "w-[450px]" : "w-[0px]"}`}
       >
-        <Button
-          variant="outline"
-          size="sm"
-          className="absolute top-4 left-4 z-10"
-          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        <motion.div
+          whileHover={{ scale: 1 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
-          {isSidebarCollapsed ? <ArrowRight /> : <ArrowLeft />}
-        </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="absolute top-4 left-4 z-10"
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          >
+            {isSidebarCollapsed ? <ArrowRight /> : <ArrowLeft />}
+          </Button>
+        </motion.div>
         <AnimatePresence>
           <motion.aside
-            className={isSidebarCollapsed ? "w-[50px]" : "w-[450px]"} // Fixed widths
+            className={isSidebarCollapsed ? "w-[50px]" : "w-[450px]"}
             variants={sidebarVariants}
             initial="open"
             animate={isSidebarCollapsed ? "collapsed" : "open"}
@@ -217,7 +246,7 @@ export default function DashboardPage() {
           >
             <motion.div variants={contentVisibility}>
               <Card>
-                <CardContent className="space-y-2 p-4">
+                <CardContent className="space-y-2">
                   <div className="flex gap-4">
                     {/* Company Logo */}
                     <div className="flex flex-col items-center">
@@ -229,42 +258,69 @@ export default function DashboardPage() {
                           animate="visible"
                           className="flex flex-col items-center"
                         >
-                          <Image
-                            src={companyInfo.logoSrc}
-                            alt="Company Logo"
-                            width={300}
-                            height={300}
-                            className="object-contain w-[200px] h-[100px]"
-                          />
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Image
+                              src={companyInfo.logoSrc}
+                              alt="Company Logo"
+                              width={300}
+                              height={300}
+                              className="object-contain w-[200px] h-[100px]"
+                            />
+                          </motion.div>
                           <div className="flex gap-2 mt-2">
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteUpload("logo")}
+                            <motion.div
+                              whileHover={{
+                                scale: 1.1,
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                              }}
+                              whileTap={{ scale: 0.95 }}
                             >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                            <Button asChild variant="outline" size="sm">
-                              <label className="flex items-center gap-2 cursor-pointer">
-                                Replace
-                                <Upload className="h-4 w-4" />
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={(e) =>
-                                    handleFileUpload(
-                                      e.target.files?.[0] || null,
-                                      "logo"
-                                    )
-                                  }
-                                />
-                              </label>
-                            </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteUpload("logo")}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </motion.div>
+                            <motion.div
+                              whileHover={{
+                                scale: 1.1,
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                              }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <Button asChild variant="outline" size="sm">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  Replace
+                                  <Upload className="h-4 w-4" />
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) =>
+                                      handleFileUpload(
+                                        e.target.files?.[0] || null,
+                                        "logo"
+                                      )
+                                    }
+                                  />
+                                </label>
+                              </Button>
+                            </motion.div>
                           </div>
                         </motion.div>
                       ) : (
-                        <div className="h-[100px] bg-gray-200 flex flex-col items-center justify-center">
+                        <motion.div
+                          whileHover={{
+                            scale: 1.05,
+                            backgroundColor: "#e5e7eb",
+                          }}
+                          className="h-[100px] bg-gray-200 flex flex-col items-center justify-center"
+                        >
                           <input
                             type="file"
                             accept="image/*"
@@ -283,7 +339,7 @@ export default function DashboardPage() {
                           >
                             Drag and Drop Logo
                           </label>
-                        </div>
+                        </motion.div>
                       )}
                     </div>
                     {/* Agent Profile Pic */}
@@ -296,42 +352,69 @@ export default function DashboardPage() {
                           animate="visible"
                           className="flex flex-col items-center"
                         >
-                          <Image
-                            src={companyInfo.profilePicSrc}
-                            alt="Agent Profile"
-                            width={300}
-                            height={300}
-                            className="object-cover rounded-full w-[100px] h-[100px]"
-                          />
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Image
+                              src={companyInfo.profilePicSrc}
+                              alt="Agent Profile"
+                              width={300}
+                              height={300}
+                              className="object-cover rounded-full w-[100px] h-[100px]"
+                            />
+                          </motion.div>
                           <div className="flex gap-2 mt-2">
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteUpload("profilePic")}
+                            <motion.div
+                              whileHover={{
+                                scale: 1.1,
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                              }}
+                              whileTap={{ scale: 0.95 }}
                             >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                            <Button asChild variant="outline" size="sm">
-                              <label className="flex items-center gap-2 cursor-pointer">
-                                Replace
-                                <Upload className="h-4 w-4" />
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={(e) =>
-                                    handleFileUpload(
-                                      e.target.files?.[0] || null,
-                                      "profilePic"
-                                    )
-                                  }
-                                />
-                              </label>
-                            </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteUpload("profilePic")}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </motion.div>
+                            <motion.div
+                              whileHover={{
+                                scale: 1.1,
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                              }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <Button asChild variant="outline" size="sm">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  Replace
+                                  <Upload className="h-4 w-4" />
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) =>
+                                      handleFileUpload(
+                                        e.target.files?.[0] || null,
+                                        "profilePic"
+                                      )
+                                    }
+                                  />
+                                </label>
+                              </Button>
+                            </motion.div>
                           </div>
                         </motion.div>
                       ) : (
-                        <div className="h-[100px] bg-gray-200 flex flex-col items-center justify-center">
+                        <motion.div
+                          whileHover={{
+                            scale: 1.05,
+                            backgroundColor: "#e5e7eb",
+                          }}
+                          className="h-[100px] bg-gray-200 flex flex-col items-center justify-center"
+                        >
                           <input
                             type="file"
                             accept="image/*"
@@ -350,113 +433,204 @@ export default function DashboardPage() {
                           >
                             Drag and Drop Profile Pic
                           </label>
-                        </div>
+                        </motion.div>
                       )}
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <div>
-                      <Label>Business Name</Label>
-                      <Input
-                        value={companyInfo.businessName}
-                        onChange={(e) =>
-                          setCompanyInfo({
-                            ...companyInfo,
-                            businessName: e.target.value,
-                          })
-                        }
-                        disabled={!isEditing}
-                        className="h-8"
-                      />
-                    </div>
-                    <div>
-                      <Label>Agent Name</Label>
-                      <Input
-                        value={companyInfo.agentName}
-                        onChange={(e) =>
-                          setCompanyInfo({
-                            ...companyInfo,
-                            agentName: e.target.value,
-                          })
-                        }
-                        disabled={!isEditing}
-                        className="h-8"
-                      />
-                    </div>
-                    <div>
-                      <Label>Email</Label>
-                      <Input
-                        value={companyInfo.email}
-                        onChange={(e) =>
-                          setCompanyInfo({
-                            ...companyInfo,
-                            email: e.target.value,
-                          })
-                        }
-                        disabled={!isEditing}
-                        className="h-8"
-                      />
-                    </div>
-                    <div>
-                      <Label>Phone Number</Label>
-                      <Input
-                        value={companyInfo.phone}
-                        onChange={(e) =>
-                          setCompanyInfo({
-                            ...companyInfo,
-                            phone: e.target.value,
-                          })
-                        }
-                        disabled={!isEditing}
-                        className="h-8"
-                      />
+                  <div className="space-y-2 mt-4">
+                    <div className="flex gap-2">
+                      <div>
+                        <Label>Business Name</Label>
+                        <motion.div
+                          whileFocus={{
+                            scale: 1.02,
+                            boxShadow: "0 0 0 2px #3b82f6",
+                          }}
+                        >
+                          <Input
+                            value={companyInfo.businessName}
+                            onChange={(e) =>
+                              setCompanyInfo({
+                                ...companyInfo,
+                                businessName: e.target.value,
+                              })
+                            }
+                            disabled={!isEditing}
+                            className="h-8"
+                          />
+                        </motion.div>
+                      </div>
+                      <div>
+                        <Label>Agent Name</Label>
+                        <motion.div
+                          whileFocus={{
+                            scale: 1.02,
+                            boxShadow: "0 0 0 2px #3b82f6",
+                          }}
+                        >
+                          <Input
+                            value={companyInfo.agentName}
+                            onChange={(e) =>
+                              setCompanyInfo({
+                                ...companyInfo,
+                                agentName: e.target.value,
+                              })
+                            }
+                            disabled={!isEditing}
+                            className="h-8"
+                          />
+                        </motion.div>
+                      </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={handleEditToggle}>
-                        {isEditing ? "Cancel" : "Edit"}
-                      </Button>
-                      {isEditing && (
-                        <Button size="sm" onClick={handleSave}>
-                          Save
+                      <div>
+                        <Label>Email</Label>
+                        <motion.div
+                          whileFocus={{
+                            scale: 1.02,
+                            boxShadow: "0 0 0 2px #3b82f6",
+                          }}
+                        >
+                          <Input
+                            value={companyInfo.email}
+                            onChange={(e) =>
+                              setCompanyInfo({
+                                ...companyInfo,
+                                email: e.target.value,
+                              })
+                            }
+                            disabled={!isEditing}
+                            className="h-8"
+                          />
+                        </motion.div>
+                      </div>
+                      <div>
+                        <Label>Phone Number</Label>
+                        <motion.div
+                          whileFocus={{
+                            scale: 1.02,
+                            boxShadow: "0 0 0 2px #3b82f6",
+                          }}
+                        >
+                          <Input
+                            value={companyInfo.phone}
+                            onChange={(e) =>
+                              setCompanyInfo({
+                                ...companyInfo,
+                                phone: e.target.value,
+                              })
+                            }
+                            disabled={!isEditing}
+                            className="h-8"
+                          />
+                        </motion.div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <motion.div
+                        whileHover={{
+                          scale: 1.1,
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Button size="sm" onClick={handleEditToggle}>
+                          {isEditing ? "Cancel" : "Edit"}
                         </Button>
+                      </motion.div>
+                      {isEditing && (
+                        <motion.div
+                          whileHover={{
+                            scale: 1.1,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                          }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Button size="sm" onClick={handleSave}>
+                            Save
+                          </Button>
+                        </motion.div>
                       )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
               <Card className="mt-4">
-                <CardContent className="space-y-2 p-4">
+                <CardContent className="space-y-2">
                   <h3 className="font-bold text-sm mb-4">
                     List of the Insurance Companies
                   </h3>
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <motion.div
+                    className="flex flex-wrap gap-2 mb-4"
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      hidden: { opacity: 0 },
+                      visible: {
+                        opacity: 1,
+                        transition: {
+                          staggerChildren: 0.1,
+                        },
+                      },
+                    }}
+                  >
                     {insuranceCompanies.map((company) => (
-                      <Button
+                      <motion.div
                         key={company}
-                        variant="outline"
-                        size="sm"
-                        className="text-sm px-2 py-1 hover:bg-gray-100 transition-colors"
-                        onClick={() => handleInsuranceClick(company)}
+                        variants={{
+                          hidden: { opacity: 0, y: 10 },
+                          visible: {
+                            opacity: 1,
+                            y: 0,
+                            transition: { type: "spring", stiffness: 120 },
+                          },
+                        }}
+                        whileHover={{
+                          scale: 1.05,
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        {company}
-                      </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-sm px-2 py-1 hover:bg-gray-100 transition-colors"
+                          onClick={() => handleInsuranceClick(company)}
+                        >
+                          {company}
+                        </Button>
+                      </motion.div>
                     ))}
-                  </div>
-                  <Button variant="default" size="sm" className="w-full">
-                    Request Provider
-                  </Button>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{
+                      scale: 1.05,
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button variant="default" size="sm" className="w-full">
+                      Request Provider
+                    </Button>
+                  </motion.div>
                   <h3 className="font-bold text-sm mt-4">Training</h3>
                   {trainingResources.map((resource) => (
-                    <>
-                      <Button
-                        className="w-full"
-                        variant="default"
-                        size="sm"
-                        key={resource}
-                      >
+                    <motion.div
+                      key={resource}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ type: "spring", stiffness: 120 }}
+                      whileHover={{
+                        scale: 1.05,
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                      }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Button className="w-full" variant="default" size="sm">
                         {resource}
                       </Button>
-                    </>
+                    </motion.div>
                   ))}
                 </CardContent>
               </Card>
@@ -464,35 +638,63 @@ export default function DashboardPage() {
           </motion.aside>
         </AnimatePresence>
       </div>
+      {/* Main Content */}
       <AnimatePresence>
         <motion.div
           variants={contentVariants}
           initial="open"
           animate={isSidebarCollapsed ? "collapsed" : "open"}
-          transition={{ duration: 0.4, ease: "easeInOut" }}
-          className="flex-1" // Ensure the content takes up remaining space
+          transition={{
+            duration: 0.5,
+            type: "spring",
+            stiffness: 100,
+            damping: 15,
+          }}
+          className="flex-1"
         >
           <Card className="h-full">
             <CardContent className="space-y-4">
-              <h2 className="text-xl font-bold">
-                IUL Client Files Without a Pension
-              </h2>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleClientAction("latest")}
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
+                className="text-xl font-bold"
               >
-                Get Latest
-              </Button>
-              <div className="grid grid-cols-4 gap-2 h-[600px]">
+                IUL Client Files Without a Pension
+              </motion.h2>
+              <motion.div
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                }}
+                whileTap={{ scale: 0.95 }}
+                className="w-min"
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleClientAction("latest")}
+                >
+                  Get Latest
+                </Button>
+              </motion.div>
+              <div className="grid grid-cols-4 gap-2 h-[500px]">
                 {[
                   "Pro Sample Files",
                   "Your Sample Files",
                   "Your Prospect Files",
                   "Your Closed Sales",
                 ].map((category) => (
-                  <div
+                  <motion.div
                     key={category}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{
+                      duration: 0.4,
+                      type: "spring",
+                      stiffness: 120,
+                    }}
+                    whileHover={{ scale: 1, backgroundColor: "#f5f5f5" }}
                     className="border p-1 bg-gray-100 overflow-hidden"
                     onDragOver={(e: React.DragEvent<HTMLDivElement>) =>
                       e.preventDefault()
@@ -502,10 +704,17 @@ export default function DashboardPage() {
                     }
                     style={{ maxHeight: "100%" }}
                   >
-                    <h3 className="font-semibold text-sm">{category}</h3>
+                    <motion.h3
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 0.1 }}
+                      className="font-semibold text-sm"
+                    >
+                      {category}
+                    </motion.h3>
                     <div
-                      className="overflow-y-auto"
-                      style={{ maxHeight: "500px" }}
+                      className="overflow-y-auto scrollbar-none"
+                      style={{ maxHeight: "max-content" }}
                     >
                       {clientFiles
                         .filter((file) => file.category === category)
@@ -515,60 +724,137 @@ export default function DashboardPage() {
                             variants={newClientVariant}
                             initial="hidden"
                             animate="visible"
+                            whileHover={{
+                              scale: 1.05,
+                              backgroundColor: "#e5e7eb",
+                            }}
+                            whileDrag={{ scale: 1.1, opacity: 0.8 }}
                             className="p-1 border-b cursor-move text-sm"
-                            draggable="true" // Enable native drag-and-drop
+                            draggable="true"
                             onDragStartCapture={(
                               e: React.DragEvent<HTMLDivElement>
-                            ) => handleDragStart(e, file.id)} // Native drag start event
+                            ) => handleDragStart(e, file.id)}
                           >
                             {file.name}{" "}
                             {file.size !== "N/A" && `(${file.size})`}
                           </motion.div>
                         ))}
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-              <div className="flex gap-2 justify-end">
+              <motion.div
+                className="flex gap-2 justify-end"
+                initial="hidden"
+                animate="visible"
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: { staggerChildren: 0.1 },
+                  },
+                }}
+              >
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button size="sm" onClick={() => handleClientAction("new")}>
-                      New
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Start New Client</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-2">
-                      <Input
-                        placeholder="Client Name"
-                        value={newClientName}
-                        onChange={(e) => setNewClientName(e.target.value)}
-                        className="h-8"
-                      />
+                    <motion.div
+                      variants={{
+                        hidden: { opacity: 0, y: 10 },
+                        visible: {
+                          opacity: 1,
+                          y: 0,
+                          transition: { type: "spring", stiffness: 120 },
+                        },
+                      }}
+                      whileHover={{
+                        scale: 1.1,
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                      }}
+                      whileTap={{ scale: 0.95 }}
+                    >
                       <Button
                         size="sm"
                         onClick={() => handleClientAction("new")}
                       >
-                        Open
+                        New
                       </Button>
-                    </div>
+                    </motion.div>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{
+                        duration: 0.3,
+                        type: "spring",
+                        stiffness: 120,
+                      }}
+                    >
+                      <DialogHeader>
+                        <DialogTitle className="mb-2">
+                          Start New Client
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-2">
+                        <motion.div
+                          whileFocus={{
+                            scale: 1.02,
+                            boxShadow: "0 0 0 2px #3b82f6",
+                          }}
+                        >
+                          <Input
+                            placeholder="Client Name"
+                            value={newClientName}
+                            onChange={(e) => setNewClientName(e.target.value)}
+                            className="h-8"
+                          />
+                        </motion.div>
+                        <motion.div
+                          whileHover={{
+                            scale: 1.05,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                          }}
+                          whileTap={{ scale: 0.95 }}
+                          className="w-min"
+                        >
+                          <Button
+                            size="sm"
+                            onClick={() => handleClientAction("new")}
+                          >
+                            Open
+                          </Button>
+                        </motion.div>
+                      </div>
+                    </motion.div>
                   </DialogContent>
                 </Dialog>
-                <Button size="sm" onClick={() => handleClientAction("open")}>
-                  Open
-                </Button>
-                <Button size="sm" onClick={() => handleClientAction("copy")}>
-                  Copy
-                </Button>
-                <Button size="sm" onClick={() => handleClientAction("rename")}>
-                  Rename
-                </Button>
-                <Button size="sm" onClick={() => handleClientAction("delete")}>
-                  Delete
-                </Button>
-              </div>
+                {["open", "copy", "rename", "delete"].map((action) => (
+                  <motion.div
+                    key={action}
+                    variants={{
+                      hidden: { opacity: 0, y: 10 },
+                      visible: {
+                        opacity: 1,
+                        y: 0,
+                        transition: { type: "spring", stiffness: 120 },
+                      },
+                    }}
+                    whileHover={{
+                      scale: 1.1,
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      size="sm"
+                      onClick={() => handleClientAction(action)}
+                    >
+                      {action.charAt(0).toUpperCase() + action.slice(1)}
+                    </Button>
+                  </motion.div>
+                ))}
+              </motion.div>
             </CardContent>
           </Card>
         </motion.div>

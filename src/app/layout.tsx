@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+import { AnimatePresence } from "motion/react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,8 +27,9 @@ export default function RootLayout({
           "min-h-screen bg-gray-100 text-gray-900"
         )}
       >
-        {/* <main className="min-h-dvh">{children}</main> */}
-        {children}
+        <AnimatePresence mode="wait" initial={false}>
+          <main className="min-h-dvh">{children}</main>
+        </AnimatePresence>
         <Toaster richColors />
       </body>
     </html>

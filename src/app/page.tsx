@@ -1,8 +1,7 @@
 // src/app/page.tsx
 "use client";
 
-import * as motion from "motion/react-client";
-import { AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -111,8 +110,13 @@ export default function AuthPage() {
         transition={{ duration: 0.4, type: "spring", stiffness: 150 }}
         className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg"
       >
-        {/* Header */}
-        <header className="text-center mb-6">
+        {/* Header with Logo Animation */}
+        <motion.header
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, type: "spring", stiffness: 120 }}
+          className="text-center mb-6"
+        >
           <Image
             width={300}
             height={100}
@@ -120,35 +124,25 @@ export default function AuthPage() {
             alt="IUL Calculator Pro Logo"
             className="h-16 w-full mx-auto mb-2 object-contain"
           />
-        </header>
+        </motion.header>
 
-        {/* Tabs */}
+        {/* Tabs with Enhanced Animation */}
         <Tabs defaultValue="signup" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="signup" asChild>
               <motion.button
-                whileHover={{ scale: 1.02, backgroundColor: "#f5f6f5" }}
+                whileHover={{ scale: 1.05, backgroundColor: "#f5f6f5" }}
                 whileTap={{ scale: 0.98 }}
-                transition={{
-                  type: "tween",
-                  stiffness: 300,
-                  damping: 25,
-                  duration: 0.3,
-                }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
                 Sign Up
               </motion.button>
             </TabsTrigger>
             <TabsTrigger value="login" asChild>
               <motion.button
-                whileHover={{ scale: 1.02, backgroundColor: "#f5f6f5" }}
+                whileHover={{ scale: 1.05, backgroundColor: "#f5f6f5" }}
                 whileTap={{ scale: 0.98 }}
-                transition={{
-                  type: "tween",
-                  stiffness: 300,
-                  damping: 25,
-                  duration: 0.3,
-                }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
                 Login
               </motion.button>
@@ -160,15 +154,10 @@ export default function AuthPage() {
             <AnimatePresence mode="wait">
               <motion.div
                 key="signup"
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{
-                  duration: 0.6,
-                  type: "spring",
-                  stiffness: 100,
-                  damping: 20,
-                }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
               >
                 <h2 className="text-xl font-bold text-gray-900 mb-4">
                   Create Your Account
@@ -188,10 +177,18 @@ export default function AuthPage() {
                           <Label htmlFor="firstName">First Name</Label>
                           <FormControl>
                             <motion.div
+                              whileFocus={{
+                                scale: 1.02,
+                                boxShadow: "0 0 0 2px #3b82f6",
+                              }}
                               animate={
-                                fieldState.error ? { x: [-2, 2, -2, 2, 0] } : {}
+                                fieldState.error
+                                  ? {
+                                      x: [-3, 3, -3, 3, 0],
+                                      transition: { duration: 0.3 },
+                                    }
+                                  : {}
                               }
-                              transition={{ duration: 0.2 }}
                             >
                               <Input
                                 id="firstName"
@@ -213,10 +210,18 @@ export default function AuthPage() {
                           <Label htmlFor="lastName">Last Name</Label>
                           <FormControl>
                             <motion.div
+                              whileFocus={{
+                                scale: 1.02,
+                                boxShadow: "0 0 0 2px #3b82f6",
+                              }}
                               animate={
-                                fieldState.error ? { x: [-2, 2, -2, 2, 0] } : {}
+                                fieldState.error
+                                  ? {
+                                      x: [-3, 3, -3, 3, 0],
+                                      transition: { duration: 0.3 },
+                                    }
+                                  : {}
                               }
-                              transition={{ duration: 0.2 }}
                             >
                               <Input
                                 id="lastName"
@@ -238,10 +243,18 @@ export default function AuthPage() {
                           <Label htmlFor="email">Email</Label>
                           <FormControl>
                             <motion.div
+                              whileFocus={{
+                                scale: 1.02,
+                                boxShadow: "0 0 0 2px #3b82f6",
+                              }}
                               animate={
-                                fieldState.error ? { x: [-2, 2, -2, 2, 0] } : {}
+                                fieldState.error
+                                  ? {
+                                      x: [-3, 3, -3, 3, 0],
+                                      transition: { duration: 0.3 },
+                                    }
+                                  : {}
                               }
-                              transition={{ duration: 0.2 }}
                             >
                               <Input
                                 id="email"
@@ -265,12 +278,18 @@ export default function AuthPage() {
                           <FormControl>
                             <div className="relative">
                               <motion.div
+                                whileFocus={{
+                                  scale: 1.02,
+                                  boxShadow: "0 0 0 2px #3b82f6",
+                                }}
                                 animate={
                                   fieldState.error
-                                    ? { x: [-2, 2, -2, 2, 0] }
+                                    ? {
+                                        x: [-3, 3, -3, 3, 0],
+                                        transition: { duration: 0.3 },
+                                      }
                                     : {}
                                 }
-                                transition={{ duration: 0.2 }}
                               >
                                 <Input
                                   id="password"
@@ -282,10 +301,10 @@ export default function AuthPage() {
                                   {...field}
                                 />
                               </motion.div>
-                              <Button
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
                                 type="button"
-                                variant="ghost"
-                                size="sm"
                                 className="absolute right-2 top-1/2 -translate-y-1/2"
                                 onClick={() =>
                                   setShowSignupPassword(!showSignupPassword)
@@ -301,7 +320,7 @@ export default function AuthPage() {
                                 ) : (
                                   <Eye className="h-4 w-4" />
                                 )}
-                              </Button>
+                              </motion.button>
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -319,12 +338,18 @@ export default function AuthPage() {
                           <FormControl>
                             <div className="relative">
                               <motion.div
+                                whileFocus={{
+                                  scale: 1.02,
+                                  boxShadow: "0 0 0 2px #3b82f6",
+                                }}
                                 animate={
                                   fieldState.error
-                                    ? { x: [-2, 2, -2, 2, 0] }
+                                    ? {
+                                        x: [-3, 3, -3, 3, 0],
+                                        transition: { duration: 0.3 },
+                                      }
                                     : {}
                                 }
-                                transition={{ duration: 0.2 }}
                               >
                                 <Input
                                   id="confirmPassword"
@@ -336,10 +361,10 @@ export default function AuthPage() {
                                   {...field}
                                 />
                               </motion.div>
-                              <Button
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
                                 type="button"
-                                variant="ghost"
-                                size="sm"
                                 className="absolute right-2 top-1/2 -translate-y-1/2"
                                 onClick={() =>
                                   setShowSignupPassword(!showSignupPassword)
@@ -355,7 +380,7 @@ export default function AuthPage() {
                                 ) : (
                                   <Eye className="h-4 w-4" />
                                 )}
-                              </Button>
+                              </motion.button>
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -364,16 +389,22 @@ export default function AuthPage() {
                     />
                     <motion.div
                       whileHover={{
-                        scale: 1.03,
-                        boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.08)",
+                        scale: 1.05,
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
                       }}
-                      whileTap={{ scale: 0.97 }}
-                      animate={isSubmitting ? { opacity: [1, 0.8, 1] } : {}}
+                      whileTap={{ scale: 0.98 }}
+                      animate={
+                        isSubmitting
+                          ? {
+                              scale: [1, 1.02, 1],
+                              transition: { duration: 0.5, repeat: Infinity },
+                            }
+                          : {}
+                      }
                       transition={{
                         type: "spring",
                         stiffness: 400,
                         damping: 20,
-                        duration: isSubmitting ? 0.5 : 0.2,
                       }}
                     >
                       <Button
@@ -396,15 +427,10 @@ export default function AuthPage() {
             <AnimatePresence mode="wait">
               <motion.div
                 key="login"
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{
-                  duration: 0.6,
-                  type: "spring",
-                  stiffness: 100,
-                  damping: 20,
-                }}
+                exit={{ opacity: 0, x: 50 }}
+                transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
               >
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Log In</h2>
                 <Form {...loginForm}>
@@ -422,10 +448,18 @@ export default function AuthPage() {
                           <Label htmlFor="loginEmail">Email</Label>
                           <FormControl>
                             <motion.div
+                              whileFocus={{
+                                scale: 1.02,
+                                boxShadow: "0 0 0 2px #3b82f6",
+                              }}
                               animate={
-                                fieldState.error ? { x: [-2, 2, -2, 2, 0] } : {}
+                                fieldState.error
+                                  ? {
+                                      x: [-3, 3, -3, 3, 0],
+                                      transition: { duration: 0.3 },
+                                    }
+                                  : {}
                               }
-                              transition={{ duration: 0.2 }}
                             >
                               <Input
                                 id="loginEmail"
@@ -449,12 +483,18 @@ export default function AuthPage() {
                           <FormControl>
                             <div className="relative">
                               <motion.div
+                                whileFocus={{
+                                  scale: 1.02,
+                                  boxShadow: "0 0 0 2px #3b82f6",
+                                }}
                                 animate={
                                   fieldState.error
-                                    ? { x: [-2, 2, -2, 2, 0] }
+                                    ? {
+                                        x: [-3, 3, -3, 3, 0],
+                                        transition: { duration: 0.3 },
+                                      }
                                     : {}
                                 }
-                                transition={{ duration: 0.2 }}
                               >
                                 <Input
                                   id="loginPassword"
@@ -464,10 +504,10 @@ export default function AuthPage() {
                                   {...field}
                                 />
                               </motion.div>
-                              <Button
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
                                 type="button"
-                                variant="ghost"
-                                size="sm"
                                 className="absolute right-2 top-1/2 -translate-y-1/2"
                                 onClick={() =>
                                   setShowLoginPassword(!showLoginPassword)
@@ -483,7 +523,7 @@ export default function AuthPage() {
                                 ) : (
                                   <Eye className="h-4 w-4" />
                                 )}
-                              </Button>
+                              </motion.button>
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -492,16 +532,22 @@ export default function AuthPage() {
                     />
                     <motion.div
                       whileHover={{
-                        scale: 1.03,
-                        boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.08)",
+                        scale: 1.05,
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
                       }}
-                      whileTap={{ scale: 0.97 }}
-                      animate={isSubmitting ? { opacity: [1, 0.8, 1] } : {}}
+                      whileTap={{ scale: 0.98 }}
+                      animate={
+                        isSubmitting
+                          ? {
+                              scale: [1, 1.02, 1],
+                              transition: { duration: 0.5, repeat: Infinity },
+                            }
+                          : {}
+                      }
                       transition={{
                         type: "spring",
                         stiffness: 400,
                         damping: 20,
-                        duration: isSubmitting ? 0.5 : 0.2,
                       }}
                     >
                       <Button
@@ -520,10 +566,15 @@ export default function AuthPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Footer */}
-        <footer className="mt-6 text-center text-sm text-gray-600">
+        {/* Footer with Animation */}
+        <motion.footer
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.4 }}
+          className="mt-6 text-center text-sm text-gray-600"
+        >
           <p>Copyright © {new Date().getFullYear()} - IUL Calculator Pro</p>
-        </footer>
+        </motion.footer>
       </motion.div>
     </div>
   );
