@@ -108,7 +108,7 @@ export default function DashboardPage() {
 
   const handleClientAction = (action: string, id?: string) => {
     if (action === "new" && newClientName) {
-      const newClient: ClientFile = {
+      const newClient = {
         id: Date.now().toString(),
         name: newClientName,
         size: "N/A",
@@ -121,12 +121,12 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
+  const handleDragStart = (e: React.DragEvent, id: string) => {
     e.dataTransfer.setData("text/plain", id);
   };
 
   const handleDrop = (
-    e: React.DragEvent<HTMLDivElement>,
+    e: React.DragEvent,
     targetCategory: ClientFile["category"]
   ) => {
     e.preventDefault();
@@ -494,10 +494,8 @@ export default function DashboardPage() {
                   <div
                     key={category}
                     className="border p-1 bg-gray-100 overflow-hidden"
-                    onDragOver={(e: React.DragEvent<HTMLDivElement>) =>
-                      e.preventDefault()
-                    }
-                    onDrop={(e: React.DragEvent<HTMLDivElement>) =>
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) =>
                       handleDrop(e, category as ClientFile["category"])
                     }
                     style={{ maxHeight: "100%" }}
@@ -516,10 +514,8 @@ export default function DashboardPage() {
                             initial="hidden"
                             animate="visible"
                             className="p-1 border-b cursor-move text-sm"
-                            draggable="true" // Enable native drag-and-drop
-                            onDragStartCapture={(
-                              e: React.DragEvent<HTMLDivElement>
-                            ) => handleDragStart(e, file.id)} // Native drag start event
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, file.id)}
                           >
                             {file.name}{" "}
                             {file.size !== "N/A" && `(${file.size})`}

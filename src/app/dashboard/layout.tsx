@@ -44,7 +44,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </header> */}
 
-        <main className="container mx-auto p-4">{children}</main>
+        <main className="container mx-auto p-2">{children}</main>
 
         <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
           {navItems.map((item) => (
