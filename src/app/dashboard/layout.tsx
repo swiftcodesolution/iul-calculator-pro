@@ -24,7 +24,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen bg-gray-100">
         {/* <header className="bg-white shadow-sm">
           <div className="container mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-4">
