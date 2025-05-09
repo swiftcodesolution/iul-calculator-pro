@@ -453,245 +453,237 @@ export default function CalculatorPageV2() {
         {/* Collapsible Comparison Table */}
         <AnimatePresence>
           {!isTableCardExpanded ? (
-            <motion.div
-              animate={{ width: isTableCollapsed ? "60px" : "100%" }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              style={{ overflow: "hidden", transformOrigin: "left" }}
-            >
-              <Card>
-                <CardHeader
-                  className="flex flex-row items-center justify-between cursor-pointer"
-                  onClick={() => setIsTableCollapsed(!isTableCollapsed)}
-                  aria-label="Toggle table visibility"
-                >
-                  <h3 className="text-lg font-semibold">Comparison Table</h3>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsTableCardExpanded(true)}
-                    >
-                      <Maximize2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsTableCollapsed(!isTableCollapsed);
-                      }}
-                    >
-                      {isTableCollapsed ? (
-                        <ChevronRight className="h-4 w-4" />
-                      ) : (
-                        <ChevronLeft className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Table className="w-full table-auto">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>
-                          <motion.div
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.1, duration: 0.3 }}
-                            className="flex items-center gap-2"
-                          >
-                            <Button
-                              variant="default"
-                              size="sm"
-                              className="grow"
-                            >
-                              Options
-                            </Button>
-                            <Button
-                              variant="default"
-                              size="sm"
-                              className="grow"
-                            >
-                              Show/Hide
-                            </Button>
-                          </motion.div>
-                        </TableHead>
-                        <TableHead
-                          className={`bg-red-200 cursor-pointer ${
+            // <motion.div
+            //   animate={{ width: isTableCollapsed ? "60px" : "100%" }}
+            //   transition={{ duration: 0.3, ease: "easeInOut" }}
+            //   style={{ overflow: "hidden", transformOrigin: "left" }}
+            // >
+            <Card>
+              <CardHeader
+                className="flex flex-row items-center justify-between cursor-pointer"
+                onClick={() => setIsTableCollapsed(!isTableCollapsed)}
+                aria-label="Toggle table visibility"
+              >
+                <h3 className="text-lg font-semibold">Comparison Table</h3>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsTableCardExpanded(true)}
+                  >
+                    <Maximize2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsTableCollapsed(!isTableCollapsed);
+                    }}
+                  >
+                    {isTableCollapsed ? (
+                      <ChevronRight className="h-4 w-4" />
+                    ) : (
+                      <ChevronLeft className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table className="w-full table-auto">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>
+                        <motion.div
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1, duration: 0.3 }}
+                          className="flex items-center gap-2"
+                        >
+                          <Button variant="default" size="sm" className="grow">
+                            Options
+                          </Button>
+                          <Button variant="default" size="sm" className="grow">
+                            Show/Hide
+                          </Button>
+                        </motion.div>
+                      </TableHead>
+                      <TableHead
+                        className={`bg-red-200 cursor-pointer ${
+                          columnTextWhite.currentPlan
+                            ? "text-red-200"
+                            : "text-black"
+                        } transition-colors duration-300`}
+                        onClick={() => handleHeaderClick("currentPlan")}
+                        aria-label="Toggle Current Plan column text color"
+                      >
+                        Current Plan <br /> TSP, 401k, 403b, IRA
+                      </TableHead>
+                      <TableHead
+                        className={`bg-yellow-200 cursor-pointer ${
+                          columnTextWhite.taxes
+                            ? "text-yellow-200"
+                            : "text-black"
+                        } transition-colors duration-300`}
+                        onClick={() => handleHeaderClick("taxes")}
+                        aria-label="Toggle Taxes column text color"
+                      >
+                        Taxes
+                      </TableHead>
+                      <TableHead
+                        className={`bg-green-200 cursor-pointer ${
+                          columnTextWhite.taxFreePlan
+                            ? "text-green-200"
+                            : "text-black"
+                        } transition-colors duration-300`}
+                        onClick={() => handleHeaderClick("taxFreePlan")}
+                        aria-label="Toggle Tax Free Plan column text color"
+                      >
+                        IRS (IRC) 7702 <br /> Tax Free Plan
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[
+                      "Starting Balance",
+                      "Annual Contributions",
+                      "Annual Employer Match",
+                      "Annual Fees",
+                      "Gross Retirement Income",
+                      "Income Tax",
+                      "Net Retirement Income",
+                      "Cumulative Taxes Deferred",
+                      "Cumulative Taxes Paid",
+                      "Cumulative Fees Paid",
+                      "Cumulative Net Income",
+                      "Cumulative Account Balance",
+                      "Taxes Due",
+                      "Death Benefits",
+                      "Years You Run Out of Money",
+                    ].map((label, index) => (
+                      <motion.tr
+                        key={label}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05, duration: 0.3 }}
+                      >
+                        <TableCell
+                          className={`border cursor-pointer whitespace-nowrap ${
+                            highlightedRow === index ? "bg-[#ffa1ad]" : ""
+                          }`}
+                          onClick={() => handleCellClick(index)}
+                          aria-selected={highlightedRow === index}
+                        >
+                          {label}
+                        </TableCell>
+                        <TableCell
+                          className={`border cursor-pointer whitespace-nowrap ${
+                            highlightedRow === index
+                              ? "bg-[#ffa1ad]"
+                              : "bg-white"
+                          } ${
                             columnTextWhite.currentPlan
-                              ? "text-red-200"
+                              ? "text-white opacity-0"
                               : "text-black"
                           } transition-colors duration-300`}
-                          onClick={() => handleHeaderClick("currentPlan")}
-                          aria-label="Toggle Current Plan column text color"
+                          onClick={() => handleCellClick(index)}
+                          aria-selected={highlightedRow === index}
                         >
-                          Current Plan <br /> TSP, 401k, 403b, IRA
-                        </TableHead>
-                        <TableHead
-                          className={`bg-yellow-200 cursor-pointer ${
+                          {label === "Starting Balance" && "0"}
+                          {label === "Annual Contributions" && "$25,641"}
+                          {label === "Annual Employer Match" && "$0"}
+                          {label === "Annual Fees" && "2%"}
+                          {label === "Gross Retirement Income" &&
+                            `$${defaultResults.grossRetirementIncome.toLocaleString()}`}
+                          {label === "Income Tax" &&
+                            `$${defaultResults.incomeTax.toLocaleString()}`}
+                          {label === "Net Retirement Income" &&
+                            `$${defaultResults.netRetirementIncome.toLocaleString()}`}
+                          {label === "Cumulative Taxes Deferred" &&
+                            `$${defaultResults.cumulativeTaxesDeferred.toLocaleString()}`}
+                          {label === "Cumulative Taxes Paid" &&
+                            `$${defaultResults.cumulativeTaxesPaid.toLocaleString()}`}
+                          {label === "Cumulative Fees Paid" &&
+                            `$${defaultResults.cumulativeFeesPaid.toLocaleString()}`}
+                          {label === "Cumulative Net Income" &&
+                            `$${defaultResults.cumulativeNetIncome.toLocaleString()}`}
+                          {label === "Cumulative Account Balance" &&
+                            `$${defaultResults.cumulativeAccountBalance.toLocaleString()}`}
+                          {label === "Taxes Due" &&
+                            `${defaultResults.taxesDue}%`}
+                          {label === "Death Benefits" &&
+                            `$${defaultResults.deathBenefits.toLocaleString()}`}
+                          {label === "Years You Run Out of Money" &&
+                            `${defaultResults.yearsRunOutOfMoney}`}
+                        </TableCell>
+                        <TableCell
+                          className={`border cursor-pointer whitespace-nowrap ${
+                            highlightedRow === index
+                              ? "bg-[#ffa1ad]"
+                              : "bg-white"
+                          } ${
                             columnTextWhite.taxes
-                              ? "text-yellow-200"
-                              : "text-black"
+                              ? "text-white opacity-0"
+                              : "text-red-600"
                           } transition-colors duration-300`}
-                          onClick={() => handleHeaderClick("taxes")}
-                          aria-label="Toggle Taxes column text color"
+                          onClick={() => handleCellClick(index)}
+                          aria-selected={highlightedRow === index}
                         >
-                          Taxes
-                        </TableHead>
-                        <TableHead
-                          className={`bg-green-200 cursor-pointer ${
+                          {label === "Starting Balance" && "10%"}
+                          {label === "Annual Contributions" && "22%"}
+                          {label === "Income Tax" && "28%"}
+                          {label === "Net Retirement Income" && "28%"}
+                          {label === "Cumulative Taxes Paid" && "10%"}
+                          {label === "Taxes Due" && "28%"}
+                        </TableCell>
+                        <TableCell
+                          className={`border cursor-pointer whitespace-nowrap ${
+                            highlightedRow === index
+                              ? "bg-[#ffa1ad]"
+                              : "bg-white"
+                          } ${
                             columnTextWhite.taxFreePlan
-                              ? "text-green-200"
+                              ? "text-white opacity-0"
                               : "text-black"
                           } transition-colors duration-300`}
-                          onClick={() => handleHeaderClick("taxFreePlan")}
-                          aria-label="Toggle Tax Free Plan column text color"
+                          onClick={() => handleCellClick(index)}
+                          aria-selected={highlightedRow === index}
                         >
-                          IRS (IRC) 7702 <br /> Tax Free Plan
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {[
-                        "Starting Balance",
-                        "Annual Contributions",
-                        "Annual Employer Match",
-                        "Annual Fees",
-                        "Gross Retirement Income",
-                        "Income Tax",
-                        "Net Retirement Income",
-                        "Cumulative Taxes Deferred",
-                        "Cumulative Taxes Paid",
-                        "Cumulative Fees Paid",
-                        "Cumulative Net Income",
-                        "Cumulative Account Balance",
-                        "Taxes Due",
-                        "Death Benefits",
-                        "Years You Run Out of Money",
-                      ].map((label, index) => (
-                        <motion.tr
-                          key={label}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05, duration: 0.3 }}
-                        >
-                          <TableCell
-                            className={`border cursor-pointer whitespace-nowrap ${
-                              highlightedRow === index ? "bg-[#ffa1ad]" : ""
-                            }`}
-                            onClick={() => handleCellClick(index)}
-                            aria-selected={highlightedRow === index}
-                          >
-                            {label}
-                          </TableCell>
-                          <TableCell
-                            className={`border cursor-pointer whitespace-nowrap ${
-                              highlightedRow === index
-                                ? "bg-[#ffa1ad]"
-                                : "bg-white"
-                            } ${
-                              columnTextWhite.currentPlan
-                                ? "text-white opacity-0"
-                                : "text-black"
-                            } transition-colors duration-300`}
-                            onClick={() => handleCellClick(index)}
-                            aria-selected={highlightedRow === index}
-                          >
-                            {label === "Starting Balance" && "0"}
-                            {label === "Annual Contributions" && "$25,641"}
-                            {label === "Annual Employer Match" && "$0"}
-                            {label === "Annual Fees" && "2%"}
-                            {label === "Gross Retirement Income" &&
-                              `$${defaultResults.grossRetirementIncome.toLocaleString()}`}
-                            {label === "Income Tax" &&
-                              `$${defaultResults.incomeTax.toLocaleString()}`}
-                            {label === "Net Retirement Income" &&
-                              `$${defaultResults.netRetirementIncome.toLocaleString()}`}
-                            {label === "Cumulative Taxes Deferred" &&
-                              `$${defaultResults.cumulativeTaxesDeferred.toLocaleString()}`}
-                            {label === "Cumulative Taxes Paid" &&
-                              `$${defaultResults.cumulativeTaxesPaid.toLocaleString()}`}
-                            {label === "Cumulative Fees Paid" &&
-                              `$${defaultResults.cumulativeFeesPaid.toLocaleString()}`}
-                            {label === "Cumulative Net Income" &&
-                              `$${defaultResults.cumulativeNetIncome.toLocaleString()}`}
-                            {label === "Cumulative Account Balance" &&
-                              `$${defaultResults.cumulativeAccountBalance.toLocaleString()}`}
-                            {label === "Taxes Due" &&
-                              `${defaultResults.taxesDue}%`}
-                            {label === "Death Benefits" &&
-                              `$${defaultResults.deathBenefits.toLocaleString()}`}
-                            {label === "Years You Run Out of Money" &&
-                              `${defaultResults.yearsRunOutOfMoney}`}
-                          </TableCell>
-                          <TableCell
-                            className={`border cursor-pointer whitespace-nowrap ${
-                              highlightedRow === index
-                                ? "bg-[#ffa1ad]"
-                                : "bg-white"
-                            } ${
-                              columnTextWhite.taxes
-                                ? "text-white opacity-0"
-                                : "text-red-600"
-                            } transition-colors duration-300`}
-                            onClick={() => handleCellClick(index)}
-                            aria-selected={highlightedRow === index}
-                          >
-                            {label === "Starting Balance" && "10%"}
-                            {label === "Annual Contributions" && "22%"}
-                            {label === "Income Tax" && "28%"}
-                            {label === "Net Retirement Income" && "28%"}
-                            {label === "Cumulative Taxes Paid" && "10%"}
-                            {label === "Taxes Due" && "28%"}
-                          </TableCell>
-                          <TableCell
-                            className={`border cursor-pointer whitespace-nowrap ${
-                              highlightedRow === index
-                                ? "bg-[#ffa1ad]"
-                                : "bg-white"
-                            } ${
-                              columnTextWhite.taxFreePlan
-                                ? "text-white opacity-0"
-                                : "text-black"
-                            } transition-colors duration-300`}
-                            onClick={() => handleCellClick(index)}
-                            aria-selected={highlightedRow === index}
-                          >
-                            {label === "Starting Balance" && "0"}
-                            {label === "Annual Contributions" && "$20,000"}
-                            {label === "Annual Employer Match" && "N/A"}
-                            {label === "Annual Fees" && "Included"}
-                            {label === "Gross Retirement Income" &&
-                              `$${taxFreeResults.grossRetirementIncome.toLocaleString()}`}
-                            {label === "Income Tax" &&
-                              `$${taxFreeResults.incomeTax.toLocaleString()}`}
-                            {label === "Net Retirement Income" &&
-                              `$${taxFreeResults.netRetirementIncome.toLocaleString()}`}
-                            {label === "Cumulative Taxes Deferred" &&
-                              `$${taxFreeResults.cumulativeTaxesDeferred.toLocaleString()}`}
-                            {label === "Cumulative Taxes Paid" &&
-                              `$${taxFreeResults.cumulativeTaxesPaid.toLocaleString()}`}
-                            {label === "Cumulative Fees Paid" &&
-                              `$${taxFreeResults.cumulativeFeesPaid.toLocaleString()}`}
-                            {label === "Cumulative Net Income" &&
-                              `$${taxFreeResults.cumulativeNetIncome.toLocaleString()}`}
-                            {label === "Cumulative Account Balance" &&
-                              `$${taxFreeResults.cumulativeAccountBalance.toLocaleString()}`}
-                            {label === "Taxes Due" &&
-                              `${taxFreeResults.taxesDue}%`}
-                            {label === "Death Benefits" &&
-                              `$${taxFreeResults.deathBenefits.toLocaleString()}`}
-                            {label === "Years You Run Out of Money" &&
-                              `${taxFreeResults.yearsRunOutOfMoney}`}
-                          </TableCell>
-                        </motion.tr>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </motion.div>
+                          {label === "Starting Balance" && "0"}
+                          {label === "Annual Contributions" && "$20,000"}
+                          {label === "Annual Employer Match" && "N/A"}
+                          {label === "Annual Fees" && "Included"}
+                          {label === "Gross Retirement Income" &&
+                            `$${taxFreeResults.grossRetirementIncome.toLocaleString()}`}
+                          {label === "Income Tax" &&
+                            `$${taxFreeResults.incomeTax.toLocaleString()}`}
+                          {label === "Net Retirement Income" &&
+                            `$${taxFreeResults.netRetirementIncome.toLocaleString()}`}
+                          {label === "Cumulative Taxes Deferred" &&
+                            `$${taxFreeResults.cumulativeTaxesDeferred.toLocaleString()}`}
+                          {label === "Cumulative Taxes Paid" &&
+                            `$${taxFreeResults.cumulativeTaxesPaid.toLocaleString()}`}
+                          {label === "Cumulative Fees Paid" &&
+                            `$${taxFreeResults.cumulativeFeesPaid.toLocaleString()}`}
+                          {label === "Cumulative Net Income" &&
+                            `$${taxFreeResults.cumulativeNetIncome.toLocaleString()}`}
+                          {label === "Cumulative Account Balance" &&
+                            `$${taxFreeResults.cumulativeAccountBalance.toLocaleString()}`}
+                          {label === "Taxes Due" &&
+                            `${taxFreeResults.taxesDue}%`}
+                          {label === "Death Benefits" &&
+                            `$${taxFreeResults.deathBenefits.toLocaleString()}`}
+                          {label === "Years You Run Out of Money" &&
+                            `${taxFreeResults.yearsRunOutOfMoney}`}
+                        </TableCell>
+                      </motion.tr>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           ) : (
+            // </motion.div>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -710,7 +702,7 @@ export default function CalculatorPageV2() {
                     <Minimize2 className="h-4 w-4" />
                   </Button>
                 </CardHeader>
-                <CardContent className="overflow-y-auto">
+                <CardContent className="overflow-auto">
                   <Table className="w-full table-auto">
                     <TableHeader>
                       <TableRow>
