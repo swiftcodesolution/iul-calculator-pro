@@ -28,8 +28,8 @@ import {
   Pencil,
   Maximize2,
   Minimize2,
-  ChevronRight,
-  ChevronLeft,
+  // ChevronRight,
+  // ChevronLeft,
 } from "lucide-react";
 
 // Define types for the data structure
@@ -473,7 +473,7 @@ export default function CalculatorPageV2() {
                   >
                     <Maximize2 className="h-4 w-4" />
                   </Button>
-                  <Button
+                  {/* <Button
                     variant="ghost"
                     size="sm"
                     onClick={(e) => {
@@ -486,7 +486,7 @@ export default function CalculatorPageV2() {
                     ) : (
                       <ChevronLeft className="h-4 w-4" />
                     )}
-                  </Button>
+                  </Button> */}
                 </div>
               </CardHeader>
               <CardContent>
@@ -1035,7 +1035,7 @@ export default function CalculatorPageV2() {
                               delay: tabs.indexOf(tab) * 0.1,
                             }}
                             whileHover={{
-                              scale: 1.05,
+                              scale: 1,
                               boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                             }}
                             whileTap={{ scale: 0.95 }}
