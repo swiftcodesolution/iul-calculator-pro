@@ -217,10 +217,12 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 flex gap-4" style={{}}>
+    <div className="min-h-[95vh] flex gap-4">
       {/* Sidebar */}
       <div
-        className={`relative ${!isSidebarCollapsed ? "w-[450px]" : "w-[0px]"}`}
+        className={`relative ${
+          !isSidebarCollapsed ? "w-[450px] h-full" : "w-[0px]"
+        }`}
       >
         <motion.div
           whileHover={{ scale: 1 }}
@@ -238,15 +240,17 @@ export default function DashboardPage() {
         </motion.div>
         <AnimatePresence>
           <motion.aside
-            className={isSidebarCollapsed ? "w-[50px]" : "w-[450px]"}
+            className={`h-full flex flex-col gap-4 ${
+              isSidebarCollapsed ? "w-[50px]" : "w-[450px]"
+            }`}
             variants={sidebarVariants}
             initial="open"
             animate={isSidebarCollapsed ? "collapsed" : "open"}
             exit="collapsed"
           >
-            <motion.div variants={contentVisibility}>
-              <Card>
-                <CardContent className="space-y-2">
+            <motion.div variants={contentVisibility} className="flex">
+              <Card className="flex-1">
+                <CardContent className="space-y-2 h-full">
                   <div className="flex gap-4">
                     {/* Company Logo */}
                     <div className="flex flex-col items-center">
@@ -556,8 +560,8 @@ export default function DashboardPage() {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="mt-4">
-                <CardContent className="space-y-2">
+              <Card className="flex-1 mt-4">
+                <CardContent className="space-y-2 h-full">
                   <h3 className="font-bold text-sm mb-4">
                     List of the Insurance Companies
                   </h3>
@@ -653,7 +657,7 @@ export default function DashboardPage() {
           className="flex-1"
         >
           <Card className="h-full">
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 h-4 flex flex-col h-full">
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -678,7 +682,7 @@ export default function DashboardPage() {
                   Get Latest
                 </Button>
               </motion.div>
-              <div className="grid grid-cols-4 gap-2 h-[500px]">
+              <div className="grid grid-cols-4 gap-2 flex-1">
                 {[
                   "Pro Sample Files",
                   "Your Sample Files",

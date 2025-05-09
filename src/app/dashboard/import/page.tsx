@@ -133,7 +133,7 @@ export default function ImportPage() {
   };
 
   return (
-    <div className="p-4">
+    <div className="grow h-full">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -145,9 +145,9 @@ export default function ImportPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
-          className="lg:w-[70%] w-full max-h-[90vh] overflow-y-auto flex"
+          className="lg:w-[70%] w-full overflow-y-auto flex h-[90vh]"
         >
-          <Card className="border p-4 grow">
+          <div className="grow">
             {tables.length > 0 && !loading && !error ? (
               <>
                 <h3 className="text-lg font-semibold mb-2 sticky top-0 bg-white z-10">
@@ -199,13 +199,13 @@ export default function ImportPage() {
                 })}
               </>
             ) : (
-              <div className="flex items-center justify-center border border-dashed border-gray-300 rounded-lg">
+              <Card className="flex items-center justify-center h-full">
                 <p className="text-gray-500 text-center">
                   Tables will be displayed here once a PDF is uploaded.
                 </p>
-              </div>
+              </Card>
             )}
-          </Card>
+          </div>
         </motion.div>
 
         {/* Upload Area (fixed 30% width on the bottom-right from page load) */}

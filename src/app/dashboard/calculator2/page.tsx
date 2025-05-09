@@ -282,7 +282,7 @@ export default function CalculatorPageV2() {
   };
 
   return (
-    <div className="container mx-auto p-4 grid grid-cols-2 gap-4">
+    <div className="h-[90vh] grid grid-cols-2 gap-4">
       {/* Left Column - Input Parameters and Collapsible Comparison Table */}
       <div className="flex flex-col gap-4">
         {/* Input Parameters */}
@@ -907,10 +907,10 @@ export default function CalculatorPageV2() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
           >
-            <Card>
+            <Card className="h-full flex items-center justify-center">
               <CardContent>
-                <div className="col-span-2 bg-gray-200 p-2 flex flex-col rounded-md">
-                  <Label className="text-sm">Future Age</Label>
+                <div className="">
+                  <Label className="text-sm text-center mb-4">Future Age</Label>
                   <div className="flex flex-col gap-2">
                     <motion.div
                       whileFocus={{
@@ -937,9 +937,10 @@ export default function CalculatorPageV2() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
+            className="grow"
           >
             <Card>
-              <CardContent className="flex items-center space-x-4">
+              <CardContent className="flex items-center gap-4">
                 <motion.div
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}

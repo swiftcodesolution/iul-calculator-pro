@@ -24,7 +24,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen w-full bg-gray-100 flex flex-col">
         {/* Uncomment and animate the header if needed in the future */}
         {/* <motion.header
           initial={{ opacity: 0, y: -20 }}
@@ -50,7 +50,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </motion.header> */}
 
-        <main className="container mx-auto p-2">{children}</main>
+        <main className="w-full min-h-[95vh] mx-auto p-4 flex flex-col">
+          {children}
+        </main>
 
         {/* Animated Navigation Bar */}
         <motion.nav

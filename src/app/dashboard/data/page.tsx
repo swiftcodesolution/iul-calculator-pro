@@ -21,14 +21,15 @@ export default function DataPage() {
     "IUL Income": Math.round(4000 * Math.pow(1.02, i) * 1.5).toLocaleString(),
   })).slice(0, 79); // Up to age 119 (40 + 79 = 119)
 
+  // min-h-[calc(100vh-8rem)]
   return (
-    <div className="min-h-[calc(100vh-8rem)] p-4">
-      <Card className="w-full">
+    <div className="">
+      <Card className="w-full h-[91vh] overflow-y-scroll">
         <CardHeader>
           <CardTitle>Year-by-Year Calculations</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table className="min-w-full">
+          <Table className="min-w-full h-full overflow-scroll">
             <TableHeader>
               <TableRow>
                 <TableHead>Year</TableHead>
