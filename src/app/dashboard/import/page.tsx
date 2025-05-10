@@ -261,75 +261,10 @@ export default function ImportPage() {
                 placeholder="John Doe"
               />
             </div>
-            <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="initial-death-benefit">
-                Underwriting Class
-              </Label>
-              <Input
-                className="w-2/4"
-                id="initial-death-benefit"
-                disabled
-                placeholder="500000"
-              />
-            </div>
+
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="assumed-ror">
                 Minimum Initial Pmt
-              </Label>
-              <Input
-                className="w-2/4"
-                id="assumed-ror"
-                disabled
-                placeholder="6.3%"
-              />
-            </div>
-            <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="assumed-ror">
-                Target Premium
-              </Label>
-              <Input
-                className="w-2/4"
-                id="assumed-ror"
-                disabled
-                placeholder="6.3%"
-              />
-            </div>
-            <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="assumed-ror">
-                7-Pay
-              </Label>
-              <Input
-                className="w-2/4"
-                id="assumed-ror"
-                disabled
-                placeholder="6.3%"
-              />
-            </div>
-            <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="assumed-ror">
-                MEC?
-              </Label>
-              <Input
-                className="w-2/4"
-                id="assumed-ror"
-                disabled
-                placeholder="6.3%"
-              />
-            </div>
-            <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="assumed-ror">
-                GLP
-              </Label>
-              <Input
-                className="w-2/4"
-                id="assumed-ror"
-                disabled
-                placeholder="6.3%"
-              />
-            </div>
-            <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="assumed-ror">
-                GSP
               </Label>
               <Input
                 className="w-2/4"
