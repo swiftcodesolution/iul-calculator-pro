@@ -328,6 +328,39 @@ export default function CalculatorPageV2() {
     });
   };
 
+  // drag work start
+  const handleTabDragStart = (
+    e: React.DragEvent<HTMLDivElement>,
+    id: string
+  ) => {
+    e.dataTransfer.setData("text/plain", id);
+  };
+
+  const handleTabDrop = (
+    e: React.DragEvent<HTMLDivElement>,
+    targetId: string
+  ) => {
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData("text/plain");
+    if (draggedId === targetId) return; // Prevent dropping on self
+    setTabs((prev) => {
+      const newTabs = [...prev];
+      const draggedIndex = newTabs.findIndex((tab) => tab.id === draggedId);
+      const targetIndex = newTabs.findIndex((tab) => tab.id === targetId);
+      // Swap tabs
+      [newTabs[draggedIndex], newTabs[targetIndex]] = [
+        newTabs[targetIndex],
+        newTabs[draggedIndex],
+      ];
+      return newTabs;
+    });
+  };
+
+  const handleTabDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault(); // Allow drop
+  };
+  // drag work start
+
   return (
     <div className="h-[90vh] grid grid-cols-2 gap-4">
       {/* Left Column - Input Parameters and Collapsible Comparison Table */}
@@ -1196,11 +1229,55 @@ export default function CalculatorPageV2() {
                           <div className="space-y-4">
                             <div className="space-y-2">
                               {tabs.map((tab, index) => (
-                                <div
+                                <motion.div
                                   key={tab.id}
-                                  className="flex items-center justify-between p-2 border rounded-md"
+                                  className={`flex items-center justify-between p-2 border rounded-md cursor-move ${
+                                    tab.id === "total-advantage" ||
+                                    tab.id === "calculator"
+                                      ? "opacity-60 cursor-not-allowed"
+                                      : ""
+                                  }`}
+                                  draggable={
+                                    tab.id !== "total-advantage" &&
+                                    tab.id !== "calculator"
+                                  }
+                                  onDragStartCapture={(e) =>
+                                    tab.id !== "total-advantage" &&
+                                    tab.id !== "calculator" &&
+                                    handleTabDragStart(e, tab.id)
+                                  }
+                                  onDragOver={handleTabDragOver}
+                                  onDrop={(e) =>
+                                    tab.id !== "total-advantage" &&
+                                    tab.id !== "calculator" &&
+                                    handleTabDrop(e, tab.id)
+                                  }
+                                  whileDrag={{ scale: 1.05, opacity: 0.8 }}
+                                  aria-describedby={`drag-tab-${tab.id}`}
                                 >
                                   <div className="flex items-center gap-2">
+                                    <motion.div
+                                      whileHover={{ scale: 1.1 }}
+                                      whileTap={{ scale: 0.95 }}
+                                      className="cursor-grab"
+                                      aria-label={`Drag handle for ${tab.name}`}
+                                      id={`drag-tab-${tab.id}`}
+                                    >
+                                      <svg
+                                        className="h-4 w-4 text-gray-500"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M4 6h16M4 12h16M4 18h16"
+                                        />
+                                      </svg>
+                                    </motion.div>
                                     <input
                                       type="checkbox"
                                       checked={tab.isVisible}
@@ -1212,6 +1289,7 @@ export default function CalculatorPageV2() {
                                         tab.id === "calculator"
                                       }
                                       className="h-4 w-4"
+                                      aria-label={`Toggle visibility for ${tab.name}`}
                                     />
                                     <span>{tab.name}</span>
                                   </div>
@@ -1235,7 +1313,7 @@ export default function CalculatorPageV2() {
                                       <ChevronDown className="h-4 w-4" />
                                     </Button>
                                   </div>
-                                </div>
+                                </motion.div>
                               ))}
                             </div>
                             <Button
@@ -1569,6 +1647,12 @@ export default function CalculatorPageV2() {
                   </Dialog>
                   {/* New Manage Button and Dialog for Full-Screen View */}
                   <Dialog
+                    open={isAddDialogOpen}
+                    onOpenChange={setIsAddDialogOpen}
+                  >
+                    {/* ... Add Dialog unchanged ... */}
+                  </Dialog>
+                  <Dialog
                     open={isManageDialogOpen}
                     onOpenChange={setIsManageDialogOpen}
                   >
@@ -1590,11 +1674,55 @@ export default function CalculatorPageV2() {
                       <div className="space-y-4">
                         <div className="space-y-2">
                           {tabs.map((tab, index) => (
-                            <div
+                            <motion.div
                               key={tab.id}
-                              className="flex items-center justify-between p-2 border rounded-md"
+                              className={`flex items-center justify-between p-2 border rounded-md cursor-move ${
+                                tab.id === "total-advantage" ||
+                                tab.id === "calculator"
+                                  ? "opacity-60 cursor-not-allowed"
+                                  : ""
+                              }`}
+                              draggable={
+                                tab.id !== "total-advantage" &&
+                                tab.id !== "calculator"
+                              }
+                              onDragStartCapture={(e) =>
+                                tab.id !== "total-advantage" &&
+                                tab.id !== "calculator" &&
+                                handleTabDragStart(e, tab.id)
+                              }
+                              onDragOver={handleTabDragOver}
+                              onDrop={(e) =>
+                                tab.id !== "total-advantage" &&
+                                tab.id !== "calculator" &&
+                                handleTabDrop(e, tab.id)
+                              }
+                              whileDrag={{ scale: 1.05, opacity: 0.8 }}
+                              aria-describedby={`drag-tab-${tab.id}`}
                             >
                               <div className="flex items-center gap-2">
+                                <motion.div
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  className="cursor-grab"
+                                  aria-label={`Drag handle for ${tab.name}`}
+                                  id={`drag-tab-${tab.id}`}
+                                >
+                                  <svg
+                                    className="h-4 w-4 text-gray-500"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M4 6h16M4 12h16M4 18h16"
+                                    />
+                                  </svg>
+                                </motion.div>
                                 <input
                                   type="checkbox"
                                   checked={tab.isVisible}
@@ -1606,6 +1734,7 @@ export default function CalculatorPageV2() {
                                     tab.id === "calculator"
                                   }
                                   className="h-4 w-4"
+                                  aria-label={`Toggle visibility for ${tab.name}`}
                                 />
                                 <span>{tab.name}</span>
                               </div>
@@ -1626,10 +1755,10 @@ export default function CalculatorPageV2() {
                                   disabled={index === tabs.length - 1}
                                   aria-label={`Move ${tab.name} down`}
                                 >
-                                  <ChevronDown className="h-4 w-4" />
+                                  <ChevronUp className="h-4 w-4" />
                                 </Button>
                               </div>
-                            </div>
+                            </motion.div>
                           ))}
                         </div>
                         <Button
