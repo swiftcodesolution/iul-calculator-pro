@@ -12,10 +12,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { Trash2, ArrowLeft, ArrowRight, Upload } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 // Define types
 type CompanyInfo = {
@@ -43,8 +42,8 @@ const initialCompanyInfo: CompanyInfo = {
   agentName: "Steven Johnson",
   email: "steve@iulcalculatorpro.com",
   phone: "760-517-8105",
-  logoSrc: "/logo.png", // Placeholder
-  profilePicSrc: "/profile.jpg", // Placeholder
+  logoSrc: "/logo.png",
+  profilePicSrc: "/profile.jpg",
 };
 
 const initialClientFiles: ClientFile[] = [
@@ -77,8 +76,6 @@ export default function DashboardPage() {
   const [newClientName, setNewClientName] = useState("");
   const [selectedFile, setSelectedFile] = useState<ClientFile | null>(null);
   const [dialogAction, setDialogAction] = useState<string | null>(null);
-
-  const router = useRouter();
 
   const handleFileUpload = (file: File | null, type: "logo" | "profilePic") => {
     if (file) {
@@ -126,10 +123,10 @@ export default function DashboardPage() {
       setNewClientName("");
       setDialogAction(null);
     } else if (action === "latest") {
-      console.log("Get Latest clicked"); // Placeholder for latest action
+      console.log("Get Latest clicked");
     } else if (data?.id) {
       if (action === "open") {
-        console.log(`Opening file: ${data.id}`); // Implement open logic
+        console.log(`Opening file: ${data.id}`);
         setDialogAction(null);
       } else if (action === "copy" && data.name) {
         const fileToCopy = clientFiles.find((file) => file.id === data.id);
@@ -181,7 +178,7 @@ export default function DashboardPage() {
   };
 
   const handleInsuranceClick = (company: string) => {
-    console.log(`Clicked on insurance company: ${company}`); // Placeholder for click action
+    console.log(`Clicked on insurance company: ${company}`);
   };
 
   const handleFileSelect = (file: ClientFile) => {
@@ -308,7 +305,7 @@ export default function DashboardPage() {
             </motion.div>
           )}
           {dialogAction === "delete" && (
-            <p>{`Are you sure you want to delete "{selectedFile?.name}"?`}</p>
+            <p>Are you sure you want to delete {selectedFile?.name}?</p>
           )}
           <motion.div
             whileHover={{ scale: 1.05, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
@@ -652,7 +649,6 @@ export default function DashboardPage() {
                         </motion.div>
                       </div>
                     </div>
-
                     <div className="flex gap-2">
                       <motion.div
                         whileHover={{
@@ -754,7 +750,7 @@ export default function DashboardPage() {
                       whileTap={{ scale: 0.95 }}
                     >
                       <Button
-                        onClick={() => router.push(resource.link)}
+                        onClick={() => window.open(resource.link, "_blank")}
                         className="w-full"
                         variant="default"
                         size="sm"
@@ -856,18 +852,20 @@ export default function DashboardPage() {
                             initial="hidden"
                             animate="visible"
                             whileHover={{
-                              scale: 1.05,
                               backgroundColor: "#e5e7eb",
                             }}
                             whileDrag={{ scale: 1.1, opacity: 0.8 }}
-                            className={`p-1 border-b cursor-move text-sm ${
-                              selectedFile?.id === file.id ? "bg-gray-200" : ""
+                            className={`p-1 border-b cursor-move text-sm rounded-md transition-colors ${
+                              selectedFile?.id === file.id
+                                ? "bg-blue-100 border-blue-500 border"
+                                : "bg-transparent"
                             }`}
                             draggable="true"
                             onClick={() => handleFileSelect(file)}
                             onDragStartCapture={(
                               e: React.DragEvent<HTMLDivElement>
                             ) => handleDragStart(e, file.id)}
+                            aria-selected={selectedFile?.id === file.id}
                           >
                             {file.name}{" "}
                             {file.size !== "N/A" && `(${file.size})`}
@@ -891,28 +889,21 @@ export default function DashboardPage() {
               >
                 <Dialog
                   open={!!dialogAction}
-                  onOpenChange={() => setDialogAction(null)}
+                  onOpenChange={(open) => {
+                    if (!open) {
+                      setDialogAction(null);
+                      setNewClientName("");
+                    }
+                  }}
                 >
                   <DialogTrigger asChild>
-                    <motion.div
-                      variants={{
-                        hidden: { opacity: 0, y: 10 },
-                        visible: {
-                          opacity: 1,
-                          y: 0,
-                          transition: { type: "spring", stiffness: 120 },
-                        },
-                      }}
-                      whileHover={{
-                        scale: 1.1,
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                      }}
-                      whileTap={{ scale: 0.95 }}
+                    <Button
+                      size="sm"
+                      onClick={() => setDialogAction("new")}
+                      aria-label="Create new client file"
                     >
-                      <Button size="sm" onClick={() => setDialogAction("new")}>
-                        New
-                      </Button>
-                    </motion.div>
+                      New
+                    </Button>
                   </DialogTrigger>
                   <DialogContent>{renderDialogContent()}</DialogContent>
                 </Dialog>
@@ -937,6 +928,9 @@ export default function DashboardPage() {
                       size="sm"
                       onClick={() => setDialogAction(action)}
                       disabled={!selectedFile}
+                      aria-label={`${
+                        action.charAt(0).toUpperCase() + action.slice(1)
+                      } client file`}
                     >
                       {action.charAt(0).toUpperCase() + action.slice(1)}
                     </Button>
