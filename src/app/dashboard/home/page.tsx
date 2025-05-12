@@ -15,6 +15,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import { Trash2, ArrowLeft, ArrowRight, Upload } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 // Define types
 type CompanyInfo = {
@@ -61,7 +62,10 @@ const insuranceCompanies = [
   "Minnesota",
   "National Life",
 ];
-const trainingResources = ["View the Training Page", "Downloads"];
+const trainingResources = [
+  { title: "View the Training Page", link: "/dashboard/training-content" },
+  { title: "Downloads", link: "/dashboard/downloads-content" },
+];
 
 export default function DashboardPage() {
   const [companyInfo, setCompanyInfo] =
@@ -71,6 +75,10 @@ export default function DashboardPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [newClientName, setNewClientName] = useState("");
+  const [selectedFile, setSelectedFile] = useState<ClientFile | null>(null);
+  const [dialogAction, setDialogAction] = useState<string | null>(null);
+
+  const router = useRouter();
 
   const handleFileUpload = (file: File | null, type: "logo" | "profilePic") => {
     if (file) {
@@ -103,7 +111,10 @@ export default function DashboardPage() {
     setIsEditing(false);
   };
 
-  const handleClientAction = (action: string, id?: string) => {
+  const handleClientAction = (
+    action: string,
+    data?: { id?: string; name?: string }
+  ) => {
     if (action === "new" && newClientName) {
       const newClient: ClientFile = {
         id: Date.now().toString(),
@@ -113,8 +124,42 @@ export default function DashboardPage() {
       };
       setClientFiles((prev) => [...prev, newClient]);
       setNewClientName("");
-    } else if (id) {
-      console.log(`${action} clicked for client ${id}`); // Placeholder for Open, Copy, Rename, Delete actions
+      setDialogAction(null);
+    } else if (action === "latest") {
+      console.log("Get Latest clicked"); // Placeholder for latest action
+    } else if (data?.id) {
+      if (action === "open") {
+        console.log(`Opening file: ${data.id}`); // Implement open logic
+        setDialogAction(null);
+      } else if (action === "copy" && data.name) {
+        const fileToCopy = clientFiles.find((file) => file.id === data.id);
+        if (fileToCopy) {
+          const newFile: ClientFile = {
+            ...fileToCopy,
+            id: Date.now().toString(),
+            name: data.name,
+          };
+          setClientFiles((prev) => [...prev, newFile]);
+        }
+        setNewClientName("");
+        setSelectedFile(null);
+        setDialogAction(null);
+      } else if (action === "rename" && data.name) {
+        setClientFiles((prev) =>
+          prev.map((file) =>
+            file.id === data.id
+              ? { ...file, name: data.name ?? file.name }
+              : file
+          )
+        );
+        setNewClientName("");
+        setSelectedFile(null);
+        setDialogAction(null);
+      } else if (action === "delete") {
+        setClientFiles((prev) => prev.filter((file) => file.id !== data.id));
+        setSelectedFile(null);
+        setDialogAction(null);
+      }
     }
   };
 
@@ -137,6 +182,10 @@ export default function DashboardPage() {
 
   const handleInsuranceClick = (company: string) => {
     console.log(`Clicked on insurance company: ${company}`); // Placeholder for click action
+  };
+
+  const handleFileSelect = (file: ClientFile) => {
+    setSelectedFile(file);
   };
 
   // Animation Variants
@@ -214,6 +263,79 @@ export default function DashboardPage() {
       scale: 1,
       transition: { duration: 0.4, type: "spring", stiffness: 120 },
     },
+  };
+
+  // Render dialog content based on action
+  const renderDialogContent = () => {
+    if (!dialogAction) return null;
+
+    const titles: { [key: string]: string } = {
+      new: "Start New Client",
+      open: "Open Client File",
+      copy: "Copy Client File",
+      rename: "Rename Client File",
+      delete: "Delete Client File",
+    };
+
+    const placeholders: { [key: string]: string } = {
+      new: "Client Name",
+      rename: "New File Name",
+      copy: "Copy File Name",
+    };
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ duration: 0.3, type: "spring", stiffness: 120 }}
+      >
+        <DialogHeader>
+          <DialogTitle className="mb-2">{titles[dialogAction]}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2">
+          {dialogAction !== "delete" && (
+            <motion.div
+              whileFocus={{ scale: 1.02, boxShadow: "0 0 0 2px #3b82f6" }}
+            >
+              <Input
+                placeholder={placeholders[dialogAction] || "Enter name"}
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                className="h-8"
+                disabled={dialogAction === "open"}
+              />
+            </motion.div>
+          )}
+          {dialogAction === "delete" && (
+            <p>{`Are you sure you want to delete "{selectedFile?.name}"?`}</p>
+          )}
+          <motion.div
+            whileHover={{ scale: 1.05, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+            whileTap={{ scale: 0.95 }}
+            className="w-min"
+          >
+            <Button
+              size="sm"
+              onClick={() =>
+                handleClientAction(dialogAction, {
+                  id: selectedFile?.id,
+                  name: newClientName,
+                })
+              }
+              disabled={
+                (dialogAction === "new" ||
+                  dialogAction === "copy" ||
+                  dialogAction === "rename") &&
+                !newClientName
+              }
+            >
+              {dialogAction === "delete" ? "Confirm" : "Submit"}
+            </Button>
+          </motion.div>
+        </div>
+      </motion.div>
+    );
   };
 
   return (
@@ -621,7 +743,7 @@ export default function DashboardPage() {
                   <h3 className="font-bold text-sm mt-4">Training</h3>
                   {trainingResources.map((resource) => (
                     <motion.div
-                      key={resource}
+                      key={resource.link}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ type: "spring", stiffness: 120 }}
@@ -631,8 +753,13 @@ export default function DashboardPage() {
                       }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <Button className="w-full" variant="default" size="sm">
-                        {resource}
+                      <Button
+                        onClick={() => router.push(resource.link)}
+                        className="w-full"
+                        variant="default"
+                        size="sm"
+                      >
+                        {resource.title}
                       </Button>
                     </motion.div>
                   ))}
@@ -657,7 +784,7 @@ export default function DashboardPage() {
           className="flex-1"
         >
           <Card className="h-full">
-            <CardContent className="space-y-4 h-4 flex flex-col h-full">
+            <CardContent className="space-y-4 flex flex-col h-full">
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -733,8 +860,11 @@ export default function DashboardPage() {
                               backgroundColor: "#e5e7eb",
                             }}
                             whileDrag={{ scale: 1.1, opacity: 0.8 }}
-                            className="p-1 border-b cursor-move text-sm"
+                            className={`p-1 border-b cursor-move text-sm ${
+                              selectedFile?.id === file.id ? "bg-gray-200" : ""
+                            }`}
                             draggable="true"
+                            onClick={() => handleFileSelect(file)}
                             onDragStartCapture={(
                               e: React.DragEvent<HTMLDivElement>
                             ) => handleDragStart(e, file.id)}
@@ -759,7 +889,10 @@ export default function DashboardPage() {
                   },
                 }}
               >
-                <Dialog>
+                <Dialog
+                  open={!!dialogAction}
+                  onOpenChange={() => setDialogAction(null)}
+                >
                   <DialogTrigger asChild>
                     <motion.div
                       variants={{
@@ -776,62 +909,12 @@ export default function DashboardPage() {
                       }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <Button
-                        size="sm"
-                        onClick={() => handleClientAction("new")}
-                      >
+                      <Button size="sm" onClick={() => setDialogAction("new")}>
                         New
                       </Button>
                     </motion.div>
                   </DialogTrigger>
-                  <DialogContent>
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{
-                        duration: 0.3,
-                        type: "spring",
-                        stiffness: 120,
-                      }}
-                    >
-                      <DialogHeader>
-                        <DialogTitle className="mb-2">
-                          Start New Client
-                        </DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-2">
-                        <motion.div
-                          whileFocus={{
-                            scale: 1.02,
-                            boxShadow: "0 0 0 2px #3b82f6",
-                          }}
-                        >
-                          <Input
-                            placeholder="Client Name"
-                            value={newClientName}
-                            onChange={(e) => setNewClientName(e.target.value)}
-                            className="h-8"
-                          />
-                        </motion.div>
-                        <motion.div
-                          whileHover={{
-                            scale: 1.05,
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                          }}
-                          whileTap={{ scale: 0.95 }}
-                          className="w-min"
-                        >
-                          <Button
-                            size="sm"
-                            onClick={() => handleClientAction("new")}
-                          >
-                            Open
-                          </Button>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-                  </DialogContent>
+                  <DialogContent>{renderDialogContent()}</DialogContent>
                 </Dialog>
                 {["open", "copy", "rename", "delete"].map((action) => (
                   <motion.div
@@ -852,7 +935,8 @@ export default function DashboardPage() {
                   >
                     <Button
                       size="sm"
-                      onClick={() => handleClientAction(action)}
+                      onClick={() => setDialogAction(action)}
+                      disabled={!selectedFile}
                     >
                       {action.charAt(0).toUpperCase() + action.slice(1)}
                     </Button>

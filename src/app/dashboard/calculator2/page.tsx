@@ -28,9 +28,10 @@ import {
   Pencil,
   Maximize2,
   Minimize2,
-  // ChevronRight,
-  // ChevronLeft,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
+import TabCalculator from "@/components/TabCalculator";
 
 // Define types for the data structure
 type Plan = {
@@ -73,7 +74,8 @@ type TabContent = {
   name: string;
   file?: File;
   src?: string;
-  type: "image" | "video" | "pdf" | "other" | "totalAdvantage";
+  type: "image" | "video" | "pdf" | "other" | "totalAdvantage" | "calculator";
+  isVisible: boolean; // Added to track tab visibility
 };
 
 // Default data
@@ -151,37 +153,45 @@ export default function CalculatorPageV2() {
   const [data, setData] = useState<CalculatorData>(defaultData);
   const [futureAge, setFutureAge] = useState(data.futureAgeYears);
   const [tabs, setTabs] = useState<TabContent[]>([
-    { id: "total-advantage", name: "Total Advantage", type: "totalAdvantage" },
+    {
+      id: "total-advantage",
+      name: "Total Advantage",
+      type: "totalAdvantage",
+      isVisible: true,
+    },
+    {
+      id: "calculator",
+      name: "Calculator",
+      type: "calculator",
+      isVisible: true,
+    },
   ]);
   const [activeTab, setActiveTab] = useState<string | null>("total-advantage");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isManageDialogOpen, setIsManageDialogOpen] = useState(false); // Added for manage dialog
   const [editTabId, setEditTabId] = useState<string | null>(null);
   const [newTabName, setNewTabName] = useState("");
   const [newTabFile, setNewTabFile] = useState<File | null>(null);
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
   const [isTableCardExpanded, setIsTableCardExpanded] = useState(false);
   const [isTabCardExpanded, setIsTabCardExpanded] = useState(false);
-  // State to track text color for each column
   const [columnTextWhite, setColumnTextWhite] = useState({
     currentPlan: false,
     taxes: false,
     taxFreePlan: false,
   });
-  // State to track highlighted row (index or null if none)
   const [highlightedRow, setHighlightedRow] = useState<number | null>(null);
 
-  // Handler for individual TableHead clicks
   const handleHeaderClick = (column: keyof typeof columnTextWhite) => {
     setColumnTextWhite((prev) => ({
       ...prev,
-      [column]: !prev[column], // Toggle the specific column's state
+      [column]: !prev[column],
     }));
   };
 
-  // Handler for TableCell clicks
   const handleCellClick = (rowIndex: number) => {
-    setHighlightedRow((prev) => (prev === rowIndex ? null : rowIndex)); // Toggle highlight
+    setHighlightedRow((prev) => (prev === rowIndex ? null : rowIndex));
   };
 
   const handleFutureAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,6 +220,7 @@ export default function CalculatorPageV2() {
           file: newTabFile,
           src,
           type,
+          isVisible: true, // New tabs are visible by default
         };
         setTabs((prev) => [...prev, newTab]);
         setActiveTab(newTab.id);
@@ -223,7 +234,7 @@ export default function CalculatorPageV2() {
 
   const handleEditTab = () => {
     if (editTabId && newTabName) {
-      if (editTabId === "total-advantage") {
+      if (editTabId === "total-advantage" || editTabId === "calculator") {
         setTabs((prev) =>
           prev.map((tab) =>
             tab.id === editTabId ? { ...tab, name: newTabName } : tab
@@ -274,11 +285,47 @@ export default function CalculatorPageV2() {
   };
 
   const handleDeleteTab = (id: string) => {
-    if (id === "total-advantage") return;
+    if (id === "total-advantage" || id === "calculator") return;
     setTabs((prev) => prev.filter((tab) => tab.id !== id));
     if (activeTab === id) {
       setActiveTab(tabs.length > 1 ? tabs[0].id : null);
     }
+  };
+
+  // New handler to toggle tab visibility
+  const handleToggleVisibility = (id: string) => {
+    if (id === "total-advantage" || id === "calculator") return; // Prevent disabling default tabs
+    setTabs((prev) =>
+      prev.map((tab) =>
+        tab.id === id ? { ...tab, isVisible: !tab.isVisible } : tab
+      )
+    );
+  };
+
+  // New handler to move tab up
+  const handleMoveUp = (index: number) => {
+    if (index === 0) return; // Can't move first tab up
+    setTabs((prev) => {
+      const newTabs = [...prev];
+      [newTabs[index - 1], newTabs[index]] = [
+        newTabs[index],
+        newTabs[index - 1],
+      ];
+      return newTabs;
+    });
+  };
+
+  // New handler to move tab down
+  const handleMoveDown = (index: number) => {
+    if (index === tabs.length - 1) return; // Can't move last tab down
+    setTabs((prev) => {
+      const newTabs = [...prev];
+      [newTabs[index], newTabs[index + 1]] = [
+        newTabs[index + 1],
+        newTabs[index],
+      ];
+      return newTabs;
+    });
   };
 
   return (
@@ -314,7 +361,11 @@ export default function CalculatorPageV2() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.3 }}
                   >
-                    {data.currentAge}
+                    <Input
+                      className="w-[50px] text-sm border-gray-500 border-2"
+                      disabled
+                      value={data.currentAge}
+                    />
                   </motion.p>
                 </motion.div>
                 <motion.div
@@ -327,7 +378,11 @@ export default function CalculatorPageV2() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.3 }}
                   >
-                    {data.stopSavingAge}
+                    <Input
+                      className="w-[50px] text-sm border-gray-500 border-2"
+                      disabled
+                      value={data.stopSavingAge}
+                    />
                   </motion.p>
                 </motion.div>
                 <motion.div
@@ -340,7 +395,11 @@ export default function CalculatorPageV2() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.3 }}
                   >
-                    {data.retirementAge}
+                    <Input
+                      className="w-[50px] text-sm border-gray-500 border-2"
+                      disabled
+                      value={data.retirementAge}
+                    />
                   </motion.p>
                 </motion.div>
               </motion.div>
@@ -365,7 +424,11 @@ export default function CalculatorPageV2() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.3 }}
                   >
-                    {data.workingTaxRate}%
+                    <Input
+                      className="w-[60px] text-sm border-gray-500 border-2"
+                      disabled
+                      value={`${data.workingTaxRate}%`}
+                    />
                   </motion.p>
                 </motion.div>
                 <motion.div
@@ -378,7 +441,11 @@ export default function CalculatorPageV2() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.3 }}
                   >
-                    {data.retirementTaxRate}%
+                    <Input
+                      className="w-[60px] text-sm border-gray-500 border-2"
+                      disabled
+                      value={`${data.retirementTaxRate}%`}
+                    />
                   </motion.p>
                 </motion.div>
                 <motion.div
@@ -391,7 +458,11 @@ export default function CalculatorPageV2() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.3 }}
                   >
-                    {data.inflationRate}%
+                    <Input
+                      className="w-[60px] text-sm border-gray-500 border-2"
+                      disabled
+                      value={`${data.inflationRate}%`}
+                    />
                   </motion.p>
                 </motion.div>
               </motion.div>
@@ -416,7 +487,11 @@ export default function CalculatorPageV2() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.3 }}
                   >
-                    {data.currentPlanFees}%
+                    <Input
+                      className="w-[60px] text-sm border-gray-500 border-2"
+                      disabled
+                      value={`${data.currentPlanFees}%`}
+                    />
                   </motion.p>
                 </motion.div>
                 <motion.div
@@ -429,7 +504,11 @@ export default function CalculatorPageV2() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.3 }}
                   >
-                    6.3%
+                    <Input
+                      className="w-[60px] text-sm border-gray-500 border-2"
+                      disabled
+                      value={`6.3%`}
+                    />
                   </motion.p>
                 </motion.div>
                 <motion.div
@@ -442,7 +521,11 @@ export default function CalculatorPageV2() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.3 }}
                   >
-                    6.3%
+                    <Input
+                      className="w-[60px] text-sm border-gray-500 border-2"
+                      disabled
+                      value={`6.3%`}
+                    />
                   </motion.p>
                 </motion.div>
               </motion.div>
@@ -453,11 +536,6 @@ export default function CalculatorPageV2() {
         {/* Collapsible Comparison Table */}
         <AnimatePresence>
           {!isTableCardExpanded ? (
-            // <motion.div
-            //   animate={{ width: isTableCollapsed ? "60px" : "100%" }}
-            //   transition={{ duration: 0.3, ease: "easeInOut" }}
-            //   style={{ overflow: "hidden", transformOrigin: "left" }}
-            // >
             <Card>
               <CardHeader
                 className="flex flex-row items-center justify-between cursor-pointer"
@@ -473,41 +551,13 @@ export default function CalculatorPageV2() {
                   >
                     <Maximize2 className="h-4 w-4" />
                   </Button>
-                  {/* <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsTableCollapsed(!isTableCollapsed);
-                    }}
-                  >
-                    {isTableCollapsed ? (
-                      <ChevronRight className="h-4 w-4" />
-                    ) : (
-                      <ChevronLeft className="h-4 w-4" />
-                    )}
-                  </Button> */}
                 </div>
               </CardHeader>
               <CardContent>
                 <Table className="w-full table-auto">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>
-                        <motion.div
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.1, duration: 0.3 }}
-                          className="flex items-center gap-2"
-                        >
-                          <Button variant="default" size="sm" className="grow">
-                            Options
-                          </Button>
-                          <Button variant="default" size="sm" className="grow">
-                            Show/Hide
-                          </Button>
-                        </motion.div>
-                      </TableHead>
+                      <TableHead></TableHead>
                       <TableHead
                         className={`bg-red-200 cursor-pointer ${
                           columnTextWhite.currentPlan
@@ -683,7 +733,6 @@ export default function CalculatorPageV2() {
               </CardContent>
             </Card>
           ) : (
-            // </motion.div>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -1026,31 +1075,34 @@ export default function CalculatorPageV2() {
                   >
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex gap-2 overflow-x-auto">
-                        {tabs.map((tab) => (
-                          <motion.div
-                            key={tab.id}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{
-                              duration: 0.3,
-                              delay: tabs.indexOf(tab) * 0.1,
-                            }}
-                            whileHover={{
-                              scale: 1,
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                            }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <Button
-                              variant={
-                                activeTab === tab.id ? "default" : "outline"
-                              }
-                              onClick={() => setActiveTab(tab.id)}
+                        {tabs
+                          .filter((tab) => tab.isVisible) // Only show visible tabs
+                          .map((tab) => (
+                            <motion.div
+                              key={tab.id}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{
+                                duration: 0.3,
+                                delay: tabs.indexOf(tab) * 0.1,
+                              }}
+                              whileHover={{
+                                scale: 1,
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                              }}
+                              whileTap={{ scale: 0.95 }}
                             >
-                              {tab.name}
-                            </Button>
-                          </motion.div>
-                        ))}
+                              <Button
+                                variant={
+                                  activeTab === tab.id ? "default" : "outline"
+                                }
+                                onClick={() => setActiveTab(tab.id)}
+                                aria-selected={activeTab === tab.id}
+                              >
+                                {tab.name}
+                              </Button>
+                            </motion.div>
+                          ))}
                       </div>
                       <motion.div
                         whileHover={{
@@ -1121,6 +1173,80 @@ export default function CalculatorPageV2() {
                           </div>
                         </DialogContent>
                       </Dialog>
+                      {/* New Manage Button and Dialog */}
+                      <Dialog
+                        open={isManageDialogOpen}
+                        onOpenChange={setIsManageDialogOpen}
+                      >
+                        <DialogTrigger asChild>
+                          <motion.div
+                            whileHover={{
+                              scale: 1.1,
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Button variant="outline">Manage</Button>
+                          </motion.div>
+                        </DialogTrigger>
+                        <DialogContent className="bg-gray-50 p-6">
+                          <DialogHeader>
+                            <DialogTitle>Manage Tabs</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              {tabs.map((tab, index) => (
+                                <div
+                                  key={tab.id}
+                                  className="flex items-center justify-between p-2 border rounded-md"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={tab.isVisible}
+                                      onChange={() =>
+                                        handleToggleVisibility(tab.id)
+                                      }
+                                      disabled={
+                                        tab.id === "total-advantage" ||
+                                        tab.id === "calculator"
+                                      }
+                                      className="h-4 w-4"
+                                    />
+                                    <span>{tab.name}</span>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleMoveUp(index)}
+                                      disabled={index === 0}
+                                      aria-label={`Move ${tab.name} up`}
+                                    >
+                                      <ChevronUp className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleMoveDown(index)}
+                                      disabled={index === tabs.length - 1}
+                                      aria-label={`Move ${tab.name} down`}
+                                    >
+                                      <ChevronDown className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <Button
+                              onClick={() => setIsManageDialogOpen(false)}
+                              className="w-full"
+                            >
+                              Save
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                     <AnimatePresence mode="wait">
                       {activeTab && (
@@ -1128,31 +1254,64 @@ export default function CalculatorPageV2() {
                           {tabs.map(
                             (tab) =>
                               tab.id === activeTab && (
-                                <div key={tab.id} className="space blanc-y-4">
+                                <div key={tab.id} className="space-y-4">
                                   {tab.type === "totalAdvantage" && (
                                     <div className="h-[400px] flex items-center justify-center gap-4 text-center">
-                                      <div>
-                                        <h2 className="text-2xl font-bold">
+                                      <div className="mt-[100px] border-2 border-black w-full h-[200px] flex items-center justify-center flex-col">
+                                        <h2 className="text-4xl font-bold mb-5">
+                                          Total Advantage
+                                        </h2>
+                                        <h2 className="text-4xl font-bold mb-5">
                                           $
                                           {totalAdvantage.total.toLocaleString()}
                                         </h2>
-                                        <p>
-                                          Taxes $
-                                          {totalAdvantage.taxes.toLocaleString()}
-                                        </p>
-                                        <p>
-                                          Fees $
-                                          {totalAdvantage.fees.toLocaleString()}
-                                        </p>
-                                        <p>
-                                          Cumulative Income $
-                                          {totalAdvantage.cumulativeIncome.toLocaleString()}
-                                        </p>
-                                        <p>
-                                          Death Benefit $
-                                          {totalAdvantage.deathBenefits.toLocaleString()}
-                                        </p>
+                                        <div className="flex items-center gap-1">
+                                          <Button
+                                            variant="ghost"
+                                            size="lg"
+                                            className="cursor-pointer"
+                                            onClick={() => {}}
+                                          >
+                                            Taxes $
+                                            {totalAdvantage.taxes.toLocaleString()}
+                                          </Button>
+                                          <p>|</p>
+                                          <Button
+                                            variant="ghost"
+                                            size="lg"
+                                            className="cursor-pointer"
+                                            onClick={() => {}}
+                                          >
+                                            Fees $
+                                            {totalAdvantage.fees.toLocaleString()}
+                                          </Button>
+                                          <p>|</p>
+                                          <Button
+                                            variant="ghost"
+                                            size="lg"
+                                            className="cursor-pointer"
+                                            onClick={() => {}}
+                                          >
+                                            Cumulative Income $
+                                            {totalAdvantage.cumulativeIncome.toLocaleString()}
+                                          </Button>
+                                          <p>|</p>
+                                          <Button
+                                            variant="ghost"
+                                            size="lg"
+                                            className="cursor-pointer"
+                                            onClick={() => {}}
+                                          >
+                                            Death Benefit $
+                                            {totalAdvantage.deathBenefits.toLocaleString()}
+                                          </Button>
+                                        </div>
                                       </div>
+                                    </div>
+                                  )}
+                                  {tab.type === "calculator" && (
+                                    <div className="h-[400px] flex items-center justify-center gap-4 text-center">
+                                      <TabCalculator />
                                     </div>
                                   )}
                                   {tab.type === "image" && tab.src && (
@@ -1187,99 +1346,104 @@ export default function CalculatorPageV2() {
                                   {tab.type === "other" && tab.src && (
                                     <p>Unsupported file type: {tab.name}</p>
                                   )}
-                                  {tab.id !== "total-advantage" && (
-                                    <div className="flex gap-2">
-                                      <Dialog
-                                        open={isEditDialogOpen}
-                                        onOpenChange={setIsEditDialogOpen}
-                                      >
-                                        <DialogTrigger asChild>
-                                          <motion.div
-                                            whileHover={{
-                                              scale: 1.1,
-                                              boxShadow:
-                                                "0 2px 8px rgba(0,0,0,0.1)",
-                                            }}
-                                            whileTap={{ scale: 0.95 }}
-                                          >
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              onClick={() => {
-                                                setEditTabId(tab.id);
-                                                setNewTabName(tab.name);
-                                                setNewTabFile(null);
-                                              }}
-                                            >
-                                              <Pencil className="h-4 w-4 mr-2" />{" "}
-                                              Edit
-                                            </Button>
-                                          </motion.div>
-                                        </DialogTrigger>
-                                        <DialogContent className="bg-gray-50 p-6">
-                                          <DialogHeader>
-                                            <DialogTitle>Edit Tab</DialogTitle>
-                                          </DialogHeader>
-                                          <div className="space-y-4">
-                                            <Input
-                                              placeholder="Tab Name"
-                                              value={newTabName}
-                                              onChange={(e) =>
-                                                setNewTabName(e.target.value)
-                                              }
-                                              className="rounded-md"
-                                            />
-                                            <Button asChild>
-                                              <label className="flex items-center gap-2 cursor-pointer">
-                                                Upload New File (Optional)
-                                                <Upload className="h-4 w-4" />
-                                                <input
-                                                  type="file"
-                                                  className="hidden"
-                                                  accept="image/*,video/*,application/pdf"
-                                                  onChange={(e) => {
-                                                    const file =
-                                                      e.target.files?.[0];
-                                                    if (file)
-                                                      setNewTabFile(file);
-                                                  }}
-                                                />
-                                              </label>
-                                            </Button>
-                                            {newTabFile && (
-                                              <p>Selected: {newTabFile.name}</p>
-                                            )}
-                                            <Button
-                                              onClick={handleEditTab}
-                                              disabled={!newTabName}
-                                              className="w-full"
-                                            >
-                                              Save
-                                            </Button>
-                                          </div>
-                                        </DialogContent>
-                                      </Dialog>
-                                      <motion.div
-                                        whileHover={{
-                                          scale: 1.1,
-                                          boxShadow:
-                                            "0 2px 8px rgba(0,0,0,0.1)",
-                                        }}
-                                        whileTap={{ scale: 0.95 }}
-                                      >
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() =>
-                                            handleDeleteTab(tab.id)
-                                          }
+                                  {tab.id !== "total-advantage" &&
+                                    tab.id !== "calculator" && (
+                                      <div className="flex gap-2">
+                                        <Dialog
+                                          open={isEditDialogOpen}
+                                          onOpenChange={setIsEditDialogOpen}
                                         >
-                                          <Trash2 className="h-4 w-4 mr-2" />{" "}
-                                          Delete
-                                        </Button>
-                                      </motion.div>
-                                    </div>
-                                  )}
+                                          <DialogTrigger asChild>
+                                            <motion.div
+                                              whileHover={{
+                                                scale: 1.1,
+                                                boxShadow:
+                                                  "0 2px 8px rgba(0,0,0,0.1)",
+                                              }}
+                                              whileTap={{ scale: 0.95 }}
+                                            >
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                  setEditTabId(tab.id);
+                                                  setNewTabName(tab.name);
+                                                  setNewTabFile(null);
+                                                }}
+                                              >
+                                                <Pencil className="h-4 w-4 mr-2" />
+                                                Edit
+                                              </Button>
+                                            </motion.div>
+                                          </DialogTrigger>
+                                          <DialogContent className="bg-gray-50 p-6">
+                                            <DialogHeader>
+                                              <DialogTitle>
+                                                Edit Tab
+                                              </DialogTitle>
+                                            </DialogHeader>
+                                            <div className="space-y-4">
+                                              <Input
+                                                placeholder="Tab Name"
+                                                value={newTabName}
+                                                onChange={(e) =>
+                                                  setNewTabName(e.target.value)
+                                                }
+                                                className="rounded-md"
+                                              />
+                                              <Button asChild>
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                  Upload New File (Optional)
+                                                  <Upload className="h-4 w-4" />
+                                                  <input
+                                                    type="file"
+                                                    className="hidden"
+                                                    accept="image/*,video/*,application/pdf"
+                                                    onChange={(e) => {
+                                                      const file =
+                                                        e.target.files?.[0];
+                                                      if (file)
+                                                        setNewTabFile(file);
+                                                    }}
+                                                  />
+                                                </label>
+                                              </Button>
+                                              {newTabFile && (
+                                                <p>
+                                                  Selected: {newTabFile.name}
+                                                </p>
+                                              )}
+                                              <Button
+                                                onClick={handleEditTab}
+                                                disabled={!newTabName}
+                                                className="w-full"
+                                              >
+                                                Save
+                                              </Button>
+                                            </div>
+                                          </DialogContent>
+                                        </Dialog>
+                                        <motion.div
+                                          whileHover={{
+                                            scale: 1.1,
+                                            boxShadow:
+                                              "0 2px 8px rgba(0,0,0,0.1)",
+                                          }}
+                                          whileTap={{ scale: 0.95 }}
+                                        >
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                              handleDeleteTab(tab.id)
+                                            }
+                                          >
+                                            <Trash2 className="h-4 w-4 mr-2" />
+                                            Delete
+                                          </Button>
+                                        </motion.div>
+                                      </div>
+                                    )}
                                 </div>
                               )
                           )}
@@ -1305,29 +1469,34 @@ export default function CalculatorPageV2() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex gap-2 overflow-x-auto">
-                    {tabs.map((tab) => (
-                      <motion.div
-                        key={tab.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{
-                          duration: 0.3,
-                          delay: tabs.indexOf(tab) * 0.1,
-                        }}
-                        whileHover={{
-                          scale: 1.05,
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                        }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Button
-                          variant={activeTab === tab.id ? "default" : "outline"}
-                          onClick={() => setActiveTab(tab.id)}
+                    {tabs
+                      .filter((tab) => tab.isVisible) // Only show visible tabs
+                      .map((tab) => (
+                        <motion.div
+                          key={tab.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{
+                            duration: 0.3,
+                            delay: tabs.indexOf(tab) * 0.1,
+                          }}
+                          whileHover={{
+                            scale: 1.05,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                          }}
+                          whileTap={{ scale: 0.95 }}
                         >
-                          {tab.name}
-                        </Button>
-                      </motion.div>
-                    ))}
+                          <Button
+                            variant={
+                              activeTab === tab.id ? "default" : "outline"
+                            }
+                            onClick={() => setActiveTab(tab.id)}
+                            aria-selected={activeTab === tab.id}
+                          >
+                            {tab.name}
+                          </Button>
+                        </motion.div>
+                      ))}
                   </div>
                   <motion.div
                     whileHover={{
@@ -1398,6 +1567,80 @@ export default function CalculatorPageV2() {
                       </div>
                     </DialogContent>
                   </Dialog>
+                  {/* New Manage Button and Dialog for Full-Screen View */}
+                  <Dialog
+                    open={isManageDialogOpen}
+                    onOpenChange={setIsManageDialogOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <motion.div
+                        whileHover={{
+                          scale: 1.1,
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Button variant="outline">Manage</Button>
+                      </motion.div>
+                    </DialogTrigger>
+                    <DialogContent className="bg-gray-50 p-6">
+                      <DialogHeader>
+                        <DialogTitle>Manage Tabs</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          {tabs.map((tab, index) => (
+                            <div
+                              key={tab.id}
+                              className="flex items-center justify-between p-2 border rounded-md"
+                            >
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={tab.isVisible}
+                                  onChange={() =>
+                                    handleToggleVisibility(tab.id)
+                                  }
+                                  disabled={
+                                    tab.id === "total-advantage" ||
+                                    tab.id === "calculator"
+                                  }
+                                  className="h-4 w-4"
+                                />
+                                <span>{tab.name}</span>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleMoveUp(index)}
+                                  disabled={index === 0}
+                                  aria-label={`Move ${tab.name} up`}
+                                >
+                                  <ChevronUp className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleMoveDown(index)}
+                                  disabled={index === tabs.length - 1}
+                                  aria-label={`Move ${tab.name} down`}
+                                >
+                                  <ChevronDown className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <Button
+                          onClick={() => setIsManageDialogOpen(false)}
+                          className="w-full"
+                        >
+                          Save
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 <AnimatePresence mode="wait">
                   {activeTab && (
@@ -1429,6 +1672,11 @@ export default function CalculatorPageV2() {
                                       {totalAdvantage.deathBenefits.toLocaleString()}
                                     </p>
                                   </div>
+                                </div>
+                              )}
+                              {tab.type === "calculator" && (
+                                <div className="h-full flex items-center justify-center gap-4 text-center">
+                                  <TabCalculator />
                                 </div>
                               )}
                               {tab.type === "image" && tab.src && (
@@ -1463,95 +1711,96 @@ export default function CalculatorPageV2() {
                               {tab.type === "other" && tab.src && (
                                 <p>Unsupported file type: {tab.name}</p>
                               )}
-                              {tab.id !== "total-advantage" && (
-                                <div className="flex gap-2 justify-center">
-                                  <Dialog
-                                    open={isEditDialogOpen}
-                                    onOpenChange={setIsEditDialogOpen}
-                                  >
-                                    <DialogTrigger asChild>
-                                      <motion.div
-                                        whileHover={{
-                                          scale: 1.1,
-                                          boxShadow:
-                                            "0 2px 8px rgba(0,0,0,0.1)",
-                                        }}
-                                        whileTap={{ scale: 0.95 }}
-                                      >
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => {
-                                            setEditTabId(tab.id);
-                                            setNewTabName(tab.name);
-                                            setNewTabFile(null);
-                                          }}
-                                        >
-                                          <Pencil className="h-4 w-4 mr-2" />
-                                          Edit
-                                        </Button>
-                                      </motion.div>
-                                    </DialogTrigger>
-                                    <DialogContent className="bg-gray-50 p-6">
-                                      <DialogHeader>
-                                        <DialogTitle>Edit Tab</DialogTitle>
-                                      </DialogHeader>
-                                      <div className="space-y-4">
-                                        <Input
-                                          placeholder="Tab Name"
-                                          value={newTabName}
-                                          onChange={(e) =>
-                                            setNewTabName(e.target.value)
-                                          }
-                                          className="rounded-md"
-                                        />
-                                        <Button asChild>
-                                          <label className="flex items-center gap-2 cursor-pointer">
-                                            Upload New File (Optional)
-                                            <Upload className="h-4 w-4" />
-                                            <input
-                                              type="file"
-                                              className="hidden"
-                                              accept="image/*,video/*,application/pdf"
-                                              onChange={(e) => {
-                                                const file =
-                                                  e.target.files?.[0];
-                                                if (file) setNewTabFile(file);
-                                              }}
-                                            />
-                                          </label>
-                                        </Button>
-                                        {newTabFile && (
-                                          <p>Selected: {newTabFile.name}</p>
-                                        )}
-                                        <Button
-                                          onClick={handleEditTab}
-                                          disabled={!newTabName}
-                                          className="w-full"
-                                        >
-                                          Save
-                                        </Button>
-                                      </div>
-                                    </DialogContent>
-                                  </Dialog>
-                                  <motion.div
-                                    whileHover={{
-                                      scale: 1.1,
-                                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                                    }}
-                                    whileTap={{ scale: 0.95 }}
-                                  >
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleDeleteTab(tab.id)}
+                              {tab.id !== "total-advantage" &&
+                                tab.id !== "calculator" && (
+                                  <div className="flex gap-2 justify-center">
+                                    <Dialog
+                                      open={isEditDialogOpen}
+                                      onOpenChange={setIsEditDialogOpen}
                                     >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Delete
-                                    </Button>
-                                  </motion.div>
-                                </div>
-                              )}
+                                      <DialogTrigger asChild>
+                                        <motion.div
+                                          whileHover={{
+                                            scale: 1.1,
+                                            boxShadow:
+                                              "0 2px 8px rgba(0,0,0,0.1)",
+                                          }}
+                                          whileTap={{ scale: 0.95 }}
+                                        >
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              setEditTabId(tab.id);
+                                              setNewTabName(tab.name);
+                                              setNewTabFile(null);
+                                            }}
+                                          >
+                                            <Pencil className="h-4 w-4 mr-2" />
+                                            Edit
+                                          </Button>
+                                        </motion.div>
+                                      </DialogTrigger>
+                                      <DialogContent className="bg-gray-50 p-6">
+                                        <DialogHeader>
+                                          <DialogTitle>Edit Tab</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="space-y-4">
+                                          <Input
+                                            placeholder="Tab Name"
+                                            value={newTabName}
+                                            onChange={(e) =>
+                                              setNewTabName(e.target.value)
+                                            }
+                                            className="rounded-md"
+                                          />
+                                          <Button asChild>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                              Upload New File (Optional)
+                                              <Upload className="h-4 w-4" />
+                                              <input
+                                                type="file"
+                                                className="hidden"
+                                                accept="image/*,video/*,application/pdf"
+                                                onChange={(e) => {
+                                                  const file =
+                                                    e.target.files?.[0];
+                                                  if (file) setNewTabFile(file);
+                                                }}
+                                              />
+                                            </label>
+                                          </Button>
+                                          {newTabFile && (
+                                            <p>Selected: {newTabFile.name}</p>
+                                          )}
+                                          <Button
+                                            onClick={handleEditTab}
+                                            disabled={!newTabName}
+                                            className="w-full"
+                                          >
+                                            Save
+                                          </Button>
+                                        </div>
+                                      </DialogContent>
+                                    </Dialog>
+                                    <motion.div
+                                      whileHover={{
+                                        scale: 1.1,
+                                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                                      }}
+                                      whileTap={{ scale: 0.95 }}
+                                    >
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleDeleteTab(tab.id)}
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Delete
+                                      </Button>
+                                    </motion.div>
+                                  </div>
+                                )}
                             </div>
                           )
                       )}

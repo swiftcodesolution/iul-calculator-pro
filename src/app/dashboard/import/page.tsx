@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import axios, { AxiosError } from "axios";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react"; // Updated to include AnimatePresence
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -13,9 +13,9 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input"; // Added for input fields
-import { Label } from "@/components/ui/label"; // Added for labels
-import { Upload } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Upload, ZoomIn, ZoomOut, Fullscreen, Minimize2 } from "lucide-react"; // Added Minimize2
 import { toast } from "sonner";
 
 // Define types
@@ -39,6 +39,8 @@ export default function ImportPage() {
   const [tables, setTables] = useState<TableData[]>([]);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [zoomLevel, setZoomLevel] = useState<number>(1); // Added for zoom control
+  const [isTableFullScreen, setIsTableFullScreen] = useState<boolean>(false); // Added for full-screen control
 
   // Handle file change
   const handleFileChange = (
@@ -47,10 +49,8 @@ export default function ImportPage() {
     let selectedFile: File | null = null;
 
     if ("dataTransfer" in e) {
-      // Drag-and-drop event
       selectedFile = e.dataTransfer.files?.[0] || null;
     } else {
-      // File input event
       selectedFile = e.target.files?.[0] || null;
     }
 
@@ -58,6 +58,8 @@ export default function ImportPage() {
       setFile(selectedFile);
       setError("");
       setTables([]);
+      setZoomLevel(1); // Reset zoom on new file
+      setIsTableFullScreen(false); // Exit full-screen on new file
     } else {
       setFile(null);
       setError("Please upload a valid PDF file.");
@@ -118,10 +120,11 @@ export default function ImportPage() {
     if (!tables.length) return;
 
     console.log("Importing tables:", tables);
-    // Placeholder: Send data to Pages 2 and 4
     setFile(null);
     setTables([]);
     setError("");
+    setZoomLevel(1); // Reset zoom on import
+    setIsTableFullScreen(false); // Exit full-screen on import
     toast("Data imported successfully.");
   };
 
@@ -130,6 +133,23 @@ export default function ImportPage() {
     setFile(null);
     setTables([]);
     setError("");
+    setZoomLevel(1); // Reset zoom on cancel
+    setIsTableFullScreen(false); // Exit full-screen on cancel
+  };
+
+  // Handle zoom in
+  const handleZoomIn = () => {
+    setZoomLevel((prev) => Math.min(prev + 0.1, 2)); // Max zoom: 2x
+  };
+
+  // Handle zoom out
+  const handleZoomOut = () => {
+    setZoomLevel((prev) => Math.max(prev - 0.1, 0.5)); // Min zoom: 0.5x
+  };
+
+  // Handle full-screen toggle
+  const handleFullScreenToggle = () => {
+    setIsTableFullScreen((prev) => !prev);
   };
 
   return (
@@ -141,72 +161,182 @@ export default function ImportPage() {
         className="flex flex-col lg:flex-row gap-4 flex-1"
       >
         {/* Table Area (fixed 70% width on the left, with scrolling for multiple tables) */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4 }}
-          className="lg:w-[70%] w-full overflow-y-auto flex h-[90vh]"
-        >
-          <div className="grow">
-            {tables.length > 0 && !loading && !error ? (
-              <>
-                <h3 className="text-lg font-semibold mb-2 sticky top-0 bg-white z-10">
-                  Imported Data Preview
-                </h3>
-                {tables.map((table, index) => {
-                  const columns = Object.keys(table.data[0] || {}).filter(
-                    (key) => key !== "Source_Text" && key !== "Page_Number"
-                  );
+        <AnimatePresence>
+          {!isTableFullScreen ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="lg:w-[70%] w-full overflow-y-auto flex h-[90vh]"
+            >
+              <div className="grow">
+                {tables.length > 0 && !loading && !error ? (
+                  <>
+                    <h3 className="text-lg font-semibold mb-2 sticky top-0 bg-white z-10">
+                      Imported Data Preview
+                    </h3>
+                    <div
+                      style={{
+                        transform: `scale(${zoomLevel})`,
+                        transformOrigin: "top left",
+                        transition: "transform 0.3s ease",
+                      }}
+                    >
+                      {tables.map((table, index) => {
+                        const columns = Object.keys(table.data[0] || {}).filter(
+                          (key) =>
+                            key !== "Source_Text" && key !== "Page_Number"
+                        );
 
-                  return (
-                    <div key={index} className="mb-6">
-                      <h4 className="text-md font-medium mb-2">
-                        Table from {table.source_text} (Page {table.page_number}
-                        )
-                      </h4>
-                      <Table className="border table-fixed w-full">
-                        <TableHeader>
-                          <TableRow>
-                            {columns.map((header) => (
-                              <TableHead
-                                key={header}
-                                className="border whitespace-normal break-words min-h-[60px] align-top"
-                                style={{ width: `${100 / columns.length}%` }}
-                              >
-                                {header}
-                              </TableHead>
-                            ))}
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {table.data.map((row, rowIndex) => (
-                            <TableRow key={rowIndex} className="min-h-[60px]">
-                              {columns.map((col) => (
-                                <TableCell
-                                  key={col}
-                                  className="border whitespace-normal break-words align-top"
-                                  style={{ width: `${100 / columns.length}%` }}
-                                >
-                                  {row[col] ?? "-"}
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                        return (
+                          <div key={index} className="mb-6">
+                            <h4 className="text-md font-medium mb-2">
+                              Table from {table.source_text} (Page{" "}
+                              {table.page_number})
+                            </h4>
+                            <Table className="border table-fixed w-full">
+                              <TableHeader>
+                                <TableRow>
+                                  {columns.map((header) => (
+                                    <TableHead
+                                      key={header}
+                                      className="border whitespace-normal break-words min-h-[60px] align-top"
+                                      style={{
+                                        width: `${100 / columns.length}%`,
+                                      }}
+                                    >
+                                      {header}
+                                    </TableHead>
+                                  ))}
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {table.data.map((row, rowIndex) => (
+                                  <TableRow
+                                    key={rowIndex}
+                                    className="min-h-[60px]"
+                                  >
+                                    {columns.map((col) => (
+                                      <TableCell
+                                        key={col}
+                                        className="border whitespace-normal break-words align-top"
+                                        style={{
+                                          width: `${100 / columns.length}%`,
+                                        }}
+                                      >
+                                        {row[col] ?? "-"}
+                                      </TableCell>
+                                    ))}
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </>
-            ) : (
-              <Card className="flex items-center justify-center h-full">
-                <p className="text-gray-500 text-center">
-                  Tables will be displayed here once a PDF is uploaded.
-                </p>
+                  </>
+                ) : (
+                  <Card className="flex items-center justify-center h-full">
+                    <p className="text-gray-500 text-center">
+                      Tables will be displayed here once a PDF is uploaded.
+                    </p>
+                  </Card>
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
+              className="fixed inset-0 z-50 bg-white p-6 flex flex-col"
+            >
+              <Card className="flex-1 flex flex-col">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <h3 className="text-lg font-semibold">
+                    Imported Data Preview
+                  </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleFullScreenToggle}
+                    disabled={loading}
+                    aria-label="Exit full-screen mode"
+                  >
+                    <Minimize2 className="h-4 w-4" />
+                  </Button>
+                </CardHeader>
+                <CardContent
+                  className="overflow-y-auto flex-1"
+                  style={{ maxHeight: "calc(100vh - 80px)" }} // Adjusted for header and padding
+                >
+                  <div
+                    style={{
+                      transform: `scale(${zoomLevel})`,
+                      transformOrigin: "top left",
+                      transition: "transform 0.3s ease",
+                    }}
+                  >
+                    {tables.map((table, index) => {
+                      const columns = Object.keys(table.data[0] || {}).filter(
+                        (key) => key !== "Source_Text" && key !== "Page_Number"
+                      );
+
+                      return (
+                        <div key={index} className="mb-6">
+                          <h4 className="text-md font-medium mb-2">
+                            Table from {table.source_text} (Page{" "}
+                            {table.page_number})
+                          </h4>
+                          <Table className="border table-fixed w-full">
+                            <TableHeader>
+                              <TableRow>
+                                {columns.map((header) => (
+                                  <TableHead
+                                    key={header}
+                                    className="border whitespace-normal break-words min-h-[60px] align-top"
+                                    style={{
+                                      width: `${100 / columns.length}%`,
+                                    }}
+                                  >
+                                    {header}
+                                  </TableHead>
+                                ))}
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {table.data.map((row, rowIndex) => (
+                                <TableRow
+                                  key={rowIndex}
+                                  className="min-h-[60px]"
+                                >
+                                  {columns.map((col) => (
+                                    <TableCell
+                                      key={col}
+                                      className="border whitespace-normal break-words align-top"
+                                      style={{
+                                        width: `${100 / columns.length}%`,
+                                      }}
+                                    >
+                                      {row[col] ?? "-"}
+                                    </TableCell>
+                                  ))}
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
               </Card>
-            )}
-          </div>
-        </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Upload Area (fixed 30% width on the bottom-right from page load) */}
         <motion.div
@@ -261,7 +391,6 @@ export default function ImportPage() {
                 placeholder="John Doe"
               />
             </div>
-
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="assumed-ror">
                 Minimum Initial Pmt
@@ -322,12 +451,7 @@ export default function ImportPage() {
               </Button>
             </CardContent>
           </Card>
-          {/* Sample Buttons (Do Nothing) */}
-          {/* <div className="flex flex-col gap-2">
-            <h3 className="text-md font-semibold">Load Sample Data</h3>
-            <Button disabled={loading}>Load Sample 1</Button>
-            <Button disabled={loading}>Load Sample 2</Button>
-          </div> */}
+
           {/* Error Message */}
           {error && (
             <motion.div
@@ -374,6 +498,41 @@ export default function ImportPage() {
               </Button>
             </motion.div>
           )}
+          {/* Zoom and Fullscreen Buttons */}
+          <div className="flex gap-2">
+            <Button
+              variant="default"
+              onClick={handleZoomIn}
+              disabled={loading || zoomLevel >= 2 || !tables.length}
+              aria-label="Zoom in on table"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="default"
+              onClick={handleZoomOut}
+              disabled={loading || zoomLevel <= 0.5 || !tables.length}
+              aria-label="Zoom out on table"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleFullScreenToggle}
+              disabled={loading || !tables.length}
+              aria-label={
+                isTableFullScreen
+                  ? "Exit full-screen mode"
+                  : "Enter full-screen mode"
+              }
+            >
+              {isTableFullScreen ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Fullscreen className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </motion.div>
       </motion.div>
     </div>
