@@ -278,16 +278,7 @@ export function ComparisonTable({
               <Table className="w-full table-auto">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>
-                      <div className="flex items-center gap-2">
-                        <Button variant="default" size="sm" className="grow">
-                          Options
-                        </Button>
-                        <Button variant="default" size="sm" className="grow">
-                          Show/Hide
-                        </Button>
-                      </div>
-                    </TableHead>
+                    <TableHead></TableHead>
                     <TableHead
                       className={cn(
                         "bg-red-200 cursor-pointer",

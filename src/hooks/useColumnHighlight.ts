@@ -3,8 +3,8 @@ import { useState, useCallback } from "react";
 export const useColumnHighlight = () => {
   const [columnTextWhite, setColumnTextWhite] = useState({
     currentPlan: false,
-    taxes: false,
-    taxFreePlan: false,
+    taxes: true,
+    taxFreePlan: true,
   });
   const [highlightedRow, setHighlightedRow] = useState<number | null>(null);
 

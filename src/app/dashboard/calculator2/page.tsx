@@ -148,7 +148,7 @@ export default function CalculatorPageV2() {
     <div className="h-[90vh] grid grid-cols-2 gap-4">
       {/* Left Column */}
       <div className="flex flex-col gap-4">
-        <InputParameters data={data} />
+        <InputParameters data={defaultData} />
         <ComparisonTable
           defaultResults={defaultResults}
           taxFreeResults={taxFreeResults}

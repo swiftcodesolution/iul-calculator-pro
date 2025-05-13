@@ -30,6 +30,17 @@ export default function DataPage() {
   const handleZoomOut = () => setZoomIndex((prev) => Math.max(prev - 1, 0));
   const handleFullScreenToggle = () => setIsFullScreen((prev) => !prev);
 
+  function getContrastingTextColor(bgColor: string): string {
+    const r = parseInt(bgColor.slice(1, 3), 16);
+    const g = parseInt(bgColor.slice(3, 5), 16);
+    const b = parseInt(bgColor.slice(5, 7), 16);
+
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    return luminance > 0.5 ? "#000000" : "#FFFFFF"; // Light background = black text, dark background = white text
+  }
+
   type TableRow = Record<string, string | number>;
 
   const data: TableRow[] = Array.from({ length: 80 }, (_, i) => {
@@ -106,62 +117,75 @@ export default function DataPage() {
   ];
 
   const renderTable = () => (
-    <Card className="w-full h-[91vh] overflow-y-scroll">
+    <Card className="w-full h-[90vh] flex flex-col">
       <CardHeader>
-        <CardTitle>Year-by-Year Calculations</CardTitle>
+        <CardTitle>Current Plan vs Tax Free Plan (TFP)</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto w-full">
-          <Table className="table-auto w-full">
-            <TableHeader>
-              <TableRow>
-                {headers.map((header, index) => (
-                  <TableHead
-                    key={header}
-                    className="border whitespace-nowrap"
-                    style={{
-                      backgroundColor:
-                        index % 2 === 0 ? oddColumnColor : evenColumnColor,
-                      fontSize,
-                      padding: paddingSize,
-                    }}
-                  >
-                    {header}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((row, rowIndex) => (
-                <TableRow key={rowIndex}>
-                  {headers.map((header, colIndex) => (
-                    <TableCell
-                      key={`${rowIndex}-${colIndex}`}
+
+      <CardContent className="flex-1 overflow-hidden">
+        <div className="w-full h-full overflow-auto">
+          <div className="min-w-full">
+            <Table className="table-auto w-full">
+              <TableHeader>
+                <TableRow>
+                  {headers.map((header, index) => (
+                    <TableHead
+                      key={header}
                       className="border whitespace-nowrap"
                       style={{
                         backgroundColor:
-                          colIndex % 2 === 0 ? oddColumnColor : evenColumnColor,
+                          index % 2 === 0 ? oddColumnColor : evenColumnColor,
+                        color: getContrastingTextColor(
+                          index % 2 === 0 ? oddColumnColor : evenColumnColor
+                        ),
                         fontSize,
                         padding: paddingSize,
                       }}
                     >
-                      {row[header]}
-                    </TableCell>
+                      {header}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {data.map((row, rowIndex) => (
+                  <TableRow key={rowIndex}>
+                    {headers.map((header, colIndex) => (
+                      <TableCell
+                        key={`${rowIndex}-${colIndex}`}
+                        className="border whitespace-nowrap"
+                        style={{
+                          backgroundColor:
+                            colIndex % 2 === 0
+                              ? oddColumnColor
+                              : evenColumnColor,
+                          color: getContrastingTextColor(
+                            colIndex % 2 === 0
+                              ? oddColumnColor
+                              : evenColumnColor
+                          ),
+                          fontSize,
+                          padding: paddingSize,
+                        }}
+                      >
+                        {row[header]}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </CardContent>
     </Card>
   );
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col p-2">
       {/* Header Controls */}
       <div className="flex items-end justify-between mb-4">
-        <div className="flex flex-col gap-2">
+        <div className="flex gap-2">
           <div className="flex items-center gap-2">
             <Label htmlFor="odd-column-color">Current Plan</Label>
             <input
@@ -183,9 +207,6 @@ export default function DataPage() {
             />
           </div>
         </div>
-        <h2 className="text-3xl text-center font-bold">
-          Current Plan vs Tax Free Plan (TFP)
-        </h2>
         <div className="flex gap-2">
           <Button
             variant="default"
