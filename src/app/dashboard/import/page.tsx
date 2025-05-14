@@ -183,12 +183,9 @@ export default function ImportPage() {
                         transition: "transform 0.3s ease",
                       }}
                     >
-                      {/* Modified: Use flexbox for side-by-side display when tables > 2 */}
                       <div
                         className={
-                          tables.length > 2
-                            ? "flex flex-wrap gap-6"
-                            : "flex flex-col gap-6"
+                          tables.length > 2 ? "flex gap-0" : "flex gap-0"
                         }
                       >
                         {tables.map((table, index) => {
@@ -203,15 +200,13 @@ export default function ImportPage() {
                             <div
                               key={index}
                               className={
-                                tables.length > 2
-                                  ? "flex-1 min-w-[300px] max-w-[500px]"
-                                  : "w-full"
+                                tables.length === 2
+                                  ? index === 0
+                                    ? "w-[80%]" // First table takes 80% width
+                                    : "w-[20%]" // Second table takes 20% width
+                                  : "grow" // Default for other cases
                               }
                             >
-                              <h4 className="text-md font-medium mb-2">
-                                Table from {table.source_text} (Page{" "}
-                                {table.page_number})
-                              </h4>
                               <Table className="border table-fixed w-full">
                                 <TableHeader>
                                   <TableRow>
@@ -298,12 +293,9 @@ export default function ImportPage() {
                       transition: "transform 0.3s ease",
                     }}
                   >
-                    {/* Modified: Use flexbox for side-by-side display when tables > 2 in full-screen */}
                     <div
                       className={
-                        tables.length > 2
-                          ? "flex flex-wrap gap-6"
-                          : "flex flex-col gap-6"
+                        tables.length > 2 ? "flex gap-0" : "flex gap-0"
                       }
                     >
                       {tables.map((table, index) => {
@@ -316,15 +308,15 @@ export default function ImportPage() {
                           <div
                             key={index}
                             className={
-                              tables.length > 2
+                              tables.length === 2
+                                ? index === 0
+                                  ? "w-[80%]" // First table takes 80% width
+                                  : "w-[20%]" // Second table takes 20% width
+                                : tables.length > 2
                                 ? "flex-1 min-w-[300px] max-w-[500px]"
                                 : "w-full"
                             }
                           >
-                            <h4 className="text-md font-medium mb-2">
-                              Table from {table.source_text} (Page{" "}
-                              {table.page_number})
-                            </h4>
                             <Table className="border table-fixed w-full">
                               <TableHeader>
                                 <TableRow>
@@ -345,7 +337,7 @@ export default function ImportPage() {
                                 {table.data.map((row, rowIndex) => (
                                   <TableRow
                                     key={rowIndex}
-                                    className="min-h-[60px]"
+                                    className=" hiking-[60px]"
                                   >
                                     {columns.map((col) => (
                                       <TableCell
