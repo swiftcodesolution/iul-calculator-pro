@@ -183,6 +183,129 @@ export default function ImportPage() {
                         transition: "transform 0.3s ease",
                       }}
                     >
+                      {/* Modified: Use flexbox for side-by-side display when tables > 2 */}
+                      <div
+                        className={
+                          tables.length > 2
+                            ? "flex flex-wrap gap-6"
+                            : "flex flex-col gap-6"
+                        }
+                      >
+                        {tables.map((table, index) => {
+                          const columns = Object.keys(
+                            table.data[0] || {}
+                          ).filter(
+                            (key) =>
+                              key !== "Source_Text" && key !== "Page_Number"
+                          );
+
+                          return (
+                            <div
+                              key={index}
+                              className={
+                                tables.length > 2
+                                  ? "flex-1 min-w-[300px] max-w-[500px]"
+                                  : "w-full"
+                              }
+                            >
+                              <h4 className="text-md font-medium mb-2">
+                                Table from {table.source_text} (Page{" "}
+                                {table.page_number})
+                              </h4>
+                              <Table className="border table-fixed w-full">
+                                <TableHeader>
+                                  <TableRow>
+                                    {columns.map((header) => (
+                                      <TableHead
+                                        key={header}
+                                        className="border whitespace-normal break-words min-h-[60px] align-top"
+                                        style={{
+                                          width: `${100 / columns.length}%`,
+                                        }}
+                                      >
+                                        {header}
+                                      </TableHead>
+                                    ))}
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {table.data.map((row, rowIndex) => (
+                                    <TableRow
+                                      key={rowIndex}
+                                      className="min-h-[60px]"
+                                    >
+                                      {columns.map((col) => (
+                                        <TableCell
+                                          key={col}
+                                          className="border whitespace-normal break-words align-top"
+                                          style={{
+                                            width: `${100 / columns.length}%`,
+                                          }}
+                                        >
+                                          {row[col] ?? "-"}
+                                        </TableCell>
+                                      ))}
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <Card className="flex items-center justify-center h-full">
+                    <p className="text-gray-500 text-center">
+                      Tables will be displayed here once a PDF is uploaded.
+                    </p>
+                  </Card>
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
+              className="fixed inset-0 z-50 bg-white p-6 flex flex-col"
+            >
+              <Card className="flex-1 flex flex-col">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <h3 className="text-lg font-semibold">
+                    Imported Data Preview
+                  </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleFullScreenToggle}
+                    disabled={loading}
+                    aria-label="Exit full-screen mode"
+                  >
+                    <Minimize2 className="h-4 w-4" />
+                  </Button>
+                </CardHeader>
+                <CardContent
+                  className="overflow-y-auto flex-1"
+                  style={{ maxHeight: "calc(100vh - 80px)" }}
+                >
+                  <div
+                    style={{
+                      transform: `scale(${zoomLevel})`,
+                      transformOrigin: "top left",
+                      transition: "transform 0.3s ease",
+                    }}
+                  >
+                    {/* Modified: Use flexbox for side-by-side display when tables > 2 in full-screen */}
+                    <div
+                      className={
+                        tables.length > 2
+                          ? "flex flex-wrap gap-6"
+                          : "flex flex-col gap-6"
+                      }
+                    >
                       {tables.map((table, index) => {
                         const columns = Object.keys(table.data[0] || {}).filter(
                           (key) =>
@@ -190,7 +313,14 @@ export default function ImportPage() {
                         );
 
                         return (
-                          <div key={index} className="mb-6">
+                          <div
+                            key={index}
+                            className={
+                              tables.length > 2
+                                ? "flex-1 min-w-[300px] max-w-[500px]"
+                                : "w-full"
+                            }
+                          >
                             <h4 className="text-md font-medium mb-2">
                               Table from {table.source_text} (Page{" "}
                               {table.page_number})
@@ -236,101 +366,6 @@ export default function ImportPage() {
                         );
                       })}
                     </div>
-                  </>
-                ) : (
-                  <Card className="flex items-center justify-center h-full">
-                    <p className="text-gray-500 text-center">
-                      Tables will be displayed here once a PDF is uploaded.
-                    </p>
-                  </Card>
-                )}
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
-              className="fixed inset-0 z-50 bg-white p-6 flex flex-col"
-            >
-              <Card className="flex-1 flex flex-col">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <h3 className="text-lg font-semibold">
-                    Imported Data Preview
-                  </h3>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleFullScreenToggle}
-                    disabled={loading}
-                    aria-label="Exit full-screen mode"
-                  >
-                    <Minimize2 className="h-4 w-4" />
-                  </Button>
-                </CardHeader>
-                <CardContent
-                  className="overflow-y-auto flex-1"
-                  style={{ maxHeight: "calc(100vh - 80px)" }} // Adjusted for header and padding
-                >
-                  <div
-                    style={{
-                      transform: `scale(${zoomLevel})`,
-                      transformOrigin: "top left",
-                      transition: "transform 0.3s ease",
-                    }}
-                  >
-                    {tables.map((table, index) => {
-                      const columns = Object.keys(table.data[0] || {}).filter(
-                        (key) => key !== "Source_Text" && key !== "Page_Number"
-                      );
-
-                      return (
-                        <div key={index} className="mb-6">
-                          <h4 className="text-md font-medium mb-2">
-                            Table from {table.source_text} (Page{" "}
-                            {table.page_number})
-                          </h4>
-                          <Table className="border table-fixed w-full">
-                            <TableHeader>
-                              <TableRow>
-                                {columns.map((header) => (
-                                  <TableHead
-                                    key={header}
-                                    className="border whitespace-normal break-words min-h-[60px] align-top"
-                                    style={{
-                                      width: `${100 / columns.length}%`,
-                                    }}
-                                  >
-                                    {header}
-                                  </TableHead>
-                                ))}
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {table.data.map((row, rowIndex) => (
-                                <TableRow
-                                  key={rowIndex}
-                                  className="min-h-[60px]"
-                                >
-                                  {columns.map((col) => (
-                                    <TableCell
-                                      key={col}
-                                      className="border whitespace-normal break-words align-top"
-                                      style={{
-                                        width: `${100 / columns.length}%`,
-                                      }}
-                                    >
-                                      {row[col] ?? "-"}
-                                    </TableCell>
-                                  ))}
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      );
-                    })}
                   </div>
                 </CardContent>
               </Card>
