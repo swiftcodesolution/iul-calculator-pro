@@ -6,6 +6,8 @@ interface TableStore {
   tables: TableData[];
   setTables: (tables: TableData[]) => void;
   clearTables: () => void;
+  yearsRunOutOfMoney: number;
+  setYearsRunOutOfMoney: (age: number) => void;
 }
 
 export const useTableStore = create<TableStore>()(
@@ -14,6 +16,8 @@ export const useTableStore = create<TableStore>()(
       tables: [],
       setTables: (tables) => set({ tables }),
       clearTables: () => set({ tables: [] }),
+      yearsRunOutOfMoney: 0,
+      setYearsRunOutOfMoney: (age) => set({ yearsRunOutOfMoney: age }),
     }),
     {
       name: "table-storage", // Key in localStorage

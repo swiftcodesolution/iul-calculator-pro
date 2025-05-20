@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import {
@@ -57,10 +57,7 @@ export function ComparisonTable({
   handleHeaderClick,
   handleCellClick,
 }: ComparisonTableProps) {
-  const { tables } = useTableStore();
-  const [yearsRunOutOfMoney, setYearsRunOutOfMoney] = useState<number>(
-    defaultResults.yearsRunOutOfMoney
-  );
+  const { tables, yearsRunOutOfMoney, setYearsRunOutOfMoney } = useTableStore();
   const [startingBalance, setStartingBalance] = useState<number>(
     defaultResults.startingBalance
   );
@@ -82,6 +79,13 @@ export function ComparisonTable({
       .sort((a, b) => a - b);
     return [...new Set(ages)];
   }, [tables]);
+
+  // Set yearsRunOutOfMoney when tables is populated
+  useEffect(() => {
+    if (ageOptions.length > 0 && !ageOptions.includes(yearsRunOutOfMoney)) {
+      setYearsRunOutOfMoney(ageOptions[0]);
+    }
+  }, [ageOptions, yearsRunOutOfMoney, setYearsRunOutOfMoney]);
 
   // Compute taxFreeResults dynamically based on yearsRunOutOfMoney
   const taxFreeResults = useMemo(
@@ -246,6 +250,7 @@ export function ComparisonTable({
             value={yearsRunOutOfMoney.toString()}
             onValueChange={handleYearsRunOutOfMoneyChange}
             aria-label="Select years you run out of money for Current Plan"
+            disabled={ageOptions.length === 0} // Disable if no options
           >
             <SelectTrigger className="w-32">
               <SelectValue placeholder="Select Age" />

@@ -139,131 +139,6 @@ export function throttle<T extends (...args: unknown[]) => R, R>(
   };
 }
 
-// export function extractTaxFreeResults(
-//   tables: TableData[],
-//   currentAge: number,
-//   yearsRunOutOfMoney: number
-// ): Results {
-//   // First table for Premium Outlay, Net Outlay, Cash Value, Death Benefit
-//   const mainTable = tables[0]?.data || [];
-//   // Second table for Charges
-//   const chargesTable = tables[1]?.data || [];
-
-//   if (!mainTable.length) {
-//     return {
-//       startingBalance: 0,
-//       annualContributions: 0,
-//       annualEmployerMatch: "N/A",
-//       annualFees: "Included",
-//       grossRetirementIncome: 0,
-//       incomeTax: 0,
-//       netRetirementIncome: 0,
-//       cumulativeTaxesDeferred: 0,
-//       cumulativeTaxesPaid: 0,
-//       cumulativeFeesPaid: 0,
-//       cumulativeNetIncome: 0,
-//       cumulativeAccountBalance: 0,
-//       taxesDue: 0,
-//       deathBenefits: 0,
-//       yearsRunOutOfMoney,
-//       currentAge,
-//     };
-//   }
-
-//   // Helper to parse currency strings (e.g., "$6,000.00" -> 6000)
-//   const parseCurrency = (value: string | number): number => {
-//     if (typeof value === "number") return value;
-//     return Number(value.replace(/[^0-9.-]+/g, "")) || 0;
-//   };
-
-//   // Annual Contributions: 7th row of "Premium Outlay"
-//   const annualContributions = parseCurrency(
-//     mainTable[6]?.["Premium Outlay"] || 0
-//   );
-
-//   // Find the age at which "Net Outlay" value first changes
-//   let xValue = 0;
-//   for (let i = 1; i < mainTable.length; i++) {
-//     if (mainTable[i]["Net Outlay"] !== mainTable[i - 1]["Net Outlay"]) {
-//       xValue = mainTable[i]["Age"]; // store the age when Net Outlay changes
-//       break; // stop after finding the first change
-//     }
-//   }
-
-//   // Initialize output variables
-//   let grossRetirementIncome = 0;
-//   let netRetirementIncome = 0;
-//   let cumulativeNetIncome = 0;
-
-//   // If the person runs out of money before retirement income starts
-//   if (yearsRunOutOfMoney < xValue) {
-//     // All values remain zero
-//     grossRetirementIncome = 0;
-//     netRetirementIncome = 0;
-//     cumulativeNetIncome = 0;
-//   } else {
-//     // Otherwise, calculate income-related values
-
-//     // Find the row for the year the person runs out of money (or last available row)
-//     const rowIndex = Math.min(yearsRunOutOfMoney - 1, mainTable.length - 1);
-
-//     // Get the "Net Outlay" value at the run-out year, parsed as currency
-//     grossRetirementIncome = parseCurrency(
-//       mainTable[rowIndex]?.["Net Outlay"] || 0
-//     );
-
-//     // Assume net income is equal to gross income
-//     netRetirementIncome = grossRetirementIncome;
-
-//     // Sum Net Outlay values from when it starts (xValue age) until the run-out year
-//     for (let i = 0; i < mainTable.length; i++) {
-//       if (
-//         mainTable[i]["Age"] >= xValue &&
-//         mainTable[i]["Age"] < yearsRunOutOfMoney
-//       ) {
-//         cumulativeNetIncome += parseCurrency(mainTable[i]["Net Outlay"] || 0);
-//       }
-//     }
-//   }
-
-//   // Cumulative Fees Paid: Sum of "Charges" up to yearsRunOutOfMoney row
-//   let cumulativeFeesPaid = 0;
-//   for (let i = 0; i < Math.min(yearsRunOutOfMoney, chargesTable.length); i++) {
-//     cumulativeFeesPaid += parseCurrency(chargesTable[i]?.["Charges"] || 0);
-//   }
-
-//   // Cumulative Account Balance: "Cash Value" at yearsRunOutOfMoney row
-//   const rowIndex = Math.min(yearsRunOutOfMoney - 1, mainTable.length - 1);
-//   const cumulativeAccountBalance = parseCurrency(
-//     mainTable[rowIndex]?.["Cash Value"] || 0
-//   );
-
-//   // Death Benefits: "Death Benefit" at yearsRunOutOfMoney row
-//   const deathBenefits = parseCurrency(
-//     mainTable[rowIndex]?.["Death Benefit"] || 0
-//   );
-
-//   return {
-//     xValue,
-//     startingBalance: 0,
-//     annualContributions,
-//     annualEmployerMatch: "N/A",
-//     annualFees: "Included",
-//     grossRetirementIncome,
-//     incomeTax: 0,
-//     netRetirementIncome,
-//     cumulativeTaxesDeferred: 0,
-//     cumulativeTaxesPaid: 0,
-//     cumulativeFeesPaid,
-//     cumulativeNetIncome,
-//     cumulativeAccountBalance,
-//     taxesDue: 0,
-//     deathBenefits,
-//     yearsRunOutOfMoney,
-//     currentAge,
-//   };
-// }
-
 export function extractTaxFreeResults(
   tables: TableData[],
   currentAge: number,
@@ -358,27 +233,16 @@ export function extractTaxFreeResults(
       .reduce((sum, row) => sum + parseCurrency(row["Net Outlay"] || 0), 0);
   }
 
-  // Sum Charges for rows corresponding to years up to yearsRunOutOfMoney - currentAge
-  // const yearsToSum = Math.max(0, yearsRunOutOfMoney - currentAge);
-  // const cumulativeFeesPaid = chargesTable
-  //   .slice(0, yearsToSum)
-  //   .reduce((sum, row) => sum + parseCurrency(row.Charges || 0), 0);
-
-  // console.log(chargesTable);
-
   let cumulativeFeesPaid = 0;
 
   if (chargesTable.length && mainTable.length) {
-    // Map indexes of ages 41 through yearsRunOutOfMoney using mainTable
-    const startIndex = mainTable.findIndex((row) => Number(row.Age) === 41);
     const endIndex = mainTable.findIndex(
       (row) => Number(row.Age) === yearsRunOutOfMoney
     );
 
-    // If valid indexes found, sum corresponding Charges from chargesTable
-    if (startIndex !== -1 && endIndex !== -1 && endIndex >= startIndex) {
+    if (endIndex !== -1 && endIndex < chargesTable.length) {
       cumulativeFeesPaid = chargesTable
-        .slice(startIndex, endIndex + 1) // +1 to include end age
+        .slice(0, endIndex + 1)
         .reduce((sum, row) => sum + parseCurrency(row.Charges || 0), 0);
     }
   }
@@ -390,77 +254,6 @@ export function extractTaxFreeResults(
 
   const cumulativeAccountBalance = parseCurrency(targetRow["Cash Value"] || 0);
   const deathBenefits = parseCurrency(targetRow["Death Benefit"] || 0);
-
-  console.log({
-    xValue: {
-      value: xValue,
-      source: `Age when "Net Outlay" first changes in mainTable, found by comparing consecutive rows`,
-    },
-    startingBalance: {
-      value: 0,
-      source: `Hardcoded as 0`,
-    },
-    annualContributions: {
-      value: annualContributions,
-      source: `Parsed "Premium Outlay" from mainTable row where Age = currentAge + 6, or 0 if not found`,
-    },
-    annualEmployerMatch: {
-      value: "N/A",
-      source: `Hardcoded as "N/A"`,
-    },
-    annualFees: {
-      value: "Included",
-      source: `Hardcoded as "Included"`,
-    },
-    grossRetirementIncome: {
-      value: grossRetirementIncome,
-      source: `Parsed "Net Outlay" from mainTable row where Age = yearsRunOutOfMoney, or last row if not found`,
-    },
-    incomeTax: {
-      value: 0,
-      source: `Hardcoded as 0`,
-    },
-    netRetirementIncome: {
-      value: netRetirementIncome,
-      source: `Equal to grossRetirementIncome`,
-    },
-    cumulativeTaxesDeferred: {
-      value: 0,
-      source: `Hardcoded as 0`,
-    },
-    cumulativeTaxesPaid: {
-      value: 0,
-      source: `Hardcoded as 0`,
-    },
-    cumulativeFeesPaid: {
-      value: cumulativeFeesPaid,
-      source: `Sum of parsed "Charges" from chargesTable rows up to (yearsRunOutOfMoney - currentAge) rows`,
-    },
-    cumulativeNetIncome: {
-      value: cumulativeNetIncome,
-      source: `Sum of parsed "Net Outlay" from mainTable rows where Age >= xValue and Age < yearsRunOutOfMoney`,
-    },
-    cumulativeAccountBalance: {
-      value: cumulativeAccountBalance,
-      source: `Parsed "Cash Value" from mainTable row where Age = yearsRunOutOfMoney, or last row if not found`,
-    },
-    taxesDue: {
-      value: 0,
-      source: `Hardcoded as 0`,
-    },
-    deathBenefits: {
-      value: deathBenefits,
-      source: `Parsed "Death Benefit" from mainTable row where Age = yearsRunOutOfMoney, or last row if not found`,
-    },
-    yearsRunOutOfMoney: {
-      value: yearsRunOutOfMoney,
-      source: `Input parameter`,
-    },
-    currentAge: {
-      value: currentAge,
-      source: `Input parameter`,
-    },
-  });
 
   return {
     xValue,
