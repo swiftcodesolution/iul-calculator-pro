@@ -53,6 +53,10 @@ export type CalculatorData = {
 };
 
 export type Results = {
+  startingBalance: number;
+  annualContributions: number;
+  annualEmployerMatch: string;
+  annualFees: string;
   grossRetirementIncome: number;
   incomeTax: number;
   netRetirementIncome: number;
@@ -64,7 +68,34 @@ export type Results = {
   taxesDue: number;
   deathBenefits: number;
   yearsRunOutOfMoney: number;
+  currentAge?: number; // Optional, for cumulativeNetIncome calculation
 };
+
+export interface TableData {
+  source: string; // Align with API response
+  page_number: number;
+  keyword?: string; // Optional, as per API
+  extractor?: string; // Optional, as per API
+  data: Record<string, string | number>[];
+}
+
+export interface TaxesData {
+  startingBalance: string;
+  annualContributions: string;
+  annualEmployerMatch: string;
+  annualFees: string;
+  grossRetirementIncome: string;
+  incomeTax: string;
+  netRetirementIncome: string;
+  cumulativeTaxesDeferred: string;
+  cumulativeTaxesPaid: string;
+  cumulativeFeesPaid: string;
+  cumulativeNetIncome: string;
+  cumulativeAccountBalance: string;
+  taxesDue: string;
+  deathBenefits: string;
+  yearsRunOutOfMoney: string;
+}
 
 export type TabContent = {
   id: string;

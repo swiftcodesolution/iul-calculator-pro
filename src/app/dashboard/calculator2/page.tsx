@@ -10,6 +10,7 @@ import { useColumnHighlight } from "@/hooks/useColumnHighlight";
 import {
   CalculatorData,
   Results,
+  TaxesData,
   TabContent,
   TotalAdvantage,
   CompanyDetails,
@@ -43,31 +44,40 @@ const defaultData: CalculatorData = {
 };
 
 const defaultResults: Results = {
-  grossRetirementIncome: 67817,
-  incomeTax: 18989,
-  netRetirementIncome: 48828,
-  cumulativeTaxesDeferred: 0,
-  cumulativeTaxesPaid: 569661,
-  cumulativeFeesPaid: 725982,
-  cumulativeNetIncome: 1464844,
-  cumulativeAccountBalance: 57490,
+  startingBalance: 0,
+  annualContributions: 25641,
+  annualEmployerMatch: "0",
+  annualFees: "2%",
+  grossRetirementIncome: 1000000,
+  incomeTax: 280000,
+  netRetirementIncome: 720000,
+  cumulativeTaxesDeferred: 50000,
+  cumulativeTaxesPaid: 300000,
+  cumulativeFeesPaid: 20000,
+  cumulativeNetIncome: 700000,
+  cumulativeAccountBalance: 1500000,
   taxesDue: 28,
-  deathBenefits: 41393,
-  yearsRunOutOfMoney: 95,
+  deathBenefits: 500000,
+  yearsRunOutOfMoney: 30,
+  currentAge: 65, // Example value
 };
 
-const taxFreeResults: Results = {
-  grossRetirementIncome: 0,
-  incomeTax: 0,
-  netRetirementIncome: 96251,
-  cumulativeTaxesDeferred: 0,
-  cumulativeTaxesPaid: 0,
-  cumulativeFeesPaid: 272966,
-  cumulativeNetIncome: 2887530,
-  cumulativeAccountBalance: 6480275,
-  taxesDue: 0,
-  deathBenefits: 466114,
-  yearsRunOutOfMoney: 119,
+const taxesData: TaxesData = {
+  startingBalance: "10%",
+  annualContributions: "22%",
+  annualEmployerMatch: "",
+  annualFees: "",
+  grossRetirementIncome: "",
+  incomeTax: "28%",
+  netRetirementIncome: "28%",
+  cumulativeTaxesDeferred: "",
+  cumulativeTaxesPaid: "10%",
+  cumulativeFeesPaid: "",
+  cumulativeNetIncome: "",
+  cumulativeAccountBalance: "",
+  taxesDue: "28%",
+  deathBenefits: "",
+  yearsRunOutOfMoney: "",
 };
 
 const totalAdvantage: TotalAdvantage = {
@@ -107,7 +117,6 @@ const initialTabs: TabContent[] = [
 ];
 
 export default function CalculatorPageV2() {
-  const [data, setData] = useState<CalculatorData>(defaultData); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
   const [isTableCardExpanded, setIsTableCardExpanded] = useState(false);
   const [isTabCardExpanded, setIsTabCardExpanded] = useState(false);
@@ -150,8 +159,9 @@ export default function CalculatorPageV2() {
       <div className="flex flex-col gap-4">
         <InputParameters data={defaultData} />
         <ComparisonTable
+          currentAge={40}
           defaultResults={defaultResults}
-          taxFreeResults={taxFreeResults}
+          taxesData={taxesData}
           columnTextWhite={columnTextWhite}
           highlightedRow={highlightedRow}
           isTableCollapsed={isTableCollapsed}

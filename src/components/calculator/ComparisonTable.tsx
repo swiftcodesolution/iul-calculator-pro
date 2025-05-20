@@ -1,3 +1,7 @@
+// app/comparison/page.tsx
+"use client";
+
+import { useState, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import {
@@ -10,12 +14,15 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
-import { Results } from "@/lib/types";
+import { Input } from "@/components/ui/input";
+import { Results, TaxesData } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useTableStore } from "@/lib/store";
+import { extractTaxFreeResults } from "@/lib/utils";
 
 interface ComparisonTableProps {
   defaultResults: Results;
-  taxFreeResults: Results;
+  taxesData: TaxesData;
   columnTextWhite: {
     currentPlan: boolean;
     taxes: boolean;
@@ -24,6 +31,7 @@ interface ComparisonTableProps {
   highlightedRow: number | null;
   isTableCollapsed: boolean;
   isTableCardExpanded: boolean;
+  currentAge: number; // Added prop for currentAge
   setIsTableCollapsed: (value: boolean) => void;
   setIsTableCardExpanded: (value: boolean) => void;
   handleHeaderClick: (column: "currentPlan" | "taxes" | "taxFreePlan") => void;
@@ -32,98 +40,164 @@ interface ComparisonTableProps {
 
 export function ComparisonTable({
   defaultResults,
-  taxFreeResults,
+  taxesData,
   columnTextWhite,
   highlightedRow,
   isTableCollapsed,
   isTableCardExpanded,
+  currentAge,
   setIsTableCollapsed,
   setIsTableCardExpanded,
   handleHeaderClick,
   handleCellClick,
 }: ComparisonTableProps) {
-  const tableRows = [
-    { label: "Starting Balance", current: "0", taxes: "10%", taxFree: "0" },
-    {
-      label: "Annual Contributions",
-      current: "$25,641",
-      taxes: "22%",
-      taxFree: "$20,000",
-    },
-    {
-      label: "Annual Employer Match",
-      current: "$0",
-      taxes: "",
-      taxFree: "N/A",
-    },
-    { label: "Annual Fees", current: "2%", taxes: "", taxFree: "Included" },
-    {
-      label: "Gross Retirement Income",
-      current: `$${defaultResults.grossRetirementIncome.toLocaleString()}`,
-      taxes: "",
-      taxFree: `$${taxFreeResults.grossRetirementIncome.toLocaleString()}`,
-    },
-    {
-      label: "Income Tax",
-      current: `$${defaultResults.incomeTax.toLocaleString()}`,
-      taxes: "28%",
-      taxFree: `$${taxFreeResults.incomeTax.toLocaleString()}`,
-    },
-    {
-      label: "Net Retirement Income",
-      current: `$${defaultResults.netRetirementIncome.toLocaleString()}`,
-      taxes: "28%",
-      taxFree: `$${taxFreeResults.netRetirementIncome.toLocaleString()}`,
-    },
-    {
-      label: "Cumulative Taxes Deferred",
-      current: `$${defaultResults.cumulativeTaxesDeferred.toLocaleString()}`,
-      taxes: "",
-      taxFree: `$${taxFreeResults.cumulativeTaxesDeferred.toLocaleString()}`,
-    },
-    {
-      label: "Cumulative Taxes Paid",
-      current: `$${defaultResults.cumulativeTaxesPaid.toLocaleString()}`,
-      taxes: "10%",
-      taxFree: `$${taxFreeResults.cumulativeTaxesPaid.toLocaleString()}`,
-    },
-    {
-      label: "Cumulative Fees Paid",
-      current: `$${defaultResults.cumulativeFeesPaid.toLocaleString()}`,
-      taxes: "",
-      taxFree: `$${taxFreeResults.cumulativeFeesPaid.toLocaleString()}`,
-    },
-    {
-      label: "Cumulative Net Income",
-      current: `$${defaultResults.cumulativeNetIncome.toLocaleString()}`,
-      taxes: "",
-      taxFree: `$${taxFreeResults.cumulativeNetIncome.toLocaleString()}`,
-    },
-    {
-      label: "Cumulative Account Balance",
-      current: `$${defaultResults.cumulativeAccountBalance.toLocaleString()}`,
-      taxes: "",
-      taxFree: `$${taxFreeResults.cumulativeAccountBalance.toLocaleString()}`,
-    },
-    {
-      label: "Taxes Due",
-      current: `${defaultResults.taxesDue}%`,
-      taxes: "28%",
-      taxFree: `${taxFreeResults.taxesDue}%`,
-    },
-    {
-      label: "Death Benefits",
-      current: `$${defaultResults.deathBenefits.toLocaleString()}`,
-      taxes: "",
-      taxFree: `$${taxFreeResults.deathBenefits.toLocaleString()}`,
-    },
-    {
-      label: "Years You Run Out of Money",
-      current: `${defaultResults.yearsRunOutOfMoney}`,
-      taxes: "",
-      taxFree: `${taxFreeResults.yearsRunOutOfMoney}`,
-    },
-  ];
+  const { tables } = useTableStore();
+  const [yearsRunOutOfMoney, setYearsRunOutOfMoney] = useState<number>(
+    defaultResults.yearsRunOutOfMoney
+  );
+
+  // Compute taxFreeResults dynamically based on yearsRunOutOfMoney
+  const taxFreeResults = useMemo(
+    () => extractTaxFreeResults(tables, currentAge, yearsRunOutOfMoney),
+    [tables, currentAge, yearsRunOutOfMoney]
+  );
+
+  const handleYearsRunOutOfMoneyChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = Number(e.target.value);
+    if (!isNaN(value) && value >= 0) {
+      setYearsRunOutOfMoney(value);
+    }
+  };
+
+  const tableRows = useMemo(
+    () => [
+      {
+        label: "Starting Balance",
+        current: `$${defaultResults.startingBalance.toLocaleString()}`,
+        taxes: taxesData.startingBalance,
+        taxFree: `$${taxFreeResults.startingBalance.toLocaleString()}`,
+      },
+      {
+        label: "Annual Contributions",
+        current: `$${defaultResults.annualContributions.toLocaleString()}`,
+        taxes: taxesData.annualContributions,
+        taxFree: `$${taxFreeResults.annualContributions.toLocaleString()}`,
+      },
+      {
+        label: "Annual Employer Match",
+        current:
+          typeof defaultResults.annualEmployerMatch === "number"
+            ? `$${defaultResults.annualEmployerMatch}`
+            : defaultResults.annualEmployerMatch,
+        taxes: taxesData.annualEmployerMatch,
+        taxFree: taxFreeResults.annualEmployerMatch,
+      },
+      {
+        label: "Annual Fees",
+        current:
+          typeof defaultResults.annualFees === "number"
+            ? `${defaultResults.annualFees}%`
+            : defaultResults.annualFees,
+        taxes: taxesData.annualFees,
+        taxFree: taxFreeResults.annualFees,
+      },
+      {
+        label: "Gross Retirement Income",
+        current: `$${defaultResults.grossRetirementIncome.toLocaleString()}`,
+        taxes: taxesData.grossRetirementIncome,
+        taxFree: `$${taxFreeResults.grossRetirementIncome.toLocaleString()}`,
+      },
+      {
+        label: "Income Tax",
+        current: `$${defaultResults.incomeTax.toLocaleString()}`,
+        taxes: taxesData.incomeTax,
+        taxFree: `$${taxFreeResults.incomeTax.toLocaleString()}`,
+      },
+      {
+        label: "Net Retirement Income",
+        current: `$${defaultResults.netRetirementIncome.toLocaleString()}`,
+        taxes: taxesData.netRetirementIncome,
+        taxFree: `$${taxFreeResults.netRetirementIncome.toLocaleString()}`,
+      },
+      {
+        label: "Cumulative Taxes Deferred",
+        current: `$${defaultResults.cumulativeTaxesDeferred.toLocaleString()}`,
+        taxes: taxesData.cumulativeTaxesDeferred,
+        taxFree: `$${taxFreeResults.cumulativeTaxesDeferred.toLocaleString()}`,
+      },
+      {
+        label: "Cumulative Taxes Paid",
+        current: `$${defaultResults.cumulativeTaxesPaid.toLocaleString()}`,
+        taxes: taxesData.cumulativeTaxesPaid,
+        taxFree: `$${taxFreeResults.cumulativeTaxesPaid.toLocaleString()}`,
+      },
+      {
+        label: "Cumulative Fees Paid",
+        current: `$${defaultResults.cumulativeFeesPaid.toLocaleString()}`,
+        taxes: taxesData.cumulativeFeesPaid,
+        taxFree: `$${taxFreeResults.cumulativeFeesPaid.toLocaleString()}`,
+      },
+      {
+        label: "Cumulative Net Income",
+        current: `$${defaultResults.cumulativeNetIncome.toLocaleString()}`,
+        taxes: taxesData.cumulativeNetIncome,
+        taxFree: `$${taxFreeResults.cumulativeNetIncome.toLocaleString()}`,
+      },
+      {
+        label: "Cumulative Account Balance",
+        current: `$${defaultResults.cumulativeAccountBalance.toLocaleString()}`,
+        taxes: taxesData.cumulativeAccountBalance,
+        taxFree: `$${taxFreeResults.cumulativeAccountBalance.toLocaleString()}`,
+      },
+      {
+        label: "Taxes Due",
+        current: `${defaultResults.taxesDue}%`,
+        taxes: taxesData.taxesDue,
+        taxFree: `${taxFreeResults.taxesDue}%`,
+      },
+      {
+        label: "Death Benefits",
+        current: `$${defaultResults.deathBenefits.toLocaleString()}`,
+        taxes: taxesData.deathBenefits,
+        taxFree: `$${taxFreeResults.deathBenefits.toLocaleString()}`,
+      },
+      {
+        label: "Years You Run Out of Money",
+        current: (
+          <Input
+            type="number"
+            value={yearsRunOutOfMoney}
+            onChange={handleYearsRunOutOfMoneyChange}
+            className="w-20"
+            min={0}
+            aria-label="Years you run out of money for Current Plan"
+          />
+        ),
+        taxes: taxesData.yearsRunOutOfMoney,
+        taxFree: `${taxFreeResults.yearsRunOutOfMoney}`,
+      },
+    ],
+    [defaultResults, taxesData, taxFreeResults, yearsRunOutOfMoney]
+  );
+
+  // Error handling for missing API data
+  // if (!tables.length) {
+  //   return (
+  //     <Card>
+  //       <CardHeader>
+  //         <h3 className="text-lg font-semibold">Comparison Table</h3>
+  //       </CardHeader>
+  //       <CardContent>
+  //         <p className="text-red-500">
+  //           Error: No API data available. Please upload a PDF on the Import
+  //           page.
+  //         </p>
+  //       </CardContent>
+  //     </Card>
+  //   );
+  // }
 
   return (
     <AnimatePresence>

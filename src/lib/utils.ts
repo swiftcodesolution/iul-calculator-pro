@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { ClientFile } from "./types";
+import { ClientFile, TableData, Results } from "./types";
 
 // Utility to merge class names for Tailwind CSS
 export function cn(...inputs: ClassValue[]) {
@@ -136,5 +136,106 @@ export function throttle<T extends (...args: unknown[]) => R, R>(
       setTimeout(() => (inThrottle = false), limit);
     }
     return lastResult;
+  };
+}
+
+export function extractTaxFreeResults(
+  tables: TableData[],
+  currentAge: number,
+  yearsRunOutOfMoney: number
+): Results {
+  // First table for Premium Outlay, Net Outlay, Cash Value, Death Benefit
+  const mainTable = tables[0]?.data || [];
+  // Second table for Charges
+  const chargesTable = tables[1]?.data || [];
+
+  if (!mainTable.length) {
+    return {
+      startingBalance: 0,
+      annualContributions: 0,
+      annualEmployerMatch: "N/A",
+      annualFees: "Included",
+      grossRetirementIncome: 0,
+      incomeTax: 0,
+      netRetirementIncome: 0,
+      cumulativeTaxesDeferred: 0,
+      cumulativeTaxesPaid: 0,
+      cumulativeFeesPaid: 0,
+      cumulativeNetIncome: 0,
+      cumulativeAccountBalance: 0,
+      taxesDue: 0,
+      deathBenefits: 0,
+      yearsRunOutOfMoney,
+      currentAge,
+    };
+  }
+
+  // Helper to parse currency strings (e.g., "$6,000.00" -> 6000)
+  const parseCurrency = (value: string | number): number => {
+    if (typeof value === "number") return value;
+    return Number(value.replace(/[^0-9.-]+/g, "")) || 0;
+  };
+
+  // Annual Contributions: 7th row of "Premium Outlay"
+  const annualContributions = parseCurrency(
+    mainTable[6]?.["Premium Outlay"] || 0
+  );
+
+  // Gross Retirement Income: First different value in "Net Outlay"
+  let grossRetirementIncome = 0;
+  for (let i = 1; i < mainTable.length; i++) {
+    if (mainTable[i]["Net Outlay"] !== mainTable[i - 1]["Net Outlay"]) {
+      grossRetirementIncome = parseCurrency(mainTable[i]["Net Outlay"]);
+      break;
+    }
+  }
+  // Fallback: If all Net Outlay values are the same (e.g., $0), use a default or last value
+  if (grossRetirementIncome === 0) {
+    grossRetirementIncome = parseCurrency(
+      mainTable[mainTable.length - 1]?.["Net Outlay"] || 0
+    );
+  }
+
+  // Cumulative Fees Paid: Sum of "Charges" up to yearsRunOutOfMoney row
+  let cumulativeFeesPaid = 0;
+  for (let i = 0; i < Math.min(yearsRunOutOfMoney, chargesTable.length); i++) {
+    cumulativeFeesPaid += parseCurrency(chargesTable[i]?.["Charges"] || 0);
+  }
+
+  // Cumulative Account Balance: "Cash Value" at yearsRunOutOfMoney row
+  const rowIndex = Math.min(yearsRunOutOfMoney - 1, mainTable.length - 1);
+  const cumulativeAccountBalance = parseCurrency(
+    mainTable[rowIndex]?.["Cash Value"] || 0
+  );
+
+  // Death Benefits: "Death Benefit" at yearsRunOutOfMoney row
+  const deathBenefits = parseCurrency(
+    mainTable[rowIndex]?.["Death Benefit"] || 0
+  );
+
+  // Net Retirement Income: Same as grossRetirementIncome
+  const netRetirementIncome = grossRetirementIncome;
+
+  // Cumulative Net Income: grossRetirementIncome * (currentAge - yearsRunOutOfMoney)
+  const yearsDifference = Math.max(currentAge - yearsRunOutOfMoney, 0);
+  const cumulativeNetIncome = grossRetirementIncome * yearsDifference;
+
+  return {
+    startingBalance: 0,
+    annualContributions,
+    annualEmployerMatch: "N/A",
+    annualFees: "Included",
+    grossRetirementIncome,
+    incomeTax: 0,
+    netRetirementIncome,
+    cumulativeTaxesDeferred: 0,
+    cumulativeTaxesPaid: 0,
+    cumulativeFeesPaid,
+    cumulativeNetIncome,
+    cumulativeAccountBalance,
+    taxesDue: 0,
+    deathBenefits,
+    yearsRunOutOfMoney,
+    currentAge,
   };
 }

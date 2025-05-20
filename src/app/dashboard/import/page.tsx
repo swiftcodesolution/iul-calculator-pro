@@ -17,10 +17,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload, ZoomIn, ZoomOut, Fullscreen, Minimize2 } from "lucide-react"; // Added Minimize2
 import { toast } from "sonner";
+import { useTableStore } from "@/lib/store";
+import { useRouter } from "next/navigation";
 
 // Define types
 type TableData = {
-  source_text: string;
+  source: string;
   page_number: number;
   data: Record<string, string | number>[];
 };
@@ -36,30 +38,29 @@ const API_ENDPOINT =
 
 export default function ImportPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [tables, setTables] = useState<TableData[]>([]);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [zoomLevel, setZoomLevel] = useState<number>(1); // Added for zoom control
   const [isTableFullScreen, setIsTableFullScreen] = useState<boolean>(false); // Added for full-screen control
+  const { tables, setTables, clearTables } = useTableStore();
+  const router = useRouter();
 
   // Handle file change
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>
   ) => {
     let selectedFile: File | null = null;
-
     if ("dataTransfer" in e) {
       selectedFile = e.dataTransfer.files?.[0] || null;
     } else {
       selectedFile = e.target.files?.[0] || null;
     }
-
     if (selectedFile && selectedFile.type === "application/pdf") {
       setFile(selectedFile);
       setError("");
-      setTables([]);
-      setZoomLevel(1); // Reset zoom on new file
-      setIsTableFullScreen(false); // Exit full-screen on new file
+      clearTables(); // Clear previous data
+      setZoomLevel(1);
+      setIsTableFullScreen(false);
     } else {
       setFile(null);
       setError("Please upload a valid PDF file.");
@@ -74,22 +75,19 @@ export default function ImportPage() {
       toast("Please select a PDF file.");
       return;
     }
-
     setLoading(true);
     const formData = new FormData();
     formData.append("file", file);
-
     try {
       const response = await axios.post<ApiResponse>(API_ENDPOINT, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
       if (response.data.tables) {
         console.log(
           "Received tables:",
           JSON.stringify(response.data.tables, null, 2)
         );
-        setTables(response.data.tables);
+        setTables(response.data.tables); // Save to persisted store
         toast(`Extracted ${response.data.tables.length} tables from PDF.`);
       } else {
         setError(response.data.message || "No tables found.");
@@ -126,6 +124,7 @@ export default function ImportPage() {
     setZoomLevel(1); // Reset zoom on import
     setIsTableFullScreen(false); // Exit full-screen on import
     toast("Data imported successfully.");
+    router.push("/calculator");
   };
 
   // Handle cancel (reset form)
