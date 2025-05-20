@@ -359,7 +359,7 @@ export function extractTaxFreeResults(
   }
 
   // Sum Charges for rows corresponding to years up to yearsRunOutOfMoney - currentAge
-  const yearsToSum = Math.max(0, yearsRunOutOfMoney - currentAge);
+  const yearsToSum = Math.max(0, yearsRunOutOfMoney + currentAge);
   const cumulativeFeesPaid = chargesTable
     .slice(0, yearsToSum)
     .reduce((sum, row) => sum + parseCurrency(row.Charges || 0), 0);
