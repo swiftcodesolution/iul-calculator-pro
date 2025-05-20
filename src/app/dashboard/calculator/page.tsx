@@ -20,7 +20,7 @@ import {
 const defaultResults: Results = {
   xValue: 0,
   startingBalance: 0,
-  annualContributions: 25641,
+  annualContributions: 0,
   annualEmployerMatch: "0",
   annualFees: "2%",
   grossRetirementIncome: 1000000,
