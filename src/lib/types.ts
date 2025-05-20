@@ -30,16 +30,7 @@ export type CropState = {
   } | null;
 };
 
-// for calculator page
-export type Plan = {
-  startingBalance: number;
-  annualContribution: number;
-  annualEmployerMatch: number;
-  annualFees: number | "Included";
-  rateOfReturn: number;
-};
-
-export type CalculatorData = {
+export type BoxesData = {
   currentAge: number;
   stopSavingAge: number;
   retirementAge: number;
@@ -47,9 +38,13 @@ export type CalculatorData = {
   retirementTaxRate: number;
   inflationRate: number;
   currentPlanFees: number;
-  currentPlan: Plan;
-  taxFreePlan: Plan;
-  futureAgeYears: number;
+  currentPlanROR: number;
+  taxFreePlanROR: number;
+};
+export type BoxesInputField = {
+  label: string;
+  key: keyof BoxesData;
+  value: string | number;
 };
 
 export type Results = {

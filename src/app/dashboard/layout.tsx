@@ -16,8 +16,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const navItems = [
     { label: "Home", href: "/dashboard/home", icon: Home },
-    // { label: "Calculator", href: "/dashboard/calculator", icon: Calculator },
-    { label: "Calculator", href: "/dashboard/calculator2", icon: Calculator },
+    { label: "Calculator", href: "/dashboard/calculator", icon: Calculator },
     { label: "Import", href: "/dashboard/import", icon: Upload },
     { label: "Data", href: "/dashboard/data", icon: Database },
   ];

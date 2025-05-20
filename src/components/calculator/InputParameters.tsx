@@ -2,13 +2,27 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { CalculatorData } from "@/lib/types";
+import { BoxesData, BoxesInputField } from "@/lib/types";
 
 interface InputParametersProps {
-  data: CalculatorData;
+  data: BoxesData;
+  onUpdate: (updatedData: Partial<BoxesData>) => void;
 }
 
-export function InputParameters({ data }: InputParametersProps) {
+export function InputParameters({ data, onUpdate }: InputParametersProps) {
+  const handleInputChange = (key: keyof BoxesData, value: string) => {
+    if (value === "") {
+      onUpdate({ [key]: 0 });
+      return;
+    }
+    const parsedValue = value.endsWith("%")
+      ? parseFloat(value)
+      : parseInt(value);
+    if (!isNaN(parsedValue)) {
+      onUpdate({ [key]: parsedValue });
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -28,11 +42,25 @@ export function InputParameters({ data }: InputParametersProps) {
             }}
             className="flex flex-col space-y-2"
           >
-            {[
-              { label: "Current Age", value: data.currentAge },
-              { label: "Stop Saving Age", value: data.stopSavingAge },
-              { label: "Retirement Age", value: data.retirementAge },
-            ].map(({ label, value }) => (
+            {(
+              [
+                {
+                  label: "Current Age",
+                  key: "currentAge",
+                  value: data.currentAge,
+                },
+                {
+                  label: "Stop Saving Age",
+                  key: "stopSavingAge",
+                  value: data.stopSavingAge,
+                },
+                {
+                  label: "Retirement Age",
+                  key: "retirementAge",
+                  value: data.retirementAge,
+                },
+              ] as BoxesInputField[]
+            ).map(({ label, key, value }) => (
               <motion.div
                 key={label}
                 className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md"
@@ -47,6 +75,7 @@ export function InputParameters({ data }: InputParametersProps) {
                   <Input
                     className="w-[50px] text-sm border-gray-500 border-2"
                     value={value}
+                    onChange={(e) => handleInputChange(key, e.target.value)}
                   />
                 </motion.p>
               </motion.div>
@@ -63,14 +92,25 @@ export function InputParameters({ data }: InputParametersProps) {
             }}
             className="flex flex-col space-y-2"
           >
-            {[
-              { label: "Working Tax Rate", value: `${data.workingTaxRate}%` },
-              {
-                label: "Retirement Tax Rate",
-                value: `${data.retirementTaxRate}%`,
-              },
-              { label: "Inflation Rate", value: `${data.inflationRate}%` },
-            ].map(({ label, value }) => (
+            {(
+              [
+                {
+                  label: "Working Tax Rate",
+                  key: "workingTaxRate",
+                  value: `${data.workingTaxRate}%`,
+                },
+                {
+                  label: "Retirement Tax Rate",
+                  key: "retirementTaxRate",
+                  value: `${data.retirementTaxRate}%`,
+                },
+                {
+                  label: "Inflation Rate",
+                  key: "inflationRate",
+                  value: `${data.inflationRate}%`,
+                },
+              ] as BoxesInputField[]
+            ).map(({ label, key, value }) => (
               <motion.div
                 key={label}
                 className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md"
@@ -85,6 +125,7 @@ export function InputParameters({ data }: InputParametersProps) {
                   <Input
                     className="w-[60px] text-sm border-gray-500 border-2"
                     value={value}
+                    onChange={(e) => handleInputChange(key, e.target.value)}
                   />
                 </motion.p>
               </motion.div>
@@ -101,11 +142,25 @@ export function InputParameters({ data }: InputParametersProps) {
             }}
             className="flex flex-col space-y-2"
           >
-            {[
-              { label: "Current Plan Fees", value: `${data.currentPlanFees}%` },
-              { label: "Current Plan ROR", value: "6.3%" },
-              { label: "Tax Free Plan ROR", value: "6.3%" },
-            ].map(({ label, value }) => (
+            {(
+              [
+                {
+                  label: "Current Plan Fees",
+                  key: "currentPlanFees",
+                  value: `${data.currentPlanFees}%`,
+                },
+                {
+                  label: "Current Plan ROR",
+                  key: "currentPlanROR",
+                  value: `${data.currentPlanROR}%`,
+                },
+                {
+                  label: "Tax Free Plan ROR",
+                  key: "taxFreePlanROR",
+                  value: `${data.taxFreePlanROR}%`,
+                },
+              ] as BoxesInputField[]
+            ).map(({ label, key, value }) => (
               <motion.div
                 key={label}
                 className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md"
@@ -120,6 +175,7 @@ export function InputParameters({ data }: InputParametersProps) {
                   <Input
                     className="w-[60px] text-sm border-gray-500 border-2"
                     value={value}
+                    onChange={(e) => handleInputChange(key, e.target.value)}
                   />
                 </motion.p>
               </motion.div>

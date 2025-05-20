@@ -124,7 +124,7 @@ export default function ImportPage() {
     setZoomLevel(1); // Reset zoom on import
     setIsTableFullScreen(false); // Exit full-screen on import
     toast("Data imported successfully.");
-    router.push("/calculator");
+    router.push("/dashboard/calculator");
   };
 
   // Handle cancel (reset form)

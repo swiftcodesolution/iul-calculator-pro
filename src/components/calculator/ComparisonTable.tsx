@@ -1,4 +1,3 @@
-// app/comparison/page.tsx
 "use client";
 
 import { useState, useMemo } from "react";
@@ -181,23 +180,6 @@ export function ComparisonTable({
     ],
     [defaultResults, taxesData, taxFreeResults, yearsRunOutOfMoney]
   );
-
-  // Error handling for missing API data
-  // if (!tables.length) {
-  //   return (
-  //     <Card>
-  //       <CardHeader>
-  //         <h3 className="text-lg font-semibold">Comparison Table</h3>
-  //       </CardHeader>
-  //       <CardContent>
-  //         <p className="text-red-500">
-  //           Error: No API data available. Please upload a PDF on the Import
-  //           page.
-  //         </p>
-  //       </CardContent>
-  //     </Card>
-  //   );
-  // }
 
   return (
     <AnimatePresence>
