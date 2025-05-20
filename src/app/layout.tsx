@@ -5,6 +5,9 @@ import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { AnimatePresence } from "motion/react";
 
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 const inter = Inter({
   subsets: ["latin"],
 });
@@ -31,6 +34,8 @@ export default function RootLayout({
           <main className="min-h-dvh">{children}</main>
         </AnimatePresence>
         <Toaster richColors />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
