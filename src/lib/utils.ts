@@ -359,10 +359,29 @@ export function extractTaxFreeResults(
   }
 
   // Sum Charges for rows corresponding to years up to yearsRunOutOfMoney - currentAge
-  const yearsToSum = Math.max(0, yearsRunOutOfMoney + currentAge);
-  const cumulativeFeesPaid = chargesTable
-    .slice(0, yearsToSum)
-    .reduce((sum, row) => sum + parseCurrency(row.Charges || 0), 0);
+  // const yearsToSum = Math.max(0, yearsRunOutOfMoney - currentAge);
+  // const cumulativeFeesPaid = chargesTable
+  //   .slice(0, yearsToSum)
+  //   .reduce((sum, row) => sum + parseCurrency(row.Charges || 0), 0);
+
+  // console.log(chargesTable);
+
+  let cumulativeFeesPaid = 0;
+
+  if (chargesTable.length && mainTable.length) {
+    // Map indexes of ages 41 through yearsRunOutOfMoney using mainTable
+    const startIndex = mainTable.findIndex((row) => Number(row.Age) === 41);
+    const endIndex = mainTable.findIndex(
+      (row) => Number(row.Age) === yearsRunOutOfMoney
+    );
+
+    // If valid indexes found, sum corresponding Charges from chargesTable
+    if (startIndex !== -1 && endIndex !== -1 && endIndex >= startIndex) {
+      cumulativeFeesPaid = chargesTable
+        .slice(startIndex, endIndex + 1) // +1 to include end age
+        .reduce((sum, row) => sum + parseCurrency(row.Charges || 0), 0);
+    }
+  }
 
   // Find row where Age matches yearsRunOutOfMoney
   const targetRow =

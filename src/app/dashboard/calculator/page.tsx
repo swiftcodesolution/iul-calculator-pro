@@ -34,7 +34,7 @@ const defaultResults: Results = {
   taxesDue: 28,
   deathBenefits: 500000,
   yearsRunOutOfMoney: 30,
-  currentAge: 65, // Example value
+  currentAge: 40,
 };
 
 const taxesData: TaxesData = {
@@ -96,7 +96,7 @@ export default function CalculatorPage() {
   const [isTableCardExpanded, setIsTableCardExpanded] = useState(false);
   const [isTabCardExpanded, setIsTabCardExpanded] = useState(false);
   const [boxesData, setBoxesData] = useState<BoxesData>({
-    currentAge: 30,
+    currentAge: 40,
     stopSavingAge: 60,
     retirementAge: 65,
     workingTaxRate: 25,
