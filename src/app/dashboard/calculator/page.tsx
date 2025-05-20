@@ -18,6 +18,7 @@ import {
 } from "@/lib/types";
 
 const defaultResults: Results = {
+  xValue: 0,
   startingBalance: 0,
   annualContributions: 25641,
   annualEmployerMatch: "0",
