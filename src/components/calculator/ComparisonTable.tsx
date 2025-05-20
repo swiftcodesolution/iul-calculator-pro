@@ -13,6 +13,13 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Results, TaxesData } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -30,7 +37,7 @@ interface ComparisonTableProps {
   highlightedRow: number | null;
   isTableCollapsed: boolean;
   isTableCardExpanded: boolean;
-  currentAge: number; // Added prop for currentAge
+  currentAge: number;
   setIsTableCollapsed: (value: boolean) => void;
   setIsTableCardExpanded: (value: boolean) => void;
   handleHeaderClick: (column: "currentPlan" | "taxes" | "taxFreePlan") => void;
@@ -54,6 +61,27 @@ export function ComparisonTable({
   const [yearsRunOutOfMoney, setYearsRunOutOfMoney] = useState<number>(
     defaultResults.yearsRunOutOfMoney
   );
+  const [startingBalance, setStartingBalance] = useState<number>(
+    defaultResults.startingBalance
+  );
+  const [annualContributions, setAnnualContributions] = useState<number>(
+    defaultResults.annualContributions
+  );
+  const [annualEmployerMatch, setAnnualEmployerMatch] = useState<number>(
+    typeof defaultResults.annualEmployerMatch === "number"
+      ? defaultResults.annualEmployerMatch
+      : 0
+  );
+
+  // Extract unique Age values from mainTable
+  const ageOptions = useMemo(() => {
+    const mainTable = tables[0]?.data || [];
+    const ages = mainTable
+      .map((row) => Number(row.Age))
+      // .filter((age) => !isNaN(age) && age >= currentAge)
+      .sort((a, b) => a - b);
+    return [...new Set(ages)];
+  }, [tables]);
 
   // Compute taxFreeResults dynamically based on yearsRunOutOfMoney
   const taxFreeResults = useMemo(
@@ -61,12 +89,37 @@ export function ComparisonTable({
     [tables, currentAge, yearsRunOutOfMoney]
   );
 
-  const handleYearsRunOutOfMoneyChange = (
+  const handleYearsRunOutOfMoneyChange = (value: string) => {
+    const age = Number(value);
+    if (!isNaN(age)) {
+      setYearsRunOutOfMoney(age);
+    }
+  };
+
+  const handleStartingBalanceChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = Number(e.target.value);
     if (!isNaN(value) && value >= 0) {
-      setYearsRunOutOfMoney(value);
+      setStartingBalance(value);
+    }
+  };
+
+  const handleAnnualContributionsChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = Number(e.target.value);
+    if (!isNaN(value) && value >= 0) {
+      setAnnualContributions(value);
+    }
+  };
+
+  const handleAnnualEmployerMatchChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = Number(e.target.value);
+    if (!isNaN(value) && value >= 0) {
+      setAnnualEmployerMatch(value);
     }
   };
 
@@ -74,22 +127,46 @@ export function ComparisonTable({
     () => [
       {
         label: "Starting Balance",
-        current: `$${defaultResults.startingBalance.toLocaleString()}`,
+        current: (
+          <Input
+            type="number"
+            value={startingBalance}
+            onChange={handleStartingBalanceChange}
+            className="w-32"
+            min={0}
+            aria-label="Starting Balance for Current Plan"
+          />
+        ),
         taxes: taxesData.startingBalance,
         taxFree: `$${taxFreeResults.startingBalance.toLocaleString()}`,
       },
       {
         label: "Annual Contributions",
-        current: `$${defaultResults.annualContributions.toLocaleString()}`,
+        current: (
+          <Input
+            type="number"
+            value={annualContributions}
+            onChange={handleAnnualContributionsChange}
+            className="w-32"
+            min={0}
+            aria-label="Annual Contributions for Current Plan"
+          />
+        ),
         taxes: taxesData.annualContributions,
         taxFree: `$${taxFreeResults.annualContributions.toLocaleString()}`,
       },
       {
         label: "Annual Employer Match",
-        current:
-          typeof defaultResults.annualEmployerMatch === "number"
-            ? `$${defaultResults.annualEmployerMatch}`
-            : defaultResults.annualEmployerMatch,
+        current: (
+          <Input
+            type="number"
+            value={annualEmployerMatch}
+            onChange={handleAnnualEmployerMatchChange}
+            className="w-32"
+            min={0}
+            aria-label="Annual Employer Match for Current Plan"
+          />
+        ),
         taxes: taxesData.annualEmployerMatch,
         taxFree: taxFreeResults.annualEmployerMatch,
       },
@@ -165,20 +242,37 @@ export function ComparisonTable({
       {
         label: "Years You Run Out of Money",
         current: (
-          <Input
-            type="number"
-            value={yearsRunOutOfMoney}
-            onChange={handleYearsRunOutOfMoneyChange}
-            className="w-20"
-            min={0}
-            aria-label="Years you run out of money for Current Plan"
-          />
+          <Select
+            value={yearsRunOutOfMoney.toString()}
+            onValueChange={handleYearsRunOutOfMoneyChange}
+            aria-label="Select years you run out of money for Current Plan"
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Select Age" />
+            </SelectTrigger>
+            <SelectContent>
+              {ageOptions.map((age) => (
+                <SelectItem key={age} value={age.toString()}>
+                  {age}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         ),
         taxes: taxesData.yearsRunOutOfMoney,
         taxFree: `${taxFreeResults.yearsRunOutOfMoney}`,
       },
     ],
-    [defaultResults, taxesData, taxFreeResults, yearsRunOutOfMoney]
+    [
+      defaultResults,
+      taxesData,
+      taxFreeResults,
+      yearsRunOutOfMoney,
+      ageOptions,
+      startingBalance,
+      annualContributions,
+      annualEmployerMatch,
+    ]
   );
 
   return (

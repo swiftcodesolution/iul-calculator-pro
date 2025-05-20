@@ -48,6 +48,7 @@ export type BoxesInputField = {
 };
 
 export type Results = {
+  xValue: number;
   startingBalance: number;
   annualContributions: number;
   annualEmployerMatch: string;
@@ -63,15 +64,15 @@ export type Results = {
   taxesDue: number;
   deathBenefits: number;
   yearsRunOutOfMoney: number;
-  currentAge?: number; // Optional, for cumulativeNetIncome calculation
+  currentAge: number;
 };
 
 export interface TableData {
-  source: string; // Align with API response
+  source: string;
   page_number: number;
-  keyword?: string; // Optional, as per API
-  extractor?: string; // Optional, as per API
-  data: Record<string, string | number>[];
+  keyword?: string;
+  extractor?: string;
+  data: Record<string, string | number>[]; // Each object in data may include Age for mainTable
 }
 
 export interface TaxesData {

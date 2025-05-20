@@ -73,9 +73,10 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                   transition={{ delay: 0.2, duration: 0.3 }}
                 >
                   <Input
-                    className="w-[50px] text-sm border-gray-500 border-2"
+                    className="w-[80px] text-sm border-gray-500 border-2"
                     value={value}
                     onChange={(e) => handleInputChange(key, e.target.value)}
+                    type="number"
                   />
                 </motion.p>
               </motion.div>
@@ -123,7 +124,7 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                   transition={{ delay: 0.2, duration: 0.3 }}
                 >
                   <Input
-                    className="w-[60px] text-sm border-gray-500 border-2"
+                    className="w-[80px] text-sm border-gray-500 border-2"
                     value={value}
                     onChange={(e) => handleInputChange(key, e.target.value)}
                   />
@@ -173,7 +174,7 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                   transition={{ delay: 0.2, duration: 0.3 }}
                 >
                   <Input
-                    className="w-[60px] text-sm border-gray-500 border-2"
+                    className="w-[80px] text-sm border-gray-500 border-2"
                     value={value}
                     onChange={(e) => handleInputChange(key, e.target.value)}
                   />
