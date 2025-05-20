@@ -8,7 +8,6 @@ import { TabManager } from "@/components/calculator/TabManager";
 import { useTabs } from "@/hooks/useTabs";
 import { useColumnHighlight } from "@/hooks/useColumnHighlight";
 import {
-  Results,
   TaxesData,
   TabContent,
   TotalAdvantage,
@@ -17,26 +16,7 @@ import {
   BoxesData,
 } from "@/lib/types";
 
-const defaultResults: Results = {
-  xValue: 0,
-  startingBalance: 0,
-  annualContributions: 0,
-  annualEmployerMatch: "0",
-  annualFees: "2%",
-  grossRetirementIncome: 1000000,
-  incomeTax: 280000,
-  netRetirementIncome: 720000,
-  cumulativeTaxesDeferred: 50000,
-  cumulativeTaxesPaid: 300000,
-  cumulativeFeesPaid: 20000,
-  cumulativeNetIncome: 700000,
-  cumulativeAccountBalance: 1500000,
-  taxesDue: 28,
-  deathBenefits: 500000,
-  yearsRunOutOfMoney: 30,
-  currentAge: 40,
-};
-
+// Static data for Taxes column (yellow); replace with dynamic logic if needed
 const taxesData: TaxesData = {
   startingBalance: "10%",
   annualContributions: "22%",
@@ -55,6 +35,7 @@ const taxesData: TaxesData = {
   yearsRunOutOfMoney: "",
 };
 
+// Static data for Total Advantage tab
 const totalAdvantage: TotalAdvantage = {
   total: 1324000,
   taxes: 125000,
@@ -63,6 +44,7 @@ const totalAdvantage: TotalAdvantage = {
   deathBenefits: 786000,
 };
 
+// Company details for display
 const companyDetails: CompanyDetails = {
   businessName: "IUL Calculator PRO",
   agentName: "Steven Johnson",
@@ -70,12 +52,14 @@ const companyDetails: CompanyDetails = {
   phone: "(760) 517-8105",
 };
 
+// Default logo and profile images
 const defaultLogo: ImageAsset = { src: "/logo.png", name: "Company Logo" };
 const defaultProfile: ImageAsset = {
   src: "/profile.jpg",
   name: "Agent Profile",
 };
 
+// Initial tabs for TabManager
 const initialTabs: TabContent[] = [
   {
     id: "total-advantage",
@@ -95,22 +79,25 @@ export default function CalculatorPage() {
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
   const [isTableCardExpanded, setIsTableCardExpanded] = useState(false);
   const [isTabCardExpanded, setIsTabCardExpanded] = useState(false);
+  // State for input parameters
   const [boxesData, setBoxesData] = useState<BoxesData>({
-    currentAge: 40,
+    currentAge: 45, // Client’s default age
     stopSavingAge: 60,
     retirementAge: 65,
-    workingTaxRate: 25,
-    retirementTaxRate: 15,
+    workingTaxRate: 22, // Client’s default
+    retirementTaxRate: 28, // Client’s default
     inflationRate: 2.5,
-    currentPlanFees: 1.0,
-    currentPlanROR: 6.3,
-    taxFreePlanROR: 6.3,
+    currentPlanFees: 1.0, // Client’s assumed fee
+    currentPlanROR: 6.0, // Client’s default return
+    taxFreePlanROR: 6.0,
   });
 
+  // Update boxesData when inputs change
   const handleBoxesDataValueChange = (updatedData: Partial<BoxesData>) => {
     setBoxesData((prev) => ({ ...prev, ...updatedData }));
   };
 
+  // Tab management hooks
   const {
     tabs,
     setTabs,
@@ -122,7 +109,8 @@ export default function CalculatorPage() {
     setIsEditDialogOpen,
     isManageDialogOpen,
     setIsManageDialogOpen,
-    editTabId, // eslint-disable-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    editTabId,
     setEditTabId,
     newTabName,
     setNewTabName,
@@ -136,6 +124,7 @@ export default function CalculatorPage() {
     handleMoveDown,
   } = useTabs(initialTabs);
 
+  // Column and row highlight hooks
   const {
     columnTextWhite,
     highlightedRow,
@@ -153,7 +142,7 @@ export default function CalculatorPage() {
         />
         <ComparisonTable
           currentAge={boxesData.currentAge}
-          defaultResults={defaultResults}
+          boxesData={boxesData} // Pass boxesData for dynamic calculations
           taxesData={taxesData}
           columnTextWhite={columnTextWhite}
           highlightedRow={highlightedRow}
@@ -163,6 +152,7 @@ export default function CalculatorPage() {
           setIsTableCardExpanded={setIsTableCardExpanded}
           handleHeaderClick={handleHeaderClick}
           handleCellClick={handleCellClick}
+          defaultResults={boxesData as never}
         />
       </div>
 

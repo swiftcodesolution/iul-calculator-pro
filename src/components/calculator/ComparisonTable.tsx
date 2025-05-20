@@ -21,14 +21,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Results, TaxesData } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { Results, TaxesData, BoxesData } from "@/lib/types";
+import {
+  cn,
+  extractTaxFreeResults,
+  extractCurrentPlanResults,
+} from "@/lib/utils";
 import { useTableStore } from "@/lib/store";
-import { extractTaxFreeResults } from "@/lib/utils";
 
 interface ComparisonTableProps {
-  defaultResults: Results;
-  taxesData: TaxesData;
+  defaultResults: Results; // Static prop for compatibility (not used directly)
+  taxesData: TaxesData; // Data for yellow column
   columnTextWhite: {
     currentPlan: boolean;
     taxes: boolean;
@@ -37,7 +40,8 @@ interface ComparisonTableProps {
   highlightedRow: number | null;
   isTableCollapsed: boolean;
   isTableCardExpanded: boolean;
-  currentAge: number;
+  currentAge: number; // From boxesData
+  boxesData: BoxesData; // Input parameters from page
   setIsTableCollapsed: (value: boolean) => void;
   setIsTableCardExpanded: (value: boolean) => void;
   handleHeaderClick: (column: "currentPlan" | "taxes" | "taxFreePlan") => void;
@@ -52,47 +56,68 @@ export function ComparisonTable({
   isTableCollapsed,
   isTableCardExpanded,
   currentAge,
+  boxesData,
   setIsTableCollapsed,
   setIsTableCardExpanded,
   handleHeaderClick,
   handleCellClick,
 }: ComparisonTableProps) {
   const { tables, yearsRunOutOfMoney, setYearsRunOutOfMoney } = useTableStore();
+  // State for user inputs in the table
   const [startingBalance, setStartingBalance] = useState<number>(
     defaultResults.startingBalance
   );
   const [annualContributions, setAnnualContributions] = useState<number>(
-    defaultResults.annualContributions
+    10000 // Default to client’s $10,000
   );
   const [annualEmployerMatch, setAnnualEmployerMatch] = useState<number>(
-    typeof defaultResults.annualEmployerMatch === "number"
-      ? defaultResults.annualEmployerMatch
-      : 0
+    0 // Client specified no match
   );
 
-  // Extract unique Age values from mainTable
+  // Extract unique Age values from mainTable for dropdown
   const ageOptions = useMemo(() => {
     const mainTable = tables[0]?.data || [];
-    const ages = mainTable
-      .map((row) => Number(row.Age))
-      // .filter((age) => !isNaN(age) && age >= currentAge)
-      .sort((a, b) => a - b);
+    const ages = mainTable.map((row) => Number(row.Age)).sort((a, b) => a - b);
     return [...new Set(ages)];
   }, [tables]);
 
-  // Set yearsRunOutOfMoney when tables is populated
+  // Set default yearsRunOutOfMoney when tables are populated
   useEffect(() => {
     if (ageOptions.length > 0 && !ageOptions.includes(yearsRunOutOfMoney)) {
       setYearsRunOutOfMoney(ageOptions[0]);
     }
   }, [ageOptions, yearsRunOutOfMoney, setYearsRunOutOfMoney]);
 
-  // Compute taxFreeResults dynamically based on yearsRunOutOfMoney
+  // Compute 401(k) results for Current Plan (red column) dynamically
+  const currentPlanResults = useMemo(
+    () =>
+      extractCurrentPlanResults(
+        currentAge,
+        yearsRunOutOfMoney,
+        annualContributions, // From table input
+        boxesData.currentPlanROR / 100, // Convert percentage to decimal
+        boxesData.retirementTaxRate / 100, // Convert percentage to decimal
+        boxesData.currentPlanFees / 100, // Convert percentage to decimal
+        boxesData.workingTaxRate / 100 // Convert percentage to decimal
+      ),
+    [
+      currentAge,
+      yearsRunOutOfMoney,
+      annualContributions,
+      boxesData.currentPlanROR,
+      boxesData.retirementTaxRate,
+      boxesData.currentPlanFees,
+      boxesData.workingTaxRate,
+    ]
+  );
+
+  // Compute tax-free results for IRS 7702 (green column)
   const taxFreeResults = useMemo(
     () => extractTaxFreeResults(tables, currentAge, yearsRunOutOfMoney),
     [tables, currentAge, yearsRunOutOfMoney]
   );
 
+  // Handle dropdown change for yearsRunOutOfMoney
   const handleYearsRunOutOfMoneyChange = (value: string) => {
     const age = Number(value);
     if (!isNaN(age)) {
@@ -100,6 +125,7 @@ export function ComparisonTable({
     }
   };
 
+  // Handle input changes for Starting Balance
   const handleStartingBalanceChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -109,6 +135,7 @@ export function ComparisonTable({
     }
   };
 
+  // Handle input changes for Annual Contributions
   const handleAnnualContributionsChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -118,6 +145,7 @@ export function ComparisonTable({
     }
   };
 
+  // Handle input changes for Annual Employer Match
   const handleAnnualEmployerMatchChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -127,6 +155,7 @@ export function ComparisonTable({
     }
   };
 
+  // Define table rows with data for all columns
   const tableRows = useMemo(
     () => [
       {
@@ -176,70 +205,67 @@ export function ComparisonTable({
       },
       {
         label: "Annual Fees",
-        current:
-          typeof defaultResults.annualFees === "number"
-            ? `${defaultResults.annualFees}%`
-            : defaultResults.annualFees,
+        current: currentPlanResults.annualFees,
         taxes: taxesData.annualFees,
         taxFree: taxFreeResults.annualFees,
       },
       {
         label: "Gross Retirement Income",
-        current: `$${defaultResults.grossRetirementIncome.toLocaleString()}`,
+        current: `$${currentPlanResults.grossRetirementIncome.toLocaleString()}`,
         taxes: taxesData.grossRetirementIncome,
         taxFree: `$${taxFreeResults.grossRetirementIncome.toLocaleString()}`,
       },
       {
         label: "Income Tax",
-        current: `$${defaultResults.incomeTax.toLocaleString()}`,
+        current: `$${currentPlanResults.incomeTax.toLocaleString()}`,
         taxes: taxesData.incomeTax,
         taxFree: `$${taxFreeResults.incomeTax.toLocaleString()}`,
       },
       {
         label: "Net Retirement Income",
-        current: `$${defaultResults.netRetirementIncome.toLocaleString()}`,
+        current: `$${currentPlanResults.netRetirementIncome.toLocaleString()}`,
         taxes: taxesData.netRetirementIncome,
         taxFree: `$${taxFreeResults.netRetirementIncome.toLocaleString()}`,
       },
       {
         label: "Cumulative Taxes Deferred",
-        current: `$${defaultResults.cumulativeTaxesDeferred.toLocaleString()}`,
+        current: `$${currentPlanResults.cumulativeTaxesDeferred.toLocaleString()}`,
         taxes: taxesData.cumulativeTaxesDeferred,
         taxFree: `$${taxFreeResults.cumulativeTaxesDeferred.toLocaleString()}`,
       },
       {
         label: "Cumulative Taxes Paid",
-        current: `$${defaultResults.cumulativeTaxesPaid.toLocaleString()}`,
+        current: `$${currentPlanResults.cumulativeTaxesPaid.toLocaleString()}`,
         taxes: taxesData.cumulativeTaxesPaid,
         taxFree: `$${taxFreeResults.cumulativeTaxesPaid.toLocaleString()}`,
       },
       {
         label: "Cumulative Fees Paid",
-        current: `$${defaultResults.cumulativeFeesPaid.toLocaleString()}`,
+        current: `$${currentPlanResults.cumulativeFeesPaid.toLocaleString()}`,
         taxes: taxesData.cumulativeFeesPaid,
         taxFree: `$${taxFreeResults.cumulativeFeesPaid.toLocaleString()}`,
       },
       {
         label: "Cumulative Net Income",
-        current: `$${defaultResults.cumulativeNetIncome.toLocaleString()}`,
+        current: `$${currentPlanResults.cumulativeNetIncome.toLocaleString()}`,
         taxes: taxesData.cumulativeNetIncome,
         taxFree: `$${taxFreeResults.cumulativeNetIncome.toLocaleString()}`,
       },
       {
         label: "Cumulative Account Balance",
-        current: `$${defaultResults.cumulativeAccountBalance.toLocaleString()}`,
+        current: `$${currentPlanResults.cumulativeAccountBalance.toLocaleString()}`,
         taxes: taxesData.cumulativeAccountBalance,
         taxFree: `$${taxFreeResults.cumulativeAccountBalance.toLocaleString()}`,
       },
       {
         label: "Taxes Due",
-        current: `${defaultResults.taxesDue}%`,
+        current: `${currentPlanResults.taxesDue}%`,
         taxes: taxesData.taxesDue,
         taxFree: `${taxFreeResults.taxesDue}%`,
       },
       {
         label: "Death Benefits",
-        current: `$${defaultResults.deathBenefits.toLocaleString()}`,
+        current: `$${currentPlanResults.deathBenefits.toLocaleString()}`,
         taxes: taxesData.deathBenefits,
         taxFree: `$${taxFreeResults.deathBenefits.toLocaleString()}`,
       },
@@ -250,7 +276,7 @@ export function ComparisonTable({
             value={yearsRunOutOfMoney.toString()}
             onValueChange={handleYearsRunOutOfMoneyChange}
             aria-label="Select years you run out of money for Current Plan"
-            disabled={ageOptions.length === 0} // Disable if no options
+            disabled={ageOptions.length === 0}
           >
             <SelectTrigger className="w-32">
               <SelectValue placeholder="Select Age" />
@@ -268,8 +294,9 @@ export function ComparisonTable({
         taxFree: `${taxFreeResults.yearsRunOutOfMoney}`,
       },
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      defaultResults,
+      currentPlanResults,
       taxesData,
       taxFreeResults,
       yearsRunOutOfMoney,

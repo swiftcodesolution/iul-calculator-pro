@@ -139,6 +139,87 @@ export function throttle<T extends (...args: unknown[]) => R, R>(
   };
 }
 
+// Utility to calculate 401(k) results for the Current Plan (red column)
+export function extractCurrentPlanResults(
+  currentAge: number,
+  yearsRunOutOfMoney: number,
+  annualContribution: number = 10000,
+  returnRate: number = 0.06,
+  retirementTaxRate: number = 0.28,
+  annualFee: number = 0.01,
+  workingTaxRate: number = 0.22
+): Results {
+  // Calculate years of contribution (from current age to retirement age 65)
+  const contributionYears = 65 - currentAge;
+  // Calculate retirement duration (from age 65 to yearsRunOutOfMoney)
+  const retirementDuration = yearsRunOutOfMoney - 65;
+
+  // Validate inputs to ensure positive contribution and retirement periods
+  if (contributionYears <= 0 || retirementDuration <= 0) {
+    console.warn("Invalid age or retirement duration");
+    return {
+      xValue: 65,
+      startingBalance: 0,
+      annualContributions: annualContribution,
+      annualEmployerMatch: 0,
+      annualFees: `${(annualFee * 100).toFixed(2)}%`,
+      grossRetirementIncome: 0,
+      incomeTax: 0,
+      netRetirementIncome: 0,
+      cumulativeTaxesDeferred: 0,
+      cumulativeTaxesPaid: 0,
+      cumulativeFeesPaid: 0,
+      cumulativeNetIncome: 0,
+      cumulativeAccountBalance: 0,
+      taxesDue: retirementTaxRate * 100,
+      deathBenefits: 0,
+      yearsRunOutOfMoney,
+      currentAge,
+    };
+  }
+
+  // Calculate future value of 401(k) at age 65 using future value of annuity
+  const effectiveRate = returnRate - annualFee;
+  const fv =
+    annualContribution *
+    ((Math.pow(1 + effectiveRate, contributionYears) - 1) / effectiveRate);
+
+  // Calculate annual withdrawal to deplete balance over retirement duration
+  const annualWithdrawal = fv / retirementDuration;
+
+  // Calculate after-tax income and taxes
+  const netRetirementIncome = annualWithdrawal * (1 - retirementTaxRate);
+  const incomeTax = annualWithdrawal * retirementTaxRate;
+
+  // Calculate cumulative metrics
+  const cumulativeNetIncome = netRetirementIncome * retirementDuration;
+  const cumulativeTaxesPaid = incomeTax * retirementDuration;
+  const cumulativeFeesPaid = fv * annualFee * retirementDuration;
+  const cumulativeTaxesDeferred =
+    annualContribution * contributionYears * workingTaxRate;
+
+  return {
+    xValue: 65, // Age when withdrawals start
+    startingBalance: 0, // Assumed no initial balance
+    annualContributions: annualContribution,
+    annualEmployerMatch: 0, // Not specified
+    annualFees: `${(annualFee * 100).toFixed(2)}%`,
+    grossRetirementIncome: annualWithdrawal,
+    incomeTax,
+    netRetirementIncome,
+    cumulativeTaxesDeferred,
+    cumulativeTaxesPaid,
+    cumulativeFeesPaid,
+    cumulativeNetIncome,
+    cumulativeAccountBalance: fv,
+    taxesDue: retirementTaxRate * 100,
+    deathBenefits: 0, // Not applicable for 401(k)
+    yearsRunOutOfMoney,
+    currentAge,
+  };
+}
+
+// Utility to calculate tax-free plan results (IRS 7702, green column)
 export function extractTaxFreeResults(
   tables: TableData[],
   currentAge: number,
@@ -174,6 +255,7 @@ export function extractTaxFreeResults(
     };
   }
 
+  // Parse currency values from strings
   const parseCurrency = (value: string | number): number => {
     if (typeof value === "number") return value;
     return Number(value.replace(/[^0-9.-]+/g, "")) || 0;

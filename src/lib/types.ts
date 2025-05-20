@@ -51,7 +51,7 @@ export type Results = {
   xValue: number;
   startingBalance: number;
   annualContributions: number;
-  annualEmployerMatch: string;
+  annualEmployerMatch: string | number;
   annualFees: string;
   grossRetirementIncome: number;
   incomeTax: number;
@@ -78,7 +78,7 @@ export interface TableData {
 export interface TaxesData {
   startingBalance: string;
   annualContributions: string;
-  annualEmployerMatch: string;
+  annualEmployerMatch: string | number;
   annualFees: string;
   grossRetirementIncome: string;
   incomeTax: string;
