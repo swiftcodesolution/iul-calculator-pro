@@ -61,6 +61,7 @@ export type BoxesData = {
   currentPlanROR: number | string;
   taxFreePlanROR: number | string;
 };
+
 export type BoxesInputField = {
   label: string;
   key: keyof BoxesData;
@@ -71,8 +72,8 @@ export type Results = {
   xValue: number;
   startingBalance: number;
   annualContributions: number;
-  annualEmployerMatch: string | number;
-  annualFees: string;
+  annualEmployerMatch: number | "N/A";
+  annualFees: string; // e.g., "1.00%" or "Included"
   grossRetirementIncome: number;
   incomeTax: number;
   netRetirementIncome: number;
@@ -81,10 +82,10 @@ export type Results = {
   cumulativeFeesPaid: number;
   cumulativeNetIncome: number;
   cumulativeAccountBalance: number;
-  taxesDue: number;
+  taxesDue: number; // Percentage
   deathBenefits: number;
   yearsRunOutOfMoney: number;
-  currentAge: number | string;
+  currentAge: number;
 };
 
 export interface TableData {

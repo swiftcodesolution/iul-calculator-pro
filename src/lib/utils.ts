@@ -147,21 +147,28 @@ export function extractCurrentPlanResults(
   returnRate: number = 0.06,
   retirementTaxRate: number = 0.28,
   annualFee: number = 0.01,
-  workingTaxRate: number = 0.22
+  workingTaxRate: number = 0.22,
+  startingBalance: number = 0, // Add startingBalance parameter
+  annualEmployerMatch: number = 0 // Add annualEmployerMatch parameter
 ): Results {
-  // Calculate years of contribution (from current age to retirement age 65)
-  const contributionYears = 65 - currentAge;
-  // Calculate retirement duration (from age 65 to yearsRunOutOfMoney)
-  const retirementDuration = yearsRunOutOfMoney - 65;
-
-  // Validate inputs to ensure positive contribution and retirement periods
-  if (contributionYears <= 0 || retirementDuration <= 0) {
-    console.warn("Invalid age or retirement duration");
+  // Validate inputs
+  if (
+    currentAge < 0 ||
+    yearsRunOutOfMoney < currentAge ||
+    annualContribution < 0 ||
+    startingBalance < 0 ||
+    annualEmployerMatch < 0 ||
+    returnRate < 0 ||
+    annualFee < 0 ||
+    retirementTaxRate < 0 ||
+    workingTaxRate < 0
+  ) {
+    console.warn("Invalid input parameters for Current Plan calculations");
     return {
       xValue: 65,
-      startingBalance: 0,
+      startingBalance,
       annualContributions: annualContribution,
-      annualEmployerMatch: 0,
+      annualEmployerMatch,
       annualFees: `${(annualFee * 100).toFixed(2)}%`,
       grossRetirementIncome: 0,
       incomeTax: 0,
@@ -178,11 +185,46 @@ export function extractCurrentPlanResults(
     };
   }
 
-  // Calculate future value of 401(k) at age 65 using future value of annuity
+  // Calculate years of contribution (from current age to retirement age 65)
+  const contributionYears = 65 - currentAge;
+  // Calculate retirement duration (from age 65 to yearsRunOutOfMoney)
+  const retirementDuration = yearsRunOutOfMoney - 65;
+
+  // Validate contribution and retirement periods
+  if (contributionYears <= 0 || retirementDuration <= 0) {
+    console.warn("Invalid age or retirement duration");
+    return {
+      xValue: 65,
+      startingBalance,
+      annualContributions: annualContribution,
+      annualEmployerMatch,
+      annualFees: `${(annualFee * 100).toFixed(2)}%`,
+      grossRetirementIncome: 0,
+      incomeTax: 0,
+      netRetirementIncome: 0,
+      cumulativeTaxesDeferred: 0,
+      cumulativeTaxesPaid: 0,
+      cumulativeFeesPaid: 0,
+      cumulativeNetIncome: 0,
+      cumulativeAccountBalance: 0,
+      taxesDue: retirementTaxRate * 100,
+      deathBenefits: 0,
+      yearsRunOutOfMoney,
+      currentAge,
+    };
+  }
+
+  // Calculate future value of 401(k) at age 65
   const effectiveRate = returnRate - annualFee;
-  const fv =
-    annualContribution *
+  const totalAnnualContribution = annualContribution + annualEmployerMatch;
+  // Future value of starting balance
+  const fvStarting =
+    startingBalance * Math.pow(1 + effectiveRate, contributionYears);
+  // Future value of contributions (annuity)
+  const fvContributions =
+    totalAnnualContribution *
     ((Math.pow(1 + effectiveRate, contributionYears) - 1) / effectiveRate);
+  const fv = fvStarting + fvContributions;
 
   // Calculate annual withdrawal to deplete balance over retirement duration
   const annualWithdrawal = fv / retirementDuration;
@@ -196,13 +238,13 @@ export function extractCurrentPlanResults(
   const cumulativeTaxesPaid = incomeTax * retirementDuration;
   const cumulativeFeesPaid = fv * annualFee * retirementDuration;
   const cumulativeTaxesDeferred =
-    annualContribution * contributionYears * workingTaxRate;
+    totalAnnualContribution * contributionYears * workingTaxRate;
 
   return {
     xValue: 65, // Age when withdrawals start
-    startingBalance: 0, // Assumed no initial balance
+    startingBalance,
     annualContributions: annualContribution,
-    annualEmployerMatch: 0, // Not specified
+    annualEmployerMatch,
     annualFees: `${(annualFee * 100).toFixed(2)}%`,
     grossRetirementIncome: annualWithdrawal,
     incomeTax,
@@ -228,12 +270,14 @@ export function extractTaxFreeResults(
   const mainTable = tables[0]?.data || [];
   const chargesTable = tables[1]?.data || [];
 
-  // Validate mainTable rows have Age as string or number
+  // Validate inputs
   if (
+    currentAge < 0 ||
+    yearsRunOutOfMoney < currentAge ||
     !mainTable.length ||
     !mainTable.every((row) => typeof row.Age !== "undefined")
   ) {
-    console.warn("mainTable is empty or missing Age values");
+    console.warn("Invalid inputs or empty mainTable for Tax-Free Plan");
     return {
       xValue: 0,
       startingBalance: 0,
@@ -278,7 +322,7 @@ export function extractTaxFreeResults(
     : 0;
 
   // Find the age when "Net Outlay" first changes
-  let xValue = 0;
+  let xValue = (parsedMainTable[0]?.Age as number) || 65;
   for (let i = 0; i < parsedMainTable.length - 1; i++) {
     const row = parsedMainTable[i];
     const nextRow = parsedMainTable[i + 1];
@@ -303,33 +347,30 @@ export function extractTaxFreeResults(
       parsedMainTable[parsedMainTable.length - 1];
 
     grossRetirementIncome = parseCurrency(targetRow["Net Outlay"] || 0);
-    netRetirementIncome = grossRetirementIncome;
-
-    // Sum Net Outlay for rows where Age is between xValue and yearsRunOutOfMoney
+    netRetirementIncome = grossRetirementIncome; // Tax-free, so no income tax
     cumulativeNetIncome = parsedMainTable
       .filter(
         (row) =>
           (row.Age as number) >= xValue &&
-          (row.Age as number) < yearsRunOutOfMoney
+          (row.Age as number) <= yearsRunOutOfMoney
       )
       .reduce((sum, row) => sum + parseCurrency(row["Net Outlay"] || 0), 0);
   }
 
   let cumulativeFeesPaid = 0;
-
   if (chargesTable.length && mainTable.length) {
-    const endIndex = mainTable.findIndex(
-      (row) => Number(row.Age) === yearsRunOutOfMoney
+    const endIndex = parsedMainTable.findIndex(
+      (row) => row.Age === yearsRunOutOfMoney
     );
-
     if (endIndex !== -1 && endIndex < chargesTable.length) {
       cumulativeFeesPaid = chargesTable
         .slice(0, endIndex + 1)
         .reduce((sum, row) => sum + parseCurrency(row.Charges || 0), 0);
+    } else {
+      console.warn("Charges table index out of bounds or mismatched");
     }
   }
 
-  // Find row where Age matches yearsRunOutOfMoney
   const targetRow =
     parsedMainTable.find((row) => row.Age === yearsRunOutOfMoney) ||
     parsedMainTable[parsedMainTable.length - 1];

@@ -81,7 +81,7 @@ export default function CalculatorPage() {
   const [isTabCardExpanded, setIsTabCardExpanded] = useState(false);
   // State for input parameters
   const [boxesData, setBoxesData] = useState<BoxesData>({
-    currentAge: "", // Client’s default age
+    currentAge: "40", // Client’s default age
     stopSavingAge: "",
     retirementAge: "",
     workingTaxRate: "", // Client’s default
