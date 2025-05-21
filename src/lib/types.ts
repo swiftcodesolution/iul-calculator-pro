@@ -1,11 +1,22 @@
-export type CompanyInfo = {
-  businessName: string;
-  agentName: string;
-  email: string;
-  phone: string;
-  logoSrc?: string;
-  profilePicSrc?: string;
-};
+import { z } from "zod";
+
+export const signupSchema = z
+  .object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(8, "Passwords must match"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords must match",
+    path: ["confirmPassword"],
+  });
+
+export const loginSchema = z.object({
+  loginEmail: z.string().email("Invalid email address"),
+  loginPassword: z.string().min(8, "Password must be at least 8 characters"),
+});
 
 export type ClientFile = {
   id: string;
