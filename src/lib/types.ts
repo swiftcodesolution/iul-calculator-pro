@@ -18,6 +18,15 @@ export const loginSchema = z.object({
   loginPassword: z.string().min(8, "Password must be at least 8 characters"),
 });
 
+export type CompanyInfo = {
+  businessName: string;
+  agentName: string;
+  email: string;
+  phone: string;
+  logoSrc?: string;
+  profilePicSrc?: string;
+};
+
 export type ClientFile = {
   id: string;
   name: string;
