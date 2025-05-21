@@ -144,143 +144,71 @@ export function extractCurrentPlanResults(
   currentAge: number,
   yearsRunOutOfMoney: number,
   annualContribution: number,
-  returnRate: number, // currentPlanROR (e.g., 6.3% as 0.063)
-  retirementTaxRate: number, // e.g., 28% as 0.28
-  annualFee: number, // currentPlanFees (e.g., 2.5% as 0.025)
-  workingTaxRate: number, // e.g., 28% as 0.28
+  returnRate: number,
+  retirementTaxRate: number,
+  annualFee: number,
+  workingTaxRate: number,
   startingBalance: number,
   annualEmployerMatch: number,
-  retirementAge: number, // From BoxesData, replacing hardcoded 65
-  withdrawalRate: number = 0.04 // Default to 4%, can be made configurable
+  retirementAge: number
 ): Results {
-  // Validate inputs
-  if (
-    currentAge < 0 ||
-    yearsRunOutOfMoney < currentAge ||
-    annualContribution < 0 ||
-    startingBalance < 0 ||
-    annualEmployerMatch < 0 ||
-    returnRate < 0 ||
-    annualFee < 0 ||
-    retirementTaxRate < 0 ||
-    workingTaxRate < 0 ||
-    retirementAge < currentAge ||
-    withdrawalRate <= 0
-  ) {
-    console.warn("Invalid input parameters for Current Plan calculations");
-    return {
-      xValue: retirementAge,
-      startingBalance,
-      annualContributions: annualContribution,
-      annualEmployerMatch,
-      annualFees: `${(annualFee * 100).toFixed(2)}%`,
-      grossRetirementIncome: 0,
-      incomeTax: 0,
-      netRetirementIncome: 0,
-      cumulativeTaxesDeferred: 0,
-      cumulativeTaxesPaid: 0,
-      cumulativeFeesPaid: 0,
-      cumulativeNetIncome: 0,
-      cumulativeAccountBalance: 0,
-      taxesDue: 0,
-      deathBenefits: 0,
-      yearsRunOutOfMoney,
-      currentAge,
-    };
-  }
-
-  // Calculate years of contribution (from current age to retirement age)
   const contributionYears = retirementAge - currentAge;
-  const retirementDuration = yearsRunOutOfMoney - retirementAge;
+  const retirementYears = yearsRunOutOfMoney - retirementAge;
 
-  // Validate contribution and retirement periods
-  if (contributionYears <= 0 || retirementDuration <= 0) {
-    console.warn("Invalid age or retirement duration");
-    return {
-      xValue: retirementAge,
-      startingBalance,
-      annualContributions: annualContribution,
-      annualEmployerMatch,
-      annualFees: `${(annualFee * 100).toFixed(2)}%`,
-      grossRetirementIncome: 0,
-      incomeTax: 0,
-      netRetirementIncome: 0,
-      cumulativeTaxesDeferred: 0,
-      cumulativeTaxesPaid: 0,
-      cumulativeFeesPaid: 0,
-      cumulativeNetIncome: 0,
-      cumulativeAccountBalance: 0,
-      taxesDue: 0,
-      deathBenefits: 0,
-      yearsRunOutOfMoney,
-      currentAge,
-    };
+  if (contributionYears <= 0 || retirementYears <= 0) {
+    return getEmptyResults();
   }
 
-  // 1. Cumulative Account Balance at retirement age (before withdrawals)
+  // Step 1: Accumulate balance until retirement
   let balance = startingBalance;
   for (let i = 0; i < contributionYears; i++) {
     balance += annualContribution + annualEmployerMatch;
-    balance *= 1 + returnRate; // Apply growth
-    balance -= balance * annualFee; // Apply fees after growth
+    balance *= 1 + returnRate;
+    const fee = balance * annualFee;
+    balance -= fee;
   }
 
-  // 2. Gross Retirement Income: Use the provided withdrawal rate
-  const grossRetirementIncome = balance * withdrawalRate;
+  const balanceAtRetirement = balance;
 
-  // 3. Income Tax: retirementTaxRate of gross retirement income
+  // Step 2: Calculate effective return after fees
+  const effectiveRate = (1 + returnRate) * (1 - annualFee) - 1;
+
+  // Step 3: Solve for drawdown amount (annuity depletion)
+  const annuityFactor =
+    (1 - Math.pow(1 + effectiveRate, -retirementYears)) / effectiveRate;
+  const grossRetirementIncome = balanceAtRetirement / annuityFactor;
+
   const incomeTax = grossRetirementIncome * retirementTaxRate;
-
-  // 4. Net Retirement Income: Gross - Income Tax
   const netRetirementIncome = grossRetirementIncome - incomeTax;
+  const cumulativeNetIncome = netRetirementIncome * retirementYears;
+  const cumulativeTaxesDeferred = 0; // No deferred taxes on pre-tax contributions
 
-  // 5. Cumulative Taxes Deferred: $0 (no pre-tax contributions)
-  const cumulativeTaxesDeferred = 0;
-
-  // 6. Cumulative Taxes Paid: Working taxes + retirement taxes
-  const taxesDuringWorkingYears =
-    annualContribution * workingTaxRate * contributionYears;
-  const taxesDuringRetirement = incomeTax * retirementDuration;
+  const taxesDuringRetirement = incomeTax * retirementYears;
+  const taxesDuringWorkingYears = 0; // Assume pre-tax contribution, no tax during work
   const cumulativeTaxesPaid = taxesDuringWorkingYears + taxesDuringRetirement;
 
-  // 7. Cumulative Fees Paid: Accumulate fees over contribution and retirement periods
+  // Step 4: Calculate fees and remaining balance over retirement
+  let tempBalance = balanceAtRetirement;
   let cumulativeFeesPaid = 0;
-  let tempBalance = startingBalance;
-  for (let i = 0; i < contributionYears + retirementDuration; i++) {
-    if (i < contributionYears) {
-      tempBalance += annualContribution + annualEmployerMatch;
-      tempBalance *= 1 + returnRate;
-      const fee = tempBalance * annualFee;
-      cumulativeFeesPaid += fee;
-      tempBalance -= fee;
-    } else {
-      tempBalance -= grossRetirementIncome;
-      tempBalance *= 1 + returnRate; // Continue growth on remaining balance
-      if (tempBalance < 0) tempBalance = 0;
-      const fee = tempBalance * annualFee;
-      cumulativeFeesPaid += fee;
-      tempBalance -= fee;
+
+  for (let i = 0; i < retirementYears; i++) {
+    if (tempBalance < grossRetirementIncome) {
+      // Avoid negative balance
+      break;
     }
+    tempBalance -= grossRetirementIncome;
+    tempBalance *= 1 + returnRate;
+    const fee = tempBalance * annualFee;
+    cumulativeFeesPaid += fee;
+    tempBalance -= fee;
   }
 
-  // 8. Cumulative Net Income: Net retirement income over retirement duration
-  const cumulativeNetIncome = netRetirementIncome * retirementDuration;
-
-  // 9. Cumulative Account Balance: Remaining balance after withdrawals and fees
-  let remainingBalance = balance;
-  for (let i = 0; i < retirementDuration; i++) {
-    remainingBalance -= grossRetirementIncome;
-    remainingBalance *= 1 + returnRate;
-    if (remainingBalance < 0) remainingBalance = 0;
-    remainingBalance -= remainingBalance * annualFee;
-  }
-  const cumulativeAccountBalance = remainingBalance;
-
-  // 10. Taxes Due: retirementTaxRate of remaining balance at end of retirement
-  const taxesDue = remainingBalance * retirementTaxRate;
-
-  // 11. Death Benefits: Remaining balance after taxes due
-  const deathBenefits = remainingBalance - taxesDue;
+  const cumulativeAccountBalance = Math.max(0, tempBalance);
+  const taxesDue =
+    cumulativeAccountBalance > 0
+      ? cumulativeAccountBalance * retirementTaxRate
+      : 0;
+  const deathBenefits = Math.max(0, cumulativeAccountBalance - taxesDue);
 
   return {
     xValue: retirementAge,
@@ -297,9 +225,32 @@ export function extractCurrentPlanResults(
     cumulativeNetIncome,
     cumulativeAccountBalance,
     taxesDue,
-    deathBenefits: deathBenefits > 0 ? deathBenefits : 0,
+    deathBenefits,
     yearsRunOutOfMoney,
     currentAge,
+  };
+}
+
+// Helper for fallback case
+function getEmptyResults(): Results {
+  return {
+    xValue: 0,
+    startingBalance: 0,
+    annualContributions: 0,
+    annualEmployerMatch: 0,
+    annualFees: "0.00%",
+    grossRetirementIncome: 0,
+    incomeTax: 0,
+    netRetirementIncome: 0,
+    cumulativeTaxesDeferred: 0,
+    cumulativeTaxesPaid: 0,
+    cumulativeFeesPaid: 0,
+    cumulativeNetIncome: 0,
+    cumulativeAccountBalance: 0,
+    taxesDue: 0,
+    deathBenefits: 0,
+    yearsRunOutOfMoney: 0,
+    currentAge: 0,
   };
 }
 

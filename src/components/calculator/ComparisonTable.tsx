@@ -106,8 +106,7 @@ export function ComparisonTable({
         (boxesData.workingTaxRate as number) / 100,
         Number(startingBalance) || 0,
         Number(annualEmployerMatch) || 0,
-        boxesData.retirementAge as number, // Add retirementAge from boxesData
-        0.04 // Default withdrawal rate (or make configurable)
+        boxesData.retirementAge as number // Add retirementAge from boxesData
       ),
     [
       currentAge,
