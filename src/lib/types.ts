@@ -31,15 +31,15 @@ export type CropState = {
 };
 
 export type BoxesData = {
-  currentAge: number;
-  stopSavingAge: number;
-  retirementAge: number;
-  workingTaxRate: number;
-  retirementTaxRate: number;
-  inflationRate: number;
-  currentPlanFees: number;
-  currentPlanROR: number;
-  taxFreePlanROR: number;
+  currentAge: number | string;
+  stopSavingAge: number | string;
+  retirementAge: number | string;
+  workingTaxRate: number | string;
+  retirementTaxRate: number | string;
+  inflationRate: number | string;
+  currentPlanFees: number | string;
+  currentPlanROR: number | string;
+  taxFreePlanROR: number | string;
 };
 export type BoxesInputField = {
   label: string;
@@ -64,7 +64,7 @@ export type Results = {
   taxesDue: number;
   deathBenefits: number;
   yearsRunOutOfMoney: number;
-  currentAge: number;
+  currentAge: number | string;
 };
 
 export interface TableData {
@@ -76,21 +76,21 @@ export interface TableData {
 }
 
 export interface TaxesData {
-  startingBalance: string;
-  annualContributions: string;
-  annualEmployerMatch: string | number;
-  annualFees: string;
-  grossRetirementIncome: string;
-  incomeTax: string;
-  netRetirementIncome: string;
-  cumulativeTaxesDeferred: string;
-  cumulativeTaxesPaid: string;
-  cumulativeFeesPaid: string;
-  cumulativeNetIncome: string;
-  cumulativeAccountBalance: string;
-  taxesDue: string;
-  deathBenefits: string;
-  yearsRunOutOfMoney: string;
+  startingBalance: number | string;
+  annualContributions: number | string;
+  annualEmployerMatch: number | string;
+  annualFees: number | string;
+  grossRetirementIncome: number | string;
+  incomeTax: number | string;
+  netRetirementIncome: number | string;
+  cumulativeTaxesDeferred: number | string;
+  cumulativeTaxesPaid: number | string;
+  cumulativeFeesPaid: number | string;
+  cumulativeNetIncome: number | string;
+  cumulativeAccountBalance: number | string;
+  taxesDue: number | string;
+  deathBenefits: number | string;
+  yearsRunOutOfMoney: number | string;
 }
 
 export type TabContent = {

@@ -81,15 +81,15 @@ export default function CalculatorPage() {
   const [isTabCardExpanded, setIsTabCardExpanded] = useState(false);
   // State for input parameters
   const [boxesData, setBoxesData] = useState<BoxesData>({
-    currentAge: 45, // Client’s default age
-    stopSavingAge: 60,
-    retirementAge: 65,
-    workingTaxRate: 22, // Client’s default
-    retirementTaxRate: 28, // Client’s default
-    inflationRate: 2.5,
-    currentPlanFees: 1.0, // Client’s assumed fee
-    currentPlanROR: 6.0, // Client’s default return
-    taxFreePlanROR: 6.0,
+    currentAge: "", // Client’s default age
+    stopSavingAge: "",
+    retirementAge: "",
+    workingTaxRate: "", // Client’s default
+    retirementTaxRate: "", // Client’s default
+    inflationRate: "",
+    currentPlanFees: "", // Client’s assumed fee
+    currentPlanROR: "", // Client’s default return
+    taxFreePlanROR: "",
   });
 
   // Update boxesData when inputs change
@@ -141,7 +141,7 @@ export default function CalculatorPage() {
           onUpdate={handleBoxesDataValueChange}
         />
         <ComparisonTable
-          currentAge={boxesData.currentAge}
+          currentAge={Number(boxesData.currentAge) || 0}
           boxesData={boxesData} // Pass boxesData for dynamic calculations
           taxesData={taxesData}
           columnTextWhite={columnTextWhite}

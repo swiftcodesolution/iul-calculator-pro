@@ -74,6 +74,21 @@ export function ComparisonTable({
     0 // Client specified no match
   );
 
+  const [yearsRunOutOfMoneyInput, setYearsRunOutOfMoneyInput] =
+    useState<number>(
+      yearsRunOutOfMoney // Initialize with current yearsRunOutOfMoney
+    );
+
+  const handleYearsRunOutOfMoneyInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = Number(e.target.value);
+    if (!isNaN(value) && value >= 0) {
+      setYearsRunOutOfMoneyInput(value);
+      setYearsRunOutOfMoney(value); // Update the store to reflect the input
+    }
+  };
+
   // Extract unique Age values from mainTable for dropdown
   const ageOptions = useMemo(() => {
     const mainTable = tables[0]?.data || [];
@@ -95,10 +110,10 @@ export function ComparisonTable({
         currentAge,
         yearsRunOutOfMoney,
         annualContributions, // From table input
-        boxesData.currentPlanROR / 100, // Convert percentage to decimal
-        boxesData.retirementTaxRate / 100, // Convert percentage to decimal
-        boxesData.currentPlanFees / 100, // Convert percentage to decimal
-        boxesData.workingTaxRate / 100 // Convert percentage to decimal
+        (boxesData.currentPlanROR as number) / 100, // Convert percentage to decimal
+        (boxesData.retirementTaxRate as number) / 100, // Convert percentage to decimal
+        (boxesData.currentPlanFees as number) / 100, // Convert percentage to decimal
+        (boxesData.workingTaxRate as number) / 100 // Convert percentage to decimal
       ),
     [
       currentAge,
@@ -171,7 +186,9 @@ export function ComparisonTable({
           />
         ),
         taxes: taxesData.startingBalance,
-        taxFree: `$${taxFreeResults.startingBalance.toLocaleString()}`,
+        taxFree: isNaN(Number(taxFreeResults.startingBalance))
+          ? ""
+          : `$${Number(taxFreeResults.startingBalance).toLocaleString()}`, // Convert to number before toLocaleString
       },
       {
         label: "Annual Contributions",
@@ -186,7 +203,9 @@ export function ComparisonTable({
           />
         ),
         taxes: taxesData.annualContributions,
-        taxFree: `$${taxFreeResults.annualContributions.toLocaleString()}`,
+        taxFree: isNaN(Number(taxFreeResults.annualContributions))
+          ? ""
+          : `$${Number(taxFreeResults.annualContributions).toLocaleString()}`, // Convert to number before toLocaleString
       },
       {
         label: "Annual Employer Match",
@@ -201,97 +220,173 @@ export function ComparisonTable({
           />
         ),
         taxes: taxesData.annualEmployerMatch,
-        taxFree: taxFreeResults.annualEmployerMatch,
+        taxFree: isNaN(Number(taxFreeResults.annualEmployerMatch))
+          ? ""
+          : Number(taxFreeResults.annualEmployerMatch).toLocaleString(), // Convert to number before toLocaleString
       },
       {
         label: "Annual Fees",
-        current: currentPlanResults.annualFees,
+        current: isNaN(Number(currentPlanResults.annualFees))
+          ? ""
+          : Number(currentPlanResults.annualFees).toLocaleString(), // Convert to number before toLocaleString
         taxes: taxesData.annualFees,
-        taxFree: taxFreeResults.annualFees,
+        taxFree: isNaN(Number(taxFreeResults.annualFees))
+          ? ""
+          : Number(taxFreeResults.annualFees).toLocaleString(), // Convert to number before toLocaleString
       },
       {
         label: "Gross Retirement Income",
-        current: `$${currentPlanResults.grossRetirementIncome.toLocaleString()}`,
+        current: isNaN(Number(currentPlanResults.grossRetirementIncome))
+          ? ""
+          : `$${Number(
+              currentPlanResults.grossRetirementIncome
+            ).toLocaleString()}`, // Convert to number before toLocaleString
         taxes: taxesData.grossRetirementIncome,
-        taxFree: `$${taxFreeResults.grossRetirementIncome.toLocaleString()}`,
+        taxFree: isNaN(Number(taxFreeResults.grossRetirementIncome))
+          ? ""
+          : `$${Number(taxFreeResults.grossRetirementIncome).toLocaleString()}`, // Convert to number before toLocaleString
       },
       {
         label: "Income Tax",
-        current: `$${currentPlanResults.incomeTax.toLocaleString()}`,
+        current: isNaN(Number(currentPlanResults.incomeTax))
+          ? ""
+          : `$${Number(currentPlanResults.incomeTax).toLocaleString()}`, // Convert to number before toLocaleString
         taxes: taxesData.incomeTax,
-        taxFree: `$${taxFreeResults.incomeTax.toLocaleString()}`,
+        taxFree: isNaN(Number(taxFreeResults.incomeTax))
+          ? ""
+          : `$${Number(taxFreeResults.incomeTax).toLocaleString()}`, // Convert to number before toLocaleString
       },
       {
         label: "Net Retirement Income",
-        current: `$${currentPlanResults.netRetirementIncome.toLocaleString()}`,
+        current: isNaN(Number(currentPlanResults.netRetirementIncome))
+          ? ""
+          : `$${Number(
+              currentPlanResults.netRetirementIncome
+            ).toLocaleString()}`, // Convert to number before toLocaleString
         taxes: taxesData.netRetirementIncome,
-        taxFree: `$${taxFreeResults.netRetirementIncome.toLocaleString()}`,
+        taxFree: isNaN(Number(taxFreeResults.netRetirementIncome))
+          ? ""
+          : `$${Number(taxFreeResults.netRetirementIncome).toLocaleString()}`, // Convert to number before toLocaleString
       },
       {
         label: "Cumulative Taxes Deferred",
-        current: `$${currentPlanResults.cumulativeTaxesDeferred.toLocaleString()}`,
+        current: isNaN(Number(currentPlanResults.cumulativeTaxesDeferred))
+          ? ""
+          : `$${Number(
+              currentPlanResults.cumulativeTaxesDeferred
+            ).toLocaleString()}`, // Convert to number before toLocaleString
         taxes: taxesData.cumulativeTaxesDeferred,
-        taxFree: `$${taxFreeResults.cumulativeTaxesDeferred.toLocaleString()}`,
+        taxFree: isNaN(Number(taxFreeResults.cumulativeTaxesDeferred))
+          ? ""
+          : `$${Number(
+              taxFreeResults.cumulativeTaxesDeferred
+            ).toLocaleString()}`, // Convert to number before toLocaleString
       },
       {
         label: "Cumulative Taxes Paid",
-        current: `$${currentPlanResults.cumulativeTaxesPaid.toLocaleString()}`,
+        current: isNaN(Number(currentPlanResults.cumulativeTaxesPaid))
+          ? ""
+          : `$${Number(
+              currentPlanResults.cumulativeTaxesPaid
+            ).toLocaleString()}`, // Convert to number before toLocaleString
         taxes: taxesData.cumulativeTaxesPaid,
-        taxFree: `$${taxFreeResults.cumulativeTaxesPaid.toLocaleString()}`,
+        taxFree: isNaN(Number(taxFreeResults.cumulativeTaxesPaid))
+          ? ""
+          : `$${Number(taxFreeResults.cumulativeTaxesPaid).toLocaleString()}`, // Convert to number before toLocaleString
       },
       {
         label: "Cumulative Fees Paid",
-        current: `$${currentPlanResults.cumulativeFeesPaid.toLocaleString()}`,
+        current: isNaN(Number(currentPlanResults.cumulativeFeesPaid))
+          ? ""
+          : `$${Number(
+              currentPlanResults.cumulativeFeesPaid
+            ).toLocaleString()}`, // Convert to number before toLocaleString
         taxes: taxesData.cumulativeFeesPaid,
-        taxFree: `$${taxFreeResults.cumulativeFeesPaid.toLocaleString()}`,
+        taxFree: isNaN(Number(taxFreeResults.cumulativeFeesPaid))
+          ? ""
+          : `$${Number(taxFreeResults.cumulativeFeesPaid).toLocaleString()}`, // Convert to number before toLocaleString
       },
       {
         label: "Cumulative Net Income",
-        current: `$${currentPlanResults.cumulativeNetIncome.toLocaleString()}`,
+        current: isNaN(Number(currentPlanResults.cumulativeNetIncome))
+          ? ""
+          : `$${Number(
+              currentPlanResults.cumulativeNetIncome
+            ).toLocaleString()}`, // Convert to number before toLocaleString
         taxes: taxesData.cumulativeNetIncome,
-        taxFree: `$${taxFreeResults.cumulativeNetIncome.toLocaleString()}`,
+        taxFree: isNaN(Number(taxFreeResults.cumulativeNetIncome))
+          ? ""
+          : `$${Number(taxFreeResults.cumulativeNetIncome).toLocaleString()}`, // Convert to number before toLocaleString
       },
       {
         label: "Cumulative Account Balance",
-        current: `$${currentPlanResults.cumulativeAccountBalance.toLocaleString()}`,
+        current: isNaN(Number(currentPlanResults.cumulativeAccountBalance))
+          ? ""
+          : `$${Number(
+              currentPlanResults.cumulativeAccountBalance
+            ).toLocaleString()}`, // Convert to number before toLocaleString
         taxes: taxesData.cumulativeAccountBalance,
-        taxFree: `$${taxFreeResults.cumulativeAccountBalance.toLocaleString()}`,
+        taxFree: isNaN(Number(taxFreeResults.cumulativeAccountBalance))
+          ? ""
+          : `$${Number(
+              taxFreeResults.cumulativeAccountBalance
+            ).toLocaleString()}`, // Convert to number before toLocaleString
       },
       {
         label: "Taxes Due",
-        current: `${currentPlanResults.taxesDue}%`,
+        current: isNaN(Number(currentPlanResults.taxesDue))
+          ? ""
+          : `${Number(currentPlanResults.taxesDue)}%`, // Convert to number before formatting
         taxes: taxesData.taxesDue,
-        taxFree: `${taxFreeResults.taxesDue}%`,
+        taxFree: isNaN(Number(taxFreeResults.taxesDue))
+          ? ""
+          : `${Number(taxFreeResults.taxesDue)}%`, // Convert to number before formatting
       },
       {
         label: "Death Benefits",
-        current: `$${currentPlanResults.deathBenefits.toLocaleString()}`,
+        current: isNaN(Number(currentPlanResults.deathBenefits))
+          ? ""
+          : `$${Number(currentPlanResults.deathBenefits).toLocaleString()}`, // Convert to number before toLocaleString
         taxes: taxesData.deathBenefits,
-        taxFree: `$${taxFreeResults.deathBenefits.toLocaleString()}`,
+        taxFree: isNaN(Number(taxFreeResults.deathBenefits))
+          ? ""
+          : `$${Number(taxFreeResults.deathBenefits).toLocaleString()}`, // Convert to number before toLocaleString
       },
       {
         label: "Years You Run Out of Money",
-        current: (
-          <Select
-            value={yearsRunOutOfMoney.toString()}
-            onValueChange={handleYearsRunOutOfMoneyChange}
-            aria-label="Select years you run out of money for Current Plan"
-            disabled={ageOptions.length === 0}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Select Age" />
-            </SelectTrigger>
-            <SelectContent>
-              {ageOptions.map((age) => (
-                <SelectItem key={age} value={age.toString()}>
-                  {age}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ),
+        current:
+          ageOptions.length === 0 ? (
+            <Input
+              type="number"
+              value={yearsRunOutOfMoneyInput}
+              onChange={handleYearsRunOutOfMoneyInputChange}
+              className="w-32"
+              min={0}
+              aria-label="Years You Run Out of Money for Current Plan"
+            />
+          ) : (
+            <Select
+              value={yearsRunOutOfMoney.toString()}
+              onValueChange={handleYearsRunOutOfMoneyChange}
+              aria-label="Select years you run out of money for Current Plan"
+              disabled={ageOptions.length === 0}
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Select Age" />
+              </SelectTrigger>
+              <SelectContent>
+                {ageOptions.map((age) => (
+                  <SelectItem key={age} value={age.toString()}>
+                    {age}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ),
         taxes: taxesData.yearsRunOutOfMoney,
-        taxFree: `${taxFreeResults.yearsRunOutOfMoney}`,
+        taxFree: isNaN(Number(taxFreeResults.yearsRunOutOfMoney))
+          ? ""
+          : `${Number(taxFreeResults.yearsRunOutOfMoney)}`, // Convert to number before formatting
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -300,6 +395,7 @@ export function ComparisonTable({
       taxesData,
       taxFreeResults,
       yearsRunOutOfMoney,
+      yearsRunOutOfMoneyInput,
       ageOptions,
       startingBalance,
       annualContributions,

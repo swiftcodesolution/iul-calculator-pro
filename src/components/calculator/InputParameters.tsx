@@ -12,16 +12,24 @@ interface InputParametersProps {
 export function InputParameters({ data, onUpdate }: InputParametersProps) {
   const handleInputChange = (key: keyof BoxesData, value: string) => {
     if (value === "") {
-      onUpdate({ [key]: 0 });
+      onUpdate({ [key]: "" }); // Allow empty string to clear input
       return;
     }
-    const parsedValue = value.endsWith("%")
-      ? parseFloat(value)
-      : parseInt(value);
+    const parsedValue = parseFloat(value); // Use parseFloat to handle decimals
     if (!isNaN(parsedValue)) {
-      onUpdate({ [key]: parsedValue });
+      onUpdate({ [key]: parsedValue }); // Update with parsed number
     }
   };
+
+  // Define which fields should allow decimals
+  const decimalFields: (keyof BoxesData)[] = [
+    "workingTaxRate",
+    "retirementTaxRate",
+    "inflationRate",
+    "currentPlanFees",
+    "currentPlanROR",
+    "taxFreePlanROR",
+  ];
 
   return (
     <motion.div
@@ -77,6 +85,8 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                     value={value}
                     onChange={(e) => handleInputChange(key, e.target.value)}
                     type="number"
+                    step={decimalFields.includes(key) ? "0.1" : "1"} // Use decimalFields to set step
+                    min="0" // Prevent negative values
                   />
                 </motion.p>
               </motion.div>
@@ -98,17 +108,17 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                 {
                   label: "Working Tax Rate",
                   key: "workingTaxRate",
-                  value: `${data.workingTaxRate}%`,
+                  value: data.workingTaxRate,
                 },
                 {
                   label: "Retirement Tax Rate",
                   key: "retirementTaxRate",
-                  value: `${data.retirementTaxRate}%`,
+                  value: data.retirementTaxRate,
                 },
                 {
                   label: "Inflation Rate",
                   key: "inflationRate",
-                  value: `${data.inflationRate}%`,
+                  value: data.inflationRate,
                 },
               ] as BoxesInputField[]
             ).map(({ label, key, value }) => (
@@ -122,12 +132,19 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.3 }}
+                  className="relative"
                 >
                   <Input
-                    className="w-[80px] text-sm border-gray-500 border-2"
+                    className="w-[80px] text-sm border-gray-500 border-2 pr-6"
                     value={value}
                     onChange={(e) => handleInputChange(key, e.target.value)}
+                    type="number"
+                    step={decimalFields.includes(key) ? "0.1" : "1"} // Use decimalFields to set step
+                    min="0" // Prevent negative values
                   />
+                  <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    %
+                  </span>
                 </motion.p>
               </motion.div>
             ))}
@@ -148,17 +165,17 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                 {
                   label: "Current Plan Fees",
                   key: "currentPlanFees",
-                  value: `${data.currentPlanFees}%`,
+                  value: data.currentPlanFees,
                 },
                 {
                   label: "Current Plan ROR",
                   key: "currentPlanROR",
-                  value: `${data.currentPlanROR}%`,
+                  value: data.currentPlanROR,
                 },
                 {
                   label: "Tax Free Plan ROR",
                   key: "taxFreePlanROR",
-                  value: `${data.taxFreePlanROR}%`,
+                  value: data.taxFreePlanROR,
                 },
               ] as BoxesInputField[]
             ).map(({ label, key, value }) => (
@@ -172,12 +189,19 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.3 }}
+                  className="relative"
                 >
                   <Input
-                    className="w-[80px] text-sm border-gray-500 border-2"
+                    className="w-[80px] text-sm border-gray-500 border-2 pr-6"
                     value={value}
                     onChange={(e) => handleInputChange(key, e.target.value)}
+                    type="number"
+                    step={decimalFields.includes(key) ? "0.1" : "1"} // Use decimalFields to set step
+                    min="0" // Prevent negative values
                   />
+                  <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    %
+                  </span>
                 </motion.p>
               </motion.div>
             ))}
