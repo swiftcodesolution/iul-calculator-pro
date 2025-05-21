@@ -104,8 +104,10 @@ export function ComparisonTable({
         (boxesData.retirementTaxRate as number) / 100,
         (boxesData.currentPlanFees as number) / 100,
         (boxesData.workingTaxRate as number) / 100,
-        Number(startingBalance) || 0, // Pass startingBalance
-        Number(annualEmployerMatch) || 0 // Pass annualEmployerMatch
+        Number(startingBalance) || 0,
+        Number(annualEmployerMatch) || 0,
+        boxesData.retirementAge as number, // Add retirementAge from boxesData
+        0.04 // Default withdrawal rate (or make configurable)
       ),
     [
       currentAge,
@@ -117,6 +119,7 @@ export function ComparisonTable({
       boxesData.retirementTaxRate,
       boxesData.currentPlanFees,
       boxesData.workingTaxRate,
+      boxesData.retirementAge, // Add to dependency array
     ]
   );
 
