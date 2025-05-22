@@ -24,31 +24,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="min-h-screen w-full bg-gray-100 flex flex-col">
-        {/* Uncomment and animate the header if needed in the future */}
-        {/* <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeInOut" }}
-          className="bg-white shadow-sm"
-        >
-          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Image
-                width={150}
-                height={50}
-                src="/logo.png"
-                alt="IUL Calculator Pro Logo"
-                className="object-contain"
-              />
-            </div>
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/" aria-label="Log out">
-                <LogOut className="h-5 w-5 text-gray-600" />
-              </Link>
-            </Button>
-          </div>
-        </motion.header> */}
-
         <main className="w-full min-h-[95vh] mx-auto p-4 flex flex-col">
           {children}
         </main>
@@ -72,7 +47,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               aria-label={`Navigate to ${item.label}`}
             >
               <motion.div
-                whileHover={{ scale: 1.15, rotate: 5 }}
+                whileHover={{ scale: 1.15, rotate: 0 }}
                 whileTap={{ scale: 0.95 }}
                 animate={
                   pathname === item.href
@@ -87,10 +62,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Button
                   variant={pathname === item.href ? "default" : "outline"}
                   size="icon"
-                  className="rounded-none transition-colors duration-200"
+                  className="rounded-none transition-colors duration-200 cursor-pointer"
                 >
                   <motion.div
-                    whileHover={{ rotate: pathname === item.href ? 0 : 360 }}
+                    whileHover={{ rotate: pathname === item.href ? 0 : 0 }}
                     transition={{ duration: 0.5, ease: "easeInOut" }}
                   >
                     <item.icon className="h-5 w-5" />
@@ -110,7 +85,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               className="fixed bottom-4 right-0 -translate-x-1/2 rounded-none transition-colors duration-200"
             >
               <motion.div
-                whileHover={{ rotate: 360 }}
+                whileHover={{ rotate: 0 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
               >
                 <LogOut />
