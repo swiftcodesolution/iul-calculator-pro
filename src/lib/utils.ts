@@ -139,10 +139,9 @@ export function throttle<T extends (...args: unknown[]) => R, R>(
   };
 }
 
-// Utility to calculate 401(k) results for the Current Plan (red column)
 export function extractCurrentPlanResults(
   currentAge: number,
-  yearsRunOutOfMoney: number,
+  yearsRunOutOfMoney: number, // Age when money runs out
   annualContribution: number,
   returnRate: number,
   retirementTaxRate: number,
@@ -161,53 +160,52 @@ export function extractCurrentPlanResults(
 
   // Step 1: Accumulate balance until retirement
   let balance = startingBalance;
+  let cumulativeFeesPaidAccumulation = 0;
+
   for (let i = 0; i < contributionYears; i++) {
     balance += annualContribution + annualEmployerMatch;
     balance *= 1 + returnRate;
     const fee = balance * annualFee;
+    cumulativeFeesPaidAccumulation += fee;
     balance -= fee;
   }
 
   const balanceAtRetirement = balance;
 
-  // Step 2: Calculate effective return after fees
+  // Step 2: Calculate gross retirement income using annuity formula
   const effectiveRate = (1 + returnRate) * (1 - annualFee) - 1;
-
-  // Step 3: Solve for drawdown amount (annuity depletion)
   const annuityFactor =
     (1 - Math.pow(1 + effectiveRate, -retirementYears)) / effectiveRate;
+
   const grossRetirementIncome = balanceAtRetirement / annuityFactor;
 
+  // Step 3: Taxes and net income
   const incomeTax = grossRetirementIncome * retirementTaxRate;
   const netRetirementIncome = grossRetirementIncome - incomeTax;
   const cumulativeNetIncome = netRetirementIncome * retirementYears;
-  const cumulativeTaxesDeferred = 0; // No deferred taxes on pre-tax contributions
+  const cumulativeTaxesDeferred = 0;
+  const cumulativeTaxesPaid = incomeTax * retirementYears;
 
-  const taxesDuringRetirement = incomeTax * retirementYears;
-  const taxesDuringWorkingYears = 0; // Assume pre-tax contribution, no tax during work
-  const cumulativeTaxesPaid = taxesDuringWorkingYears + taxesDuringRetirement;
-
-  // Step 4: Calculate fees and remaining balance over retirement
+  // Step 4: Withdrawals during retirement
   let tempBalance = balanceAtRetirement;
-  let cumulativeFeesPaid = 0;
+  let cumulativeFeesPaidRetirement = 0;
 
   for (let i = 0; i < retirementYears; i++) {
-    if (tempBalance < grossRetirementIncome) {
-      // Avoid negative balance
-      break;
-    }
-    tempBalance -= grossRetirementIncome;
     tempBalance *= 1 + returnRate;
     const fee = tempBalance * annualFee;
-    cumulativeFeesPaid += fee;
+    cumulativeFeesPaidRetirement += fee;
     tempBalance -= fee;
+    tempBalance -= grossRetirementIncome;
+    if (tempBalance < 0) {
+      tempBalance = 0;
+      break;
+    }
   }
 
-  const cumulativeAccountBalance = Math.max(0, tempBalance);
-  const taxesDue =
-    cumulativeAccountBalance > 0
-      ? cumulativeAccountBalance * retirementTaxRate
-      : 0;
+  const cumulativeFeesPaid =
+    cumulativeFeesPaidAccumulation + cumulativeFeesPaidRetirement;
+  const cumulativeAccountBalance = tempBalance;
+  const taxesDue = cumulativeAccountBalance * retirementTaxRate;
   const deathBenefits = Math.max(0, cumulativeAccountBalance - taxesDue);
 
   return {
