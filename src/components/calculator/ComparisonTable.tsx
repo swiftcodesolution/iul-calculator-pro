@@ -94,33 +94,69 @@ export function ComparisonTable({
   }, [ageOptions, yearsRunOutOfMoney, setYearsRunOutOfMoney]);
 
   // Compute 401(k) results for Current Plan (red column) dynamically
-  const currentPlanResults = useMemo(
-    () =>
-      extractCurrentPlanResults(
-        currentAge,
-        yearsRunOutOfMoney,
-        Number(annualContributions) || 10000,
-        (boxesData.currentPlanROR as number) / 100,
-        (boxesData.retirementTaxRate as number) / 100,
-        (boxesData.currentPlanFees as number) / 100,
-        (boxesData.workingTaxRate as number) / 100,
-        Number(startingBalance) || 0,
-        Number(annualEmployerMatch) || 0,
-        boxesData.retirementAge as number // Add retirementAge from boxesData
-      ),
-    [
+  const currentPlanResults = useMemo(() => {
+    const inputs = {
       currentAge,
       yearsRunOutOfMoney,
-      annualContributions,
-      annualEmployerMatch,
-      startingBalance,
-      boxesData.currentPlanROR,
-      boxesData.retirementTaxRate,
-      boxesData.currentPlanFees,
-      boxesData.workingTaxRate,
-      boxesData.retirementAge, // Add to dependency array
-    ]
-  );
+      annualContributions: Number(annualContributions) || 10000,
+      currentPlanROR: boxesData.currentPlanROR as number,
+      retirementTaxRate: boxesData.retirementTaxRate as number,
+      currentPlanFees: boxesData.currentPlanFees as number,
+      workingTaxRate: boxesData.workingTaxRate as number,
+      startingBalance: Number(startingBalance) || 0,
+      annualEmployerMatch: Number(annualEmployerMatch) || 0,
+      retirementAge: boxesData.retirementAge as number,
+      stopSavingAge: boxesData.stopSavingAge as number,
+      // currentAge: 45,
+      // yearsRunOutOfMoney: 95,
+      // annualContributions: 12821,
+      // currentPlanROR: boxesData.currentPlanROR,
+      // retirementTaxRate: 22,
+      // currentPlanFees: 2,
+      // workingTaxRate: 22,
+      // startingBalance: 0,
+      // annualEmployerMatch: 0,
+      // retirementAge: 66,
+      // stopSavingAge: 65,
+    };
+    console.log("Current Plan Calculation Inputs:", inputs);
+
+    const results = extractCurrentPlanResults(
+      inputs.currentAge,
+      inputs.yearsRunOutOfMoney,
+      inputs.annualContributions,
+      inputs.currentPlanROR as number,
+      inputs.retirementTaxRate,
+      inputs.currentPlanFees,
+      inputs.workingTaxRate,
+      inputs.startingBalance,
+      inputs.annualEmployerMatch,
+      inputs.retirementAge,
+      inputs.stopSavingAge
+    );
+    console.log("Current Plan Local Calculation Results:", results);
+
+    return results;
+  }, [
+    currentAge,
+    yearsRunOutOfMoney,
+    annualContributions,
+    annualEmployerMatch,
+    startingBalance,
+    boxesData.currentPlanROR,
+    boxesData.retirementTaxRate,
+    boxesData.currentPlanFees,
+    boxesData.workingTaxRate,
+    boxesData.retirementAge,
+    boxesData.stopSavingAge,
+  ]);
+
+  console.log("State Values:", {
+    currentAge,
+    annualContributions,
+    annualEmployerMatch,
+    startingBalance,
+  });
 
   // Compute tax-free results for IRS 7702 (green column)
   const taxFreeResults = useMemo(
