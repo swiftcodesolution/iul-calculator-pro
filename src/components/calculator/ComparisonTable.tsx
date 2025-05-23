@@ -30,8 +30,8 @@ import {
 import { useTableStore } from "@/lib/store";
 
 interface ComparisonTableProps {
-  defaultResults: Results; // Static prop for compatibility (not used directly)
-  taxesData: TaxesData; // Data for yellow column
+  defaultResults: Results;
+  taxesData: TaxesData;
   columnTextWhite: {
     currentPlan: boolean;
     taxes: boolean;
@@ -40,8 +40,8 @@ interface ComparisonTableProps {
   highlightedRow: number | null;
   isTableCollapsed: boolean;
   isTableCardExpanded: boolean;
-  currentAge: number; // From boxesData
-  boxesData: BoxesData; // Input parameters from page
+  currentAge: number;
+  boxesData: BoxesData;
   setIsTableCollapsed: (value: boolean) => void;
   setIsTableCardExpanded: (value: boolean) => void;
   handleHeaderClick: (column: "currentPlan" | "taxes" | "taxFreePlan") => void;
@@ -63,7 +63,6 @@ export function ComparisonTable({
   handleCellClick,
 }: ComparisonTableProps) {
   const { tables, yearsRunOutOfMoney, setYearsRunOutOfMoney } = useTableStore();
-  // State for user inputs in the table
   const [startingBalance, setStartingBalance] = useState<number | string>(
     defaultResults.startingBalance
   );
@@ -73,59 +72,87 @@ export function ComparisonTable({
   const [annualEmployerMatch, setAnnualEmployerMatch] = useState<
     number | string
   >(defaultResults.annualEmployerMatch);
+  const [yearsRunOutOfMoneyInput, setYearsRunOutOfMoneyInput] = useState<
+    number | string
+  >(yearsRunOutOfMoney);
 
-  const [yearsRunOutOfMoneyInput, setYearsRunOutOfMoneyInput] =
-    useState<number>(
-      yearsRunOutOfMoney // Initialize with current yearsRunOutOfMoney
-    );
-
-  // Extract unique Age values from mainTable for dropdown
   const ageOptions = useMemo(() => {
     const mainTable = tables[0]?.data || [];
     const ages = mainTable.map((row) => Number(row.Age)).sort((a, b) => a - b);
     return [...new Set(ages)];
   }, [tables]);
 
-  // Set default yearsRunOutOfMoney when tables are populated
   useEffect(() => {
     if (ageOptions.length > 0 && !ageOptions.includes(yearsRunOutOfMoney)) {
       setYearsRunOutOfMoney(ageOptions[0]);
+      setYearsRunOutOfMoneyInput(ageOptions[0]);
     }
   }, [ageOptions, yearsRunOutOfMoney, setYearsRunOutOfMoney]);
 
-  // Compute 401(k) results for Current Plan (red column) dynamically
+  // Utility to parse input with fallback
+  const parseInput = (value: string | number, fallback: number): number => {
+    if (typeof value === "number") return value;
+    const parsed = parseFloat(value);
+    return isNaN(parsed) || parsed < 0 ? fallback : parsed;
+  };
+
+  // Validation function for yearsRunOutOfMoneyInput
+  const isYearsRunOutOfMoneyInvalid = (value: string | number): boolean => {
+    if (value === "") return false; // Empty input is allowed
+    const numValue = parseFloat(value.toString());
+    if (isNaN(numValue)) return true; // Invalid number
+    if (numValue <= currentAge) return true; // Less than or equal to currentAge
+    return false;
+  };
+
+  // Compute 401(k) results for Current Plan (red column) with fallback values
   const currentPlanResults = useMemo(() => {
     const inputs = {
-      currentAge,
-      yearsRunOutOfMoney,
-      annualContributions: Number(annualContributions) || 10000,
-      currentPlanROR: boxesData.currentPlanROR as number,
-      retirementTaxRate: boxesData.retirementTaxRate as number,
-      currentPlanFees: boxesData.currentPlanFees as number,
-      workingTaxRate: boxesData.workingTaxRate as number,
-      startingBalance: Number(startingBalance) || 0,
-      annualEmployerMatch: Number(annualEmployerMatch) || 0,
-      retirementAge: boxesData.retirementAge as number,
-      stopSavingAge: boxesData.stopSavingAge as number,
-      // currentAge: 45,
-      // yearsRunOutOfMoney: 95,
-      // annualContributions: 12821,
-      // currentPlanROR: boxesData.currentPlanROR,
-      // retirementTaxRate: 22,
-      // currentPlanFees: 2,
-      // workingTaxRate: 22,
-      // startingBalance: 0,
-      // annualEmployerMatch: 0,
-      // retirementAge: 66,
-      // stopSavingAge: 65,
+      currentAge: parseInput(boxesData.currentAge, 40),
+      yearsRunOutOfMoney: parseInput(yearsRunOutOfMoneyInput, 95),
+      annualContributions: parseInput(annualContributions, 10000),
+      currentPlanROR: parseInput(boxesData.currentPlanROR, 6),
+      retirementTaxRate: parseInput(boxesData.retirementTaxRate, 22),
+      currentPlanFees: parseInput(boxesData.currentPlanFees, 2),
+      workingTaxRate: parseInput(boxesData.workingTaxRate, 22),
+      startingBalance: parseInput(startingBalance, 0),
+      annualEmployerMatch: parseInput(annualEmployerMatch, 0),
+      retirementAge: parseInput(boxesData.retirementAge, 66),
+      stopSavingAge: parseInput(boxesData.stopSavingAge, 65),
     };
+
+    // Skip calculations if critical inputs are invalid
+    if (
+      inputs.currentAge >= inputs.yearsRunOutOfMoney ||
+      inputs.currentAge >= inputs.retirementAge ||
+      inputs.currentAge >= inputs.stopSavingAge
+    ) {
+      return {
+        startingBalance: 0,
+        annualContributions: 0,
+        annualEmployerMatch: 0,
+        annualFees: 0,
+        grossRetirementIncome: 0,
+        incomeTax: 0,
+        netRetirementIncome: 0,
+        cumulativeTaxesDeferred: 0,
+        cumulativeTaxesPaid: 0,
+        cumulativeFeesPaid: 0,
+        cumulativeNetIncome: 0,
+        cumulativeAccountBalance: 0,
+        taxesDue: 0,
+        deathBenefits: 0,
+        yearsRunOutOfMoney: inputs.yearsRunOutOfMoney,
+      };
+    }
+
     console.log("Current Plan Calculation Inputs:", inputs);
 
     const results = extractCurrentPlanResults(
       inputs.currentAge,
       inputs.yearsRunOutOfMoney,
       inputs.annualContributions,
-      inputs.currentPlanROR as number,
+      inputs.currentPlanROR,
       inputs.retirementTaxRate,
       inputs.currentPlanFees,
       inputs.workingTaxRate,
@@ -137,9 +164,10 @@ export function ComparisonTable({
     console.log("Current Plan Local Calculation Results:", results);
 
     return results;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     currentAge,
-    yearsRunOutOfMoney,
+    yearsRunOutOfMoneyInput, // Changed from yearsRunOutOfMoney
     annualContributions,
     annualEmployerMatch,
     startingBalance,
@@ -151,92 +179,64 @@ export function ComparisonTable({
     boxesData.stopSavingAge,
   ]);
 
-  console.log("State Values:", {
-    currentAge,
-    annualContributions,
-    annualEmployerMatch,
-    startingBalance,
-  });
-
-  // Compute tax-free results for IRS 7702 (green column)
   const taxFreeResults = useMemo(
     () => extractTaxFreeResults(tables, currentAge, yearsRunOutOfMoney),
     [tables, currentAge, yearsRunOutOfMoney]
   );
 
-  // Handle dropdown change for yearsRunOutOfMoney
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleYearsRunOutOfMoneyChange = (value: string) => {
     const age = Number(value);
     if (!isNaN(age)) {
       setYearsRunOutOfMoney(age);
+      setYearsRunOutOfMoneyInput(age);
     }
   };
 
-  // Handle input changes for Starting Balance
   const handleStartingBalanceChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = e.target.value;
-    if (value === "") {
-      setStartingBalance("");
-    } else {
-      const numValue = Number(value);
-      if (!isNaN(numValue) && numValue >= 0) {
-        setStartingBalance(numValue);
-      }
-    }
+    setStartingBalance(
+      value === "" ? "" : Number(value) >= 0 ? Number(value) : ""
+    );
   };
 
-  // Handle input changes for Annual Contributions
   const handleAnnualContributionsChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = e.target.value;
-    if (value === "") {
-      setAnnualContributions("");
-    } else {
-      const numValue = Number(value);
-      if (!isNaN(numValue) && numValue >= 0) {
-        setAnnualContributions(numValue);
-      }
-    }
+    setAnnualContributions(
+      value === "" ? "" : Number(value) >= 0 ? Number(value) : ""
+    );
   };
 
-  // Handle input changes for Annual Employer Match
   const handleAnnualEmployerMatchChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = e.target.value;
-    if (value === "") {
-      setAnnualEmployerMatch("");
-    } else {
-      const numValue = Number(value);
-      if (!isNaN(numValue) && numValue >= 0) {
-        setAnnualEmployerMatch(numValue);
-      }
-    }
+    setAnnualEmployerMatch(
+      value === "" ? "" : Number(value) >= 0 ? Number(value) : ""
+    );
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleYearsRunOutOfMoneyInputChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = Number(e.target.value);
-    if (!isNaN(value) && value > currentAge) {
-      setYearsRunOutOfMoneyInput(value);
-      setYearsRunOutOfMoney(value);
+    const value = e.target.value;
+    setYearsRunOutOfMoneyInput(value); // Allow any input, including empty string
+    const numValue = Number(value);
+    if (!isNaN(numValue) && numValue > currentAge) {
+      setYearsRunOutOfMoney(numValue); // Update only if valid
     }
   };
 
-  // Utility to format values consistently
   const formatValue = (
     value: number | string,
     isPercentage: boolean = false
   ): string => {
     if (typeof value === "string") {
       if (["included", "n/a"].includes(value.toLowerCase())) return value;
-      return value; // Return as-is if it's a formatted string
+      return value;
     }
     if (isPercentage) {
       return `${Number(value).toFixed(2)}%`;
@@ -247,7 +247,6 @@ export function ComparisonTable({
     })}`;
   };
 
-  // Define table rows with data for all columns
   const tableRows = useMemo(
     () => [
       {
@@ -257,7 +256,9 @@ export function ComparisonTable({
             type="number"
             value={startingBalance}
             onChange={handleStartingBalanceChange}
-            className="w-32"
+            className={`w-32 ${
+              isYearsRunOutOfMoneyInvalid(startingBalance) ? "" : ""
+            }`}
             min={0}
             aria-label="Starting Balance for Current Plan"
           />
@@ -272,7 +273,9 @@ export function ComparisonTable({
             type="number"
             value={annualContributions}
             onChange={handleAnnualContributionsChange}
-            className="w-32"
+            className={`w-32 ${
+              isYearsRunOutOfMoneyInvalid(annualContributions) ? "" : ""
+            }`}
             min={0}
             aria-label="Annual Contributions for Current Plan"
           />
@@ -287,7 +290,9 @@ export function ComparisonTable({
             type="number"
             value={annualEmployerMatch}
             onChange={handleAnnualEmployerMatchChange}
-            className="w-32"
+            className={`w-32 ${
+              isYearsRunOutOfMoneyInvalid(annualEmployerMatch) ? "" : ""
+            }`}
             min={0}
             aria-label="Annual Employer Match for Current Plan"
           />
@@ -369,8 +374,12 @@ export function ComparisonTable({
               type="number"
               value={yearsRunOutOfMoneyInput}
               onChange={handleYearsRunOutOfMoneyInputChange}
-              className="w-32"
-              min={currentAge + 1} // Ensure yearsRunOutOfMoney > currentAge
+              className={`w-32 ${
+                isYearsRunOutOfMoneyInvalid(yearsRunOutOfMoneyInput)
+                  ? "border-red-500"
+                  : ""
+              }`}
+              min={currentAge + 1}
               aria-label="Years You Run Out of Money for Current Plan"
             />
           ) : (
@@ -384,13 +393,11 @@ export function ComparisonTable({
                 <SelectValue placeholder="Select Age" />
               </SelectTrigger>
               <SelectContent>
-                {ageOptions
-                  // .filter((age) => age > currentAge) // Filter out invalid ages
-                  .map((age) => (
-                    <SelectItem key={age} value={age.toString()}>
-                      {age}
-                    </SelectItem>
-                  ))}
+                {ageOptions.map((age) => (
+                  <SelectItem key={age} value={age.toString()}>
+                    {age}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           ),
@@ -398,6 +405,7 @@ export function ComparisonTable({
         taxFree: taxFreeResults.yearsRunOutOfMoney,
       },
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       currentPlanResults,
       taxesData,

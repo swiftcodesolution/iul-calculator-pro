@@ -11,14 +11,7 @@ interface InputParametersProps {
 
 export function InputParameters({ data, onUpdate }: InputParametersProps) {
   const handleInputChange = (key: keyof BoxesData, value: string) => {
-    if (value === "") {
-      onUpdate({ [key]: "" }); // Allow empty string to clear input
-      return;
-    }
-    const parsedValue = parseFloat(value); // Use parseFloat to handle decimals
-    if (!isNaN(parsedValue)) {
-      onUpdate({ [key]: parsedValue }); // Update with parsed number
-    }
+    onUpdate({ [key]: value }); // Pass raw input value (string or empty)
   };
 
   // Define which fields should allow decimals
@@ -30,6 +23,20 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
     "currentPlanROR",
     "taxFreePlanROR",
   ];
+
+  // Validation function to determine if an input is invalid
+  const isInvalid = (key: keyof BoxesData, value: string | number): boolean => {
+    const stringValue = value.toString(); // Convert to string for consistency
+    if (stringValue === "") return false; // Empty inputs are allowed
+    const numValue = parseFloat(stringValue);
+    if (isNaN(numValue)) return true; // Invalid number
+    if (numValue < 0) return true; // Negative values not allowed
+    if (key === "stopSavingAge" || key === "retirementAge") {
+      const currentAgeNum = parseFloat(data.currentAge.toString());
+      return !isNaN(currentAgeNum) && numValue <= currentAgeNum;
+    }
+    return false;
+  };
 
   return (
     <motion.div
@@ -81,12 +88,16 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                   transition={{ delay: 0.2, duration: 0.3 }}
                 >
                   <Input
-                    className="w-[80px] text-sm border-gray-500 border-2"
-                    value={value}
+                    className={`w-[80px] text-sm border-2 ${
+                      isInvalid(key, value)
+                        ? "border-red-500"
+                        : "border-gray-500"
+                    }`}
+                    value={value.toString()} // Convert to string
                     onChange={(e) => handleInputChange(key, e.target.value)}
                     type="number"
-                    step={decimalFields.includes(key) ? "0.1" : "1"} // Use decimalFields to set step
-                    min="0" // Prevent negative values
+                    step={decimalFields.includes(key) ? "0.1" : "1"}
+                    min="0"
                   />
                 </motion.p>
               </motion.div>
@@ -135,12 +146,16 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                   className="relative"
                 >
                   <Input
-                    className="w-[80px] text-sm border-gray-500 border-2 pr-6"
-                    value={value}
+                    className={`w-[80px] text-sm border-2 pr-6 ${
+                      isInvalid(key, value)
+                        ? "border-red-500"
+                        : "border-gray-500"
+                    }`}
+                    value={value.toString()} // Convert to string
                     onChange={(e) => handleInputChange(key, e.target.value)}
                     type="number"
-                    step={decimalFields.includes(key) ? "0.1" : "1"} // Use decimalFields to set step
-                    min="0" // Prevent negative values
+                    step={decimalFields.includes(key) ? "0.1" : "1"}
+                    min="0"
                   />
                   <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500">
                     %
@@ -192,12 +207,16 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                   className="relative"
                 >
                   <Input
-                    className="w-[80px] text-sm border-gray-500 border-2 pr-6"
-                    value={value}
+                    className={`w-[80px] text-sm border-2 pr-6 ${
+                      isInvalid(key, value)
+                        ? "border-red-500"
+                        : "border-gray-500"
+                    }`}
+                    value={value.toString()} // Convert to string
                     onChange={(e) => handleInputChange(key, e.target.value)}
                     type="number"
-                    step={decimalFields.includes(key) ? "0.1" : "1"} // Use decimalFields to set step
-                    min="0" // Prevent negative values
+                    step={decimalFields.includes(key) ? "0.1" : "1"}
+                    min="0"
                   />
                   <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500">
                     %
