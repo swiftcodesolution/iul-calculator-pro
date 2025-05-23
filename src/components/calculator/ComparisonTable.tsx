@@ -473,8 +473,8 @@ export function ComparisonTable({
               </SelectContent>
             </Select>
           ),
-        taxes: formatValue(taxesData.yearsRunOutOfMoney),
-        taxFree: formatValue(taxFreeResults.yearsRunOutOfMoney),
+        taxes: taxesData.yearsRunOutOfMoney,
+        taxFree: taxFreeResults.yearsRunOutOfMoney,
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
