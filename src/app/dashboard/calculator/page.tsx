@@ -13,8 +13,9 @@ import {
   TotalAdvantage,
   CompanyDetails,
   ImageAsset,
-  BoxesData,
+  // BoxesData,
 } from "@/lib/types";
+import { useTableStore } from "@/lib/store";
 
 // Static data for Taxes column (yellow); replace with dynamic logic if needed
 const taxesData: TaxesData = {
@@ -79,23 +80,12 @@ export default function CalculatorPage() {
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
   const [isTableCardExpanded, setIsTableCardExpanded] = useState(false);
   const [isTabCardExpanded, setIsTabCardExpanded] = useState(false);
-  // State for input parameters
-  const [boxesData, setBoxesData] = useState<BoxesData>({
-    currentAge: "40", // Client’s default age
-    stopSavingAge: "",
-    retirementAge: "",
-    workingTaxRate: "", // Client’s default
-    retirementTaxRate: "", // Client’s default
-    inflationRate: "",
-    currentPlanFees: "", // Client’s assumed fee
-    currentPlanROR: "", // Client’s default return
-    taxFreePlanROR: "",
-  });
 
-  // Update boxesData when inputs change
-  const handleBoxesDataValueChange = (updatedData: Partial<BoxesData>) => {
-    setBoxesData((prev) => ({ ...prev, ...updatedData }));
-  };
+  const { boxesData, setBoxesData } = useTableStore();
+  // // Update boxesData when inputs change
+  // const handleBoxesDataValueChange = (updatedData: Partial<BoxesData>) => {
+  //   setBoxesData((prev) => ({ ...prev, ...updatedData }));
+  // };
 
   // Tab management hooks
   const {
@@ -136,10 +126,7 @@ export default function CalculatorPage() {
     <div className="h-[90vh] grid grid-cols-2 gap-4">
       {/* Left Column */}
       <div className="flex flex-col gap-4">
-        <InputParameters
-          data={boxesData}
-          onUpdate={handleBoxesDataValueChange}
-        />
+        <InputParameters data={boxesData} onUpdate={setBoxesData} />
         <ComparisonTable
           currentAge={Number(boxesData.currentAge) || 0}
           boxesData={boxesData} // Pass boxesData for dynamic calculations
