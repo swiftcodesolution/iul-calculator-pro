@@ -49,25 +49,25 @@ interface ComparisonTableProps {
 }
 
 export function ComparisonTable({
-  defaultResults = {
-    startingBalance: 0,
-    annualContributions: 10000,
-    annualEmployerMatch: 0,
-    xValue: 0,
-    annualFees: "",
-    grossRetirementIncome: 0,
-    incomeTax: 0,
-    netRetirementIncome: 0,
-    cumulativeTaxesDeferred: 0,
-    cumulativeTaxesPaid: 0,
-    cumulativeFeesPaid: 0,
-    cumulativeNetIncome: 0,
-    cumulativeAccountBalance: 0,
-    taxesDue: 0,
-    deathBenefits: 0,
-    yearsRunOutOfMoney: 0,
-    currentAge: 0,
-  },
+  // defaultResults = {
+  //   startingBalance: 0,
+  //   annualContributions: 10000,
+  //   annualEmployerMatch: 0,
+  //   xValue: 0,
+  //   annualFees: "",
+  //   grossRetirementIncome: 0,
+  //   incomeTax: 0,
+  //   netRetirementIncome: 0,
+  //   cumulativeTaxesDeferred: 0,
+  //   cumulativeTaxesPaid: 0,
+  //   cumulativeFeesPaid: 0,
+  //   cumulativeNetIncome: 0,
+  //   cumulativeAccountBalance: 0,
+  //   taxesDue: 0,
+  //   deathBenefits: 0,
+  //   yearsRunOutOfMoney: 0,
+  //   currentAge: 0,
+  // },
   taxesData = {
     startingBalance: 0,
     annualContributions: 0,
@@ -106,20 +106,33 @@ export function ComparisonTable({
   handleHeaderClick,
   handleCellClick,
 }: ComparisonTableProps) {
+  // const {
+  //   tables = [],
+  //   yearsRunOutOfMoney = 95,
+  //   setYearsRunOutOfMoney,
+  // } = useTableStore() || {};
+  // const [startingBalance, setStartingBalance] = useState<number | string>(
+  //   defaultResults.startingBalance
+  // );
+  // const [annualContributions, setAnnualContributions] = useState<
+  //   number | string
+  // >(defaultResults.annualContributions);
+  // const [annualEmployerMatch, setAnnualEmployerMatch] = useState<
+  //   number | string
+  // >(defaultResults.annualEmployerMatch);
+
   const {
     tables = [],
     yearsRunOutOfMoney = 95,
     setYearsRunOutOfMoney,
-  } = useTableStore() || {};
-  const [startingBalance, setStartingBalance] = useState<number | string>(
-    defaultResults.startingBalance
-  );
-  const [annualContributions, setAnnualContributions] = useState<
-    number | string
-  >(defaultResults.annualContributions);
-  const [annualEmployerMatch, setAnnualEmployerMatch] = useState<
-    number | string
-  >(defaultResults.annualEmployerMatch);
+    startingBalance,
+    annualContributions,
+    annualEmployerMatch,
+    setStartingBalance,
+    setAnnualContributions,
+    setAnnualEmployerMatch,
+  } = useTableStore();
+
   const [yearsRunOutOfMoneyInput, setYearsRunOutOfMoneyInput] = useState<
     number | string
   >(yearsRunOutOfMoney);

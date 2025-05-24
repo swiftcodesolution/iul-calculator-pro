@@ -10,6 +10,12 @@ interface TableStore {
   setYearsRunOutOfMoney: (age: number) => void;
   boxesData: BoxesData;
   setBoxesData: (updatedData: Partial<BoxesData>) => void;
+  startingBalance: number | string;
+  annualContributions: number | string;
+  annualEmployerMatch: number | string;
+  setStartingBalance: (value: number | string) => void;
+  setAnnualContributions: (value: number | string) => void;
+  setAnnualEmployerMatch: (value: number | string) => void;
 }
 
 export const useTableStore = create<TableStore>()(
@@ -35,6 +41,12 @@ export const useTableStore = create<TableStore>()(
         set((state) => ({
           boxesData: { ...state.boxesData, ...updatedData },
         })),
+      startingBalance: 0,
+      annualContributions: 10000,
+      annualEmployerMatch: 0,
+      setStartingBalance: (value) => set({ startingBalance: value }),
+      setAnnualContributions: (value) => set({ annualContributions: value }),
+      setAnnualEmployerMatch: (value) => set({ annualEmployerMatch: value }),
     }),
     {
       name: "table-storage", // Key in localStorage
@@ -43,6 +55,9 @@ export const useTableStore = create<TableStore>()(
         tables: state.tables,
         yearsRunOutOfMoney: state.yearsRunOutOfMoney,
         boxesData: state.boxesData,
+        startingBalance: state.startingBalance,
+        annualContributions: state.annualContributions,
+        annualEmployerMatch: state.annualEmployerMatch,
       }),
     }
   )
