@@ -12,25 +12,24 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { useTableStore } from "@/lib/store";
-import { runRetirementPlanLoop } from "@/lib/utils";
-// import { BoxesData } from "@/lib/types";
+import { runGrossRetirementIncomeLoop } from "@/lib/utils";
 
 export default function CurrentPlanFullTable() {
   const {
     boxesData = {
-      currentAge: "40",
+      currentAge: "45",
       stopSavingAge: "65",
       retirementAge: "66",
       workingTaxRate: "22",
       retirementTaxRate: "22",
       inflationRate: "2",
       currentPlanFees: "2",
-      currentPlanROR: "6",
+      currentPlanROR: "6.3",
       taxFreePlanROR: "6",
     },
     yearsRunOutOfMoney = 95,
     startingBalance = 0,
-    annualContributions = 10000,
+    annualContributions = 12821,
     annualEmployerMatch = 0,
   } = useTableStore();
 
@@ -45,13 +44,13 @@ export default function CurrentPlanFullTable() {
     return isNaN(parsed) || parsed < 0 ? fallback : parsed;
   };
 
-  // Compute results using runRetirementPlanLoop
+  // Compute results using runGrossRetirementIncomeLoop
   const currentPlanResults = useMemo(() => {
     const inputs = {
-      currentAge: parseInput(boxesData.currentAge, 40),
+      currentAge: parseInput(boxesData.currentAge, 45),
       yearsRunOutOfMoney: parseInput(yearsRunOutOfMoney, 95),
-      annualContributions: parseInput(annualContributions, 10000),
-      currentPlanROR: parseInput(boxesData.currentPlanROR, 6),
+      annualContributions: parseInput(annualContributions, 12821),
+      currentPlanROR: parseInput(boxesData.currentPlanROR, 6.3),
       retirementTaxRate: parseInput(boxesData.retirementTaxRate, 22),
       currentPlanFees: parseInput(boxesData.currentPlanFees, 2),
       workingTaxRate: parseInput(boxesData.workingTaxRate, 22),
@@ -69,7 +68,7 @@ export default function CurrentPlanFullTable() {
       return [];
     }
 
-    return runRetirementPlanLoop(
+    return runGrossRetirementIncomeLoop(
       inputs.currentAge,
       inputs.yearsRunOutOfMoney,
       inputs.annualContributions,
@@ -124,15 +123,19 @@ export default function CurrentPlanFullTable() {
           <Table className="w-full table-auto">
             <TableHeader>
               <TableRow>
+                <TableHead>Year</TableHead>
                 <TableHead>Age</TableHead>
-                <TableHead>Balance</TableHead>
-                <TableHead>Gross Income</TableHead>
-                <TableHead>Net Income</TableHead>
-                <TableHead>Taxes Due</TableHead>
+                <TableHead>Annual Contributions</TableHead>
+                <TableHead>Gross Retirement Income</TableHead>
+                <TableHead>Retirement Taxes</TableHead>
+                <TableHead>Retirement Income</TableHead>
+                <TableHead>Management Fee</TableHead>
+                <TableHead>Interest</TableHead>
+                <TableHead>End of Year Balance</TableHead>
+                <TableHead>Cumulative Income</TableHead>
+                <TableHead>Cumulative Fees</TableHead>
                 <TableHead>Cumulative Taxes Deferred</TableHead>
-                <TableHead>Cumulative Taxes Paid</TableHead>
-                <TableHead>Cumulative Fees Paid</TableHead>
-                <TableHead>Cumulative Net Income</TableHead>
+                <TableHead>Death Benefit</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -143,29 +146,25 @@ export default function CurrentPlanFullTable() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05, duration: 0.3 }}
                 >
-                  <TableCell>{result.currentAge + index}</TableCell>
+                  <TableCell>{result.year}</TableCell>
+                  <TableCell>{result.age}</TableCell>
                   <TableCell>
-                    {formatValue(result.cumulativeAccountBalance)}
+                    {formatValue(result.annualContribution)}
                   </TableCell>
                   <TableCell>
                     {formatValue(result.grossRetirementIncome)}
                   </TableCell>
-                  <TableCell>
-                    {formatValue(result.netRetirementIncome)}
-                  </TableCell>
-                  <TableCell>{formatValue(result.taxesDue, true)}</TableCell>
+                  <TableCell>{formatValue(result.retirementTaxes)}</TableCell>
+                  <TableCell>{formatValue(result.retirementIncome)}</TableCell>
+                  <TableCell>{formatValue(result.managementFees)}</TableCell>
+                  <TableCell>{formatValue(result.interest)}</TableCell>
+                  <TableCell>{formatValue(result.endOfYearBalance)}</TableCell>
+                  <TableCell>{formatValue(result.cumulativeIncome)}</TableCell>
+                  <TableCell>{formatValue(result.cumulativeFees)}</TableCell>
                   <TableCell>
                     {formatValue(result.cumulativeTaxesDeferred)}
                   </TableCell>
-                  <TableCell>
-                    {formatValue(result.cumulativeTaxesPaid)}
-                  </TableCell>
-                  <TableCell>
-                    {formatValue(result.cumulativeFeesPaid)}
-                  </TableCell>
-                  <TableCell>
-                    {formatValue(result.cumulativeNetIncome)}
-                  </TableCell>
+                  <TableCell>{formatValue(result.deathBenefit)}</TableCell>
                 </motion.tr>
               ))}
             </TableBody>
