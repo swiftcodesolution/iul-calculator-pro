@@ -88,6 +88,30 @@ export type Results = {
   currentAge: number;
 };
 
+export interface CombinedResult {
+  year: number;
+  age: number;
+  annualContribution: number;
+  tfpAnnualContribution: number;
+  grossRetirementIncome: number;
+  retirementTaxes: number;
+  retirementIncome: number;
+  tfpRetirementIncome: number;
+  managementFee: number;
+  tfpFee: string | number;
+  interest: number;
+  endOfYearBalance: number;
+  tfpCumulativeBalance: number;
+  cumulativeIncome: number;
+  tfpCumulativeIncome: number;
+  cumulativeFees: number;
+  tfpCumulativeFees: number;
+  cumulativeTaxesDeferred: number;
+  deathBenefit: number;
+  tfpDeathBenefit: number;
+  [key: string]: number | string; // Index signature for string keys
+}
+
 export interface TableData {
   source: string;
   page_number: number;

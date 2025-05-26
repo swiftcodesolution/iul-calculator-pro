@@ -685,3 +685,19 @@ export function runGrossRetirementIncomeLoop(
   return results;
 }
 // ---
+
+// FOR TAX FREE PLAN FULL TABLE
+export function runTaxFreePlanLoop(
+  tables: TableData[],
+  currentAge: number,
+  yearsRunOutOfMoney: number
+): Results[] {
+  const results: Results[] = [];
+
+  for (let age = currentAge; age <= yearsRunOutOfMoney; age++) {
+    const planResults = extractTaxFreeResults(tables, currentAge, age);
+    results.push(planResults);
+  }
+
+  return results;
+}

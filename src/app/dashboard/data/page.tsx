@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -14,90 +14,242 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ZoomIn, ZoomOut, Fullscreen, Minimize2 } from "lucide-react";
+import { useTableStore } from "@/lib/store";
+import { runGrossRetirementIncomeLoop, runTaxFreePlanLoop } from "@/lib/utils";
 
-export default function DataPage() {
-  const [evenColumnColor, setEvenColumnColor] = useState("#f0f0f0");
-  const [oddColumnColor, setOddColumnColor] = useState("#e6f3ff");
-  const [zoomIndex, setZoomIndex] = useState(1); // 1 = normal
+interface CombinedResult {
+  year: number;
+  age: number;
+  annualContribution: number;
+  tfpAnnualContribution: number;
+  grossRetirementIncome: number;
+  retirementTaxes: number;
+  retirementIncome: number;
+  tfpRetirementIncome: number;
+  managementFee: number;
+  tfpFee: string | number;
+  interest: number;
+  endOfYearBalance: number;
+  tfpCumulativeBalance: number;
+  cumulativeIncome: number;
+  tfpCumulativeIncome: number;
+  cumulativeFees: number;
+  tfpCumulativeFees: number;
+  cumulativeTaxesDeferred: number;
+  deathBenefit: number;
+  tfpDeathBenefit: number;
+  [key: string]: number | string;
+}
+
+export default function CombinedPlanTable() {
+  const [evenColumnColor, setEvenColumnColor] = useState("#e6f3ff"); // TFP columns
+  const [oddColumnColor, setOddColumnColor] = useState("#f0f0f0"); // Current Plan columns
+  const [zoomLevel, setZoomLevel] = useState(0.6); // Zoom scale (1 = normal)
   const [isFullScreen, setIsFullScreen] = useState(false);
 
-  const zoomSteps = [0.8, 1, 1.2]; // Font scaling steps
-  const fontSize = `${zoomSteps[zoomIndex]}rem`;
-  const paddingSize = `${0.75 * zoomSteps[zoomIndex]}rem`;
+  const fontSize = `${zoomLevel}rem`;
+  const paddingSize = `${0.75 * zoomLevel}rem`;
 
-  const handleZoomIn = () =>
-    setZoomIndex((prev) => Math.min(prev + 1, zoomSteps.length - 1));
-  const handleZoomOut = () => setZoomIndex((prev) => Math.max(prev - 1, 0));
+  const handleZoomIn = () => setZoomLevel((prev) => prev + 0.2);
+  const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 0.2, 0.4)); // Minimum zoom 0.4
   const handleFullScreenToggle = () => setIsFullScreen((prev) => !prev);
 
   function getContrastingTextColor(bgColor: string): string {
     const r = parseInt(bgColor.slice(1, 3), 16);
     const g = parseInt(bgColor.slice(3, 5), 16);
     const b = parseInt(bgColor.slice(5, 7), 16);
-
-    // Calculate luminance
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-
-    return luminance > 0.5 ? "#000000" : "#FFFFFF"; // Light background = black text, dark background = white text
+    return luminance > 0.5 ? "#000000" : "#FFFFFF";
   }
 
-  type TableRow = Record<string, string | number>;
+  const {
+    tables = [],
+    boxesData = {
+      currentAge: "45",
+      stopSavingAge: "65",
+      retirementAge: "66",
+      workingTaxRate: "22",
+      retirementTaxRate: "22",
+      inflationRate: "2",
+      currentPlanFees: "2",
+      currentPlanROR: "6.3",
+      taxFreePlanROR: "6",
+    },
+    yearsRunOutOfMoney = 95,
+    startingBalance = 0,
+    annualContributions = 12821,
+    annualEmployerMatch = 0,
+  } = useTableStore();
 
-  const data: TableRow[] = Array.from({ length: 80 }, (_, i) => {
-    const year = 2025 + i;
-    const age = 40 + i;
-    const annual401kValue = Math.round(100000 * Math.pow(1.063, i));
-    const annualIULValue = Math.round(annual401kValue * 1.5);
-    const annual401kIncome = Math.round(4000 * Math.pow(1.02, i));
-    const annualIULIncome = Math.round(annual401kIncome * 1.5);
-    const annualContributions = 5000;
-    const tfpAnnualContributions = annualContributions * 1.1;
-    const grossRetirementIncome = annual401kIncome + annualIULIncome;
-    const retirementTaxes = grossRetirementIncome * 0.2;
-    const retirementIncome = grossRetirementIncome - retirementTaxes;
-    const tfpRetirementIncome = retirementIncome * 1.05;
-    const managementFee = annual401kValue * 0.01;
-    const tfpFee = annualIULValue * 0.01;
-    const interest = annual401kValue * 0.063;
-    const endOfYearBalance = annual401kValue + interest;
-    const tfpCumulativeBalance = annualIULValue + interest * 1.5;
-    const cumulativeIncome = (annual401kIncome + annualIULIncome) * (i + 1);
-    const tfpCumulativeIncome = cumulativeIncome * 1.5;
-    const cumulativeFee = managementFee * (i + 1);
-    const tfpCumulativeFee = tfpFee * (i + 1);
-    const cumulativeTaxesDeferred = retirementTaxes * (i + 1);
-    const deathBenefit = annualIULValue * 1.2;
-    const tfpDeathBenefit = tfpCumulativeBalance * 1.2;
+  // Utility to parse input with fallback
+  const parseInput = (
+    value: string | number | undefined | null,
+    fallback: number
+  ): number => {
+    if (value == null || value === "") return fallback;
+    if (typeof value === "number") return value;
+    const parsed = parseFloat(value);
+    return isNaN(parsed) || parsed < 0 ? fallback : parsed;
+  };
 
-    return {
-      year,
-      age,
-      "Annual Contributions": annualContributions.toLocaleString(),
-      "TFP Annual Contributions": tfpAnnualContributions.toLocaleString(),
-      "Gross Retirement Income": grossRetirementIncome.toLocaleString(),
-      "Retirement Taxes": retirementTaxes.toLocaleString(),
-      "Retirement Income": retirementIncome.toLocaleString(),
-      "TFP Retirement Income": tfpRetirementIncome.toLocaleString(),
-      "Management Fee": managementFee.toLocaleString(),
-      "TFP Fee": tfpFee.toLocaleString(),
-      Interest: interest.toLocaleString(),
-      "End of Year Balance": endOfYearBalance.toLocaleString(),
-      "TFP Cumulative Balance": tfpCumulativeBalance.toLocaleString(),
-      "Cumulative Income": cumulativeIncome.toLocaleString(),
-      "TFP Cumulative Income": tfpCumulativeIncome.toLocaleString(),
-      "Cumulative Fee": cumulativeFee.toLocaleString(),
-      "TFP Cumulative Fee": tfpCumulativeFee.toLocaleString(),
-      "Cumulative Taxes Deferred": cumulativeTaxesDeferred.toLocaleString(),
-      "Death Benefit": deathBenefit.toLocaleString(),
-      "TFP Death Benefit": tfpDeathBenefit.toLocaleString(),
+  // Compute Current Plan results
+  const currentPlanResults = useMemo(() => {
+    const inputs = {
+      currentAge: parseInput(boxesData.currentAge, 45),
+      yearsRunOutOfMoney: parseInput(yearsRunOutOfMoney, 95),
+      annualContributions: parseInput(annualContributions, 12821),
+      currentPlanROR: parseInput(boxesData.currentPlanROR, 6.3),
+      retirementTaxRate: parseInput(boxesData.retirementTaxRate, 22),
+      currentPlanFees: parseInput(boxesData.currentPlanFees, 2),
+      workingTaxRate: parseInput(boxesData.workingTaxRate, 22),
+      startingBalance: parseInput(startingBalance, 0),
+      annualEmployerMatch: parseInput(annualEmployerMatch, 0),
+      retirementAge: parseInput(boxesData.retirementAge, 66),
+      stopSavingAge: parseInput(boxesData.stopSavingAge, 65),
     };
-  }).slice(0, 79);
+
+    if (
+      inputs.currentAge >= inputs.yearsRunOutOfMoney ||
+      inputs.currentAge >= inputs.retirementAge ||
+      inputs.currentAge >= inputs.stopSavingAge
+    ) {
+      return [];
+    }
+
+    return runGrossRetirementIncomeLoop(
+      inputs.currentAge,
+      inputs.yearsRunOutOfMoney,
+      inputs.annualContributions,
+      inputs.currentPlanROR,
+      inputs.retirementTaxRate,
+      inputs.currentPlanFees,
+      inputs.workingTaxRate,
+      inputs.startingBalance,
+      inputs.annualEmployerMatch,
+      inputs.retirementAge,
+      inputs.stopSavingAge
+    );
+  }, [
+    boxesData.currentAge,
+    boxesData.currentPlanROR,
+    boxesData.retirementTaxRate,
+    boxesData.currentPlanFees,
+    boxesData.workingTaxRate,
+    boxesData.retirementAge,
+    boxesData.stopSavingAge,
+    yearsRunOutOfMoney,
+    startingBalance,
+    annualContributions,
+    annualEmployerMatch,
+  ]);
+
+  // Compute Tax-Free Plan results
+  const taxFreePlanResults = useMemo(() => {
+    const inputs = {
+      currentAge: parseInput(boxesData.currentAge, 45),
+      yearsRunOutOfMoney: parseInput(yearsRunOutOfMoney, 95),
+    };
+
+    if (inputs.currentAge >= inputs.yearsRunOutOfMoney) {
+      return [];
+    }
+
+    return runTaxFreePlanLoop(
+      tables,
+      inputs.currentAge,
+      inputs.yearsRunOutOfMoney
+    );
+  }, [tables, boxesData.currentAge, yearsRunOutOfMoney]);
+
+  // Combine results
+  const combinedResults = useMemo<CombinedResult[]>(() => {
+    const maxLength = Math.max(
+      currentPlanResults.length,
+      taxFreePlanResults.length
+    );
+    const results: CombinedResult[] = [];
+
+    for (let i = 0; i < maxLength; i++) {
+      const current = currentPlanResults[i] || {
+        year: i + 1,
+        age: parseInput(boxesData.currentAge, 45) + i,
+        annualContribution: 0,
+        grossRetirementIncome: 0,
+        retirementTaxes: 0,
+        retirementIncome: 0,
+        managementFees: 0,
+        interest: 0,
+        endOfYearBalance: 0,
+        cumulativeIncome: 0,
+        cumulativeFees: 0,
+        cumulativeTaxesDeferred: 0,
+        deathBenefit: 0,
+      };
+      const taxFree = taxFreePlanResults[i] || {
+        annualContributions: 0,
+        grossRetirementIncome: 0,
+        incomeTax: 0,
+        netRetirementIncome: 0,
+        annualFees: "0",
+        cumulativeNetIncome: 0,
+        cumulativeFeesPaid: 0,
+        cumulativeTaxesDeferred: 0,
+        cumulativeAccountBalance: 0,
+        deathBenefits: 0,
+      };
+
+      results.push({
+        year: current.year,
+        age: current.age,
+        annualContribution: current.annualContribution,
+        tfpAnnualContribution: taxFree.annualContributions,
+        grossRetirementIncome: current.grossRetirementIncome,
+        retirementTaxes: current.retirementTaxes,
+        retirementIncome: current.retirementIncome,
+        tfpRetirementIncome: taxFree.netRetirementIncome,
+        managementFee: current.managementFees,
+        tfpFee: taxFree.annualFees,
+        interest: current.interest,
+        endOfYearBalance: current.endOfYearBalance,
+        tfpCumulativeBalance: taxFree.cumulativeAccountBalance,
+        cumulativeIncome: current.cumulativeIncome,
+        tfpCumulativeIncome: taxFree.cumulativeNetIncome,
+        cumulativeFees: current.cumulativeFees,
+        tfpCumulativeFees: taxFree.cumulativeFeesPaid,
+        cumulativeTaxesDeferred: current.cumulativeTaxesDeferred,
+        deathBenefit: current.deathBenefit,
+        tfpDeathBenefit: taxFree.deathBenefits,
+      });
+    }
+
+    return results;
+  }, [currentPlanResults, taxFreePlanResults, boxesData.currentAge]);
+
+  // Format values for display
+  const formatValue = (
+    value: number | string | undefined,
+    isPercentage: boolean = false,
+    isPlainNumber: boolean = false
+  ): string => {
+    if (value == null) return "N/A";
+    if (typeof value === "string") return value;
+    if (isPercentage) return `${Number(value).toFixed(2)}%`;
+    if (isPlainNumber)
+      return `${Number(value).toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      })}`;
+    return `$${Number(value).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
 
   const headers = [
     "Year",
     "Age",
-    "Annual Contributions",
-    "TFP Annual Contributions",
+    "Annual Contribution",
+    "TFP Annual Contribution",
     "Gross Retirement Income",
     "Retirement Taxes",
     "Retirement Income",
@@ -109,68 +261,115 @@ export default function DataPage() {
     "TFP Cumulative Balance",
     "Cumulative Income",
     "TFP Cumulative Income",
-    "Cumulative Fee",
-    "TFP Cumulative Fee",
+    "Cumulative Fees",
+    "TFP Cumulative Fees",
     "Cumulative Taxes Deferred",
     "Death Benefit",
     "TFP Death Benefit",
   ];
 
+  const headerToKey: Record<string, keyof CombinedResult> = {
+    Year: "year",
+    Age: "age",
+    "Annual Contribution": "annualContribution",
+    "TFP Annual Contribution": "tfpAnnualContribution",
+    "Gross Retirement Income": "grossRetirementIncome",
+    "Retirement Taxes": "retirementTaxes",
+    "Retirement Income": "retirementIncome",
+    "TFP Retirement Income": "tfpRetirementIncome",
+    "Management Fee": "managementFee",
+    "TFP Fee": "tfpFee",
+    Interest: "interest",
+    "End of Year Balance": "endOfYearBalance",
+    "TFP Cumulative Balance": "tfpCumulativeBalance",
+    "Cumulative Income": "cumulativeIncome",
+    "TFP Cumulative Income": "tfpCumulativeIncome",
+    "Cumulative Fees": "cumulativeFees",
+    "TFP Cumulative Fees": "tfpCumulativeFees",
+    "Cumulative Taxes Deferred": "cumulativeTaxesDeferred",
+    "Death Benefit": "deathBenefit",
+    "TFP Death Benefit": "tfpDeathBenefit",
+  };
+
   const renderTable = () => (
     <Card className="w-full h-[90vh] flex flex-col">
       <CardHeader>
-        <CardTitle>Current Plan vs Tax Free Plan (TFP)</CardTitle>
+        <CardTitle>Combined Plan Yearly Results</CardTitle>
       </CardHeader>
-
       <CardContent className="flex-1 overflow-hidden">
         <div className="w-full h-full overflow-auto">
           <div className="min-w-full">
-            <Table className="table-auto w-full">
+            <Table className="table-fixed w-full">
               <TableHeader>
                 <TableRow>
-                  {headers.map((header, index) => (
-                    <TableHead
-                      key={header}
-                      className="border whitespace-nowrap"
-                      style={{
-                        backgroundColor:
-                          index % 2 === 0 ? oddColumnColor : evenColumnColor,
-                        color: getContrastingTextColor(
-                          index % 2 === 0 ? oddColumnColor : evenColumnColor
-                        ),
-                        fontSize,
-                        padding: paddingSize,
-                      }}
-                    >
-                      {header}
-                    </TableHead>
-                  ))}
+                  {headers.map((header) => {
+                    const isTFP = header.includes("TFP");
+                    const isFixed = header === "Year" || header === "Age";
+
+                    const bgColor = isFixed
+                      ? "#FFFFFF"
+                      : isTFP
+                      ? evenColumnColor
+                      : oddColumnColor;
+
+                    const textColor = isFixed
+                      ? "#000000"
+                      : getContrastingTextColor(bgColor);
+                    return (
+                      <TableHead
+                        key={header}
+                        className="whitespace-break-spaces border break-words text-wrap align-top text-sm text-center"
+                        style={{
+                          backgroundColor: bgColor,
+                          color: textColor,
+                          fontSize,
+                          padding: paddingSize,
+                          width: "70px",
+                        }}
+                      >
+                        {header}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.map((row, rowIndex) => (
+                {combinedResults.map((row, rowIndex) => (
                   <TableRow key={rowIndex}>
-                    {headers.map((header, colIndex) => (
-                      <TableCell
-                        key={`${rowIndex}-${colIndex}`}
-                        className="border whitespace-nowrap"
-                        style={{
-                          backgroundColor:
-                            colIndex % 2 === 0
-                              ? oddColumnColor
-                              : evenColumnColor,
-                          color: getContrastingTextColor(
-                            colIndex % 2 === 0
-                              ? oddColumnColor
-                              : evenColumnColor
-                          ),
-                          fontSize,
-                          padding: paddingSize,
-                        }}
-                      >
-                        {row[header]}
-                      </TableCell>
-                    ))}
+                    {headers.map((header, colIndex) => {
+                      const isTFP = header.includes("TFP");
+                      const isFixed = header === "Year" || header === "Age";
+
+                      const bgColor = isFixed
+                        ? "#FFFFFF"
+                        : isTFP
+                        ? evenColumnColor
+                        : oddColumnColor;
+
+                      const textColor = isFixed
+                        ? "#000000"
+                        : getContrastingTextColor(bgColor);
+
+                      return (
+                        <TableCell
+                          key={`${rowIndex}-${colIndex}`}
+                          className="border whitespace-nowrap text-sm"
+                          style={{
+                            backgroundColor: bgColor,
+                            color: textColor,
+                            fontSize,
+                            padding: paddingSize,
+                            width: "70px",
+                          }}
+                        >
+                          {formatValue(
+                            row[headerToKey[header]],
+                            false,
+                            header === "Year" || header === "Age"
+                          )}
+                        </TableCell>
+                      );
+                    })}
                   </TableRow>
                 ))}
               </TableBody>
@@ -208,18 +407,10 @@ export default function DataPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="default"
-            onClick={handleZoomIn}
-            disabled={zoomIndex >= zoomSteps.length - 1}
-          >
+          <Button variant="default" onClick={handleZoomIn}>
             <ZoomIn className="h-4 w-4" />
           </Button>
-          <Button
-            variant="default"
-            onClick={handleZoomOut}
-            disabled={zoomIndex <= 0}
-          >
+          <Button variant="default" onClick={handleZoomOut}>
             <ZoomOut className="h-4 w-4" />
           </Button>
           <Button variant="outline" onClick={handleFullScreenToggle}>
@@ -255,7 +446,7 @@ export default function DataPage() {
           >
             <Card className="flex-1 flex flex-col">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Year-by-Year Calculations</CardTitle>
+                <CardTitle>Combined Plan Yearly Results</CardTitle>
                 <Button variant="outline" onClick={handleFullScreenToggle}>
                   <Minimize2 className="h-4 w-4" />
                 </Button>
