@@ -340,7 +340,178 @@ export function extractCurrentPlanResults(
   return results;
 }
 
-// current plan full table
+// current plan loop calculations for full table
+export function runGrossRetirementIncomeLoop(
+  currentAge: number,
+  yearsRunOutOfMoney: number,
+  annualContribution: number,
+  returnRate: number,
+  retirementTaxRate: number,
+  annualFee: number,
+  workingTaxRate: number,
+  startingBalance: number,
+  annualEmployerMatch: number,
+  retirementAge: number,
+  stopSavingAge: number = retirementAge
+): Array<{
+  year: number;
+  age: number;
+  annualContribution: number;
+  grossRetirementIncome: number;
+  retirementTaxes: number;
+  retirementIncome: number;
+  managementFees: number;
+  interest: number;
+  endOfYearBalance: number;
+  cumulativeIncome: number;
+  cumulativeFees: number;
+  cumulativeTaxesDeferred: number;
+  deathBenefit: number;
+}> {
+  const results: Array<{
+    year: number;
+    age: number;
+    annualContribution: number;
+    grossRetirementIncome: number;
+    retirementTaxes: number;
+    retirementIncome: number;
+    managementFees: number;
+    interest: number;
+    endOfYearBalance: number;
+    cumulativeIncome: number;
+    cumulativeFees: number;
+    cumulativeTaxesDeferred: number;
+    deathBenefit: number;
+  }> = [];
+
+  const startYear = 1;
+  let previousEndOfYearBalance = startingBalance;
+  let cumulativeIncome = 0;
+  let cumulativeFees = 0;
+  let cumulativeTaxesDeferred = 0;
+
+  // Validate inputs
+  if (
+    currentAge >= yearsRunOutOfMoney ||
+    currentAge >= retirementAge ||
+    currentAge >= stopSavingAge
+  ) {
+    return results;
+  }
+
+  const contributionYears = stopSavingAge - currentAge;
+  const totalContributions =
+    (annualContribution + annualEmployerMatch) * contributionYears;
+  // const netReturnRate = returnRate / 100 - annualFee / 100;
+  const decimalWorkingTaxRate = workingTaxRate / 100;
+
+  // Calculate hypothetical gross balance for taxes deferred
+  let hypotheticalGrossBalance =
+    startingBalance * Math.pow(1 + returnRate / 100, contributionYears);
+  if (returnRate !== 0) {
+    hypotheticalGrossBalance +=
+      (annualContribution + annualEmployerMatch) *
+      ((Math.pow(1 + returnRate / 100, contributionYears) - 1) /
+        (returnRate / 100));
+  } else {
+    hypotheticalGrossBalance +=
+      (annualContribution + annualEmployerMatch) * contributionYears;
+  }
+
+  for (let age = currentAge; age <= yearsRunOutOfMoney; age++) {
+    const year = startYear + (age - currentAge);
+    const annualContrib =
+      age <= stopSavingAge ? annualContribution + annualEmployerMatch : 0;
+
+    const retirementResults: Results | 0 =
+      age >= retirementAge
+        ? extractCurrentPlanResults(
+            currentAge,
+            yearsRunOutOfMoney,
+            annualContribution,
+            returnRate,
+            retirementTaxRate,
+            annualFee,
+            workingTaxRate,
+            startingBalance,
+            annualEmployerMatch,
+            retirementAge,
+            stopSavingAge
+          )
+        : 0;
+
+    const grossRetirementIncome =
+      retirementResults !== 0 ? retirementResults.grossRetirementIncome : 0;
+
+    const safeGrossRetirementIncome = Number.isFinite(grossRetirementIncome)
+      ? grossRetirementIncome
+      : 0;
+    const retirementTaxes =
+      safeGrossRetirementIncome * (retirementTaxRate / 100);
+    const retirementIncome = safeGrossRetirementIncome - retirementTaxes;
+
+    const managementFees =
+      year === 1
+        ? annualContrib * (annualFee / 100)
+        : (annualContrib +
+            previousEndOfYearBalance -
+            safeGrossRetirementIncome) *
+          (annualFee / 100);
+
+    const interest =
+      year === 1
+        ? annualContrib * (returnRate / 100)
+        : (annualContrib +
+            previousEndOfYearBalance -
+            safeGrossRetirementIncome) *
+          (returnRate / 100);
+
+    const endOfYearBalance =
+      year === 1
+        ? annualContrib + interest - safeGrossRetirementIncome
+        : previousEndOfYearBalance +
+          annualContrib +
+          interest -
+          safeGrossRetirementIncome;
+
+    // Cumulative calculations
+    cumulativeIncome += retirementIncome;
+    cumulativeFees += managementFees;
+
+    // Cumulative taxes deferred (based on original logic)
+    if (age === stopSavingAge) {
+      const totalGrowth =
+        hypotheticalGrossBalance - totalContributions - startingBalance;
+      cumulativeTaxesDeferred =
+        (totalContributions + totalGrowth) * decimalWorkingTaxRate;
+    }
+
+    // Death benefit (designed as remaining balance, common in retirement plans)
+    const deathBenefit = endOfYearBalance > 0 ? endOfYearBalance : 0;
+
+    previousEndOfYearBalance = endOfYearBalance;
+
+    results.push({
+      year: Math.floor(year),
+      age: Math.floor(age),
+      annualContribution: Math.floor(annualContrib),
+      grossRetirementIncome: Math.floor(safeGrossRetirementIncome),
+      retirementTaxes: Math.floor(retirementTaxes),
+      retirementIncome: Math.floor(retirementIncome),
+      managementFees: Math.floor(managementFees),
+      interest: Math.floor(interest),
+      endOfYearBalance: Math.floor(endOfYearBalance),
+      cumulativeIncome: Math.floor(cumulativeIncome),
+      cumulativeFees: Math.floor(cumulativeFees),
+      cumulativeTaxesDeferred: Math.floor(cumulativeTaxesDeferred),
+      deathBenefit: Math.floor(deathBenefit),
+    });
+  }
+
+  return results;
+}
+
+// current plan loop function to generate full table
 export function runRetirementPlanLoop(
   currentAge: number,
   yearsRunOutOfMoney: number,
@@ -514,179 +685,7 @@ export function extractTaxFreeResults(
   };
 }
 
-// ---
-export function runGrossRetirementIncomeLoop(
-  currentAge: number,
-  yearsRunOutOfMoney: number,
-  annualContribution: number,
-  returnRate: number,
-  retirementTaxRate: number,
-  annualFee: number,
-  workingTaxRate: number,
-  startingBalance: number,
-  annualEmployerMatch: number,
-  retirementAge: number,
-  stopSavingAge: number = retirementAge
-): Array<{
-  year: number;
-  age: number;
-  annualContribution: number;
-  grossRetirementIncome: number;
-  retirementTaxes: number;
-  retirementIncome: number;
-  managementFees: number;
-  interest: number;
-  endOfYearBalance: number;
-  cumulativeIncome: number;
-  cumulativeFees: number;
-  cumulativeTaxesDeferred: number;
-  deathBenefit: number;
-}> {
-  const results: Array<{
-    year: number;
-    age: number;
-    annualContribution: number;
-    grossRetirementIncome: number;
-    retirementTaxes: number;
-    retirementIncome: number;
-    managementFees: number;
-    interest: number;
-    endOfYearBalance: number;
-    cumulativeIncome: number;
-    cumulativeFees: number;
-    cumulativeTaxesDeferred: number;
-    deathBenefit: number;
-  }> = [];
-
-  const startYear = 1;
-  let previousEndOfYearBalance = startingBalance;
-  let cumulativeIncome = 0;
-  let cumulativeFees = 0;
-  let cumulativeTaxesDeferred = 0;
-
-  // Validate inputs
-  if (
-    currentAge >= yearsRunOutOfMoney ||
-    currentAge >= retirementAge ||
-    currentAge >= stopSavingAge
-  ) {
-    return results;
-  }
-
-  const contributionYears = stopSavingAge - currentAge;
-  const totalContributions =
-    (annualContribution + annualEmployerMatch) * contributionYears;
-  // const netReturnRate = returnRate / 100 - annualFee / 100;
-  const decimalWorkingTaxRate = workingTaxRate / 100;
-
-  // Calculate hypothetical gross balance for taxes deferred
-  let hypotheticalGrossBalance =
-    startingBalance * Math.pow(1 + returnRate / 100, contributionYears);
-  if (returnRate !== 0) {
-    hypotheticalGrossBalance +=
-      (annualContribution + annualEmployerMatch) *
-      ((Math.pow(1 + returnRate / 100, contributionYears) - 1) /
-        (returnRate / 100));
-  } else {
-    hypotheticalGrossBalance +=
-      (annualContribution + annualEmployerMatch) * contributionYears;
-  }
-
-  for (let age = currentAge; age <= yearsRunOutOfMoney; age++) {
-    const year = startYear + (age - currentAge);
-    const annualContrib =
-      age <= stopSavingAge ? annualContribution + annualEmployerMatch : 0;
-
-    const retirementResults: Results | 0 =
-      age >= retirementAge
-        ? extractCurrentPlanResults(
-            currentAge,
-            yearsRunOutOfMoney,
-            annualContribution,
-            returnRate,
-            retirementTaxRate,
-            annualFee,
-            workingTaxRate,
-            startingBalance,
-            annualEmployerMatch,
-            retirementAge,
-            stopSavingAge
-          )
-        : 0;
-
-    const grossRetirementIncome =
-      retirementResults !== 0 ? retirementResults.grossRetirementIncome : 0;
-
-    const safeGrossRetirementIncome = Number.isFinite(grossRetirementIncome)
-      ? grossRetirementIncome
-      : 0;
-    const retirementTaxes =
-      safeGrossRetirementIncome * (retirementTaxRate / 100);
-    const retirementIncome = safeGrossRetirementIncome - retirementTaxes;
-
-    const managementFees =
-      year === 1
-        ? annualContrib * (annualFee / 100)
-        : (annualContrib +
-            previousEndOfYearBalance -
-            safeGrossRetirementIncome) *
-          (annualFee / 100);
-
-    const interest =
-      year === 1
-        ? annualContrib * (returnRate / 100)
-        : (annualContrib +
-            previousEndOfYearBalance -
-            safeGrossRetirementIncome) *
-          (returnRate / 100);
-
-    const endOfYearBalance =
-      year === 1
-        ? annualContrib + interest - safeGrossRetirementIncome
-        : previousEndOfYearBalance +
-          annualContrib +
-          interest -
-          safeGrossRetirementIncome;
-
-    // Cumulative calculations
-    cumulativeIncome += retirementIncome;
-    cumulativeFees += managementFees;
-
-    // Cumulative taxes deferred (based on original logic)
-    if (age === stopSavingAge) {
-      const totalGrowth =
-        hypotheticalGrossBalance - totalContributions - startingBalance;
-      cumulativeTaxesDeferred =
-        (totalContributions + totalGrowth) * decimalWorkingTaxRate;
-    }
-
-    // Death benefit (designed as remaining balance, common in retirement plans)
-    const deathBenefit = endOfYearBalance > 0 ? endOfYearBalance : 0;
-
-    previousEndOfYearBalance = endOfYearBalance;
-
-    results.push({
-      year: Math.floor(year),
-      age: Math.floor(age),
-      annualContribution: Math.floor(annualContrib),
-      grossRetirementIncome: Math.floor(safeGrossRetirementIncome),
-      retirementTaxes: Math.floor(retirementTaxes),
-      retirementIncome: Math.floor(retirementIncome),
-      managementFees: Math.floor(managementFees),
-      interest: Math.floor(interest),
-      endOfYearBalance: Math.floor(endOfYearBalance),
-      cumulativeIncome: Math.floor(cumulativeIncome),
-      cumulativeFees: Math.floor(cumulativeFees),
-      cumulativeTaxesDeferred: Math.floor(cumulativeTaxesDeferred),
-      deathBenefit: Math.floor(deathBenefit),
-    });
-  }
-
-  return results;
-}
-// ---
-
-// FOR TAX FREE PLAN FULL TABLE
+// tax free plan loop function to generate full table
 export function runTaxFreePlanLoop(
   tables: TableData[],
   currentAge: number,
