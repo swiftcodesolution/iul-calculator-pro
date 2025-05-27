@@ -4,7 +4,14 @@ import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Home, Calculator, Upload, Database } from "lucide-react";
+import {
+  LogOut,
+  Home,
+  Calculator,
+  Upload,
+  Database,
+  Table,
+} from "lucide-react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
@@ -22,17 +29,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     {
       label: "Data",
       href: "/dashboard/current-plan-full-table",
-      icon: Database,
-    },
-    {
-      label: "Data",
-      href: "/dashboard/tax-free-plan-full-table",
-      icon: Database,
-    },
-    {
-      label: "Data",
-      href: "/dashboard/combined-table",
-      icon: Database,
+      icon: Table,
     },
   ];
 

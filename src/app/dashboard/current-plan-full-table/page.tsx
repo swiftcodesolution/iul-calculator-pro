@@ -12,7 +12,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { useTableStore } from "@/lib/store";
-import { runGrossRetirementIncomeLoop } from "@/lib/utils";
+import { runGrossRetirementIncomeLoop } from "@/lib/logics";
 
 export default function CurrentPlanFullTable() {
   const {

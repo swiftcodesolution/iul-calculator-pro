@@ -138,6 +138,29 @@ export interface TaxesData {
   yearsRunOutOfMoney: number | string;
 }
 
+export interface RowData {
+  startingBalance: string;
+  annualContributions: string;
+  annualEmployerMatch: string;
+  annualFees: string;
+  grossRetirementIncome: string;
+  incomeTax: string;
+  netRetirementIncome: string;
+  cumulativeTaxesDeferred: string;
+  cumulativeTaxesPaid: string;
+  cumulativeFeesPaid: string;
+  cumulativeNetIncome: string;
+  cumulativeAccountBalance: string;
+  taxesDue: string;
+  deathBenefits: string;
+  yearsRunOutOfMoney: string;
+}
+
+export interface SelectedRowData {
+  current: RowData;
+  taxFree: RowData;
+}
+
 export type TabContent = {
   id: string;
   name: string;
