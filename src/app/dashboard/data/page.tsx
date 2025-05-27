@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ZoomIn, ZoomOut, Fullscreen, Minimize2 } from "lucide-react";
 import { useTableStore } from "@/lib/store";
-import { runGrossRetirementIncomeLoop, runTaxFreePlanLoop } from "@/lib/utils";
+import { runGrossRetirementIncomeLoop, runTaxFreePlanLoop } from "@/lib/logics";
 
 interface CombinedResult {
   year: number;
