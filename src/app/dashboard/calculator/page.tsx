@@ -8,33 +8,12 @@ import { TabManager } from "@/components/calculator/TabManager";
 import { useTabs } from "@/hooks/useTabs";
 import { useColumnHighlight } from "@/hooks/useColumnHighlight";
 import {
-  TaxesData,
   TabContent,
   TotalAdvantage,
   CompanyDetails,
   ImageAsset,
-  // BoxesData,
 } from "@/lib/types";
 import { useTableStore } from "@/lib/store";
-
-// Static data for Taxes column (yellow); replace with dynamic logic if needed
-const taxesData: TaxesData = {
-  startingBalance: "10%",
-  annualContributions: "22%",
-  annualEmployerMatch: "",
-  annualFees: "",
-  grossRetirementIncome: "",
-  incomeTax: "28%",
-  netRetirementIncome: "28%",
-  cumulativeTaxesDeferred: "",
-  cumulativeTaxesPaid: "10%",
-  cumulativeFeesPaid: "",
-  cumulativeNetIncome: "",
-  cumulativeAccountBalance: "",
-  taxesDue: "28%",
-  deathBenefits: "",
-  yearsRunOutOfMoney: "",
-};
 
 // Static data for Total Advantage tab
 const totalAdvantage: TotalAdvantage = {
@@ -82,10 +61,6 @@ export default function CalculatorPage() {
   const [isTabCardExpanded, setIsTabCardExpanded] = useState(false);
 
   const { boxesData, setBoxesData } = useTableStore();
-  // // Update boxesData when inputs change
-  // const handleBoxesDataValueChange = (updatedData: Partial<BoxesData>) => {
-  //   setBoxesData((prev) => ({ ...prev, ...updatedData }));
-  // };
 
   // Tab management hooks
   const {
@@ -129,8 +104,7 @@ export default function CalculatorPage() {
         <InputParameters data={boxesData} onUpdate={setBoxesData} />
         <ComparisonTable
           currentAge={Number(boxesData.currentAge) || 0}
-          boxesData={boxesData} // Pass boxesData for dynamic calculations
-          taxesData={taxesData}
+          boxesData={boxesData}
           columnTextWhite={columnTextWhite}
           highlightedRow={highlightedRow}
           isTableCollapsed={isTableCollapsed}
