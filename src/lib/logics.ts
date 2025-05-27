@@ -390,17 +390,17 @@ export function runGrossRetirementIncomeLoop(
     results.push({
       year: Math.floor(year),
       age: Math.floor(age),
-      annualContribution: Math.floor(annualContrib),
-      grossRetirementIncome: Math.floor(safeGrossRetirementIncome),
-      retirementTaxes: Math.floor(retirementTaxes),
-      retirementIncome: Math.floor(retirementIncome),
-      managementFees: Math.floor(managementFees),
-      interest: Math.floor(interest),
-      endOfYearBalance: Math.floor(endOfYearBalance),
-      cumulativeIncome: Math.floor(cumulativeIncome),
-      cumulativeFees: Math.floor(cumulativeFees),
-      cumulativeTaxesDeferred: Math.floor(cumulativeTaxesDeferred),
-      deathBenefit: Math.floor(deathBenefit),
+      annualContribution: Math.max(0, Math.floor(annualContrib)),
+      grossRetirementIncome: Math.max(0, Math.floor(safeGrossRetirementIncome)),
+      retirementTaxes: Math.max(0, Math.floor(retirementTaxes)),
+      retirementIncome: Math.max(0, Math.floor(retirementIncome)),
+      managementFees: Math.max(0, Math.floor(managementFees)),
+      interest: Math.max(0, Math.floor(interest)),
+      endOfYearBalance: Math.max(0, Math.floor(endOfYearBalance)),
+      cumulativeIncome: Math.max(0, Math.floor(cumulativeIncome)),
+      cumulativeFees: Math.max(0, Math.floor(cumulativeFees)),
+      cumulativeTaxesDeferred: Math.max(0, Math.floor(cumulativeTaxesDeferred)),
+      deathBenefit: Math.max(0, Math.floor(deathBenefit)),
     });
   }
 
