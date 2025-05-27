@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
@@ -18,10 +17,10 @@ export function FutureAgeInput({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
     >
-      <Card className="h-full flex items-center justify-center">
-        <CardContent>
-          <div className="">
-            <Label className="text-sm text-center mb-4">Future Age</Label>
+      <div className="text-black">
+        <div>
+          <div className="flex items-center justify-start gap-2">
+            <Label className="text-sm">Future Age</Label>
             <div className="flex flex-col gap-2">
               <motion.div
                 whileFocus={{
@@ -40,8 +39,8 @@ export function FutureAgeInput({
               </motion.div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </motion.div>
   );
 }

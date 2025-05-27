@@ -292,11 +292,11 @@ export default function CombinedPlanTable() {
   };
 
   const renderTable = () => (
-    <Card className="w-full h-[90vh] flex flex-col">
-      <CardHeader>
+    <Card className="w-full h-[90vh] flex flex-col p-2 gap-2">
+      <CardHeader className="p-0">
         <CardTitle>Combined Plan Yearly Results</CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden">
+      <CardContent className="p-0 flex-1 overflow-hidden">
         <div className="w-full h-full overflow-auto">
           <div className="min-w-full">
             <Table className="table-fixed w-full">
@@ -381,7 +381,7 @@ export default function CombinedPlanTable() {
   );
 
   return (
-    <div className="flex flex-col p-2">
+    <div className="flex flex-col p-0">
       {/* Header Controls */}
       <div className="flex items-end justify-between mb-4">
         <div className="flex gap-2">

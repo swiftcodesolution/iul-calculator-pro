@@ -44,8 +44,8 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
     >
-      <Card>
-        <CardContent className="grid grid-cols-3 gap-2 pt-4">
+      <Card className="p-2">
+        <CardContent className="grid grid-cols-3 gap-6 p-0">
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -55,7 +55,7 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
               type: "spring",
               stiffness: 120,
             }}
-            className="flex flex-col space-y-2"
+            className="flex flex-col gap-2"
           >
             {(
               [
@@ -78,7 +78,7 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
             ).map(({ label, key, value }) => (
               <motion.div
                 key={label}
-                className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md"
+                className="bg-gray-50 p-0 text-end flex items-center justify-between rounded-sm"
                 whileHover={{ scale: 1.02, backgroundColor: "#e5e7eb" }}
               >
                 <Label>{label}</Label>
@@ -112,7 +112,7 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
               type: "spring",
               stiffness: 120,
             }}
-            className="flex flex-col space-y-2"
+            className="flex flex-col gap-2"
           >
             {(
               [
@@ -135,7 +135,7 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
             ).map(({ label, key, value }) => (
               <motion.div
                 key={label}
-                className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md"
+                className="bg-gray-50 p-0 text-end flex items-center justify-between rounded-sm"
                 whileHover={{ scale: 1.02, backgroundColor: "#e5e7eb" }}
               >
                 <Label>{label}</Label>
@@ -173,7 +173,7 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
               type: "spring",
               stiffness: 120,
             }}
-            className="flex flex-col space-y-2"
+            className="flex flex-col gap-2"
           >
             {(
               [
@@ -196,7 +196,7 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
             ).map(({ label, key, value }) => (
               <motion.div
                 key={label}
-                className="bg-gray-200 py-2 px-4 text-end flex items-center justify-between rounded-md"
+                className="bg-gray-50 p-0 text-end flex items-center justify-between rounded-sm"
                 whileHover={{ scale: 1.02, backgroundColor: "#e5e7eb" }}
               >
                 <Label>{label}</Label>

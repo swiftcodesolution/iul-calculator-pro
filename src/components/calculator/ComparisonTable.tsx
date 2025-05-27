@@ -651,9 +651,9 @@ export function ComparisonTable({
   return (
     <AnimatePresence>
       {!isTableCardExpanded ? (
-        <Card>
+        <Card className="p-2">
           <CardHeader
-            className="flex flex-row items-center justify-between cursor-pointer"
+            className="flex flex-row items-center justify-between cursor-pointer p-0"
             onClick={() => setIsTableCollapsed(!isTableCollapsed)}
             aria-label="Toggle table visibility"
           >
@@ -668,7 +668,7 @@ export function ComparisonTable({
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <Table className="w-full table-auto">
               <TableHeader>
                 <TableRow>

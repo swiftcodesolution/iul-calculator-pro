@@ -78,8 +78,8 @@ export function TabManager({
           transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
           className="grow"
         >
-          <Card className="h-full">
-            <CardContent className="pt-4">
+          <Card className="h-full p-2">
+            <CardContent className="p-0">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -211,7 +211,7 @@ export function TabManager({
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="p-4 min-h-[200px]"
+                      className="p-4 min-h-[600px] bg-amber-300 flex items-center justify-center"
                     >
                       {tabs.map(
                         (tab) =>
@@ -287,7 +287,7 @@ export function TabManager({
                                   <video
                                     src={tab.src}
                                     controls
-                                    className="w-full h-auto max-h-64"
+                                    className="w-full h-auto max-h-[400px]"
                                   />
                                 </div>
                               )}
@@ -296,7 +296,7 @@ export function TabManager({
                                   <embed
                                     src={tab.src}
                                     type="application/pdf"
-                                    className="w-full h-64"
+                                    className="w-full h-[400px]"
                                   />
                                 </div>
                               )}

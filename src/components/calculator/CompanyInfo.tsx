@@ -21,13 +21,13 @@ export function CompanyInfo({
       transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
       className="grow"
     >
-      <Card>
-        <CardContent className="flex items-center gap-4">
+      <Card className="p-2">
+        <CardContent className="p-0 flex items-center gap-4">
           <motion.div
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1, duration: 0.3 }}
-            className="w-2/5"
+            className="w-2/5 text-center"
           >
             <motion.h3
               initial={{ opacity: 0 }}
@@ -64,7 +64,7 @@ export function CompanyInfo({
               alt="Logo"
               width={300}
               height={300}
-              className="object-contain w-full"
+              className="object-contain w-full border border-black"
             />
           </motion.div>
           <motion.div
@@ -77,7 +77,7 @@ export function CompanyInfo({
               width={200}
               height={200}
               alt={defaultProfile.name}
-              className="w-[120px] h-[120px] object-cover rounded-full"
+              className="w-[120px] h-[120px] object-cover rounded-full border border-black"
             />
           </motion.div>
         </CardContent>
