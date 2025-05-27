@@ -44,7 +44,7 @@ export function extractCurrentPlanResults(
     !(
       currentAge <= stopSavingAge &&
       stopSavingAge <= retirementAge &&
-      retirementAge < yearsRunOutOfMoney
+      retirementAge <= yearsRunOutOfMoney
     )
   ) {
     console.error("Invalid age sequence provided.");
@@ -158,46 +158,6 @@ export function extractCurrentPlanResults(
     currentAge,
   };
 
-  // console.log("Retirement Plan Results:");
-  // console.log(`Current Age: ${results.currentAge}`);
-  // console.log(`Stop Saving Age: ${stopSavingAge}`);
-  // console.log(`Retirement Age: ${results.xValue}`);
-  // console.log(`Years Money Lasts Until: ${results.yearsRunOutOfMoney}`);
-  // console.log(`Starting Balance: $${results.startingBalance.toFixed(2)}`);
-  // console.log(
-  //   `Annual Contributions: $${results.annualContributions.toFixed(2)}`
-  // );
-  // console.log(`Annual Employer Match: $${results.annualEmployerMatch}`);
-  // console.log(`Annual Fees: ${results.annualFees}`);
-  // console.log(
-  //   `Gross Annual Retirement Income: $${results.grossRetirementIncome.toFixed(
-  //     2
-  //   )}`
-  // );
-  // console.log(`Annual Income Tax: $${results.incomeTax.toFixed(2)}`);
-  // console.log(
-  //   `Net Annual Retirement Income: $${results.netRetirementIncome.toFixed(2)}`
-  // );
-  // console.log(
-  //   `Cumulative Taxes Deferred: $${results.cumulativeTaxesDeferred.toFixed(2)}`
-  // );
-  // console.log(
-  //   `Cumulative Taxes Paid: $${results.cumulativeTaxesPaid.toFixed(2)}`
-  // );
-  // console.log(
-  //   `Cumulative Fees Paid: $${results.cumulativeFeesPaid.toFixed(2)}`
-  // );
-  // console.log(
-  //   `Cumulative Net Income: $${results.cumulativeNetIncome.toFixed(2)}`
-  // );
-  // console.log(
-  //   `Cumulative Account Balance at Retirement: $${results.cumulativeAccountBalance.toFixed(
-  //     2
-  //   )}`
-  // );
-  // console.log(`Taxes Due (%): ${results.taxesDue.toFixed(2)}%`);
-  // console.log(`Death Benefits: $${results.deathBenefits.toFixed(2)}`);
-
   return results;
 }
 
@@ -283,8 +243,14 @@ export function runGrossRetirementIncomeLoop(
 
   for (let age = currentAge; age <= yearsRunOutOfMoney; age++) {
     const year = startYear + (age - currentAge);
-    const annualContrib =
-      age <= stopSavingAge ? annualContribution + annualEmployerMatch : 0;
+
+    let annualContrib = 0;
+    if (year === 1) {
+      annualContrib = startingBalance + annualContribution;
+    } else {
+      annualContrib =
+        age <= stopSavingAge ? annualContribution + annualEmployerMatch : 0;
+    }
 
     const retirementResults: Results | 0 =
       age >= retirementAge
@@ -342,13 +308,6 @@ export function runGrossRetirementIncomeLoop(
     cumulativeIncome += retirementIncome;
     cumulativeFees += managementFees;
 
-    // Cumulative taxes deferred (based on original logic)
-    // if (age === stopSavingAge) {
-    //   const totalGrowth =
-    //     hypotheticalGrossBalance - totalContributions - startingBalance;
-    //   cumulativeTaxesDeferred =
-    //     (totalContributions + totalGrowth) * decimalWorkingTaxRate;
-    // }
     const previousCumulativeTaxesDeferred =
       results.length > 0
         ? results[results.length - 1].cumulativeTaxesDeferred
@@ -362,13 +321,6 @@ export function runGrossRetirementIncomeLoop(
       cumulativeTaxesDeferred =
         previousCumulativeTaxesDeferred - retirementTaxes;
     }
-
-    console.log(
-      `year: ${year} || current age: ${age} || previous cumulative deferred:${previousCumulativeTaxesDeferred}, current cumulative deferred: ${cumulativeTaxesDeferred}`
-    );
-
-    // Death benefit (designed as remaining balance, common in retirement plans)
-    // const deathBenefit = endOfYearBalance > 0 ? endOfYearBalance : 0;
 
     let deathBenefit = 0;
     if (age < retirementAge) {

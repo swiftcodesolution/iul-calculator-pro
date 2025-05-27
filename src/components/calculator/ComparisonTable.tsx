@@ -166,7 +166,7 @@ export function ComparisonTable({
             ),
             taxesDue: formatValue(taxFreeRow.taxesDue, true),
             deathBenefits: formatValue(taxFreeRow.deathBenefits),
-            yearsRunOutOfMoney: formatValue(age),
+            yearsRunOutOfMoney: age.toString(),
           },
         });
       } else {
