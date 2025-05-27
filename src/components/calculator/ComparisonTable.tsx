@@ -342,12 +342,13 @@ export function ComparisonTable({
       cumulativeFeesPaid: targetResult.cumulativeFees,
       cumulativeNetIncome: targetResult.cumulativeIncome,
       cumulativeAccountBalance: targetResult.endOfYearBalance,
-      taxesDue:
-        targetResult.grossRetirementIncome > 0
-          ? (targetResult.retirementTaxes /
-              targetResult.grossRetirementIncome) *
-            100
-          : 0,
+      // taxesDue:
+      //   targetResult.grossRetirementIncome > 0
+      //     ? (targetResult.retirementTaxes /
+      //         targetResult.grossRetirementIncome) *
+      //       100
+      //     : 0,
+      taxesDue: boxesData.currentPlanFees,
       deathBenefits: targetResult.deathBenefit,
       yearsRunOutOfMoney: inputs.yearsRunOutOfMoney,
       currentAge: inputs.currentAge,
