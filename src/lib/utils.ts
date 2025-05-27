@@ -468,11 +468,12 @@ export function runGrossRetirementIncomeLoop(
 
     const endOfYearBalance =
       year === 1
-        ? annualContrib + interest - safeGrossRetirementIncome
+        ? annualContrib + interest - safeGrossRetirementIncome - managementFees
         : previousEndOfYearBalance +
           annualContrib +
           interest -
-          safeGrossRetirementIncome;
+          safeGrossRetirementIncome -
+          managementFees;
 
     // Cumulative calculations
     cumulativeIncome += retirementIncome;

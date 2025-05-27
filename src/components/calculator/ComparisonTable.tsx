@@ -26,8 +26,11 @@ import {
   cn,
   extractTaxFreeResults,
   extractCurrentPlanResults,
+  runTaxFreePlanLoop,
+  runGrossRetirementIncomeLoop,
 } from "@/lib/utils";
 import { useTableStore } from "@/lib/store";
+import { FutureAgeInput } from "./FutureAgeInput";
 
 interface ComparisonTableProps {
   defaultResults?: Results;
@@ -136,6 +139,114 @@ export function ComparisonTable({
   const [yearsRunOutOfMoneyInput, setYearsRunOutOfMoneyInput] = useState<
     number | string
   >(yearsRunOutOfMoney);
+
+  // 26 monday
+  interface RowData {
+    startingBalance: string;
+    annualContributions: string;
+    annualEmployerMatch: string;
+    annualFees: string;
+    grossRetirementIncome: string;
+    incomeTax: string;
+    netRetirementIncome: string;
+    cumulativeTaxesDeferred: string;
+    cumulativeTaxesPaid: string;
+    cumulativeFeesPaid: string;
+    cumulativeNetIncome: string;
+    cumulativeAccountBalance: string;
+    taxesDue: string;
+    deathBenefits: string;
+    yearsRunOutOfMoney: string;
+  }
+
+  interface SelectedRowData {
+    current: RowData;
+    taxFree: RowData;
+  }
+
+  const [futureAge, setFutureAge] = useState<number>(currentAge + 1);
+  const [selectedRowData, setSelectedRowData] =
+    useState<SelectedRowData | null>(null);
+
+  const onFutureAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const age = Number(e.target.value);
+    if (!isNaN(age) && age > currentAge && tables[0]?.data?.length > 0) {
+      setFutureAge(age);
+      const currentPlanTable = runGrossRetirementIncomeLoop(
+        parseInput(boxesData.currentAge, 40),
+        parseInput(yearsRunOutOfMoneyInput, 95),
+        parseInput(annualContributions, 10000),
+        parseInput(boxesData.currentPlanROR, 6),
+        parseInput(boxesData.retirementTaxRate, 22),
+        parseInput(boxesData.currentPlanFees, 2),
+        parseInput(boxesData.workingTaxRate, 22),
+        parseInput(startingBalance, 0),
+        parseInput(annualEmployerMatch, 0),
+        parseInput(boxesData.retirementAge, 66),
+        parseInput(boxesData.stopSavingAge, 65)
+      );
+      const taxFreeTable = runTaxFreePlanLoop(tables, currentAge, age);
+      const currentRow = currentPlanTable.find((r) => r.age === age);
+      const taxFreeRow = taxFreeTable.find((r) => r.yearsRunOutOfMoney === age);
+      if (currentRow && taxFreeRow) {
+        setSelectedRowData({
+          current: {
+            startingBalance: formatValue(startingBalance),
+            annualContributions: formatValue(annualContributions),
+            annualEmployerMatch: formatValue(annualEmployerMatch),
+            annualFees: formatValue(currentPlanResults.annualFees, true),
+            grossRetirementIncome: formatValue(
+              currentRow.grossRetirementIncome
+            ),
+            incomeTax: formatValue(currentRow.retirementTaxes),
+            netRetirementIncome: formatValue(currentRow.retirementIncome),
+            cumulativeTaxesDeferred: formatValue(
+              currentRow.cumulativeTaxesDeferred
+            ),
+            cumulativeTaxesPaid: formatValue(
+              currentRow.retirementTaxes *
+                (age - parseInput(boxesData.retirementAge, 66) + 1)
+            ),
+            cumulativeFeesPaid: formatValue(currentRow.cumulativeFees),
+            cumulativeNetIncome: formatValue(currentRow.cumulativeIncome),
+            cumulativeAccountBalance: formatValue(currentRow.endOfYearBalance),
+            taxesDue: formatValue(currentPlanResults.taxesDue, true),
+            deathBenefits: formatValue(currentRow.deathBenefit),
+            yearsRunOutOfMoney: formatValue(age),
+          },
+          taxFree: {
+            startingBalance: formatValue(taxFreeRow.startingBalance),
+            annualContributions: formatValue(taxFreeRow.annualContributions),
+            annualEmployerMatch: formatValue(taxFreeRow.annualEmployerMatch),
+            annualFees: formatValue(taxFreeRow.annualFees),
+            grossRetirementIncome: formatValue(
+              taxFreeRow.grossRetirementIncome
+            ),
+            incomeTax: formatValue(taxFreeRow.incomeTax),
+            netRetirementIncome: formatValue(taxFreeRow.netRetirementIncome),
+            cumulativeTaxesDeferred: formatValue(
+              taxFreeRow.cumulativeTaxesDeferred
+            ),
+            cumulativeTaxesPaid: formatValue(taxFreeRow.cumulativeTaxesPaid),
+            cumulativeFeesPaid: formatValue(taxFreeRow.cumulativeFeesPaid),
+            cumulativeNetIncome: formatValue(taxFreeRow.cumulativeNetIncome),
+            cumulativeAccountBalance: formatValue(
+              taxFreeRow.cumulativeAccountBalance
+            ),
+            taxesDue: formatValue(taxFreeRow.taxesDue, true),
+            deathBenefits: formatValue(taxFreeRow.deathBenefits),
+            yearsRunOutOfMoney: formatValue(age),
+          },
+        });
+      } else {
+        setSelectedRowData(null);
+      }
+    } else {
+      setSelectedRowData(null);
+      setFutureAge(currentAge);
+    }
+  };
+  // 26 monday
 
   const ageOptions = useMemo(() => {
     const mainTable = tables[0]?.data || [];
@@ -332,6 +443,182 @@ export function ComparisonTable({
     })}`;
   };
 
+  // const tableRowsOld = useMemo(
+  //   () => [
+  //     {
+  //       label: "Starting Balance",
+  //       current: (
+  //         <Input
+  //           type="number"
+  //           value={startingBalance}
+  //           onChange={handleStartingBalanceChange}
+  //           className={`w-32 ${
+  //             Number(startingBalance) < 0 ? "border-red-500" : ""
+  //           }`}
+  //           min={0}
+  //           aria-label="Starting Balance for Current Plan"
+  //         />
+  //       ),
+  //       taxes: formatValue(taxesData.startingBalance),
+  //       taxFree: formatValue(taxFreeResults.startingBalance),
+  //     },
+  //     {
+  //       label: "Annual Contributions",
+  //       current: (
+  //         <Input
+  //           type="number"
+  //           value={annualContributions}
+  //           onChange={handleAnnualContributionsChange}
+  //           className={`w-32 ${
+  //             Number(annualContributions) < 0 ? "border-red-500" : ""
+  //           }`}
+  //           min={0}
+  //           aria-label="Annual Contributions for Current Plan"
+  //         />
+  //       ),
+  //       taxes: formatValue(taxesData.annualContributions, true),
+  //       taxFree: formatValue(taxFreeResults.annualContributions),
+  //     },
+  //     {
+  //       label: "Annual Employer Match",
+  //       current: (
+  //         <Input
+  //           type="number"
+  //           value={annualEmployerMatch}
+  //           onChange={handleAnnualEmployerMatchChange}
+  //           className={`w-32 ${
+  //             Number(annualEmployerMatch) < 0 ? "border-red-500" : ""
+  //           }`}
+  //           min={0}
+  //           aria-label="Annual Employer Match for Current Plan"
+  //         />
+  //       ),
+  //       taxes: formatValue(taxesData.annualEmployerMatch),
+  //       taxFree: formatValue(taxFreeResults.annualEmployerMatch),
+  //     },
+  //     {
+  //       label: "Annual Fees",
+  //       current: formatValue(currentPlanResults.annualFees, true),
+  //       taxes: formatValue(taxesData.annualFees),
+  //       taxFree: formatValue(taxFreeResults.annualFees),
+  //     },
+  //     {
+  //       label: "Gross Retirement Income",
+  //       current: formatValue(currentPlanResults.grossRetirementIncome),
+  //       taxes: formatValue(taxesData.grossRetirementIncome),
+  //       taxFree: formatValue(taxFreeResults.grossRetirementIncome),
+  //     },
+  //     {
+  //       label: "Income Tax",
+  //       current: formatValue(currentPlanResults.incomeTax),
+  //       taxes: formatValue(taxesData.incomeTax, true),
+  //       taxFree: formatValue(taxFreeResults.incomeTax),
+  //     },
+  //     {
+  //       label: "Net Retirement Income",
+  //       current: formatValue(currentPlanResults.netRetirementIncome),
+  //       taxes: formatValue(taxesData.netRetirementIncome),
+  //       taxFree: formatValue(taxFreeResults.netRetirementIncome),
+  //     },
+  //     {
+  //       label: "Cumulative Taxes Deferred",
+  //       current: formatValue(currentPlanResults.cumulativeTaxesDeferred),
+  //       taxes: formatValue(taxesData.cumulativeTaxesDeferred),
+  //       taxFree: formatValue(taxFreeResults.cumulativeTaxesDeferred),
+  //     },
+  //     {
+  //       label: "Cumulative Taxes Paid",
+  //       current: formatValue(currentPlanResults.cumulativeTaxesPaid),
+  //       taxes: formatValue(taxesData.cumulativeTaxesPaid),
+  //       taxFree: formatValue(taxFreeResults.cumulativeTaxesPaid),
+  //     },
+  //     {
+  //       label: "Cumulative Fees Paid",
+  //       current: formatValue(currentPlanResults.cumulativeFeesPaid),
+  //       taxes: formatValue(taxesData.cumulativeFeesPaid),
+  //       taxFree: formatValue(taxFreeResults.cumulativeFeesPaid),
+  //     },
+  //     {
+  //       label: "Cumulative Net Income",
+  //       current: formatValue(currentPlanResults.cumulativeNetIncome),
+  //       taxes: formatValue(taxesData.cumulativeNetIncome),
+  //       taxFree: formatValue(taxFreeResults.cumulativeNetIncome),
+  //     },
+  //     {
+  //       label: "Cumulative Account Balance",
+  //       current: formatValue(currentPlanResults.cumulativeAccountBalance),
+  //       taxes: formatValue(taxesData.cumulativeAccountBalance),
+  //       taxFree: formatValue(taxFreeResults.cumulativeAccountBalance),
+  //     },
+  //     {
+  //       label: "Taxes Due",
+  //       current: formatValue(currentPlanResults.taxesDue, true),
+  //       taxes: formatValue(taxesData.taxesDue, true),
+  //       taxFree: formatValue(taxFreeResults.taxesDue, true),
+  //     },
+  //     {
+  //       label: "Death Benefits",
+  //       current: formatValue(currentPlanResults.deathBenefits),
+  //       taxes: formatValue(taxesData.deathBenefits),
+  //       taxFree: formatValue(taxFreeResults.deathBenefits),
+  //     },
+  //     {
+  //       label: "Years You Run Out of Money",
+  //       current:
+  //         ageOptions.length === 0 ? (
+  //           <Input
+  //             type="number"
+  //             value={yearsRunOutOfMoneyInput}
+  //             onChange={handleYearsRunOutOfMoneyInputChange}
+  //             className={`w-32 ${
+  //               isYearsRunOutOfMoneyInvalid(yearsRunOutOfMoneyInput)
+  //                 ? "border-red-500"
+  //                 : ""
+  //             }`}
+  //             min={currentAge + 1}
+  //             aria-label="Years You Run Out of Money for Current Plan"
+  //           />
+  //         ) : (
+  //           <Select
+  //             value={String(yearsRunOutOfMoney)}
+  //             onValueChange={handleYearsRunOutOfMoneyChange}
+  //             aria-label="Select years you run out of money for Current Plan"
+  //             disabled={ageOptions.length === 0}
+  //           >
+  //             <SelectTrigger className="w-32">
+  //               <SelectValue placeholder="Select Age" />
+  //             </SelectTrigger>
+  //             <SelectContent>
+  //               {ageOptions.map((age) => (
+  //                 <SelectItem key={age} value={String(age)}>
+  //                   {age}
+  //                 </SelectItem>
+  //               ))}
+  //             </SelectContent>
+  //           </Select>
+  //         ),
+  //       taxes: taxesData.yearsRunOutOfMoney,
+  //       taxFree: taxFreeResults.yearsRunOutOfMoney,
+  //     },
+  //   ],
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  //   [
+  //     currentPlanResults,
+  //     taxesData,
+  //     taxFreeResults,
+  //     yearsRunOutOfMoney,
+  //     yearsRunOutOfMoneyInput,
+  //     ageOptions,
+  //     startingBalance,
+  //     annualContributions,
+  //     annualEmployerMatch,
+  //     handleYearsRunOutOfMoneyChange,
+  //     handleYearsRunOutOfMoneyInputChange,
+  //     currentAge,
+  //     selectedRowData,
+  //   ]
+  // );
+
   const tableRows = useMemo(
     () => [
       {
@@ -349,7 +636,9 @@ export function ComparisonTable({
           />
         ),
         taxes: formatValue(taxesData.startingBalance),
-        taxFree: formatValue(taxFreeResults.startingBalance),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.startingBalance
+          : formatValue(taxFreeResults.startingBalance),
       },
       {
         label: "Annual Contributions",
@@ -366,7 +655,9 @@ export function ComparisonTable({
           />
         ),
         taxes: formatValue(taxesData.annualContributions, true),
-        taxFree: formatValue(taxFreeResults.annualContributions),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.annualContributions
+          : formatValue(taxFreeResults.annualContributions),
       },
       {
         label: "Annual Employer Match",
@@ -383,73 +674,119 @@ export function ComparisonTable({
           />
         ),
         taxes: formatValue(taxesData.annualEmployerMatch),
-        taxFree: formatValue(taxFreeResults.annualEmployerMatch),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.annualEmployerMatch
+          : formatValue(taxFreeResults.annualEmployerMatch),
       },
       {
         label: "Annual Fees",
-        current: formatValue(currentPlanResults.annualFees, true),
+        current: selectedRowData
+          ? selectedRowData.current.annualFees
+          : formatValue(currentPlanResults.annualFees, true),
         taxes: formatValue(taxesData.annualFees),
-        taxFree: formatValue(taxFreeResults.annualFees),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.annualFees
+          : formatValue(taxFreeResults.annualFees),
       },
       {
         label: "Gross Retirement Income",
-        current: formatValue(currentPlanResults.grossRetirementIncome),
+        current: selectedRowData
+          ? selectedRowData.current.grossRetirementIncome
+          : formatValue(currentPlanResults.grossRetirementIncome),
         taxes: formatValue(taxesData.grossRetirementIncome),
-        taxFree: formatValue(taxFreeResults.grossRetirementIncome),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.grossRetirementIncome
+          : formatValue(taxFreeResults.grossRetirementIncome),
       },
       {
         label: "Income Tax",
-        current: formatValue(currentPlanResults.incomeTax),
+        current: selectedRowData
+          ? selectedRowData.current.incomeTax
+          : formatValue(currentPlanResults.incomeTax),
         taxes: formatValue(taxesData.incomeTax, true),
-        taxFree: formatValue(taxFreeResults.incomeTax),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.incomeTax
+          : formatValue(taxFreeResults.incomeTax),
       },
       {
         label: "Net Retirement Income",
-        current: formatValue(currentPlanResults.netRetirementIncome),
+        current: selectedRowData
+          ? selectedRowData.current.netRetirementIncome
+          : formatValue(currentPlanResults.netRetirementIncome),
         taxes: formatValue(taxesData.netRetirementIncome),
-        taxFree: formatValue(taxFreeResults.netRetirementIncome),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.netRetirementIncome
+          : formatValue(taxFreeResults.netRetirementIncome),
       },
       {
         label: "Cumulative Taxes Deferred",
-        current: formatValue(currentPlanResults.cumulativeTaxesDeferred),
+        current: selectedRowData
+          ? selectedRowData.current.cumulativeTaxesDeferred
+          : formatValue(currentPlanResults.cumulativeTaxesDeferred),
         taxes: formatValue(taxesData.cumulativeTaxesDeferred),
-        taxFree: formatValue(taxFreeResults.cumulativeTaxesDeferred),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.cumulativeTaxesDeferred
+          : formatValue(taxFreeResults.cumulativeTaxesDeferred),
       },
       {
         label: "Cumulative Taxes Paid",
-        current: formatValue(currentPlanResults.cumulativeTaxesPaid),
+        current: selectedRowData
+          ? selectedRowData.current.cumulativeTaxesPaid
+          : formatValue(currentPlanResults.cumulativeTaxesPaid),
         taxes: formatValue(taxesData.cumulativeTaxesPaid),
-        taxFree: formatValue(taxFreeResults.cumulativeTaxesPaid),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.cumulativeTaxesPaid
+          : formatValue(taxFreeResults.cumulativeTaxesPaid),
       },
       {
         label: "Cumulative Fees Paid",
-        current: formatValue(currentPlanResults.cumulativeFeesPaid),
+        current: selectedRowData
+          ? selectedRowData.current.cumulativeFeesPaid
+          : formatValue(currentPlanResults.cumulativeFeesPaid),
         taxes: formatValue(taxesData.cumulativeFeesPaid),
-        taxFree: formatValue(taxFreeResults.cumulativeFeesPaid),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.cumulativeFeesPaid
+          : formatValue(taxFreeResults.cumulativeFeesPaid),
       },
       {
         label: "Cumulative Net Income",
-        current: formatValue(currentPlanResults.cumulativeNetIncome),
+        current: selectedRowData
+          ? selectedRowData.current.cumulativeNetIncome
+          : formatValue(currentPlanResults.cumulativeNetIncome),
         taxes: formatValue(taxesData.cumulativeNetIncome),
-        taxFree: formatValue(taxFreeResults.cumulativeNetIncome),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.cumulativeNetIncome
+          : formatValue(taxFreeResults.cumulativeNetIncome),
       },
       {
         label: "Cumulative Account Balance",
-        current: formatValue(currentPlanResults.cumulativeAccountBalance),
+        current: selectedRowData
+          ? selectedRowData.current.cumulativeAccountBalance
+          : formatValue(currentPlanResults.cumulativeAccountBalance),
         taxes: formatValue(taxesData.cumulativeAccountBalance),
-        taxFree: formatValue(taxFreeResults.cumulativeAccountBalance),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.cumulativeAccountBalance
+          : formatValue(taxFreeResults.cumulativeAccountBalance),
       },
       {
         label: "Taxes Due",
-        current: formatValue(currentPlanResults.taxesDue, true),
+        current: selectedRowData
+          ? selectedRowData.current.taxesDue
+          : formatValue(currentPlanResults.taxesDue, true),
         taxes: formatValue(taxesData.taxesDue, true),
-        taxFree: formatValue(taxFreeResults.taxesDue, true),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.taxesDue
+          : formatValue(taxFreeResults.taxesDue, true),
       },
       {
         label: "Death Benefits",
-        current: formatValue(currentPlanResults.deathBenefits),
+        current: selectedRowData
+          ? selectedRowData.current.deathBenefits
+          : formatValue(currentPlanResults.deathBenefits),
         taxes: formatValue(taxesData.deathBenefits),
-        taxFree: formatValue(taxFreeResults.deathBenefits),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.deathBenefits
+          : formatValue(taxFreeResults.deathBenefits),
       },
       {
         label: "Years You Run Out of Money",
@@ -486,8 +823,15 @@ export function ComparisonTable({
               </SelectContent>
             </Select>
           ),
-        taxes: taxesData.yearsRunOutOfMoney,
-        taxFree: taxFreeResults.yearsRunOutOfMoney,
+        taxes: (
+          <FutureAgeInput
+            futureAge={futureAge}
+            onFutureAgeChange={onFutureAgeChange}
+          />
+        ),
+        taxFree: selectedRowData
+          ? selectedRowData.taxFree.yearsRunOutOfMoney
+          : formatValue(taxFreeResults.yearsRunOutOfMoney),
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -501,8 +845,8 @@ export function ComparisonTable({
       startingBalance,
       annualContributions,
       annualEmployerMatch,
-      handleYearsRunOutOfMoneyChange,
-      handleYearsRunOutOfMoneyInputChange,
+      selectedRowData,
+      futureAge,
       currentAge,
     ]
   );
@@ -615,7 +959,14 @@ export function ComparisonTable({
                       onClick={() => handleCellClick(index)}
                       aria-selected={highlightedRow === index}
                     >
-                      {taxes}
+                      {index === tableRows.length - 1 ? (
+                        <FutureAgeInput
+                          futureAge={futureAge}
+                          onFutureAgeChange={onFutureAgeChange}
+                        />
+                      ) : (
+                        taxes
+                      )}
                     </TableCell>
                     <TableCell
                       className={cn(
@@ -746,7 +1097,14 @@ export function ComparisonTable({
                           onClick={() => handleCellClick(index)}
                           aria-selected={highlightedRow === index}
                         >
-                          {taxes}
+                          {index === tableRows.length - 1 ? (
+                            <FutureAgeInput
+                              futureAge={futureAge}
+                              onFutureAgeChange={onFutureAgeChange}
+                            />
+                          ) : (
+                            taxes
+                          )}
                         </TableCell>
                         <TableCell
                           className={cn(

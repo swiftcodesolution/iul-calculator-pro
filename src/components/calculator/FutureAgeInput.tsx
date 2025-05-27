@@ -35,6 +35,7 @@ export function FutureAgeInput({
                   value={futureAge}
                   onChange={onFutureAgeChange}
                   className="w-20"
+                  min={0}
                 />
               </motion.div>
             </div>
