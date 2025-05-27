@@ -12,7 +12,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { useTableStore } from "@/lib/store";
-import { runTaxFreePlanLoop } from "@/lib/utils";
+import { runTaxFreePlanLoop } from "@/lib/logics";
 
 export default function TaxFreePlanFullTable() {
   const {
