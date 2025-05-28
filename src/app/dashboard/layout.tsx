@@ -9,7 +9,7 @@ import {
   Home,
   Calculator,
   Upload,
-  Database,
+  // Database,
   Table,
 } from "lucide-react";
 import { DndProvider } from "react-dnd";
@@ -25,7 +25,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { label: "Home", href: "/dashboard/home", icon: Home },
     { label: "Calculator", href: "/dashboard/calculator", icon: Calculator },
     { label: "Import", href: "/dashboard/import", icon: Upload },
-    { label: "Data", href: "/dashboard/data", icon: Database },
+    // { label: "Data", href: "/dashboard/data", icon: Database },
     {
       label: "Data",
       href: "/dashboard/current-plan-full-table",
