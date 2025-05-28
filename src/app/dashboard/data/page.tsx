@@ -65,19 +65,19 @@ export default function CombinedPlanTable() {
   const {
     tables = [],
     boxesData = {
-      currentAge: "45",
-      stopSavingAge: "65",
-      retirementAge: "66",
-      workingTaxRate: "22",
-      retirementTaxRate: "22",
-      inflationRate: "2",
-      currentPlanFees: "2",
-      currentPlanROR: "6.3",
-      taxFreePlanROR: "6",
+      currentAge: "",
+      stopSavingAge: "",
+      retirementAge: "",
+      workingTaxRate: "",
+      retirementTaxRate: "",
+      inflationRate: "",
+      currentPlanFees: "",
+      currentPlanROR: "",
+      taxFreePlanROR: "",
     },
-    yearsRunOutOfMoney = 95,
+    yearsRunOutOfMoney = 0,
     startingBalance = 0,
-    annualContributions = 12821,
+    annualContributions = 0,
     annualEmployerMatch = 0,
   } = useTableStore();
 
@@ -292,7 +292,7 @@ export default function CombinedPlanTable() {
   };
 
   const renderTable = () => (
-    <Card className="w-full h-[90vh] flex flex-col p-2 gap-2">
+    <Card className="w-full h-[85vh] flex flex-col p-2 gap-2">
       <CardHeader className="p-0">
         <CardTitle>Combined Plan Yearly Results</CardTitle>
       </CardHeader>

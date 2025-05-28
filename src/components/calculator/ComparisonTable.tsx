@@ -57,15 +57,15 @@ export function ComparisonTable({
   isTableCardExpanded,
   currentAge = 40,
   boxesData = {
-    currentAge: "40",
-    stopSavingAge: "65",
-    retirementAge: "66",
-    workingTaxRate: "22",
-    retirementTaxRate: "22",
-    inflationRate: "2",
-    currentPlanFees: "2",
-    currentPlanROR: "6",
-    taxFreePlanROR: "6",
+    currentAge: 40,
+    stopSavingAge: 65,
+    retirementAge: 66,
+    workingTaxRate: 22,
+    retirementTaxRate: 22,
+    inflationRate: 0,
+    currentPlanFees: 2,
+    currentPlanROR: 6.3,
+    taxFreePlanROR: 6.3,
   },
   setIsTableCollapsed,
   setIsTableCardExpanded,
@@ -88,12 +88,16 @@ export function ComparisonTable({
     number | string
   >(yearsRunOutOfMoney);
 
-  const [futureAge, setFutureAge] = useState<number>(currentAge + 1);
+  const [futureAge, setFutureAge] = useState<number>(currentAge);
   const [futureAgeInput, setFutureAgeInput] = useState<number | string>(
     futureAge
   );
   const [selectedRowData, setSelectedRowData] =
     useState<SelectedRowData | null>(null);
+
+  const [activeInput, setActiveInput] = useState<
+    "futureAge" | "yearsRunOutOfMoney" | null
+  >(null);
 
   const onFutureAgeChange = (age: number) => {
     console.log("onFutureAgeChange called with age:", age, "tables:", tables);
@@ -220,6 +224,7 @@ export function ComparisonTable({
       setFutureAge(age);
       setFutureAgeInput(age);
       onFutureAgeChange(age);
+      setActiveInput("futureAge");
     }
   };
 
@@ -348,11 +353,15 @@ export function ComparisonTable({
       //         targetResult.grossRetirementIncome) *
       //       100
       //     : 0,
-      taxesDue: boxesData.currentPlanFees,
+      taxesDue:
+        (targetResult.retirementTaxes / targetResult.grossRetirementIncome) *
+        100,
+      // taxesDue: boxesData.currentPlanFees,
       deathBenefits: targetResult.deathBenefit,
       yearsRunOutOfMoney: inputs.yearsRunOutOfMoney,
       currentAge: inputs.currentAge,
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     boxesData.currentAge,
     boxesData.currentPlanROR,
@@ -362,6 +371,7 @@ export function ComparisonTable({
     boxesData.retirementAge,
     boxesData.stopSavingAge,
     yearsRunOutOfMoneyInput,
+    yearsRunOutOfMoney,
     annualContributions,
     annualEmployerMatch,
     startingBalance,
@@ -389,13 +399,16 @@ export function ComparisonTable({
       };
     }
     return extractTaxFreeResults(tables, currentAge, yearsRunOutOfMoney);
-  }, [tables, currentAge, yearsRunOutOfMoney]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tables, currentAge, yearsRunOutOfMoneyInput, yearsRunOutOfMoney]);
 
   const handleYearsRunOutOfMoneyChange = (value: string) => {
     const age = Number(value);
     if (!isNaN(age)) {
       setYearsRunOutOfMoney(age);
       setYearsRunOutOfMoneyInput(age);
+      onFutureAgeChange(age);
+      setActiveInput("yearsRunOutOfMoney");
     }
   };
 
@@ -434,6 +447,8 @@ export function ComparisonTable({
     const numValue = Number(value);
     if (!isNaN(numValue) && numValue > currentAge) {
       setYearsRunOutOfMoney(numValue);
+      onFutureAgeChange(futureAge);
+      setActiveInput("yearsRunOutOfMoney");
     }
   };
 
@@ -441,18 +456,23 @@ export function ComparisonTable({
     value: number | string | undefined,
     isPercentage: boolean = false
   ): string => {
-    if (value == null) return "N/A";
+    if (value == null || value === "") return "N/A";
     if (typeof value === "string") {
-      if (["included", "n/a"].includes(value.toLowerCase())) return value;
-      return value;
+      const lowered = value.toLowerCase();
+      if (["included", "n/a"].includes(lowered)) return lowered;
+      const parsed = parseFloat(value);
+      if (isNaN(parsed)) return value;
+      value = parsed;
     }
-    if (isPercentage) {
-      return `${Number(value).toFixed(2)}%`;
-    }
-    return `$${Number(value).toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
+
+    const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
+
+    return isPercentage
+      ? `${rounded.toFixed(2)}%`
+      : `$${rounded.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`;
   };
 
   const tableRows = useMemo(
@@ -471,7 +491,9 @@ export function ComparisonTable({
             aria-label="Starting Balance for Current Plan"
           />
         ),
-        taxes: "",
+
+        taxes: "0.00%",
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.startingBalance
           : formatValue(taxFreeResults.startingBalance),
@@ -490,7 +512,9 @@ export function ComparisonTable({
             aria-label="Annual Contributions for Current Plan"
           />
         ),
-        taxes: formatValue(boxesData.workingTaxRate, true),
+
+        taxes: formatValue(parseInput(boxesData.workingTaxRate, 22), true),
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.annualContributions
           : formatValue(taxFreeResults.annualContributions),
@@ -509,7 +533,9 @@ export function ComparisonTable({
             aria-label="Annual Employer Match for Current Plan"
           />
         ),
+
         taxes: "",
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.annualEmployerMatch
           : formatValue(taxFreeResults.annualEmployerMatch),
@@ -519,7 +545,9 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.annualFees
           : formatValue(currentPlanResults.annualFees, true),
+
         taxes: "",
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.annualFees
           : formatValue(taxFreeResults.annualFees),
@@ -529,7 +557,9 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.grossRetirementIncome
           : formatValue(currentPlanResults.grossRetirementIncome),
+
         taxes: "",
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.grossRetirementIncome
           : formatValue(taxFreeResults.grossRetirementIncome),
@@ -539,7 +569,9 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.incomeTax
           : formatValue(currentPlanResults.incomeTax),
-        taxes: formatValue(boxesData.retirementTaxRate, true),
+
+        taxes: formatValue(parseInput(boxesData.retirementTaxRate, 28), true),
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.incomeTax
           : formatValue(taxFreeResults.incomeTax),
@@ -549,7 +581,9 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.netRetirementIncome
           : formatValue(currentPlanResults.netRetirementIncome),
-        taxes: formatValue(boxesData.retirementTaxRate, true),
+
+        taxes: "",
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.netRetirementIncome
           : formatValue(taxFreeResults.netRetirementIncome),
@@ -559,7 +593,9 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.cumulativeTaxesDeferred
           : formatValue(currentPlanResults.cumulativeTaxesDeferred),
+
         taxes: "",
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.cumulativeTaxesDeferred
           : formatValue(taxFreeResults.cumulativeTaxesDeferred),
@@ -569,7 +605,9 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.cumulativeTaxesPaid
           : formatValue(currentPlanResults.cumulativeTaxesPaid),
-        taxes: formatValue(boxesData.retirementTaxRate, true),
+
+        taxes: "",
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.cumulativeTaxesPaid
           : formatValue(taxFreeResults.cumulativeTaxesPaid),
@@ -579,7 +617,9 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.cumulativeFeesPaid
           : formatValue(currentPlanResults.cumulativeFeesPaid),
+
         taxes: "",
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.cumulativeFeesPaid
           : formatValue(taxFreeResults.cumulativeFeesPaid),
@@ -589,7 +629,9 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.cumulativeNetIncome
           : formatValue(currentPlanResults.cumulativeNetIncome),
+
         taxes: "",
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.cumulativeNetIncome
           : formatValue(taxFreeResults.cumulativeNetIncome),
@@ -599,7 +641,9 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.cumulativeAccountBalance
           : formatValue(currentPlanResults.cumulativeAccountBalance),
+
         taxes: "",
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.cumulativeAccountBalance
           : formatValue(taxFreeResults.cumulativeAccountBalance),
@@ -609,7 +653,9 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.taxesDue
           : formatValue(currentPlanResults.taxesDue, true),
-        taxes: formatValue(boxesData.retirementTaxRate, true),
+
+        taxes: "",
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.taxesDue
           : formatValue(taxFreeResults.taxesDue, true),
@@ -619,7 +665,9 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.deathBenefits
           : formatValue(currentPlanResults.deathBenefits),
+
         taxes: "",
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.deathBenefits
           : formatValue(taxFreeResults.deathBenefits),
@@ -659,6 +707,7 @@ export function ComparisonTable({
               </SelectContent>
             </Select>
           ),
+
         taxes: (
           <div className="flex items-center gap-4 text-black">
             <p>Future Age</p>
@@ -681,6 +730,7 @@ export function ComparisonTable({
             </Select>
           </div>
         ),
+
         taxFree: selectedRowData
           ? selectedRowData.taxFree.yearsRunOutOfMoney
           : taxFreeResults.yearsRunOutOfMoney,
@@ -704,6 +754,9 @@ export function ComparisonTable({
     ]
   );
 
+  console.log(currentPlanResults);
+  console.log(boxesData);
+
   return (
     <AnimatePresence>
       {!isTableCardExpanded ? (
@@ -714,6 +767,21 @@ export function ComparisonTable({
             aria-label="Toggle table visibility"
           >
             <h3 className="text-lg font-semibold">Comparison Table</h3>
+            {activeInput && (
+              <p
+                className={cn(
+                  "text-sm",
+                  activeInput === "futureAge"
+                    ? "text-zinc-900"
+                    : "text-zinc-900"
+                )}
+              >
+                Data displayed based on{" "}
+                {activeInput === "futureAge"
+                  ? `Future Age: ${futureAge}`
+                  : `Years Run Out of Money: ${yearsRunOutOfMoney}`}
+              </p>
+            )}
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -845,6 +913,21 @@ export function ComparisonTable({
           <Card className="flex-1">
             <CardHeader className="flex flex-row items-center justify-between">
               <h3 className="text-lg font-semibold">Comparison Table</h3>
+              {activeInput && (
+                <p
+                  className={cn(
+                    "text-sm",
+                    activeInput === "futureAge"
+                      ? "text-zinc-900"
+                      : "text-zinc-900"
+                  )}
+                >
+                  Data displayed based on{" "}
+                  {activeInput === "futureAge"
+                    ? `Future Age: ${futureAge}`
+                    : `Years Run Out of Money: ${yearsRunOutOfMoney}`}
+                </p>
+              )}
               <Button
                 variant="outline"
                 size="sm"

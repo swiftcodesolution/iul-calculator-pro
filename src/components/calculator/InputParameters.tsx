@@ -10,8 +10,9 @@ interface InputParametersProps {
 }
 
 export function InputParameters({ data, onUpdate }: InputParametersProps) {
-  const handleInputChange = (key: keyof BoxesData, value: string) => {
-    onUpdate({ [key]: value }); // Pass raw input value (string or empty)
+  const handleInputChange = (key: keyof BoxesData, rawValue: string) => {
+    const parsed = rawValue === "" ? "" : parseFloat(rawValue);
+    onUpdate({ [key]: parsed }); // Pass raw input value (string or empty)
   };
 
   // Define which fields should allow decimals

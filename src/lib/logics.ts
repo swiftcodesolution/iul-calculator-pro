@@ -749,7 +749,7 @@ export function runRetirementPlanLoop(
 ): Results[] {
   const results: Results[] = [];
 
-  for (let age = currentAge; age <= yearsRunOutOfMoney; age++) {
+  for (let age = currentAge; age < yearsRunOutOfMoney; age++) {
     const planResults = extractCurrentPlanResults(
       currentAge,
       yearsRunOutOfMoney,

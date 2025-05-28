@@ -9,8 +9,8 @@ import {
   Home,
   Calculator,
   Upload,
-  // Database,
-  Table,
+  Database,
+  // Table,
 } from "lucide-react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -25,12 +25,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { label: "Home", href: "/dashboard/home", icon: Home },
     { label: "Calculator", href: "/dashboard/calculator", icon: Calculator },
     { label: "Import", href: "/dashboard/import", icon: Upload },
-    // { label: "Data", href: "/dashboard/data", icon: Database },
-    {
-      label: "Data",
-      href: "/dashboard/current-plan-full-table",
-      icon: Table,
-    },
+    { label: "Data", href: "/dashboard/data", icon: Database },
+    // {
+    //   label: "Data",
+    //   href: "/dashboard/current-plan-full-table",
+    //   icon: Table,
+    // },
   ];
 
   return (
