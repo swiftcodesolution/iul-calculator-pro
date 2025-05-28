@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { ZoomIn, ZoomOut, Fullscreen, Minimize2 } from "lucide-react";
+import { ZoomIn, ZoomOut, Minimize2 } from "lucide-react";
 import { useTableStore } from "@/lib/store";
 import { runGrossRetirementIncomeLoop, runTaxFreePlanLoop } from "@/lib/logics";
 
@@ -407,19 +407,34 @@ export default function CombinedPlanTable() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="default" onClick={handleZoomIn}>
+          <Button variant="destructive" className="cursor-pointer">
+            Clear
+          </Button>
+          <Button
+            variant="default"
+            onClick={handleZoomIn}
+            className="cursor-pointer"
+          >
             <ZoomIn className="h-4 w-4" />
           </Button>
-          <Button variant="default" onClick={handleZoomOut}>
+          <Button
+            variant="default"
+            onClick={handleZoomOut}
+            className="cursor-pointer"
+          >
             <ZoomOut className="h-4 w-4" />
           </Button>
-          <Button variant="outline" onClick={handleFullScreenToggle}>
+          {/* <Button
+            variant="outline"
+            onClick={handleFullScreenToggle}
+            className="cursor-pointer"
+          >
             {isFullScreen ? (
               <Minimize2 className="h-4 w-4" />
             ) : (
               <Fullscreen className="h-4 w-4" />
             )}
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -444,9 +459,8 @@ export default function CombinedPlanTable() {
             transition={{ duration: 0.4 }}
             className="fixed inset-0 z-50 bg-white p-6"
           >
-            <Card className="flex-1 flex flex-col">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Combined Plan Yearly Results</CardTitle>
+            <Card className="gap-0 p-0 flex-1 flex flex-col">
+              <CardHeader className="flex flex-row items-center justify-end">
                 <Button variant="outline" onClick={handleFullScreenToggle}>
                   <Minimize2 className="h-4 w-4" />
                 </Button>

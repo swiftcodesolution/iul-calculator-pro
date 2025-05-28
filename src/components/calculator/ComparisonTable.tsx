@@ -412,31 +412,41 @@ export function ComparisonTable({
     }
   };
 
+  const formatInputValue = (value: string | number): string => {
+    if (value === "" || value == null) return "";
+    const num = parseFloat(String(value).replace(/[^0-9.]/g, ""));
+    if (isNaN(num)) return "";
+    return `$${num.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    })}`;
+  };
+
+  const parseInputValue = (value: string): number | string => {
+    if (value === "") return "";
+    const num = parseFloat(value.replace(/[^0-9.]/g, ""));
+    return isNaN(num) || num < 0 ? "0" : num;
+  };
+
   const handleStartingBalanceChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = e.target.value;
-    setStartingBalance(
-      value === "" ? "" : Number(value) >= 0 ? Number(value) : ""
-    );
+    const value = parseInputValue(e.target.value);
+    setStartingBalance(value);
   };
 
   const handleAnnualContributionsChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = e.target.value;
-    setAnnualContributions(
-      value === "" ? "" : Number(value) >= 0 ? Number(value) : ""
-    );
+    const value = parseInputValue(e.target.value);
+    setAnnualContributions(value);
   };
 
   const handleAnnualEmployerMatchChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = e.target.value;
-    setAnnualEmployerMatch(
-      value === "" ? "" : Number(value) >= 0 ? Number(value) : ""
-    );
+    const value = parseInputValue(e.target.value);
+    setAnnualEmployerMatch(value);
   };
 
   const handleYearsRunOutOfMoneyInputChange = (
@@ -481,11 +491,13 @@ export function ComparisonTable({
         label: "Starting Balance",
         current: (
           <Input
-            type="number"
-            value={startingBalance}
+            type="text"
+            value={formatInputValue(startingBalance)}
             onChange={handleStartingBalanceChange}
             className={`w-32 ${
-              Number(startingBalance) < 0 ? "border-red-500" : ""
+              Number(parseInputValue(String(startingBalance))) < 0
+                ? "border-red-500"
+                : ""
             }`}
             min={0}
             aria-label="Starting Balance for Current Plan"
@@ -502,11 +514,13 @@ export function ComparisonTable({
         label: "Annual Contributions",
         current: (
           <Input
-            type="number"
-            value={annualContributions}
+            type="text"
+            value={formatInputValue(annualContributions)}
             onChange={handleAnnualContributionsChange}
             className={`w-32 ${
-              Number(annualContributions) < 0 ? "border-red-500" : ""
+              Number(parseInputValue(String(annualContributions))) < 0
+                ? "border-red-500"
+                : ""
             }`}
             min={0}
             aria-label="Annual Contributions for Current Plan"
@@ -523,11 +537,13 @@ export function ComparisonTable({
         label: "Annual Employer Match",
         current: (
           <Input
-            type="number"
-            value={annualEmployerMatch}
+            type="text"
+            value={formatInputValue(annualEmployerMatch)}
             onChange={handleAnnualEmployerMatchChange}
             className={`w-32 ${
-              Number(annualEmployerMatch) < 0 ? "border-red-500" : ""
+              Number(parseInputValue(String(annualEmployerMatch))) < 0
+                ? "border-red-500"
+                : ""
             }`}
             min={0}
             aria-label="Annual Employer Match for Current Plan"
