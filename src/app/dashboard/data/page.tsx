@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -46,6 +46,7 @@ export default function CombinedPlanTable() {
   const [oddColumnColor, setOddColumnColor] = useState("#f0f0f0"); // Current Plan columns
   const [zoomLevel, setZoomLevel] = useState(0.6); // Zoom scale (1 = normal)
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const fontSize = `${zoomLevel}rem`;
   const paddingSize = `${0.75 * zoomLevel}rem`;
@@ -53,6 +54,10 @@ export default function CombinedPlanTable() {
   const handleZoomIn = () => setZoomLevel((prev) => prev + 0.2);
   const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 0.2, 0.4)); // Minimum zoom 0.4
   const handleFullScreenToggle = () => setIsFullScreen((prev) => !prev);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setIsScrolled(e.currentTarget.scrollTop > 50);
+  };
 
   function getContrastingTextColor(bgColor: string): string {
     const r = parseInt(bgColor.slice(1, 3), 16);
@@ -296,8 +301,48 @@ export default function CombinedPlanTable() {
       <CardHeader className="p-0">
         <CardTitle>Combined Plan Yearly Results</CardTitle>
       </CardHeader>
-      <CardContent className="p-0 flex-1 overflow-hidden">
-        <div className="w-full h-full overflow-auto">
+      <CardContent className="p-0 flex-1 overflow-hidden relative">
+        {isScrolled && (
+          <div
+            className="absolute top-0 left-0 w-full bg-white z-10 shadow-md"
+            style={{ width: "99%" }}
+          >
+            <Table className="table-fixed w-full">
+              <TableHeader>
+                <TableRow>
+                  {headers.map((header) => {
+                    const isTFP = header.includes("TFP");
+                    const isFixed = header === "Year" || header === "Age";
+                    const bgColor = isFixed
+                      ? "#FFFFFF"
+                      : isTFP
+                      ? evenColumnColor
+                      : oddColumnColor;
+                    const textColor = isFixed
+                      ? "#000000"
+                      : getContrastingTextColor(bgColor);
+                    return (
+                      <TableHead
+                        key={header}
+                        className="whitespace-break-spaces border break-words text-wrap align-top text-sm text-center"
+                        style={{
+                          backgroundColor: bgColor,
+                          color: textColor,
+                          fontSize,
+                          padding: paddingSize,
+                          width: "70px",
+                        }}
+                      >
+                        {header}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              </TableHeader>
+            </Table>
+          </div>
+        )}
+        <div className="w-full h-full overflow-auto" onScroll={handleScroll}>
           <div className="min-w-full">
             <Table className="table-fixed w-full">
               <TableHeader>
