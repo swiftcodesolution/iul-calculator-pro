@@ -6,7 +6,9 @@ export const useColumnHighlight = () => {
     taxes: true,
     taxFreePlan: true,
   });
-  const [highlightedRow, setHighlightedRow] = useState<number | null>(null);
+  const [highlightedRows, setHighlightedRows] = useState<Set<number>>(
+    new Set()
+  );
 
   const handleHeaderClick = useCallback(
     (column: keyof typeof columnTextWhite) => {
@@ -19,12 +21,20 @@ export const useColumnHighlight = () => {
   );
 
   const handleCellClick = useCallback((rowIndex: number) => {
-    setHighlightedRow((prev) => (prev === rowIndex ? null : rowIndex));
+    setHighlightedRows((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(rowIndex)) {
+        newSet.delete(rowIndex); // Unhighlight if already highlighted
+      } else {
+        newSet.add(rowIndex); // Highlight new row
+      }
+      return newSet;
+    });
   }, []);
 
   return {
     columnTextWhite,
-    highlightedRow,
+    highlightedRows,
     handleHeaderClick,
     handleCellClick,
   };

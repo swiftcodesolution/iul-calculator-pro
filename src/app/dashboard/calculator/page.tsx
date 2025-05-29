@@ -92,7 +92,7 @@ export default function CalculatorPage() {
   // Column and row highlight hooks
   const {
     columnTextWhite,
-    highlightedRow,
+    highlightedRows,
     handleHeaderClick,
     handleCellClick,
   } = useColumnHighlight();
@@ -106,7 +106,7 @@ export default function CalculatorPage() {
           currentAge={Number(boxesData.currentAge) || 0}
           boxesData={boxesData}
           columnTextWhite={columnTextWhite}
-          highlightedRow={highlightedRow}
+          highlightedRows={highlightedRows}
           isTableCollapsed={isTableCollapsed}
           isTableCardExpanded={isTableCardExpanded}
           setIsTableCollapsed={setIsTableCollapsed}

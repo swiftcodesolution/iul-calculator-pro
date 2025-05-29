@@ -39,7 +39,7 @@ interface ComparisonTableProps {
     taxes: boolean;
     taxFreePlan: boolean;
   };
-  highlightedRow: number | null;
+  highlightedRows: Set<number>;
   isTableCollapsed: boolean;
   isTableCardExpanded: boolean;
   currentAge?: number;
@@ -52,7 +52,7 @@ interface ComparisonTableProps {
 
 export function ComparisonTable({
   columnTextWhite,
-  highlightedRow,
+  highlightedRows,
   isTableCollapsed,
   isTableCardExpanded,
   currentAge = 40,
@@ -725,7 +725,7 @@ export function ComparisonTable({
           ),
 
         taxes: (
-          <div className="flex items-center gap-4 text-black">
+          <div className="flex items-center justify-center gap-4 text-black">
             <p>Future Age</p>
             <Select
               value={String(futureAge)}
@@ -733,7 +733,7 @@ export function ComparisonTable({
               aria-label="Select future age for Taxes"
               // disabled={futureAgeOptions.length === 0}
             >
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="">
                 <SelectValue placeholder="Select Age" />
               </SelectTrigger>
               <SelectContent>
@@ -809,13 +809,13 @@ export function ComparisonTable({
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <Table className="w-full table-auto">
+            <Table className="w-full table-fixed">
               <TableHeader>
                 <TableRow>
                   <TableHead></TableHead>
                   <TableHead
                     className={cn(
-                      "bg-red-200 cursor-pointer",
+                      "bg-red-200 cursor-pointer text-center",
                       columnTextWhite.currentPlan
                         ? "text-red-200"
                         : "text-black",
@@ -824,11 +824,12 @@ export function ComparisonTable({
                     onClick={() => handleHeaderClick("currentPlan")}
                     aria-label="Toggle Current Plan column text color"
                   >
-                    Current Plan <br /> TSP, 401k, 403b, IRA
+                    Current Plan <br />
+                    <span className="text-xs">TSP, 401k, 403b, IRA</span>
                   </TableHead>
                   <TableHead
                     className={cn(
-                      "bg-yellow-200 cursor-pointer",
+                      "bg-yellow-200 cursor-pointer text-center w-[180px]",
                       columnTextWhite.taxes ? "text-yellow-200" : "text-black",
                       "transition-colors duration-300"
                     )}
@@ -839,7 +840,7 @@ export function ComparisonTable({
                   </TableHead>
                   <TableHead
                     className={cn(
-                      "bg-green-200 cursor-pointer",
+                      "bg-green-200 cursor-pointer text-center",
                       columnTextWhite.taxFreePlan
                         ? "text-green-200"
                         : "text-black",
@@ -848,7 +849,8 @@ export function ComparisonTable({
                     onClick={() => handleHeaderClick("taxFreePlan")}
                     aria-label="Toggle Tax Free Plan column text color"
                   >
-                    IRS (IRC) 7702 <br /> Tax Free Plan
+                    Tax Free Plan
+                    <br /> <span className="text-xs">IRS (IRC) 7702</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -863,52 +865,58 @@ export function ComparisonTable({
                     <TableCell
                       className={cn(
                         "border cursor-pointer whitespace-nowrap",
-                        highlightedRow === index ? "bg-[#ffa1ad]" : ""
+                        highlightedRows.has(index) ? "bg-[#ffa1ad]" : ""
                       )}
                       onClick={() => handleCellClick(index)}
-                      aria-selected={highlightedRow === index}
+                      aria-selected={highlightedRows.has(index)}
                     >
                       {label}
                     </TableCell>
                     <TableCell
                       className={cn(
                         "border cursor-pointer whitespace-nowrap",
-                        highlightedRow === index ? "bg-[#ffa1ad]" : "bg-white",
+                        highlightedRows.has(index)
+                          ? "bg-[#ffa1ad]"
+                          : "bg-white",
                         columnTextWhite.currentPlan
                           ? "text-white opacity-0"
                           : "text-black",
                         "transition-colors duration-300"
                       )}
                       onClick={() => handleCellClick(index)}
-                      aria-selected={highlightedRow === index}
+                      aria-selected={highlightedRows.has(index)}
                     >
                       {current}
                     </TableCell>
                     <TableCell
                       className={cn(
-                        "border cursor-pointer whitespace-nowrap",
-                        highlightedRow === index ? "bg-[#ffa1ad]" : "bg-white",
+                        "border cursor-pointer whitespace-nowrap text-center",
+                        highlightedRows.has(index)
+                          ? "bg-[#ffa1ad]"
+                          : "bg-white",
                         columnTextWhite.taxes
                           ? "text-white opacity-0"
                           : "text-red-600",
                         "transition-colors duration-300"
                       )}
                       onClick={() => handleCellClick(index)}
-                      aria-selected={highlightedRow === index}
+                      aria-selected={highlightedRows.has(index)}
                     >
                       {taxes}
                     </TableCell>
                     <TableCell
                       className={cn(
                         "border cursor-pointer whitespace-nowrap",
-                        highlightedRow === index ? "bg-[#ffa1ad]" : "bg-white",
+                        highlightedRows.has(index)
+                          ? "bg-[#ffa1ad]"
+                          : "bg-white",
                         columnTextWhite.taxFreePlan
                           ? "text-white opacity-0"
                           : "text-black",
                         "transition-colors duration-300"
                       )}
                       onClick={() => handleCellClick(index)}
-                      aria-selected={highlightedRow === index}
+                      aria-selected={highlightedRows.has(index)}
                     >
                       {taxFree}
                     </TableCell>
@@ -1005,17 +1013,17 @@ export function ComparisonTable({
                         <TableCell
                           className={cn(
                             "border cursor-pointer whitespace-nowrap",
-                            highlightedRow === index ? "bg-[#ffa1ad]" : ""
+                            highlightedRows.has(index) ? "bg-[#ffa1ad]" : ""
                           )}
                           onClick={() => handleCellClick(index)}
-                          aria-selected={highlightedRow === index}
+                          aria-selected={highlightedRows.has(index)}
                         >
                           {label}
                         </TableCell>
                         <TableCell
                           className={cn(
                             "border cursor-pointer whitespace-nowrap",
-                            highlightedRow === index
+                            highlightedRows.has(index)
                               ? "bg-[#ffa1ad]"
                               : "bg-white",
                             columnTextWhite.currentPlan
@@ -1024,14 +1032,14 @@ export function ComparisonTable({
                             "transition-colors duration-300"
                           )}
                           onClick={() => handleCellClick(index)}
-                          aria-selected={highlightedRow === index}
+                          aria-selected={highlightedRows.has(index)}
                         >
                           {current}
                         </TableCell>
                         <TableCell
                           className={cn(
                             "border cursor-pointer whitespace-nowrap",
-                            highlightedRow === index
+                            highlightedRows.has(index)
                               ? "bg-[#ffa1ad]"
                               : "bg-white",
                             columnTextWhite.taxes
@@ -1040,14 +1048,14 @@ export function ComparisonTable({
                             "transition-colors duration-300"
                           )}
                           onClick={() => handleCellClick(index)}
-                          aria-selected={highlightedRow === index}
+                          aria-selected={highlightedRows.has(index)}
                         >
                           {taxes}
                         </TableCell>
                         <TableCell
                           className={cn(
                             "border cursor-pointer whitespace-nowrap",
-                            highlightedRow === index
+                            highlightedRows.has(index)
                               ? "bg-[#ffa1ad]"
                               : "bg-white",
                             columnTextWhite.taxFreePlan
@@ -1056,7 +1064,7 @@ export function ComparisonTable({
                             "transition-colors duration-300"
                           )}
                           onClick={() => handleCellClick(index)}
-                          aria-selected={highlightedRow === index}
+                          aria-selected={highlightedRows.has(index)}
                         >
                           {taxFree}
                         </TableCell>

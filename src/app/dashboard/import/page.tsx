@@ -19,6 +19,8 @@ import { Upload, ZoomIn, ZoomOut, Fullscreen, Minimize2 } from "lucide-react"; /
 import { toast } from "sonner";
 import { useTableStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
+import { useTableHighlight } from "@/hooks/useTableHighlight";
+import { cn } from "@/lib/utils";
 
 // Define types
 type TableData = {
@@ -44,6 +46,13 @@ export default function ImportPage() {
   const [isTableFullScreen, setIsTableFullScreen] = useState<boolean>(false); // Added for full-screen control
   const { tables, setTables, clearTables } = useTableStore();
   const router = useRouter();
+
+  const {
+    highlightedRows,
+    highlightedColumns,
+    handleRowClick,
+    handleColumnClick,
+  } = useTableHighlight();
 
   // Handle file change
   const handleFileChange = (
@@ -118,9 +127,9 @@ export default function ImportPage() {
     if (!tables.length) return;
 
     console.log("Importing tables:", tables);
-    setFile(null);
-    setTables([]);
-    setError("");
+    // setFile(null);
+    // setTables([]);
+    // setError("");
     setZoomLevel(1); // Reset zoom on import
     setIsTableFullScreen(false); // Exit full-screen on import
     toast("Data imported successfully.");
@@ -212,10 +221,21 @@ export default function ImportPage() {
                                     {columns.map((header) => (
                                       <TableHead
                                         key={header}
-                                        className="border whitespace-normal break-words min-h-[60px] align-top"
+                                        className={cn(
+                                          "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer",
+                                          highlightedColumns.has(header)
+                                            ? "bg-[#ffa1ad]"
+                                            : ""
+                                        )}
                                         style={{
                                           width: `${100 / columns.length}%`,
                                         }}
+                                        onClick={() =>
+                                          handleColumnClick(header)
+                                        }
+                                        aria-selected={highlightedColumns.has(
+                                          header
+                                        )}
                                       >
                                         {header}
                                       </TableHead>
@@ -226,12 +246,27 @@ export default function ImportPage() {
                                   {table.data.map((row, rowIndex) => (
                                     <TableRow
                                       key={rowIndex}
-                                      className="min-h-[60px]"
+                                      className={cn(
+                                        "min-h-[60px] cursor-pointer",
+                                        highlightedRows.has(rowIndex)
+                                          ? "bg-[#ffa1ad]"
+                                          : ""
+                                      )}
+                                      onClick={() => handleRowClick(rowIndex)}
+                                      aria-selected={highlightedRows.has(
+                                        rowIndex
+                                      )}
                                     >
                                       {columns.map((col) => (
                                         <TableCell
                                           key={col}
-                                          className="border whitespace-normal break-words align-top"
+                                          className={cn(
+                                            "border whitespace-normal break-words align-top",
+                                            highlightedColumns.has(col) ||
+                                              highlightedRows.has(rowIndex)
+                                              ? "bg-[#ffa1ad]"
+                                              : ""
+                                          )}
                                           style={{
                                             width: `${100 / columns.length}%`,
                                           }}
@@ -520,7 +555,7 @@ export default function ImportPage() {
                 onClick={handleCancel}
                 disabled={loading}
               >
-                Cancel
+                Clear
               </Button>
             </motion.div>
           )}
