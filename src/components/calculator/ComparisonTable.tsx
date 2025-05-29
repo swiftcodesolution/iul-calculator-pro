@@ -99,6 +99,18 @@ export function ComparisonTable({
     "futureAge" | "yearsRunOutOfMoney" | null
   >(null);
 
+  const [futureAgeError, setFutureAgeError] = useState<string | null>(null);
+
+  const isFutureAgeInvalid = (value: string | number): boolean => {
+    if (value === "") return true;
+    const numValue = Number(value);
+    if (isNaN(numValue)) return true;
+    if (numValue <= currentAge) return true;
+    if (numValue > Number(yearsRunOutOfMoney || yearsRunOutOfMoneyInput))
+      return true;
+    return false;
+  };
+
   const onFutureAgeChange = (age: number) => {
     console.log("onFutureAgeChange called with age:", age, "tables:", tables);
     if (!isNaN(age) || age > currentAge || tables[0]?.data?.length > 0) {
@@ -195,6 +207,7 @@ export function ComparisonTable({
     return [...new Set(ages)];
   }, [tables]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const futureAgeOptions = useMemo(() => {
     const start = Number(boxesData.currentAge) || currentAge;
     const end = Number(yearsRunOutOfMoney || yearsRunOutOfMoneyInput) || 95;
@@ -217,6 +230,7 @@ export function ComparisonTable({
   //   return false;
   // };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleFutureAgeChange = (value: string) => {
     const age = Number(value);
     console.log("Selected futureAge:", age);
@@ -241,6 +255,38 @@ export function ComparisonTable({
   //     setFutureAge(currentAge + 1);
   //   }
   // };
+
+  const handleFutureAgeInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setFutureAgeInput(value);
+    setActiveInput("futureAge");
+
+    if (value === "") {
+      setFutureAgeError("Future age cannot be empty");
+      setSelectedRowData(null);
+      return;
+    }
+
+    const numValue = Number(value);
+    if (isFutureAgeInvalid(numValue)) {
+      if (numValue <= currentAge) {
+        setFutureAgeError("Future age must be greater than current age");
+      } else if (
+        numValue > Number(yearsRunOutOfMoney || yearsRunOutOfMoneyInput)
+      ) {
+        setFutureAgeError("Future age cannot exceed years run out of money");
+      } else {
+        setFutureAgeError("Invalid future age");
+      }
+      setSelectedRowData(null);
+    } else {
+      setFutureAgeError(null);
+      setFutureAge(numValue);
+      onFutureAgeChange(numValue);
+    }
+  };
 
   useEffect(() => {
     if (ageOptions.length > 0 && !ageOptions.includes(yearsRunOutOfMoney)) {
@@ -461,6 +507,119 @@ export function ComparisonTable({
       setActiveInput("yearsRunOutOfMoney");
     }
   };
+
+  // 29 MAY
+  const refreshResults = () => {
+    const ageToUse =
+      activeInput === "futureAge"
+        ? Number(futureAgeInput)
+        : Number(yearsRunOutOfMoneyInput);
+
+    const maxAge = Number(yearsRunOutOfMoneyInput); // Convert to number explicitly
+
+    if (!isNaN(ageToUse) && ageToUse > currentAge && ageToUse <= maxAge) {
+      setFutureAgeError(null);
+      setFutureAge(ageToUse);
+      setYearsRunOutOfMoney(ageToUse);
+      setYearsRunOutOfMoneyInput(ageToUse);
+
+      // Run calculation for Current Plan
+      const currentPlanTable = runGrossRetirementIncomeLoop(
+        parseInput(boxesData.currentAge, 40),
+        ageToUse,
+        parseInput(annualContributions, 10000),
+        parseInput(boxesData.currentPlanROR, 6),
+        parseInput(boxesData.retirementTaxRate, 22),
+        parseInput(boxesData.currentPlanFees, 2),
+        parseInput(boxesData.workingTaxRate, 22),
+        parseInput(startingBalance, 0),
+        parseInput(annualEmployerMatch, 0),
+        parseInput(boxesData.retirementAge, 66),
+        parseInput(boxesData.stopSavingAge, 65)
+      );
+
+      // Find row for Current Plan
+      const currentRow = currentPlanTable.find((r) => r.age === ageToUse);
+
+      // Get Tax Free Plan data
+      const taxFreeTable = runTaxFreePlanLoop(tables, currentAge, ageToUse);
+      const taxFreeRow = taxFreeTable.find(
+        (r) => r.yearsRunOutOfMoney === ageToUse
+      );
+
+      if (currentRow && taxFreeRow) {
+        setSelectedRowData({
+          current: {
+            startingBalance: formatValue(startingBalance),
+            annualContributions: formatValue(annualContributions),
+            annualEmployerMatch: formatValue(annualEmployerMatch),
+            annualFees: formatValue(currentPlanResults.annualFees, true),
+            grossRetirementIncome: formatValue(
+              currentRow.grossRetirementIncome
+            ),
+            incomeTax: formatValue(currentRow.retirementTaxes),
+            netRetirementIncome: formatValue(currentRow.retirementIncome),
+            cumulativeTaxesDeferred: formatValue(
+              currentRow.cumulativeTaxesDeferred
+            ),
+            cumulativeTaxesPaid: formatValue(
+              currentRow.retirementTaxes *
+                (ageToUse - parseInput(boxesData.retirementAge, 66) + 1)
+            ),
+            cumulativeFeesPaid: formatValue(currentRow.cumulativeFees),
+            cumulativeNetIncome: formatValue(currentRow.cumulativeIncome),
+            cumulativeAccountBalance: formatValue(currentRow.endOfYearBalance),
+            taxesDue: formatValue(currentPlanResults.taxesDue, true),
+            deathBenefits: formatValue(currentRow.deathBenefit),
+            yearsRunOutOfMoney: formatValue(ageToUse),
+          },
+          taxFree: {
+            startingBalance: formatValue(taxFreeRow.startingBalance),
+            annualContributions: formatValue(taxFreeRow.annualContributions),
+            annualEmployerMatch: formatValue(taxFreeRow.annualEmployerMatch),
+            annualFees: formatValue(taxFreeRow.annualFees),
+            grossRetirementIncome: formatValue(
+              taxFreeRow.grossRetirementIncome
+            ),
+            incomeTax: formatValue(taxFreeRow.incomeTax),
+            netRetirementIncome: formatValue(taxFreeRow.netRetirementIncome),
+            cumulativeTaxesDeferred: formatValue(
+              taxFreeRow.cumulativeTaxesDeferred
+            ),
+            cumulativeTaxesPaid: formatValue(taxFreeRow.cumulativeTaxesPaid),
+            cumulativeFeesPaid: formatValue(taxFreeRow.cumulativeFeesPaid),
+            cumulativeNetIncome: formatValue(taxFreeRow.cumulativeNetIncome),
+            cumulativeAccountBalance: formatValue(
+              taxFreeRow.cumulativeAccountBalance
+            ),
+            taxesDue: formatValue(taxFreeRow.taxesDue, true),
+            deathBenefits: formatValue(taxFreeRow.deathBenefits),
+            yearsRunOutOfMoney: ageToUse.toString(),
+          },
+        });
+      } else {
+        setSelectedRowData(null);
+      }
+    } else {
+      setFutureAgeError(
+        activeInput === "futureAge"
+          ? isFutureAgeInvalid(futureAgeInput)
+            ? futureAgeInput === ""
+              ? "Future age cannot be empty"
+              : Number(futureAgeInput) <= currentAge
+              ? "Future age must be greater than current age"
+              : "Future age cannot exceed years run out of money"
+            : "Invalid future age"
+          : isYearsRunOutOfMoneyInvalid(yearsRunOutOfMoneyInput)
+          ? yearsRunOutOfMoneyInput === ""
+            ? "Years run out of money cannot be empty"
+            : "Years run out of money must be greater than current age"
+          : "Invalid years run out of money"
+      );
+      setSelectedRowData(null);
+    }
+  };
+  // 29 MAY
 
   const formatValue = (
     value: number | string | undefined,
@@ -692,58 +851,99 @@ export function ComparisonTable({
         label: "Years You Run Out of Money",
         current:
           ageOptions.length === 0 ? (
-            <Input
-              type="number"
-              value={yearsRunOutOfMoneyInput}
-              onChange={handleYearsRunOutOfMoneyInputChange}
-              className={`w-32 ${
-                isYearsRunOutOfMoneyInvalid(yearsRunOutOfMoneyInput)
-                  ? "border-red-500"
-                  : ""
-              }`}
-              min={currentAge + 1}
-              aria-label="Years You Run Out of Money for Current Plan"
-            />
+            <div className="flex items-center gap-4">
+              <Input
+                type="number"
+                value={yearsRunOutOfMoneyInput}
+                onChange={handleYearsRunOutOfMoneyInputChange}
+                className={`w-32 ${
+                  isYearsRunOutOfMoneyInvalid(yearsRunOutOfMoneyInput)
+                    ? "border-red-500"
+                    : ""
+                }`}
+                min={currentAge + 1}
+                aria-label="Years You Run Out of Money for Current Plan"
+              />
+              <Button
+                size="sm"
+                variant="default"
+                onClick={refreshResults}
+                className="cursor-pointer"
+              >
+                Refresh
+              </Button>
+            </div>
           ) : (
-            <Select
-              value={String(yearsRunOutOfMoney)}
-              onValueChange={handleYearsRunOutOfMoneyChange}
-              aria-label="Select years you run out of money for Current Plan"
-              disabled={ageOptions.length === 0}
-            >
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Select Age" />
-              </SelectTrigger>
-              <SelectContent>
-                {ageOptions.map((age) => (
-                  <SelectItem key={age} value={String(age)}>
-                    {age}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-4">
+              <Select
+                value={String(yearsRunOutOfMoney)}
+                onValueChange={handleYearsRunOutOfMoneyChange}
+                aria-label="Select years you run out of money for Current Plan"
+                disabled={ageOptions.length === 0}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Select Age" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ageOptions.map((age) => (
+                    <SelectItem key={age} value={String(age)}>
+                      {age}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                size="sm"
+                variant="default"
+                onClick={refreshResults}
+                className="cursor-pointer"
+              >
+                Refresh
+              </Button>
+            </div>
           ),
 
         taxes: (
-          <div className="flex items-center justify-center gap-4 text-black">
+          // <div className="flex items-center justify-center gap-4 text-black">
+          //   <p>Future Age</p>
+          //   <Select
+          //     value={String(futureAge)}
+          //     onValueChange={handleFutureAgeChange}
+          //     aria-label="Select future age for Taxes"
+          //     // disabled={futureAgeOptions.length === 0}
+          //   >
+          //     <SelectTrigger className="">
+          //       <SelectValue placeholder="Select Age" />
+          //     </SelectTrigger>
+          //     <SelectContent>
+          //       {futureAgeOptions.map((age) => (
+          //         <SelectItem key={age} value={String(age)}>
+          //           {age}
+          //         </SelectItem>
+          //       ))}
+          //     </SelectContent>
+          //   </Select>
+          // </div>
+
+          <div className="flex flex-col items-center justify-center gap-2 text-black">
             <p>Future Age</p>
-            <Select
-              value={String(futureAge)}
-              onValueChange={handleFutureAgeChange}
-              aria-label="Select future age for Taxes"
-              // disabled={futureAgeOptions.length === 0}
-            >
-              <SelectTrigger className="">
-                <SelectValue placeholder="Select Age" />
-              </SelectTrigger>
-              <SelectContent>
-                {futureAgeOptions.map((age) => (
-                  <SelectItem key={age} value={String(age)}>
-                    {age}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="w-[160px] relative">
+              <Input
+                type="text"
+                value={futureAgeInput}
+                onChange={handleFutureAgeInputChange}
+                className={`text-center ${
+                  futureAgeError ? "border-red-500" : ""
+                }`}
+                aria-label="Future Age for Taxes"
+                placeholder="Enter age"
+              />
+              {futureAgeError && (
+                <p className="text-red-500 text-xs mt-1 text-wrap">
+                  {futureAgeError}
+                </p>
+              )}
+            </div>
           </div>
         ),
 
@@ -769,9 +969,6 @@ export function ComparisonTable({
       currentAge,
     ]
   );
-
-  console.log(currentPlanResults);
-  console.log(boxesData);
 
   return (
     <AnimatePresence>
