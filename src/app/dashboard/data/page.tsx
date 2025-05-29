@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { ZoomIn, ZoomOut, Minimize2 } from "lucide-react";
 import { useTableStore } from "@/lib/store";
 import { runGrossRetirementIncomeLoop, runTaxFreePlanLoop } from "@/lib/logics";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 interface CombinedResult {
   year: number;
@@ -48,7 +48,6 @@ export default function CombinedPlanTable() {
   const [zoomLevel, setZoomLevel] = useState(0.6); // Zoom scale (1 = normal)
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-
   const router = useRouter();
 
   const fontSize = `${zoomLevel}rem`;
