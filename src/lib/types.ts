@@ -51,7 +51,7 @@ export type CropState = {
 };
 
 export type BoxesData = {
-  currentAge: number;
+  currentAge: number | string;
   stopSavingAge: number | string;
   retirementAge: number | string;
   workingTaxRate: number | string;
