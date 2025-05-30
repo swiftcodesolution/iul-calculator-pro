@@ -1,8 +1,9 @@
 import { useState, useCallback } from "react";
 import { TabContent } from "@/lib/types";
+import { useTableStore } from "@/lib/store";
 
-export const useTabs = (initialTabs: TabContent[]) => {
-  const [tabs, setTabs] = useState<TabContent[]>(initialTabs);
+export const useTabs = () => {
+  const { tabs, setTabs } = useTableStore();
   const [activeTab, setActiveTab] = useState<string | null>(null); // Initialize as null
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -12,6 +13,12 @@ export const useTabs = (initialTabs: TabContent[]) => {
   const [newTabFile, setNewTabFile] = useState<File | null>(null);
 
   const handleAddTab = useCallback(() => {
+    if (tabs.length >= 4) {
+      alert(
+        "Demo version: Storage not connected. Cannot add more than 4 tabs."
+      );
+      return;
+    }
     if (newTabName && newTabFile) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -26,34 +33,21 @@ export const useTabs = (initialTabs: TabContent[]) => {
         const newTab: TabContent = {
           id: Date.now().toString(),
           name: newTabName,
-          file: newTabFile,
           src,
           type,
           isVisible: true,
         };
-        setTabs((prev) => [...prev, newTab]);
+        setTabs([...tabs, newTab]);
         setIsAddDialogOpen(false);
         setNewTabName("");
         setNewTabFile(null);
       };
       reader.readAsDataURL(newTabFile);
     }
-  }, [newTabName, newTabFile]);
+  }, [newTabName, newTabFile, tabs, setTabs]);
 
   const handleEditTab = useCallback(() => {
     if (editTabId && newTabName) {
-      if (editTabId === "total-advantage" || editTabId === "calculator") {
-        setTabs((prev) =>
-          prev.map((tab) =>
-            tab.id === editTabId ? { ...tab, name: newTabName } : tab
-          )
-        );
-        setIsEditDialogOpen(false);
-        setNewTabName("");
-        setNewTabFile(null);
-        setEditTabId(null);
-        return;
-      }
       if (newTabFile) {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -65,10 +59,10 @@ export const useTabs = (initialTabs: TabContent[]) => {
             : newTabFile.type === "application/pdf"
             ? "pdf"
             : "other";
-          setTabs((prev) =>
-            prev.map((tab) =>
+          setTabs(
+            tabs.map((tab) =>
               tab.id === editTabId
-                ? { ...tab, name: newTabName, file: newTabFile, src, type }
+                ? { ...tab, name: newTabName, src, type }
                 : tab
             )
           );
@@ -79,8 +73,8 @@ export const useTabs = (initialTabs: TabContent[]) => {
         };
         reader.readAsDataURL(newTabFile);
       } else {
-        setTabs((prev) =>
-          prev.map((tab) =>
+        setTabs(
+          tabs.map((tab) =>
             tab.id === editTabId ? { ...tab, name: newTabName } : tab
           )
         );
@@ -90,53 +84,55 @@ export const useTabs = (initialTabs: TabContent[]) => {
         setEditTabId(null);
       }
     }
-  }, [editTabId, newTabName, newTabFile]);
+  }, [editTabId, newTabName, newTabFile, tabs, setTabs]);
 
   const handleDeleteTab = useCallback(
     (id: string) => {
       if (id === "total-advantage" || id === "calculator") return;
-      setTabs((prev) => prev.filter((tab) => tab.id !== id));
+      setTabs(tabs.filter((tab) => tab.id !== id));
       if (activeTab === id) {
         setActiveTab(null); // Set to null instead of selecting another tab
       }
     },
-    [activeTab]
+    [activeTab, tabs, setTabs]
   );
 
-  const handleToggleVisibility = useCallback((id: string) => {
-    if (id === "total-advantage" || id === "calculator") return;
-    setTabs((prev) =>
-      prev.map((tab) =>
-        tab.id === id ? { ...tab, isVisible: !tab.isVisible } : tab
-      )
-    );
-  }, []);
+  const handleToggleVisibility = useCallback(
+    (id: string) => {
+      setTabs(
+        tabs.map((tab) =>
+          tab.id === id ? { ...tab, isVisible: !tab.isVisible } : tab
+        )
+      );
+    },
+    [tabs, setTabs]
+  );
 
-  const handleMoveUp = useCallback((index: number) => {
-    if (index === 0) return;
-    setTabs((prev) => {
-      const newTabs = [...prev];
+  const handleMoveUp = useCallback(
+    (index: number) => {
+      if (index === 0) return;
+      if (index === 0) return;
+      const newTabs = [...tabs];
       [newTabs[index - 1], newTabs[index]] = [
         newTabs[index],
         newTabs[index - 1],
       ];
-      return newTabs;
-    });
-  }, []);
+      setTabs(newTabs);
+    },
+    [tabs, setTabs]
+  );
 
   const handleMoveDown = useCallback(
     (index: number) => {
       if (index === tabs.length - 1) return;
-      setTabs((prev) => {
-        const newTabs = [...prev];
-        [newTabs[index], newTabs[index + 1]] = [
-          newTabs[index + 1],
-          newTabs[index],
-        ];
-        return newTabs;
-      });
+      const newTabs = [...tabs];
+      [newTabs[index], newTabs[index + 1]] = [
+        newTabs[index + 1],
+        newTabs[index],
+      ];
+      setTabs(newTabs);
     },
-    [tabs.length]
+    [tabs, setTabs]
   );
 
   return {

@@ -68,8 +68,7 @@ export function ManageTabsDialog({
           <DialogHeader>
             <DialogTitle>Manage Tabs</DialogTitle>
             <DialogDescription>
-              Reorder, enable/disable, edit, or delete tabs. Protected tabs
-              cannot be modified.
+              Reorder, enable/disable, edit, or delete tabs.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -77,25 +76,11 @@ export function ManageTabsDialog({
               {tabs.map((tab, index) => (
                 <motion.div
                   key={tab.id}
-                  className={`flex items-center justify-between p-2 border rounded-md ${
-                    tab.id === "total-advantage" || tab.id === "calculator"
-                      ? "opacity-60 cursor-not-allowed"
-                      : "cursor-move"
-                  }`}
-                  draggable={
-                    tab.id !== "total-advantage" && tab.id !== "calculator"
-                  }
-                  onDragStartCapture={(e) =>
-                    tab.id !== "total-advantage" &&
-                    tab.id !== "calculator" &&
-                    handleTabDragStart(e, tab.id)
-                  }
+                  className={`flex items-center justify-between p-2 border rounded-md cursor-move`}
+                  draggable
+                  onDragStartCapture={(e) => handleTabDragStart(e, tab.id)}
                   onDragOver={handleTabDragOver}
-                  onDrop={(e) =>
-                    tab.id !== "total-advantage" &&
-                    tab.id !== "calculator" &&
-                    handleTabDrop(e, tab.id)
-                  }
+                  onDrop={(e) => handleTabDrop(e, tab.id)}
                   whileDrag={{ scale: 1.05, opacity: 0.8 }}
                   aria-describedby={`drag-tab-${tab.id}`}
                 >
@@ -103,11 +88,7 @@ export function ManageTabsDialog({
                     <motion.div
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
-                      className={
-                        tab.id === "total-advantage" || tab.id === "calculator"
-                          ? "cursor-not-allowed"
-                          : "cursor-grab"
-                      }
+                      className={"cursor-grab"}
                       aria-label={`Drag handle for ${tab.name}`}
                       id={`drag-tab-${tab.id}`}
                     >
@@ -130,9 +111,6 @@ export function ManageTabsDialog({
                       type="checkbox"
                       checked={tab.isVisible}
                       onChange={() => handleToggleVisibility(tab.id)}
-                      disabled={
-                        tab.id === "total-advantage" || tab.id === "calculator"
-                      }
                       className="h-4 w-4"
                       aria-label={`Toggle visibility for ${tab.name}`}
                     />

@@ -105,7 +105,7 @@ export function ComparisonTable({
     if (value === "") return true;
     const numValue = Number(value);
     if (isNaN(numValue)) return true;
-    if (numValue <= currentAge) return true;
+    if (numValue <= currentAge - 1) return true;
     if (numValue > Number(yearsRunOutOfMoney || yearsRunOutOfMoneyInput))
       return true;
     return false;

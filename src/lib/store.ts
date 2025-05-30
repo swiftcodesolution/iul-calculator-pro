@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { BoxesData, TableData } from "@/lib/types";
+import { BoxesData, TableData, TabContent } from "@/lib/types";
 
 interface TableStore {
   tables: TableData[];
@@ -16,6 +16,8 @@ interface TableStore {
   setStartingBalance: (value: number | string) => void;
   setAnnualContributions: (value: number | string) => void;
   setAnnualEmployerMatch: (value: number | string) => void;
+  tabs: TabContent[];
+  setTabs: (tabs: TabContent[]) => void;
 }
 
 export const useTableStore = create<TableStore>()(
@@ -47,6 +49,21 @@ export const useTableStore = create<TableStore>()(
       setStartingBalance: (value) => set({ startingBalance: value }),
       setAnnualContributions: (value) => set({ annualContributions: value }),
       setAnnualEmployerMatch: (value) => set({ annualEmployerMatch: value }),
+      tabs: [
+        {
+          id: "total-advantage",
+          name: "Total Advantage",
+          type: "totalAdvantage",
+          isVisible: true,
+        },
+        {
+          id: "calculator",
+          name: "Calculator",
+          type: "calculator",
+          isVisible: true,
+        },
+      ],
+      setTabs: (tabs) => set({ tabs }),
     }),
     {
       name: "table-storage", // Key in localStorage
@@ -58,6 +75,13 @@ export const useTableStore = create<TableStore>()(
         startingBalance: state.startingBalance,
         annualContributions: state.annualContributions,
         annualEmployerMatch: state.annualEmployerMatch,
+        tabs: state.tabs.map((tab) => ({
+          id: tab.id,
+          name: tab.name,
+          type: tab.type,
+          isVisible: tab.isVisible,
+          src: tab.src, // Store src for media tabs
+        })),
       }),
     }
   )

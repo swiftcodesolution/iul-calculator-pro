@@ -4,15 +4,10 @@ import { useState } from "react";
 import { InputParameters } from "@/components/calculator/InputParameters";
 import { ComparisonTable } from "@/components/calculator/ComparisonTable";
 import { CompanyInfo } from "@/components/calculator/CompanyInfo";
-import { TabManager } from "@/components/calculator/TabManager";
+import TabManager from "@/components/calculator/TabManager";
 import { useTabs } from "@/hooks/useTabs";
 import { useColumnHighlight } from "@/hooks/useColumnHighlight";
-import {
-  TabContent,
-  TotalAdvantage,
-  CompanyDetails,
-  ImageAsset,
-} from "@/lib/types";
+import { TotalAdvantage, CompanyDetails, ImageAsset } from "@/lib/types";
 import { useTableStore } from "@/lib/store";
 
 // Static data for Total Advantage tab
@@ -40,20 +35,20 @@ const defaultProfile: ImageAsset = {
 };
 
 // Initial tabs for TabManager
-const initialTabs: TabContent[] = [
-  {
-    id: "total-advantage",
-    name: "Total Advantage",
-    type: "totalAdvantage",
-    isVisible: true,
-  },
-  {
-    id: "calculator",
-    name: "Calculator",
-    type: "calculator",
-    isVisible: true,
-  },
-];
+// const initialTabs: TabContent[] = [
+//   {
+//     id: "total-advantage",
+//     name: "Total Advantage",
+//     type: "totalAdvantage",
+//     isVisible: true,
+//   },
+//   {
+//     id: "calculator",
+//     name: "Calculator",
+//     type: "calculator",
+//     isVisible: true,
+//   },
+// ];
 
 export default function CalculatorPage() {
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
@@ -64,8 +59,6 @@ export default function CalculatorPage() {
 
   // Tab management hooks
   const {
-    tabs,
-    setTabs,
     activeTab,
     setActiveTab,
     isAddDialogOpen,
@@ -87,7 +80,7 @@ export default function CalculatorPage() {
     handleToggleVisibility,
     handleMoveUp,
     handleMoveDown,
-  } = useTabs(initialTabs);
+  } = useTabs();
 
   // Column and row highlight hooks
   const {
@@ -127,8 +120,6 @@ export default function CalculatorPage() {
           />
         </div>
         <TabManager
-          tabs={tabs}
-          setTabs={setTabs}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           isTabCardExpanded={isTabCardExpanded}
