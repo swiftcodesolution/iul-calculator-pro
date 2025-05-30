@@ -17,30 +17,7 @@ import { ZoomIn, ZoomOut, Minimize2 } from "lucide-react";
 import { useTableStore } from "@/lib/store";
 import { runGrossRetirementIncomeLoop, runTaxFreePlanLoop } from "@/lib/logics";
 import { useRouter } from "next/navigation";
-
-interface CombinedResult {
-  year: number;
-  age: number;
-  annualContribution: number;
-  tfpAnnualContribution: number;
-  grossRetirementIncome: number;
-  retirementTaxes: number;
-  retirementIncome: number;
-  tfpRetirementIncome: number;
-  managementFee: number;
-  tfpFee: string | number;
-  interest: number;
-  endOfYearBalance: number;
-  tfpCumulativeBalance: number;
-  cumulativeIncome: number;
-  tfpCumulativeIncome: number;
-  cumulativeFees: number;
-  tfpCumulativeFees: number;
-  cumulativeTaxesDeferred: number;
-  deathBenefit: number;
-  tfpDeathBenefit: number;
-  [key: string]: number | string;
-}
+import { CombinedResult } from "@/lib/types";
 
 export default function CombinedPlanTable() {
   const [evenColumnColor, setEvenColumnColor] = useState("#e6f3ff"); // TFP columns

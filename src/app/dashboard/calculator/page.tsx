@@ -34,22 +34,6 @@ const defaultProfile: ImageAsset = {
   name: "Agent Profile",
 };
 
-// Initial tabs for TabManager
-// const initialTabs: TabContent[] = [
-//   {
-//     id: "total-advantage",
-//     name: "Total Advantage",
-//     type: "totalAdvantage",
-//     isVisible: true,
-//   },
-//   {
-//     id: "calculator",
-//     name: "Calculator",
-//     type: "calculator",
-//     isVisible: true,
-//   },
-// ];
-
 export default function CalculatorPage() {
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
   const [isTableCardExpanded, setIsTableCardExpanded] = useState(false);

@@ -36,7 +36,7 @@ type ApiResponse = {
 
 // API endpoint
 const API_ENDPOINT =
-  "https://pdf-extraction-tool-backend-production.up.railway.app/upload-pdf/";
+  "https://iul-calculator-pro-production.up.railway.app/upload-pdf/";
 
 export default function ImportPage() {
   const [file, setFile] = useState<File | null>(null);
