@@ -51,7 +51,7 @@ export default function DashboardPage() {
   } = useImageCrop(companyInfo, updateCompanyInfo);
 
   return (
-    <div className="min-h-[95vh] flex gap-4">
+    <div className="min-h-[95vh] flex gap-2">
       <Sidebar
         companyInfo={companyInfo}
         updateCompanyInfo={updateCompanyInfo}

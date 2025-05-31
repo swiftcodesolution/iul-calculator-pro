@@ -19,13 +19,11 @@ export default function InsuranceCompaniesSection() {
   };
 
   return (
-    <Card className="flex-1 mt-4">
-      <CardContent className="space-y-2 h-full">
-        <h3 className="font-bold text-sm mb-4">
-          List of the Insurance Companies
-        </h3>
+    <Card className="flex-1 p-2 gap-2 mb-2">
+      <CardContent className="p-0 space-y-2 h-full">
+        <h3 className="font-bold text-sm">List of the Insurance Companies</h3>
         <motion.div
-          className="flex flex-wrap gap-2 mb-4"
+          className="flex flex-wrap gap-2"
           initial="hidden"
           animate="visible"
           variants={{
@@ -48,7 +46,7 @@ export default function InsuranceCompaniesSection() {
                 },
               }}
               whileHover={{
-                scale: 1.05,
+                scale: 1.02,
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
               }}
               whileTap={{ scale: 0.95 }}
@@ -65,7 +63,7 @@ export default function InsuranceCompaniesSection() {
           ))}
         </motion.div>
         <motion.div
-          whileHover={{ scale: 1.05, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+          whileHover={{ scale: 1.02, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
           whileTap={{ scale: 0.95 }}
         >
           <Button variant="default" size="sm" className="w-full">

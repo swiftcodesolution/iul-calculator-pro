@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
@@ -15,6 +15,13 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "IUL Calculator Pro",
   description: "A modern SAAS platform for IUL and 401k comparisons",
+};
+
+export const viewport: Viewport = {
+  width: "600",
+  initialScale: 0.75,
+  maximumScale: 0.75,
+  userScalable: false,
 };
 
 export default function RootLayout({

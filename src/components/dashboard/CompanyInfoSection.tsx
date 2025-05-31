@@ -44,8 +44,8 @@ export default function CompanyInfoSection({
   };
 
   return (
-    <Card className="flex-1">
-      <CardContent className="space-y-2 h-full">
+    <Card className="flex-1 p-2 gap-0 mb-2">
+      <CardContent className="p-0 space-y-2 h-full">
         <div className="flex gap-4">
           {/* Company Logo */}
           <div className="flex flex-col items-center">
@@ -69,7 +69,7 @@ export default function CompanyInfoSection({
                     className="object-contain w-[200px] h-[100px]"
                   />
                 </motion.div>
-                <div className="flex gap-2 mt-2 flex-wrap justify-center">
+                <div className="flex gap-2 mt-2 justify-center">
                   <motion.div
                     whileHover={{
                       scale: 1.1,
@@ -172,7 +172,7 @@ export default function CompanyInfoSection({
                     className="object-cover rounded-full w-[100px] h-[100px]"
                   />
                 </motion.div>
-                <div className="flex gap-2 mt-2 flex-wrap justify-center">
+                <div className="flex gap-2 mt-2 justify-center">
                   <motion.div
                     whileHover={{
                       scale: 1.1,
@@ -255,9 +255,9 @@ export default function CompanyInfoSection({
           </div>
         </div>
         <div className="space-y-2 mt-4">
-          <div className="flex gap-2">
-            <div>
-              <Label>Business Name</Label>
+          <div className="flex gap-2 w-full">
+            <div className="grow">
+              <Label className="text-xs">Business Name</Label>
               <motion.div
                 whileFocus={{ scale: 1.02, boxShadow: "0 0 0 2px #3b82f6" }}
               >
@@ -267,12 +267,12 @@ export default function CompanyInfoSection({
                     updateCompanyInfo({ businessName: e.target.value })
                   }
                   disabled={!isEditing}
-                  className="h-8"
+                  className="h-6 text-xs"
                 />
               </motion.div>
             </div>
-            <div>
-              <Label>Agent Name</Label>
+            <div className="grow">
+              <Label className="text-xs">Agent Name</Label>
               <motion.div
                 whileFocus={{ scale: 1.02, boxShadow: "0 0 0 2px #3b82f6" }}
               >
@@ -282,14 +282,14 @@ export default function CompanyInfoSection({
                     updateCompanyInfo({ agentName: e.target.value })
                   }
                   disabled={!isEditing}
-                  className="h-8"
+                  className="h-6 text-xs"
                 />
               </motion.div>
             </div>
           </div>
-          <div className="flex gap-2">
-            <div>
-              <Label>Email</Label>
+          <div className="flex gap-2 w-full">
+            <div className="grow">
+              <Label className="text-xs">Email</Label>
               <motion.div
                 whileFocus={{ scale: 1.02, boxShadow: "0 0 0 2px #3b82f6" }}
               >
@@ -297,12 +297,12 @@ export default function CompanyInfoSection({
                   value={companyInfo.email}
                   onChange={(e) => updateCompanyInfo({ email: e.target.value })}
                   disabled={!isEditing}
-                  className="h-8"
+                  className="h-6 text-xs"
                 />
               </motion.div>
             </div>
-            <div>
-              <Label>Phone Number</Label>
+            <div className="grow">
+              <Label className="text-xs">Phone Number</Label>
               <motion.div
                 whileFocus={{ scale: 1.02, boxShadow: "0 0 0 2px #3b82f6" }}
               >
@@ -310,12 +310,12 @@ export default function CompanyInfoSection({
                   value={companyInfo.phone}
                   onChange={(e) => updateCompanyInfo({ phone: e.target.value })}
                   disabled={!isEditing}
-                  className="h-8"
+                  className="h-6 text-xs"
                 />
               </motion.div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full">
             <motion.div
               whileHover={{
                 scale: 1.1,
@@ -323,7 +323,7 @@ export default function CompanyInfoSection({
               }}
               whileTap={{ scale: 0.95 }}
             >
-              <Button size="sm" onClick={toggleEdit}>
+              <Button className="grow" size="sm" onClick={toggleEdit}>
                 {isEditing ? "Cancel" : "Edit"}
               </Button>
             </motion.div>
@@ -335,7 +335,7 @@ export default function CompanyInfoSection({
                 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Button size="sm" onClick={save}>
+                <Button className="grow" size="sm" onClick={save}>
                   Save
                 </Button>
               </motion.div>

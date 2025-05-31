@@ -61,7 +61,7 @@ export default function Sidebar({
   return (
     <div
       className={`relative ${
-        !isSidebarCollapsed ? "w-[450px] h-full" : "w-[0px]"
+        !isSidebarCollapsed ? "w-[500px] h-full" : "w-[0px]"
       }`}
     >
       <motion.div
@@ -81,7 +81,7 @@ export default function Sidebar({
       <AnimatePresence>
         <motion.aside
           className={`h-full flex flex-col gap-4 ${
-            isSidebarCollapsed ? "w-[50px]" : "w-[450px]"
+            isSidebarCollapsed ? "w-[50px]" : "w-[500px]"
           }`}
           variants={sidebarVariants}
           initial="open"
