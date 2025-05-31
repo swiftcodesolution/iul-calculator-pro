@@ -210,7 +210,7 @@ const TabManager = React.memo(function TabManager({
   handleMoveDown,
   totalAdvantage,
 }: TabManagerProps) {
-  const { tabs } = useTableStore();
+  const { tabs, setTabs } = useTableStore();
 
   // Single content render for active tab
   const content = activeTab && tabs.find((tab) => tab.id === activeTab) && (
@@ -310,6 +310,7 @@ const TabManager = React.memo(function TabManager({
                       </Dialog>
                       <ManageTabsDialog
                         tabs={tabs}
+                        setTabs={setTabs}
                         isManageDialogOpen={isManageDialogOpen}
                         setIsManageDialogOpen={setIsManageDialogOpen}
                         setEditTabId={setEditTabId}
@@ -415,6 +416,7 @@ const TabManager = React.memo(function TabManager({
                   </Dialog>
                   <ManageTabsDialog
                     tabs={tabs}
+                    setTabs={setTabs}
                     isManageDialogOpen={isManageDialogOpen}
                     setIsManageDialogOpen={setIsManageDialogOpen}
                     setEditTabId={setEditTabId}

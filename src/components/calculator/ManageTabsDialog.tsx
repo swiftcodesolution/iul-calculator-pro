@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 
 interface ManageTabsDialogProps {
   tabs: TabContent[];
+  setTabs: (tabs: TabContent[]) => void;
   isManageDialogOpen: boolean;
   setIsManageDialogOpen: (value: boolean) => void;
   setEditTabId: (id: string | null) => void;
@@ -33,6 +34,7 @@ interface ManageTabsDialogProps {
 
 export function ManageTabsDialog({
   tabs,
+  setTabs,
   isManageDialogOpen,
   setIsManageDialogOpen,
   setEditTabId,
@@ -49,9 +51,7 @@ export function ManageTabsDialog({
   setIsEditDialogOpen,
 }: ManageTabsDialogProps) {
   const { handleTabDragStart, handleTabDrop, handleTabDragOver } =
-    useDragAndDrop(tabs, (newTabs) => {
-      tabs.splice(0, tabs.length, ...newTabs);
-    });
+    useDragAndDrop(tabs, setTabs);
 
   return (
     <>
@@ -77,7 +77,7 @@ export function ManageTabsDialog({
                 <motion.div
                   key={tab.id}
                   className={`flex items-center justify-between p-2 border rounded-md cursor-move`}
-                  draggable
+                  draggable="true"
                   onDragStartCapture={(e) => handleTabDragStart(e, tab.id)}
                   onDragOver={handleTabDragOver}
                   onDrop={(e) => handleTabDrop(e, tab.id)}

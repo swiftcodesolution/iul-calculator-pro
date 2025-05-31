@@ -7,10 +7,7 @@ export const useDragAndDrop = (
 ) => {
   const handleTabDragStart = useCallback(
     (e: React.DragEvent<HTMLDivElement>, id: string) => {
-      if (id === "total-advantage" || id === "calculator") {
-        e.preventDefault();
-        return;
-      }
+      e.stopPropagation();
       e.dataTransfer.setData("text/plain", id);
     },
     []
@@ -19,20 +16,18 @@ export const useDragAndDrop = (
   const handleTabDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>, targetId: string) => {
       e.preventDefault();
+      e.stopPropagation();
+
       const draggedId = e.dataTransfer.getData("text/plain");
-      if (
-        draggedId === targetId ||
-        draggedId === "total-advantage" ||
-        draggedId === "calculator" ||
-        targetId === "total-advantage" ||
-        targetId === "calculator"
-      ) {
-        return;
-      }
+
+      if (draggedId === targetId) return;
+
+      const draggedIndex = tabs.findIndex((tab) => tab.id === draggedId);
+      const targetIndex = tabs.findIndex((tab) => tab.id === targetId);
+
+      if (draggedIndex === -1 || targetIndex === -1) return;
+
       const newTabs = [...tabs];
-      const draggedIndex = newTabs.findIndex((tab) => tab.id === draggedId);
-      const targetIndex = newTabs.findIndex((tab) => tab.id === targetId);
-      if (draggedIndex === -1 || targetIndex === -1) return; // Safety check
       [newTabs[draggedIndex], newTabs[targetIndex]] = [
         newTabs[targetIndex],
         newTabs[draggedIndex],
@@ -45,6 +40,7 @@ export const useDragAndDrop = (
   const handleTabDragOver = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
+      e.stopPropagation();
     },
     []
   );
