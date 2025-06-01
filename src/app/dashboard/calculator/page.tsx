@@ -7,37 +7,22 @@ import { CompanyInfo } from "@/components/calculator/CompanyInfo";
 import TabManager from "@/components/calculator/TabManager";
 import { useTabs } from "@/hooks/useTabs";
 import { useColumnHighlight } from "@/hooks/useColumnHighlight";
-import { TotalAdvantage, CompanyDetails, ImageAsset } from "@/lib/types";
+import { TotalAdvantage } from "@/lib/types";
 import { useTableStore } from "@/lib/store";
-
-// Static data for Total Advantage tab
-const totalAdvantage: TotalAdvantage = {
-  total: 1324000,
-  taxes: 125000,
-  fees: 78000,
-  cumulativeIncome: 1279000,
-  deathBenefits: 786000,
-};
-
-// Company details for display
-const companyDetails: CompanyDetails = {
-  businessName: "IUL Calculator PRO",
-  agentName: "Steven Johnson",
-  email: "steve@iulcalculatorpro.com",
-  phone: "(760) 517-8105",
-};
-
-// Default logo and profile images
-const defaultLogo: ImageAsset = { src: "/logo.png", name: "Company Logo" };
-const defaultProfile: ImageAsset = {
-  src: "/profile.jpg",
-  name: "Agent Profile",
-};
+import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 
 export default function CalculatorPage() {
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
   const [isTableCardExpanded, setIsTableCardExpanded] = useState(false);
   const [isTabCardExpanded, setIsTabCardExpanded] = useState(false);
+
+  const [totalAdvantage, setTotalAdvantage] = useState<TotalAdvantage>({
+    total: 1324000,
+    taxes: 125000,
+    fees: 78000,
+    cumulativeIncome: 1279000,
+    deathBenefits: 786000,
+  });
 
   const { boxesData, setBoxesData } = useTableStore();
 
@@ -74,6 +59,8 @@ export default function CalculatorPage() {
     handleCellClick,
   } = useColumnHighlight();
 
+  const { companyInfo } = useCompanyInfo();
+
   return (
     <div className="h-[90vh] grid grid-cols-2 gap-4">
       {/* Left Column */}
@@ -91,17 +78,14 @@ export default function CalculatorPage() {
           handleHeaderClick={handleHeaderClick}
           handleCellClick={handleCellClick}
           defaultResults={boxesData as never}
+          onTotalAdvantageChange={setTotalAdvantage}
         />
       </div>
 
       {/* Right Column */}
       <div className="flex flex-col gap-4 relative">
         <div className="flex gap-4">
-          <CompanyInfo
-            companyDetails={companyDetails}
-            defaultLogo={defaultLogo}
-            defaultProfile={defaultProfile}
-          />
+          <CompanyInfo companyInfo={companyInfo} />
         </div>
         <TabManager
           activeTab={activeTab}
@@ -126,6 +110,7 @@ export default function CalculatorPage() {
           handleMoveUp={handleMoveUp}
           handleMoveDown={handleMoveDown}
           totalAdvantage={totalAdvantage}
+          handleCellClick={handleCellClick}
         />
       </div>
     </div>

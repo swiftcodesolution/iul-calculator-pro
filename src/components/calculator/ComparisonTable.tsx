@@ -21,7 +21,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Results, TaxesData, BoxesData, SelectedRowData } from "@/lib/types";
+import {
+  Results,
+  TaxesData,
+  BoxesData,
+  SelectedRowData,
+  TotalAdvantage,
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
   getEmptyResults,
@@ -48,6 +54,7 @@ interface ComparisonTableProps {
   setIsTableCardExpanded: (value: boolean) => void;
   handleHeaderClick: (column: "currentPlan" | "taxes" | "taxFreePlan") => void;
   handleCellClick: (rowIndex: number) => void;
+  onTotalAdvantageChange?: (totalAdvantage: TotalAdvantage) => void;
 }
 
 export function ComparisonTable({
@@ -71,6 +78,7 @@ export function ComparisonTable({
   setIsTableCardExpanded,
   handleHeaderClick,
   handleCellClick,
+  onTotalAdvantageChange,
 }: ComparisonTableProps) {
   const {
     tables = [],
@@ -969,6 +977,117 @@ export function ComparisonTable({
       currentAge,
     ]
   );
+
+  // 31 MAY
+  useEffect(() => {
+    const totalAdvantage: TotalAdvantage = {
+      total:
+        (selectedRowData?.current.incomeTax
+          ? parseFloat(
+              selectedRowData.current.incomeTax.replace(/[^0-9.]/g, "")
+            )
+          : currentPlanResults.incomeTax) +
+        (selectedRowData?.current.cumulativeFeesPaid
+          ? parseFloat(
+              selectedRowData.current.cumulativeFeesPaid.replace(/[^0-9.]/g, "")
+            )
+          : currentPlanResults.cumulativeFeesPaid) +
+        (selectedRowData?.current.cumulativeNetIncome
+          ? parseFloat(
+              selectedRowData.current.cumulativeNetIncome.replace(
+                /[^0-9.]/g,
+                ""
+              )
+            )
+          : currentPlanResults.cumulativeNetIncome) +
+        (selectedRowData?.current.deathBenefits
+          ? parseFloat(
+              selectedRowData.current.deathBenefits.replace(/[^0-9.]/g, "")
+            )
+          : currentPlanResults.deathBenefits) +
+        (selectedRowData?.taxFree.incomeTax
+          ? parseFloat(
+              selectedRowData.taxFree.incomeTax.replace(/[^0-9.]/g, "")
+            )
+          : taxFreeResults.incomeTax) +
+        (selectedRowData?.taxFree.cumulativeFeesPaid
+          ? parseFloat(
+              selectedRowData.taxFree.cumulativeFeesPaid.replace(/[^0-9.]/g, "")
+            )
+          : taxFreeResults.cumulativeFeesPaid) +
+        (selectedRowData?.taxFree.cumulativeNetIncome
+          ? parseFloat(
+              selectedRowData.taxFree.cumulativeNetIncome.replace(
+                /[^0-9.]/g,
+                ""
+              )
+            )
+          : taxFreeResults.cumulativeNetIncome) +
+        (selectedRowData?.taxFree.deathBenefits
+          ? parseFloat(
+              selectedRowData.taxFree.deathBenefits.replace(/[^0-9.]/g, "")
+            )
+          : taxFreeResults.deathBenefits),
+      taxes:
+        (selectedRowData?.current.incomeTax
+          ? parseFloat(
+              selectedRowData.current.incomeTax.replace(/[^0-9.]/g, "")
+            )
+          : currentPlanResults.incomeTax) +
+        (selectedRowData?.taxFree.incomeTax
+          ? parseFloat(
+              selectedRowData.taxFree.incomeTax.replace(/[^0-9.]/g, "")
+            )
+          : taxFreeResults.incomeTax),
+      fees:
+        (selectedRowData?.current.cumulativeFeesPaid
+          ? parseFloat(
+              selectedRowData.current.cumulativeFeesPaid.replace(/[^0-9.]/g, "")
+            )
+          : currentPlanResults.cumulativeFeesPaid) +
+        (selectedRowData?.taxFree.cumulativeFeesPaid
+          ? parseFloat(
+              selectedRowData.taxFree.cumulativeFeesPaid.replace(/[^0-9.]/g, "")
+            )
+          : taxFreeResults.cumulativeFeesPaid),
+      cumulativeIncome:
+        (selectedRowData?.current.cumulativeNetIncome
+          ? parseFloat(
+              selectedRowData.current.cumulativeNetIncome.replace(
+                /[^0-9.]/g,
+                ""
+              )
+            )
+          : currentPlanResults.cumulativeNetIncome) +
+        (selectedRowData?.taxFree.cumulativeNetIncome
+          ? parseFloat(
+              selectedRowData.taxFree.cumulativeNetIncome.replace(
+                /[^0-9.]/g,
+                ""
+              )
+            )
+          : taxFreeResults.cumulativeNetIncome),
+      deathBenefits:
+        (selectedRowData?.current.deathBenefits
+          ? parseFloat(
+              selectedRowData.current.deathBenefits.replace(/[^0-9.]/g, "")
+            )
+          : currentPlanResults.deathBenefits) +
+        (selectedRowData?.taxFree.deathBenefits
+          ? parseFloat(
+              selectedRowData.taxFree.deathBenefits.replace(/[^0-9.]/g, "")
+            )
+          : taxFreeResults.deathBenefits),
+    };
+
+    onTotalAdvantageChange?.(totalAdvantage); // Pass to parent
+  }, [
+    selectedRowData,
+    currentPlanResults,
+    taxFreeResults,
+    onTotalAdvantageChange,
+  ]);
+  // 31 MAY
 
   return (
     <AnimatePresence>

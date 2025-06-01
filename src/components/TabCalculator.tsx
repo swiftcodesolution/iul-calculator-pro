@@ -62,31 +62,6 @@ export default function TabCalculator() {
           <span>${netWithdrawal.toLocaleString()}</span>
         </div>
       </div>
-
-      {/* Net Advantage Summary */}
-      <h1 className="text-xl font-semibold text-center">Net Advantage</h1>
-      <div className="flex justify-center gap-4 mt-8 text-black">
-        <div className=" text-center px-4 py-2 rounded w-32">
-          <div className="font-bold text-xl">$0</div>
-          <div className="text-sm">Total</div>
-        </div>
-        <div className="text-center px-4 py-2 rounded w-32">
-          <div className="font-bold text-xl">$0</div>
-          <div className="text-sm">Taxes Paid</div>
-        </div>
-        <div className="text-center px-4 py-2 rounded w-32">
-          <div className="font-bold text-xl">$0</div>
-          <div className="text-sm">Fees</div>
-        </div>
-        <div className="text-center px-4 py-2 rounded w-32">
-          <div className="font-bold text-xl">$0</div>
-          <div className="text-sm">Income</div>
-        </div>
-        <div className="text-center px-4 py-2 rounded w-32">
-          <div className="font-bold text-xl">$0</div>
-          <div className="text-sm">Death Benefit</div>
-        </div>
-      </div>
     </div>
   );
 }

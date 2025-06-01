@@ -40,6 +40,7 @@ interface TabManagerProps {
   handleMoveUp: (index: number) => void;
   handleMoveDown: (index: number) => void;
   totalAdvantage: TotalAdvantage;
+  handleCellClick?: (rowIndex: number) => void;
 }
 
 // Reusable Tab Navigation Component
@@ -111,34 +112,56 @@ const ToggleExpandButton = ({
 const TabContentRenderer = ({
   tab,
   totalAdvantage,
+  handleCellClick,
 }: {
   tab: { id: string; name: string; type: string; src?: string };
   totalAdvantage: TotalAdvantage;
+  handleCellClick?: (rowIndex: number) => void;
 }) => {
   return (
     <div className="h-full space-y-4">
       {tab.type === "totalAdvantage" && (
         <div className="w-full">
-          <div className="text-center">
+          <div className="p-4 text-center border-black border-2">
             <h2 className="text-4xl font-bold mb-5">Total Advantage</h2>
             <h2 className="text-4xl font-bold mb-5">
               ${totalAdvantage.total.toLocaleString()}
             </h2>
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" size="lg" className="cursor-pointer">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="cursor-pointer p-2"
+                onClick={() => handleCellClick?.(5)}
+              >
                 Taxes: ${totalAdvantage.taxes.toLocaleString()}
               </Button>
 
-              <Button variant="outline" size="lg" className="cursor-pointer">
+              <Button
+                variant="outline"
+                size="sm"
+                className="cursor-pointer p-2"
+                onClick={() => handleCellClick?.(9)}
+              >
                 Fees: ${totalAdvantage.fees.toLocaleString()}
               </Button>
 
-              <Button variant="outline" size="lg" className="cursor-pointer">
+              <Button
+                variant="outline"
+                size="sm"
+                className="cursor-pointer p-2"
+                onClick={() => handleCellClick?.(10)}
+              >
                 Cumulative Income: $
                 {totalAdvantage.cumulativeIncome.toLocaleString()}
               </Button>
 
-              <Button variant="outline" size="lg" className="cursor-pointer">
+              <Button
+                variant="outline"
+                size="sm"
+                className="cursor-pointer p-2"
+                onClick={() => handleCellClick?.(13)}
+              >
                 Death Benefit: ${totalAdvantage.deathBenefits.toLocaleString()}
               </Button>
             </div>
@@ -209,6 +232,7 @@ const TabManager = React.memo(function TabManager({
   handleMoveUp,
   handleMoveDown,
   totalAdvantage,
+  handleCellClick,
 }: TabManagerProps) {
   const { tabs, setTabs } = useTableStore();
 
@@ -227,6 +251,7 @@ const TabManager = React.memo(function TabManager({
       <TabContentRenderer
         tab={tabs.find((tab) => tab.id === activeTab)!}
         totalAdvantage={totalAdvantage}
+        handleCellClick={handleCellClick}
       />
     </motion.div>
   );

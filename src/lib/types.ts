@@ -177,15 +177,3 @@ export type TotalAdvantage = {
   cumulativeIncome: number;
   deathBenefits: number;
 };
-
-export type CompanyDetails = {
-  businessName: string;
-  agentName: string;
-  email: string;
-  phone: string;
-};
-
-export type ImageAsset = {
-  src: string;
-  name: string;
-};
