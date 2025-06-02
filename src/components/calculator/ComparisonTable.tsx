@@ -661,7 +661,7 @@ export function ComparisonTable({
             type="text"
             value={formatInputValue(startingBalance)}
             onChange={handleStartingBalanceChange}
-            className={`w-32 ${
+            className={`p-1 h-fit w-32 ${
               Number(parseInputValue(String(startingBalance))) < 0
                 ? "border-red-500"
                 : ""
@@ -684,7 +684,7 @@ export function ComparisonTable({
             type="text"
             value={formatInputValue(annualContributions)}
             onChange={handleAnnualContributionsChange}
-            className={`w-32 ${
+            className={`p-1 h-fit w-32 ${
               Number(parseInputValue(String(annualContributions))) < 0
                 ? "border-red-500"
                 : ""
@@ -707,7 +707,7 @@ export function ComparisonTable({
             type="text"
             value={formatInputValue(annualEmployerMatch)}
             onChange={handleAnnualEmployerMatchChange}
-            className={`w-32 ${
+            className={`p-1 h-fit w-32 ${
               Number(parseInputValue(String(annualEmployerMatch))) < 0
                 ? "border-red-500"
                 : ""
@@ -859,12 +859,12 @@ export function ComparisonTable({
         label: "Years You Run Out of Money",
         current:
           ageOptions.length === 0 ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <Input
                 type="number"
                 value={yearsRunOutOfMoneyInput}
                 onChange={handleYearsRunOutOfMoneyInputChange}
-                className={`w-32 ${
+                className={`p-1 h-fit w-32 ${
                   isYearsRunOutOfMoneyInvalid(yearsRunOutOfMoneyInput)
                     ? "border-red-500"
                     : ""
@@ -876,13 +876,13 @@ export function ComparisonTable({
                 size="sm"
                 variant="default"
                 onClick={refreshResults}
-                className="cursor-pointer"
+                className="cursor-pointer p-1 h-fit"
               >
                 Refresh
               </Button>
             </div>
           ) : (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <Select
                 value={String(yearsRunOutOfMoney)}
                 onValueChange={handleYearsRunOutOfMoneyChange}
@@ -904,7 +904,7 @@ export function ComparisonTable({
                 size="sm"
                 variant="default"
                 onClick={refreshResults}
-                className="cursor-pointer"
+                className="cursor-pointer p-1 h-fit"
               >
                 Refresh
               </Button>
@@ -933,14 +933,14 @@ export function ComparisonTable({
           //   </Select>
           // </div>
 
-          <div className="flex flex-col items-center justify-center gap-2 text-black">
+          <div className="flex flex-col items-center justify-center gap-0 text-black">
             <p>Future Age</p>
-            <div className="w-[160px] relative">
+            <div className="w-[80px] relative">
               <Input
                 type="text"
                 value={futureAgeInput}
                 onChange={handleFutureAgeInputChange}
-                className={`text-center ${
+                className={`p-1 h-fit text-center ${
                   futureAgeError ? "border-red-500" : ""
                 }`}
                 aria-label="Future Age for Taxes"
@@ -1125,10 +1125,10 @@ export function ComparisonTable({
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <Table className="w-full table-fixed">
+            <Table className="w-full table-fixed text-xs">
               <TableHeader>
                 <TableRow>
-                  <TableHead></TableHead>
+                  <TableHead className="w-[300px]"></TableHead>
                   <TableHead
                     className={cn(
                       "bg-red-200 cursor-pointer text-center",
@@ -1145,7 +1145,7 @@ export function ComparisonTable({
                   </TableHead>
                   <TableHead
                     className={cn(
-                      "bg-yellow-200 cursor-pointer text-center w-[180px]",
+                      "bg-yellow-200 cursor-pointer text-center w-[100px]",
                       columnTextWhite.taxes ? "text-yellow-200" : "text-black",
                       "transition-colors duration-300"
                     )}
@@ -1180,7 +1180,7 @@ export function ComparisonTable({
                   >
                     <TableCell
                       className={cn(
-                        "border cursor-pointer whitespace-nowrap",
+                        "px-2 py-1 border cursor-pointer whitespace-nowrap",
                         highlightedRows.has(index) ? "bg-[#ffa1ad]" : ""
                       )}
                       onClick={() => handleCellClick(index)}
@@ -1190,7 +1190,7 @@ export function ComparisonTable({
                     </TableCell>
                     <TableCell
                       className={cn(
-                        "border cursor-pointer whitespace-nowrap",
+                        "px-2 py-1 border cursor-pointer whitespace-nowrap",
                         highlightedRows.has(index)
                           ? "bg-[#ffa1ad]"
                           : "bg-white",
@@ -1206,7 +1206,7 @@ export function ComparisonTable({
                     </TableCell>
                     <TableCell
                       className={cn(
-                        "border cursor-pointer whitespace-nowrap text-center",
+                        "px-2 py-1 border cursor-pointer whitespace-nowrap text-center",
                         highlightedRows.has(index)
                           ? "bg-[#ffa1ad]"
                           : "bg-white",
@@ -1222,7 +1222,7 @@ export function ComparisonTable({
                     </TableCell>
                     <TableCell
                       className={cn(
-                        "border cursor-pointer whitespace-nowrap",
+                        "px-2 py-1 border cursor-pointer whitespace-nowrap",
                         highlightedRows.has(index)
                           ? "bg-[#ffa1ad]"
                           : "bg-white",

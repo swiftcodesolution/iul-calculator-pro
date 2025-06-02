@@ -119,20 +119,20 @@ const TabContentRenderer = ({
   handleCellClick?: (rowIndex: number) => void;
 }) => {
   return (
-    <div className="h-full space-y-4">
+    <div className="w-full h-full space-y-4">
       {tab.type === "totalAdvantage" && (
         <div className="w-full">
-          <div className="p-4 text-center border-black border-2">
+          <div className="flex flex-col items-center justify-center p-4 text-center border-black border-2">
             <h2 className="text-4xl font-bold mb-5">Total Advantage</h2>
             <h2 className="text-4xl font-bold mb-5">
               ${totalAdvantage.total.toLocaleString()}
             </h2>
-            <div className="flex gap-2">
+            <div className="w-full flex items-center justify-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="cursor-pointer p-2"
-                onClick={() => handleCellClick?.(5)}
+                className="cursor-pointer p-2 min-w-1/5"
+                onClick={() => handleCellClick?.(8)}
               >
                 Taxes: ${totalAdvantage.taxes.toLocaleString()}
               </Button>
@@ -140,7 +140,7 @@ const TabContentRenderer = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="cursor-pointer p-2"
+                className="cursor-pointer p-2 min-w-1/5"
                 onClick={() => handleCellClick?.(9)}
               >
                 Fees: ${totalAdvantage.fees.toLocaleString()}
@@ -149,7 +149,7 @@ const TabContentRenderer = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="cursor-pointer p-2"
+                className="cursor-pointer p-2 min-w-1/5"
                 onClick={() => handleCellClick?.(10)}
               >
                 Cumulative Income: $
@@ -159,7 +159,7 @@ const TabContentRenderer = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="cursor-pointer p-2"
+                className="cursor-pointer p-2 min-w-1/5"
                 onClick={() => handleCellClick?.(13)}
               >
                 Death Benefit: ${totalAdvantage.deathBenefits.toLocaleString()}
@@ -169,7 +169,7 @@ const TabContentRenderer = ({
         </div>
       )}
       {tab.type === "calculator" && (
-        <div className="h-full flex items-center justify-center gap-4 text-center">
+        <div className="h-full w-full flex items-center justify-center gap-4 text-center">
           <TabCalculator />
         </div>
       )}
@@ -244,7 +244,7 @@ const TabManager = React.memo(function TabManager({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className={`flex items-center justify-center p-4 w-full min-h-[600px] ${
+      className={`flex items-center justify-center p-4 w-full h-full min-h-[auto] ${
         isTabCardExpanded ? "" : ""
       }`}
     >
@@ -267,8 +267,9 @@ const TabManager = React.memo(function TabManager({
           className="grow"
         >
           <Card className="h-full p-2">
-            <CardContent className="p-0">
+            <CardContent className="p-0 h-full">
               <motion.div
+                className="h-full flex flex-col justify-between"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
@@ -360,7 +361,7 @@ const TabManager = React.memo(function TabManager({
                 </div>
 
                 <AnimatePresence mode="wait">
-                  <div className="flex flex-col">{content}</div>
+                  <div className="my-auto flex flex-col">{content}</div>
                 </AnimatePresence>
               </motion.div>
             </CardContent>

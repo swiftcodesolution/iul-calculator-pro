@@ -628,7 +628,8 @@ export function runGrossRetirementIncomeLoop(
 
     let annualContrib = 0;
     if (year === 1) {
-      annualContrib = startingBalance + annualContribution;
+      annualContrib =
+        startingBalance + annualContribution + annualEmployerMatch;
     } else {
       annualContrib =
         age <= stopSavingAge ? annualContribution + annualEmployerMatch : 0;
@@ -693,9 +694,10 @@ export function runGrossRetirementIncomeLoop(
       results.length > 0
         ? results[results.length - 1].cumulativeTaxesDeferred
         : 0;
-    if (year === 1) {
-      cumulativeTaxesDeferred = annualContribution * decimalWorkingTaxRate;
-    } else if (age < retirementAge) {
+    // if (year === 1) {
+    //   cumulativeTaxesDeferred = annualContribution * decimalWorkingTaxRate;
+    // } else
+    if (age < retirementAge) {
       const X = annualContribution * decimalWorkingTaxRate;
       cumulativeTaxesDeferred = previousCumulativeTaxesDeferred + X;
     } else if (age >= retirementAge) {
