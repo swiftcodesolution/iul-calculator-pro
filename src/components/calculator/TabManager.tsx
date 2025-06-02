@@ -15,7 +15,7 @@ import TabCalculator from "@/components/TabCalculator";
 import { TotalAdvantage } from "@/lib/types";
 import { ManageTabsDialog } from "@/components/calculator/ManageTabsDialog";
 import { useTableStore } from "@/lib/store";
-import React from "react";
+import React, { useState } from "react";
 
 interface TabManagerProps {
   activeTab: string | null;
@@ -118,6 +118,18 @@ const TabContentRenderer = ({
   totalAdvantage: TotalAdvantage;
   handleCellClick?: (rowIndex: number) => void;
 }) => {
+  const [activeButtons, setActiveButtons] = useState<{
+    [key: number]: boolean;
+  }>({});
+
+  const toggleButton = (id: number) => {
+    setActiveButtons((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+    handleCellClick?.(id);
+  };
+
   return (
     <div className="w-full h-full space-y-4">
       {tab.type === "totalAdvantage" && (
@@ -131,8 +143,10 @@ const TabContentRenderer = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="cursor-pointer p-2 min-w-1/5"
-                onClick={() => handleCellClick?.(8)}
+                className={`cursor-pointer p-2 min-w-1/5 ${
+                  activeButtons[8] ? "bg-red-300 hover:bg-red-300" : ""
+                }`}
+                onClick={() => toggleButton?.(8)}
               >
                 Taxes: ${totalAdvantage.taxes.toLocaleString()}
               </Button>
@@ -140,8 +154,10 @@ const TabContentRenderer = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="cursor-pointer p-2 min-w-1/5"
-                onClick={() => handleCellClick?.(9)}
+                className={`cursor-pointer p-2 min-w-1/5 ${
+                  activeButtons[9] ? "bg-red-300 hover:bg-red-300" : ""
+                }`}
+                onClick={() => toggleButton?.(9)}
               >
                 Fees: ${totalAdvantage.fees.toLocaleString()}
               </Button>
@@ -149,8 +165,10 @@ const TabContentRenderer = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="cursor-pointer p-2 min-w-1/5"
-                onClick={() => handleCellClick?.(10)}
+                className={`cursor-pointer p-2 min-w-1/5 ${
+                  activeButtons[10] ? "bg-red-300 hover:bg-red-300" : ""
+                }`}
+                onClick={() => toggleButton?.(10)}
               >
                 Cumulative Income: $
                 {totalAdvantage.cumulativeIncome.toLocaleString()}
@@ -159,8 +177,10 @@ const TabContentRenderer = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="cursor-pointer p-2 min-w-1/5"
-                onClick={() => handleCellClick?.(13)}
+                className={`cursor-pointer p-2 min-w-1/5 ${
+                  activeButtons[13] ? "bg-red-300 hover:bg-red-300" : ""
+                }`}
+                onClick={() => toggleButton?.(13)}
               >
                 Death Benefit: ${totalAdvantage.deathBenefits.toLocaleString()}
               </Button>
@@ -244,7 +264,7 @@ const TabManager = React.memo(function TabManager({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className={`flex items-center justify-center p-4 w-full h-full min-h-[auto] ${
+      className={`flex items-center justify-center w-full h-full min-h-[auto] ${
         isTabCardExpanded ? "" : ""
       }`}
     >

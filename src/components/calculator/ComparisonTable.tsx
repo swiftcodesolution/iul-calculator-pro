@@ -982,11 +982,14 @@ export function ComparisonTable({
   useEffect(() => {
     const totalAdvantage: TotalAdvantage = {
       total:
-        (selectedRowData?.current.incomeTax
+        (selectedRowData?.current.cumulativeTaxesPaid
           ? parseFloat(
-              selectedRowData.current.incomeTax.replace(/[^0-9.]/g, "")
+              selectedRowData.current.cumulativeTaxesPaid.replace(
+                /[^0-9.]/g,
+                ""
+              )
             )
-          : currentPlanResults.incomeTax) +
+          : currentPlanResults.cumulativeTaxesPaid) +
         (selectedRowData?.current.cumulativeFeesPaid
           ? parseFloat(
               selectedRowData.current.cumulativeFeesPaid.replace(/[^0-9.]/g, "")

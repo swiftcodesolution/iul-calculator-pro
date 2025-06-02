@@ -13,7 +13,7 @@ export default function TabCalculator() {
   const netWithdrawal = amount - penalty - taxes;
 
   return (
-    <div className="w-full mx-auto p-6 space-y-5">
+    <div className="w-full mx-auto p-4 space-y-5">
       <h1 className="text-xl font-semibold text-center">
         Early Withdrawal Tax Calculator
       </h1>
