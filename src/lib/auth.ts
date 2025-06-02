@@ -1,4 +1,3 @@
-// src/lib/authOptions.ts
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -17,13 +16,18 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
-        if (user && credentials.password === user.password) {
-          return user;
+        const prisma = new PrismaClient();
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+          });
+          if (user && credentials.password === user.password) {
+            return user;
+          }
+          return null;
+        } finally {
+          await prisma.$disconnect();
         }
-        return null;
       },
     }),
   ],
