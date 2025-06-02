@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { PrismaClient } from "@/generated/prisma";
 import { z } from "zod";
 
-const prisma = new PrismaClient();
-
 const signupApiSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
@@ -12,6 +10,8 @@ const signupApiSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const prisma = new PrismaClient();
+
   console.log("Signup API called");
   try {
     const body = await request.json();
