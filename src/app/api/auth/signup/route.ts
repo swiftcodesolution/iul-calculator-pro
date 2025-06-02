@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@/generated/prisma";
 import { z } from "zod";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/connect";
 
 const signupApiSchema = z.object({
   email: z.string().email(),
