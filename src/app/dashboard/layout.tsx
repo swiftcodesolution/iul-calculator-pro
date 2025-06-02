@@ -3,11 +3,12 @@
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Home, Calculator, Upload, Database } from "lucide-react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { signOut } from "next-auth/react";
+import { toast } from "sonner";
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -15,12 +16,34 @@ type DashboardLayoutProps = {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
   const navItems = [
     { label: "Home", href: "/dashboard/home", icon: Home },
     { label: "Calculator", href: "/dashboard/calculator", icon: Calculator },
     { label: "Import", href: "/dashboard/import", icon: Upload },
     { label: "Data", href: "/dashboard/data", icon: Database },
   ];
+
+  const handleSignOut = async () => {
+    try {
+      const response = await fetch("/api/auth/signout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to sign out");
+      }
+
+      await signOut({ redirect: false });
+      toast.success("Signed out successfully");
+      router.push("/");
+    } catch (error) {
+      toast.error("Error signing out");
+      console.error(error);
+    }
+  };
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -81,7 +104,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         <motion.div>
           <Button
-            onClick={() => signOut()}
+            onClick={handleSignOut}
             variant="outline"
             size="icon"
             className="fixed bottom-4 right-0 -translate-x-1/2 rounded-none transition-colors duration-200"

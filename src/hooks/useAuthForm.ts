@@ -47,12 +47,10 @@ export function useAuthForm() {
         });
 
         if (loginResult?.ok) {
-          router.push("/dashboard/home"); // ✅ Redirect after successful login
+          router.push("/dashboard/home");
         } else {
           toast.error("Signup succeeded, but auto-login failed.");
         }
-
-        router.push(result.redirect || "/dashboard/home");
       } else {
         const loginData = data as z.infer<typeof loginSchema>;
         const result = await signIn("credentials", {
@@ -61,7 +59,12 @@ export function useAuthForm() {
           password: loginData.loginPassword,
         });
         if (result?.error) {
-          toast.error("invalid credentials");
+          toast.error(
+            result.error ===
+              "User is already logged in on another device. Please log out first."
+              ? "Already logged in on another device. Please log out first."
+              : "Invalid credentials"
+          );
         } else {
           toast.success("login successfull");
           router.push("/dashboard/home");
@@ -74,29 +77,6 @@ export function useAuthForm() {
       setIsSubmitting(false);
       form.reset();
     }
-
-    // await new Promise((resolve) => setTimeout(resolve, 1000)); // Replace with API call
-    // toast.success(
-    //   type === "signup"
-    //     ? "Client user code sent to your email."
-    //     : "Successfully logged in.",
-    //   {
-    //     description: `Welcome${
-    //       type === "signup"
-    //         ? `, ${(data as z.infer<typeof signupSchema>).firstName}`
-    //         : ""
-    //     }!`,
-    //     duration: 3000,
-    //     style: {
-    //       background: "white",
-    //       color: "#1F2A44",
-    //       border: "1px solid #E5E7EB",
-    //     },
-    //     onAutoClose: () => form.reset(),
-    //   }
-    // );
-    // setIsSubmitting(false);
-    // router.push("/dashboard/home");
   };
 
   return { isSubmitting, handleSubmit };
