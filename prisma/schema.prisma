@@ -14,21 +14,6 @@ model User {
   password  String // Should be hashed
   firstName String?
   lastName  String?
-  name      String?
-  sessions  Session[]
-}
-
-model Session {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  sessionToken String   @unique
-  userId       String   @db.ObjectId
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id])
-}
-
-model VerificationToken {
-  id      String   @id @default(auto()) @map("_id") @db.ObjectId
-  token   String   @unique
-  email   String
-  expires DateTime
+  role      String   @default("agent")
+  deviceFingerprint String?
 }

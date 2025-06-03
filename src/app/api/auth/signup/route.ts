@@ -7,6 +7,7 @@ const signupApiSchema = z.object({
   password: z.string().min(6),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
+  deviceFingerprint: z.string().min(1),
 });
 
 export async function POST(request: Request) {
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     console.log("Request body:", body);
-    const { email, password, firstName, lastName } =
+    const { email, password, firstName, lastName, deviceFingerprint } =
       signupApiSchema.parse(body);
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
         password,
         firstName,
         lastName,
+        deviceFingerprint,
       },
     });
 

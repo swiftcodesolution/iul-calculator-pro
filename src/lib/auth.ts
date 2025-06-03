@@ -2,7 +2,6 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { NextAuthOptions } from "next-auth";
 import prisma from "./connect";
-import { randomUUID } from "crypto";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -12,44 +11,37 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        deviceFingerprint: { label: "Device Fingerprint", type: "text" },
       },
-      async authorize(credentials, req) {
-        if (!credentials?.email || !credentials?.password) return null;
+      async authorize(credentials) {
+        if (
+          !credentials?.email ||
+          !credentials?.password ||
+          !credentials?.deviceFingerprint
+        )
+          return null;
 
         try {
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
           });
 
-          const userAgent = req.headers?.["user-agent"] || "Unknown";
-          const deviceInfo = { userAgent, loginTime: new Date().toISOString() };
-          console.log("Login Attempt Device Info:", deviceInfo);
-
           if (user && credentials.password === user.password) {
-            const activeSession = await prisma.session.findFirst({
-              where: { userId: user.id, expires: { gt: new Date() } },
-            });
-
-            if (activeSession) {
+            if (
+              user.deviceFingerprint &&
+              user.deviceFingerprint !== credentials.deviceFingerprint
+            ) {
               throw new Error(
-                "User is already logged in on another device. Please log out first."
+                "Login restricted to the device used for signup."
               );
             }
 
-            const sessionToken = randomUUID();
-            const lol = await prisma.session.create({
-              data: {
-                userId: user.id,
-                sessionToken,
-                expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-                // deviceInfo: JSON.stringify(deviceInfo),
-              },
-            });
-
-            console.log(lol);
-
-            return { ...user, sessionToken };
+            return {
+              ...user,
+              deviceFingerprint: credentials.deviceFingerprint,
+            };
           }
+
           return null;
         } finally {
           await prisma.$disconnect();
@@ -63,14 +55,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.sessionToken = user.sessionToken;
+        token.deviceFingerprint = user.deviceFingerprint;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.sessionToken = token.sessionToken as string;
+        session.user.deviceFingerprint = token.deviceFingerprint as string;
       }
       return session;
     },

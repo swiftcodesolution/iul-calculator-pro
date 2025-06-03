@@ -1,14 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { loginSchema, signupSchema } from "@/lib/types";
 import { signIn } from "next-auth/react";
+import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
 export function useAuthForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
   const router = useRouter();
+
+  useEffect(() => {
+    const initializeFingerprint = async () => {
+      const fp = await FingerprintJS.load();
+      const result = await fp.get();
+      setDeviceFingerprint(result.visitorId);
+    };
+    initializeFingerprint();
+  }, []);
 
   const handleSubmit = async <
     T extends z.infer<typeof signupSchema> | z.infer<typeof loginSchema>
@@ -30,6 +41,7 @@ export function useAuthForm() {
             password: signupData.password,
             firstName: signupData.firstName,
             lastName: signupData.lastName,
+            deviceFingerprint,
           }),
         });
 
@@ -44,6 +56,7 @@ export function useAuthForm() {
           redirect: false,
           email: signupData.email,
           password: signupData.password,
+          deviceFingerprint,
         });
 
         if (loginResult?.ok) {
@@ -57,12 +70,12 @@ export function useAuthForm() {
           redirect: false,
           email: loginData.loginEmail,
           password: loginData.loginPassword,
+          deviceFingerprint,
         });
         if (result?.error) {
           toast.error(
-            result.error ===
-              "User is already logged in on another device. Please log out first."
-              ? "Already logged in on another device. Please log out first."
+            result.error === "Login restricted to the device used for signup."
+              ? "This device is not authorized. Use the device you signed up with."
               : "Invalid credentials"
           );
         } else {

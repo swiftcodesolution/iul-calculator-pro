@@ -12,12 +12,6 @@ export async function POST(_req: NextRequest) {
   }
 
   try {
-    // Delete the user's session from the database
-    await prisma.session.deleteMany({
-      where: { userId: session.user.id },
-    });
-
-    // Clear cookie manually if needed (though NextAuth usually handles this)
     const response = NextResponse.json({ message: "Signed out successfully" });
     response.headers.set(
       "Set-Cookie",
@@ -27,6 +21,7 @@ export async function POST(_req: NextRequest) {
     return response;
   } catch (error) {
     console.error("Sign-out error:", error);
+
     return NextResponse.json({ error: "Failed to sign out" }, { status: 500 });
   } finally {
     await prisma.$disconnect();
