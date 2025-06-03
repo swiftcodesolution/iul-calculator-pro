@@ -172,7 +172,7 @@ export type TabContent = {
 
 export type TotalAdvantage = {
   total: number;
-  taxes: number;
+  cumulativeTaxesPaid: number;
   fees: number;
   cumulativeIncome: number;
   deathBenefits: number;

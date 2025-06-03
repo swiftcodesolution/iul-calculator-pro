@@ -1031,17 +1031,23 @@ export function ComparisonTable({
               selectedRowData.taxFree.deathBenefits.replace(/[^0-9.]/g, "")
             )
           : taxFreeResults.deathBenefits),
-      taxes:
-        (selectedRowData?.current.incomeTax
+      cumulativeTaxesPaid:
+        (selectedRowData?.current.cumulativeTaxesPaid
           ? parseFloat(
-              selectedRowData.current.incomeTax.replace(/[^0-9.]/g, "")
+              selectedRowData.current.cumulativeTaxesPaid.replace(
+                /[^0-9.]/g,
+                ""
+              )
             )
-          : currentPlanResults.incomeTax) +
-        (selectedRowData?.taxFree.incomeTax
+          : currentPlanResults.cumulativeTaxesPaid) +
+        (selectedRowData?.taxFree.cumulativeTaxesPaid
           ? parseFloat(
-              selectedRowData.taxFree.incomeTax.replace(/[^0-9.]/g, "")
+              selectedRowData.taxFree.cumulativeTaxesPaid.replace(
+                /[^0-9.]/g,
+                ""
+              )
             )
-          : taxFreeResults.incomeTax),
+          : taxFreeResults.cumulativeTaxesPaid),
       fees:
         (selectedRowData?.current.cumulativeFeesPaid
           ? parseFloat(

@@ -151,7 +151,7 @@ const TabContentRenderer = ({
                 onClick={() => toggleButton?.(8)}
               >
                 Taxes saved:
-                <br />${totalAdvantage.taxes.toLocaleString()}
+                <br />${totalAdvantage.cumulativeTaxesPaid.toLocaleString()}
               </Button>
 
               <Button
