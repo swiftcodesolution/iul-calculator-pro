@@ -1,9 +1,9 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { cn } from "@/lib/utils";
-import { Toaster } from "@/components/ui/sonner";
-import "./globals.css";
 import { AnimatePresence } from "motion/react";
+import { Toaster } from "@/components/ui/sonner";
+import { cn } from "@/lib/utils";
+import "./globals.css";
 
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -17,20 +17,13 @@ export const metadata: Metadata = {
   description: "A modern SAAS platform for IUL and 401k comparisons",
 };
 
-export const viewport: Viewport = {
-  width: "600",
-  initialScale: 0.75,
-  maximumScale: 0.75,
-  userScalable: false,
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
           inter.className,
