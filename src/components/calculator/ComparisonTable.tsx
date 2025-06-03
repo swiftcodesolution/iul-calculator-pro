@@ -980,117 +980,77 @@ export function ComparisonTable({
 
   // 31 MAY
   useEffect(() => {
-    const totalAdvantage: TotalAdvantage = {
-      total:
-        (selectedRowData?.current.cumulativeTaxesPaid
-          ? parseFloat(
-              selectedRowData.current.cumulativeTaxesPaid.replace(
-                /[^0-9.]/g,
-                ""
-              )
-            )
-          : currentPlanResults.cumulativeTaxesPaid) +
-        (selectedRowData?.current.cumulativeFeesPaid
-          ? parseFloat(
-              selectedRowData.current.cumulativeFeesPaid.replace(/[^0-9.]/g, "")
-            )
-          : currentPlanResults.cumulativeFeesPaid) +
-        (selectedRowData?.current.cumulativeNetIncome
-          ? parseFloat(
-              selectedRowData.current.cumulativeNetIncome.replace(
-                /[^0-9.]/g,
-                ""
-              )
-            )
-          : currentPlanResults.cumulativeNetIncome) +
-        (selectedRowData?.current.deathBenefits
-          ? parseFloat(
-              selectedRowData.current.deathBenefits.replace(/[^0-9.]/g, "")
-            )
-          : currentPlanResults.deathBenefits) +
-        (selectedRowData?.taxFree.incomeTax
-          ? parseFloat(
-              selectedRowData.taxFree.incomeTax.replace(/[^0-9.]/g, "")
-            )
-          : taxFreeResults.incomeTax) +
-        (selectedRowData?.taxFree.cumulativeFeesPaid
-          ? parseFloat(
-              selectedRowData.taxFree.cumulativeFeesPaid.replace(/[^0-9.]/g, "")
-            )
-          : taxFreeResults.cumulativeFeesPaid) +
-        (selectedRowData?.taxFree.cumulativeNetIncome
-          ? parseFloat(
-              selectedRowData.taxFree.cumulativeNetIncome.replace(
-                /[^0-9.]/g,
-                ""
-              )
-            )
-          : taxFreeResults.cumulativeNetIncome) +
-        (selectedRowData?.taxFree.deathBenefits
-          ? parseFloat(
-              selectedRowData.taxFree.deathBenefits.replace(/[^0-9.]/g, "")
-            )
-          : taxFreeResults.deathBenefits),
-      cumulativeTaxesPaid:
-        (selectedRowData?.current.cumulativeTaxesPaid
-          ? parseFloat(
-              selectedRowData.current.cumulativeTaxesPaid.replace(
-                /[^0-9.]/g,
-                ""
-              )
-            )
-          : currentPlanResults.cumulativeTaxesPaid) +
-        (selectedRowData?.taxFree.cumulativeTaxesPaid
-          ? parseFloat(
-              selectedRowData.taxFree.cumulativeTaxesPaid.replace(
-                /[^0-9.]/g,
-                ""
-              )
-            )
-          : taxFreeResults.cumulativeTaxesPaid),
-      fees:
-        (selectedRowData?.current.cumulativeFeesPaid
-          ? parseFloat(
-              selectedRowData.current.cumulativeFeesPaid.replace(/[^0-9.]/g, "")
-            )
-          : currentPlanResults.cumulativeFeesPaid) +
-        (selectedRowData?.taxFree.cumulativeFeesPaid
-          ? parseFloat(
-              selectedRowData.taxFree.cumulativeFeesPaid.replace(/[^0-9.]/g, "")
-            )
-          : taxFreeResults.cumulativeFeesPaid),
-      cumulativeIncome:
-        (selectedRowData?.current.cumulativeNetIncome
-          ? parseFloat(
-              selectedRowData.current.cumulativeNetIncome.replace(
-                /[^0-9.]/g,
-                ""
-              )
-            )
-          : currentPlanResults.cumulativeNetIncome) +
-        (selectedRowData?.taxFree.cumulativeNetIncome
-          ? parseFloat(
-              selectedRowData.taxFree.cumulativeNetIncome.replace(
-                /[^0-9.]/g,
-                ""
-              )
-            )
-          : taxFreeResults.cumulativeNetIncome),
-      deathBenefits:
-        (selectedRowData?.current.deathBenefits
-          ? parseFloat(
-              selectedRowData.current.deathBenefits.replace(/[^0-9.]/g, "")
-            )
-          : currentPlanResults.deathBenefits) +
-        (selectedRowData?.taxFree.deathBenefits
-          ? parseFloat(
-              selectedRowData.taxFree.deathBenefits.replace(/[^0-9.]/g, "")
-            )
-          : taxFreeResults.deathBenefits),
-    };
+    if (
+      activeInput === "yearsRunOutOfMoney" &&
+      yearsRunOutOfMoneyInput !== ""
+    ) {
+      const currentTaxesPaid = selectedRowData?.current.cumulativeTaxesPaid
+        ? parseFloat(
+            selectedRowData.current.cumulativeTaxesPaid.replace(/[^0-9.]/g, "")
+          )
+        : currentPlanResults.cumulativeTaxesPaid;
 
-    onTotalAdvantageChange?.(totalAdvantage); // Pass to parent
+      const taxFreeTaxesPaid = selectedRowData?.taxFree.cumulativeTaxesPaid
+        ? parseFloat(
+            selectedRowData.taxFree.cumulativeTaxesPaid.replace(/[^0-9.]/g, "")
+          )
+        : taxFreeResults.cumulativeTaxesPaid;
+
+      const currentFees = selectedRowData?.current.cumulativeFeesPaid
+        ? parseFloat(
+            selectedRowData.current.cumulativeFeesPaid.replace(/[^0-9.]/g, "")
+          )
+        : currentPlanResults.cumulativeFeesPaid;
+
+      const taxFreeFees = selectedRowData?.taxFree.cumulativeFeesPaid
+        ? parseFloat(
+            selectedRowData.taxFree.cumulativeFeesPaid.replace(/[^0-9.]/g, "")
+          )
+        : taxFreeResults.cumulativeFeesPaid;
+
+      const currentIncome = selectedRowData?.current.cumulativeNetIncome
+        ? parseFloat(
+            selectedRowData.current.cumulativeNetIncome.replace(/[^0-9.]/g, "")
+          )
+        : currentPlanResults.cumulativeNetIncome;
+
+      const taxFreeIncome = selectedRowData?.taxFree.cumulativeNetIncome
+        ? parseFloat(
+            selectedRowData.taxFree.cumulativeNetIncome.replace(/[^0-9.]/g, "")
+          )
+        : taxFreeResults.cumulativeNetIncome;
+
+      const currentDeathBenefits = selectedRowData?.current.deathBenefits
+        ? parseFloat(
+            selectedRowData.current.deathBenefits.replace(/[^0-9.]/g, "")
+          )
+        : currentPlanResults.deathBenefits;
+
+      const taxFreeDeathBenefits = selectedRowData?.taxFree.deathBenefits
+        ? parseFloat(
+            selectedRowData.taxFree.deathBenefits.replace(/[^0-9.]/g, "")
+          )
+        : taxFreeResults.deathBenefits;
+
+      const cumulativeTaxesPaid = Math.abs(currentTaxesPaid - taxFreeTaxesPaid);
+      const fees = Math.abs(currentFees - taxFreeFees);
+      const cumulativeIncome = Math.abs(currentIncome - taxFreeIncome);
+      const deathBenefits = Math.abs(
+        currentDeathBenefits - taxFreeDeathBenefits
+      );
+
+      const totalAdvantage: TotalAdvantage = {
+        total: cumulativeTaxesPaid + fees + cumulativeIncome + deathBenefits,
+        cumulativeTaxesPaid,
+        fees,
+        cumulativeIncome,
+        deathBenefits,
+      };
+
+      onTotalAdvantageChange?.(totalAdvantage);
+    }
   }, [
+    yearsRunOutOfMoneyInput,
     selectedRowData,
     currentPlanResults,
     taxFreeResults,
