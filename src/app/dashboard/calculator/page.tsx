@@ -17,11 +17,11 @@ export default function CalculatorPage() {
   const [isTabCardExpanded, setIsTabCardExpanded] = useState(false);
 
   const [totalAdvantage, setTotalAdvantage] = useState<TotalAdvantage>({
-    total: 1324000,
-    taxes: 125000,
-    fees: 78000,
-    cumulativeIncome: 1279000,
-    deathBenefits: 786000,
+    total: 0,
+    cumulativeTaxesPaid: 0,
+    fees: 0,
+    cumulativeIncome: 0,
+    deathBenefits: 0,
   });
 
   const { boxesData, setBoxesData } = useTableStore();
