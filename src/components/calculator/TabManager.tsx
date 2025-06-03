@@ -135,7 +135,9 @@ const TabContentRenderer = ({
       {tab.type === "totalAdvantage" && (
         <div className="w-full">
           <div className="flex flex-col items-center justify-center p-4 text-center border-black border-2">
-            <h2 className="text-4xl font-bold mb-5">Total Advantage</h2>
+            <h2 className="text-4xl font-bold mb-5">
+              Your Estimated - Total Advantage
+            </h2>
             <h2 className="text-4xl font-bold mb-5">
               ${totalAdvantage.total.toLocaleString()}
             </h2>
@@ -143,46 +145,48 @@ const TabContentRenderer = ({
               <Button
                 variant="outline"
                 size="sm"
-                className={`cursor-pointer p-2 min-w-1/5 ${
+                className={`cursor-pointer p-6 min-w-1/5 ${
                   activeButtons[8] ? "bg-red-300 hover:bg-red-300" : ""
                 }`}
                 onClick={() => toggleButton?.(8)}
               >
-                Taxes: ${totalAdvantage.taxes.toLocaleString()}
+                Taxes saved:
+                <br />${totalAdvantage.taxes.toLocaleString()}
               </Button>
 
               <Button
                 variant="outline"
                 size="sm"
-                className={`cursor-pointer p-2 min-w-1/5 ${
+                className={`cursor-pointer p-6 min-w-1/5 ${
                   activeButtons[9] ? "bg-red-300 hover:bg-red-300" : ""
                 }`}
                 onClick={() => toggleButton?.(9)}
               >
-                Fees: ${totalAdvantage.fees.toLocaleString()}
+                Fees Saved: <br /> ${totalAdvantage.fees.toLocaleString()}
               </Button>
 
               <Button
                 variant="outline"
                 size="sm"
-                className={`cursor-pointer p-2 min-w-1/5 ${
+                className={`cursor-pointer p-6 min-w-1/5 ${
                   activeButtons[10] ? "bg-red-300 hover:bg-red-300" : ""
                 }`}
                 onClick={() => toggleButton?.(10)}
               >
-                Cumulative Income: $
+                Extra Income: <br /> $
                 {totalAdvantage.cumulativeIncome.toLocaleString()}
               </Button>
 
               <Button
                 variant="outline"
                 size="sm"
-                className={`cursor-pointer p-2 min-w-1/5 ${
+                className={`cursor-pointer p-6 min-w-1/5 ${
                   activeButtons[13] ? "bg-red-300 hover:bg-red-300" : ""
                 }`}
                 onClick={() => toggleButton?.(13)}
               >
-                Death Benefit: ${totalAdvantage.deathBenefits.toLocaleString()}
+                Death Benefit: <br /> $
+                {totalAdvantage.deathBenefits.toLocaleString()}
               </Button>
             </div>
           </div>
