@@ -62,14 +62,14 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { fileId: string } }
+  { params }: { params: Promise<{ fileId: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { fileId } = params;
+  const { fileId } = await params;
   const file = await prisma.clientFile.findUnique({ where: { id: fileId } });
   if (
     !file ||
@@ -87,14 +87,14 @@ export async function DELETE(
 
 export async function GET(
   request: Request,
-  { params }: { params: { fileId: string } }
+  { params }: { params: Promise<{ fileId: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { fileId } = params;
+  const { fileId } = await params;
   const file = await prisma.clientFile.findUnique({ where: { id: fileId } });
   if (
     !file ||
