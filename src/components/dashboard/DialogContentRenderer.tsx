@@ -1,3 +1,4 @@
+// src/components/dashboard/DialogContentRenderer.tsx
 "use client";
 
 import { motion } from "framer-motion";
@@ -5,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ClientFile } from "@/lib/types";
+import { useFileContext } from "@/context/FileContext";
 
 interface DialogContentRendererProps {
   dialogAction: string | null;
@@ -14,7 +16,7 @@ interface DialogContentRendererProps {
   handleClientAction: (
     action: string,
     data?: { id?: string; name?: string }
-  ) => void;
+  ) => Promise<{ fileId?: string } | void>;
 }
 
 export default function DialogContentRenderer({
@@ -24,20 +26,31 @@ export default function DialogContentRenderer({
   selectedFile,
   handleClientAction,
 }: DialogContentRendererProps) {
+  const { setSelectedFileId } = useFileContext();
+
   if (!dialogAction) return null;
 
   const titles: { [key: string]: string } = {
-    new: "Start New Client",
-    open: "Open Client File",
+    new: "Create New Client File",
     copy: "Copy Client File",
     rename: "Rename Client File",
     delete: "Delete Client File",
   };
 
   const placeholders: { [key: string]: string } = {
-    new: "Client Name",
+    new: "Enter File Name",
     rename: "New File Name",
     copy: "Copy File Name",
+  };
+
+  const handleSubmit = async () => {
+    const result = await handleClientAction(dialogAction, {
+      id: selectedFile?.id,
+      name: newClientName,
+    });
+    if ((dialogAction === "new" || dialogAction === "copy") && result?.fileId) {
+      setSelectedFileId(result.fileId);
+    }
   };
 
   return (
@@ -60,12 +73,11 @@ export default function DialogContentRenderer({
               value={newClientName}
               onChange={(e) => setNewClientName(e.target.value)}
               className="h-8"
-              disabled={dialogAction === "open"}
             />
           </motion.div>
         )}
         {dialogAction === "delete" && (
-          <p>Are you sure you want to delete {selectedFile?.name}?</p>
+          <p>Are you sure you want to delete {selectedFile?.fileName}?</p>
         )}
         <motion.div
           whileHover={{ scale: 1.05, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
@@ -74,12 +86,7 @@ export default function DialogContentRenderer({
         >
           <Button
             size="sm"
-            onClick={() =>
-              handleClientAction(dialogAction, {
-                id: selectedFile?.id,
-                name: newClientName,
-              })
-            }
+            onClick={handleSubmit}
             disabled={
               (dialogAction === "new" ||
                 dialogAction === "copy" ||

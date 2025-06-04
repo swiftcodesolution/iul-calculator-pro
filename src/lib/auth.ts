@@ -56,6 +56,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.deviceFingerprint = user.deviceFingerprint;
+        token.role = user.role;
       }
       return token;
     },
@@ -63,6 +64,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.deviceFingerprint = token.deviceFingerprint as string;
+        session.user.role = token.role as string;
       }
       return session;
     },

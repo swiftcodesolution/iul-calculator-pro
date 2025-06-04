@@ -3,12 +3,14 @@
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LogOut, Home, Calculator, Upload, Database } from "lucide-react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { signOut } from "next-auth/react";
 import { toast } from "sonner";
+import { useFileContext } from "@/context/FileContext";
+import { useEffect } from "react";
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -17,6 +19,8 @@ type DashboardLayoutProps = {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { selectedFileId, setSelectedFileId } = useFileContext();
 
   const navItems = [
     { label: "Home", href: "/dashboard/home", icon: Home },
@@ -24,6 +28,26 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { label: "Import", href: "/dashboard/import", icon: Upload },
     { label: "Data", href: "/dashboard/data", icon: Database },
   ];
+
+  useEffect(() => {
+    const fileId = searchParams.get("fileId");
+    if (fileId && !selectedFileId) {
+      setSelectedFileId(fileId);
+    }
+  }, [searchParams, selectedFileId, setSelectedFileId]);
+
+  useEffect(() => {
+    const restrictedPaths = [
+      "/dashboard/calculator",
+      "/dashboard/import",
+      "/dashboard/data",
+    ];
+    const fileId = searchParams.get("fileId");
+    if (!selectedFileId && !fileId && restrictedPaths.includes(pathname)) {
+      router.push("/dashboard/home");
+      toast.error("Please select a file first");
+    }
+  }, [selectedFileId, pathname, router, searchParams]);
 
   const handleSignOut = async () => {
     try {
@@ -64,40 +88,56 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           }}
           className="fixed bottom-4 left-1/2 -translate-x-1/2 flex gap-2"
         >
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-label={`Navigate to ${item.label}`}
-            >
-              <motion.div
-                whileHover={{ scale: 1.15, rotate: 0 }}
-                whileTap={{ scale: 0.95 }}
-                animate={
-                  pathname === item.href
-                    ? {
-                        scale: [1, 1.1, 1],
-                        transition: { duration: 0.8, repeat: Infinity },
-                      }
-                    : {}
-                }
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          {navItems.map((item) => {
+            const isDisabled =
+              item.href !== "/dashboard/home" && !selectedFileId;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-label={`Navigate to ${item.label}`}
+                onClick={(e) => {
+                  if (isDisabled) {
+                    e.preventDefault();
+                    toast.error("Please select a file first");
+                  }
+                }}
+                className={`${isDisabled ? "cursor-not-allowed" : ""}`}
               >
-                <Button
-                  variant={pathname === item.href ? "default" : "outline"}
-                  size="icon"
-                  className="rounded-none transition-colors duration-200 cursor-pointer"
+                <motion.div
+                  whileHover={{ scale: isDisabled ? 1 : 1.15, rotate: 0 }}
+                  whileTap={{ scale: isDisabled ? 1 : 0.95 }}
+                  animate={
+                    pathname === item.href && !isDisabled
+                      ? {
+                          scale: [1, 1.1, 1],
+                          transition: { duration: 0.8, repeat: Infinity },
+                        }
+                      : {}
+                  }
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
-                  <motion.div
-                    whileHover={{ rotate: pathname === item.href ? 0 : 0 }}
-                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                  <Button
+                    variant={pathname === item.href ? "default" : "outline"}
+                    size="icon"
+                    className={`rounded-none transition-colors duration-200 ${
+                      isDisabled
+                        ? "opacity-50 cursor-not-allowed"
+                        : "cursor-pointer"
+                    }`}
+                    disabled={isDisabled}
                   >
-                    <item.icon className="h-5 w-5" />
-                  </motion.div>
-                </Button>
-              </motion.div>
-            </Link>
-          ))}
+                    <motion.div
+                      whileHover={{ rotate: pathname === item.href ? 0 : 0 }}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
+                    >
+                      <item.icon className="h-5 w-5" />
+                    </motion.div>
+                  </Button>
+                </motion.div>
+              </Link>
+            );
+          })}
         </motion.nav>
 
         {/* Animated Logout Button */}

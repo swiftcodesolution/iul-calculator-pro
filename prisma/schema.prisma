@@ -16,4 +16,19 @@ model User {
   lastName  String?
   role      String   @default("agent")
   deviceFingerprint String?
+  files     ClientFile[]
+}
+
+model ClientFile {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String   @db.ObjectId
+  user           User     @relation(fields: [userId], references: [id])
+  deviceFingerprint String?
+  fileName       String
+  createdByRole  String   
+  category       String   
+  boxesData      Json?    
+  tablesData     Json?  
+  combinedResults Json?  
+  createdAt      DateTime @default(now())
 }

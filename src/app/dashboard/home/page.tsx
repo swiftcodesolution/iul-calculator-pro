@@ -1,3 +1,4 @@
+// src/app/dashboard/home/page.tsx
 "use client";
 
 import Sidebar from "@/components/dashboard/Sidebar";
@@ -7,6 +8,9 @@ import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 import { useClientFiles } from "@/hooks/useClientFiles";
 import { useImageCrop } from "@/hooks/useImageCrop";
 import CropDialog from "@/components/dashboard/CropDialog";
+import { useFileContext } from "@/context/FileContext";
+import { useEffect, useRef } from "react";
+import { ClientFile } from "@/lib/types";
 
 // Animation variants
 const contentVariants = {
@@ -21,8 +25,16 @@ const contentVariants = {
 };
 
 export default function DashboardPage() {
-  const { companyInfo, updateCompanyInfo, isEditing, toggleEdit, save } =
-    useCompanyInfo();
+  const { setSelectedFileId, clearSelectedFileId } = useFileContext();
+  const {
+    companyInfo,
+    updateCompanyInfo,
+    isEditing,
+    toggleEdit,
+    save,
+    isSidebarCollapsed,
+    toggleSidebar,
+  } = useCompanyInfo();
   const {
     clientFiles,
     newClientName,
@@ -35,7 +47,6 @@ export default function DashboardPage() {
     handleDragStart,
     handleDrop,
   } = useClientFiles();
-  const { isSidebarCollapsed, toggleSidebar } = useCompanyInfo();
   const {
     cropDialogOpen,
     imageToCrop,
@@ -49,9 +60,36 @@ export default function DashboardPage() {
     handleCropImage,
     handleCropExistingImage,
   } = useImageCrop(companyInfo, updateCompanyInfo);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Clear selection when page mounts
+  useEffect(() => {
+    clearSelectedFileId();
+    setSelectedFile(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Handle click outside file items to deselect
+  const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (containerRef.current && !target.closest(".file-item")) {
+      setSelectedFile(null);
+      clearSelectedFileId();
+    }
+  };
+
+  // Handle file selection
+  const handleFileSelection = (file: ClientFile) => {
+    setSelectedFile(file);
+    setSelectedFileId(file.id);
+  };
 
   return (
-    <div className="min-h-[95vh] flex gap-2">
+    <div
+      className="min-h-[95vh] flex gap-2"
+      ref={containerRef}
+      onClick={handleClickOutside}
+    >
       <Sidebar
         companyInfo={companyInfo}
         updateCompanyInfo={updateCompanyInfo}
@@ -74,7 +112,8 @@ export default function DashboardPage() {
           newClientName={newClientName}
           setNewClientName={setNewClientName}
           selectedFile={selectedFile}
-          setSelectedFile={setSelectedFile}
+          selectedFileId={selectedFile?.id || null}
+          setSelectedFile={handleFileSelection}
           dialogAction={dialogAction}
           setDialogAction={setDialogAction}
           handleClientAction={handleClientAction}

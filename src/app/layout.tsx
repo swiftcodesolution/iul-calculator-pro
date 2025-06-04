@@ -7,6 +7,8 @@ import "./globals.css";
 
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import SessionProviderWrapper from "@/components/auth/SessionProviderWrapper";
+import { FileProvider } from "@/context/FileContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -30,10 +32,14 @@ export default function RootLayout({
           "min-h-screen bg-gray-100 text-gray-900"
         )}
       >
-        <AnimatePresence mode="wait" initial={false}>
-          <main className="min-h-dvh">{children}</main>
-        </AnimatePresence>
-        <Toaster richColors />
+        <SessionProviderWrapper>
+          <FileProvider>
+            <AnimatePresence mode="wait" initial={false}>
+              <main className="min-h-dvh">{children}</main>
+            </AnimatePresence>
+          </FileProvider>
+          <Toaster />
+        </SessionProviderWrapper>
         <Analytics />
         <SpeedInsights />
       </body>

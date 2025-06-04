@@ -16,18 +16,22 @@ declare module "next-auth" {
     user: {
       id: string;
       deviceFingerprint?: string;
+      role: string;
     };
   }
   interface User {
     deviceFingerprint?: string;
+    role: string;
   }
 }
 
 declare module "@prisma/client" {
   interface Session {
     deviceInfo?: string;
+    role: string;
   }
   interface User {
     deviceFingerprint?: string;
+    role: string;
   }
 }

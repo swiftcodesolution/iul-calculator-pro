@@ -1,3 +1,4 @@
+// src/components/dashboard/ClientFilesSection.tsx
 "use client";
 
 import { motion } from "framer-motion";
@@ -6,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ClientFile } from "@/lib/types";
 import DialogContentRenderer from "./DialogContentRenderer";
+import { useRouter } from "next/navigation";
 
 const newClientVariant = {
   hidden: { opacity: 0, scale: 0.8, y: 10 },
@@ -22,13 +24,14 @@ interface ClientFilesSectionProps {
   newClientName: string;
   setNewClientName: (name: string) => void;
   selectedFile: ClientFile | null;
-  setSelectedFile: (file: ClientFile | null) => void;
+  selectedFileId: string | null;
+  setSelectedFile: (file: ClientFile) => void;
   dialogAction: string | null;
   setDialogAction: (action: string | null) => void;
   handleClientAction: (
     action: string,
     data?: { id?: string; name?: string }
-  ) => void;
+  ) => Promise<{ fileId?: string } | void>;
   handleDragStart: (e: React.DragEvent<HTMLDivElement>, id: string) => void;
   handleDrop: (
     e: React.DragEvent<HTMLDivElement>,
@@ -41,6 +44,7 @@ export default function ClientFilesSection({
   newClientName,
   setNewClientName,
   selectedFile,
+  selectedFileId,
   setSelectedFile,
   dialogAction,
   setDialogAction,
@@ -48,6 +52,14 @@ export default function ClientFilesSection({
   handleDragStart,
   handleDrop,
 }: ClientFilesSectionProps) {
+  const router = useRouter();
+
+  const handleOpen = () => {
+    if (selectedFileId) {
+      router.push(`/dashboard/calculator?fileId=${selectedFileId}`);
+    }
+  };
+
   return (
     <Card className="h-full">
       <CardContent className="space-y-4 flex flex-col h-full">
@@ -57,7 +69,7 @@ export default function ClientFilesSection({
           transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
           className="text-xl font-bold"
         >
-          IUL Client Files Without a Pension
+          IUL Client Files
         </motion.h2>
         <motion.div
           whileHover={{ scale: 1.05, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
@@ -116,19 +128,19 @@ export default function ClientFilesSection({
                       animate="visible"
                       whileHover={{ backgroundColor: "#e5e7eb" }}
                       whileDrag={{ scale: 1.1, opacity: 0.8 }}
-                      className={`p-1 border-b cursor-move text-sm rounded-md transition-colors ${
+                      className={`file-item p-1 border-b cursor-pointer text-sm rounded-md transition-colors ${
                         selectedFile?.id === file.id
                           ? "bg-blue-100 border-blue-500 border"
                           : "bg-transparent"
                       }`}
-                      draggable="true"
+                      draggable
                       onClick={() => setSelectedFile(file)}
                       onDragStartCapture={(
                         e: React.DragEvent<HTMLDivElement>
                       ) => handleDragStart(e, file.id)}
                       aria-selected={selectedFile?.id === file.id}
                     >
-                      {file.name} {file.size !== "N/A" && `(${file.size})`}
+                      {file.fileName}
                     </motion.div>
                   ))}
               </div>
@@ -159,7 +171,7 @@ export default function ClientFilesSection({
                 onClick={() => setDialogAction("new")}
                 aria-label="Create new client file"
               >
-                New
+                Create New
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -172,7 +184,31 @@ export default function ClientFilesSection({
               />
             </DialogContent>
           </Dialog>
-          {["open", "copy", "rename", "delete"].map((action) => (
+          <motion.div
+            variants={{
+              hidden: { opacity: 0, y: 10 },
+              visible: {
+                opacity: 1,
+                y: 0,
+                transition: { type: "spring", stiffness: 120 },
+              },
+            }}
+            whileHover={{
+              scale: 1.1,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button
+              size="sm"
+              onClick={handleOpen}
+              disabled={!selectedFileId}
+              aria-label="Open client file"
+            >
+              Open
+            </Button>
+          </motion.div>
+          {["copy", "rename", "delete"].map((action) => (
             <motion.div
               key={action}
               variants={{
@@ -192,7 +228,7 @@ export default function ClientFilesSection({
               <Button
                 size="sm"
                 onClick={() => setDialogAction(action)}
-                disabled={!selectedFile}
+                disabled={!selectedFileId}
                 aria-label={`${
                   action.charAt(0).toUpperCase() + action.slice(1)
                 } client file`}

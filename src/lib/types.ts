@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod";
 
 export const signupSchema = z
@@ -29,13 +30,15 @@ export type CompanyInfo = {
 
 export type ClientFile = {
   id: string;
-  name: string;
-  size: string;
-  category:
-    | "Pro Sample Files"
-    | "Your Sample Files"
-    | "Your Prospect Files"
-    | "Your Closed Sales";
+  fileName: string;
+  userId: string;
+  deviceFingerprint: string | null;
+  createdByRole: string;
+  category: string;
+  boxesData: any | null;
+  tablesData: any[] | null;
+  combinedResults: any[] | null;
+  createdAt: string;
 };
 
 export type CropState = {
