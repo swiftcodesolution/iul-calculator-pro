@@ -62,17 +62,17 @@ export function ComparisonTable({
   highlightedRows,
   isTableCollapsed,
   isTableCardExpanded,
-  currentAge = 40,
+  currentAge = 0,
   boxesData = {
-    currentAge: 40,
-    stopSavingAge: 65,
-    retirementAge: 66,
-    workingTaxRate: 22,
-    retirementTaxRate: 22,
+    currentAge: 0,
+    stopSavingAge: 0,
+    retirementAge: 0,
+    workingTaxRate: 0,
+    retirementTaxRate: 0,
     inflationRate: 0,
-    currentPlanFees: 2,
-    currentPlanROR: 6.3,
-    taxFreePlanROR: 6.3,
+    currentPlanFees: 0,
+    currentPlanROR: 0,
+    taxFreePlanROR: 0,
   },
   setIsTableCollapsed,
   setIsTableCardExpanded,
@@ -82,7 +82,7 @@ export function ComparisonTable({
 }: ComparisonTableProps) {
   const {
     tables = [],
-    yearsRunOutOfMoney = 95,
+    yearsRunOutOfMoney = 0,
     setYearsRunOutOfMoney,
     startingBalance,
     annualContributions,
@@ -125,17 +125,17 @@ export function ComparisonTable({
       setFutureAge(age);
       setFutureAgeInput(age);
       const currentPlanTable = runGrossRetirementIncomeLoop(
-        parseInput(boxesData.currentAge, 40),
-        parseInput(yearsRunOutOfMoneyInput, 95),
-        parseInput(annualContributions, 10000),
-        parseInput(boxesData.currentPlanROR, 6),
-        parseInput(boxesData.retirementTaxRate, 22),
-        parseInput(boxesData.currentPlanFees, 2),
-        parseInput(boxesData.workingTaxRate, 22),
+        parseInput(boxesData.currentAge, 0),
+        parseInput(yearsRunOutOfMoneyInput, 0),
+        parseInput(annualContributions, 0),
+        parseInput(boxesData.currentPlanROR, 0),
+        parseInput(boxesData.retirementTaxRate, 0),
+        parseInput(boxesData.currentPlanFees, 0),
+        parseInput(boxesData.workingTaxRate, 0),
         parseInput(startingBalance, 0),
         parseInput(annualEmployerMatch, 0),
-        parseInput(boxesData.retirementAge, 66),
-        parseInput(boxesData.stopSavingAge, 65)
+        parseInput(boxesData.retirementAge, 0),
+        parseInput(boxesData.stopSavingAge, 0)
       );
       const taxFreeTable = runTaxFreePlanLoop(tables, currentAge, age);
       const currentRow = currentPlanTable.find((r) => r.age === age);
@@ -160,7 +160,7 @@ export function ComparisonTable({
             ),
             cumulativeTaxesPaid: formatValue(
               currentRow.retirementTaxes *
-                (age - parseInput(boxesData.retirementAge, 66) + 1)
+                (age - parseInput(boxesData.retirementAge, 0) + 1)
             ),
             cumulativeFeesPaid: formatValue(currentRow.cumulativeFees),
             cumulativeNetIncome: formatValue(currentRow.cumulativeIncome),
@@ -218,7 +218,7 @@ export function ComparisonTable({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const futureAgeOptions = useMemo(() => {
     const start = Number(boxesData.currentAge) || currentAge;
-    const end = Number(yearsRunOutOfMoney || yearsRunOutOfMoneyInput) || 95;
+    const end = Number(yearsRunOutOfMoney || yearsRunOutOfMoneyInput) || 0;
     console.log("Future age options:", { start, end });
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }, [
@@ -298,7 +298,7 @@ export function ComparisonTable({
 
   useEffect(() => {
     if (ageOptions.length > 0 && !ageOptions.includes(yearsRunOutOfMoney)) {
-      const newAge = ageOptions[0] || 95;
+      const newAge = ageOptions[0] || 0;
       setYearsRunOutOfMoney(newAge);
       setYearsRunOutOfMoneyInput(newAge);
     }
@@ -329,17 +329,17 @@ export function ComparisonTable({
   // Compute 401(k) results for Current Plan (red column) with fallback values
   const currentPlanResults = useMemo(() => {
     const inputs = {
-      currentAge: parseInput(boxesData.currentAge, 45),
-      retirementAge: parseInput(boxesData.retirementAge, 66),
-      stopSavingAge: parseInput(boxesData.stopSavingAge, 65),
-      currentPlanROR: parseInput(boxesData.currentPlanROR, 6),
-      retirementTaxRate: parseInput(boxesData.retirementTaxRate, 22),
-      currentPlanFees: parseInput(boxesData.currentPlanFees, 2),
-      workingTaxRate: parseInput(boxesData.workingTaxRate, 22),
+      currentAge: parseInput(boxesData.currentAge, 0),
+      retirementAge: parseInput(boxesData.retirementAge, 0),
+      stopSavingAge: parseInput(boxesData.stopSavingAge, 0),
+      currentPlanROR: parseInput(boxesData.currentPlanROR, 0),
+      retirementTaxRate: parseInput(boxesData.retirementTaxRate, 0),
+      currentPlanFees: parseInput(boxesData.currentPlanFees, 0),
+      workingTaxRate: parseInput(boxesData.workingTaxRate, 0),
       startingBalance: parseInput(startingBalance, 0),
-      annualContributions: parseInput(annualContributions, 45),
+      annualContributions: parseInput(annualContributions, 0),
       annualEmployerMatch: parseInput(annualEmployerMatch, 0),
-      yearsRunOutOfMoney: parseInput(yearsRunOutOfMoneyInput, 95),
+      yearsRunOutOfMoney: parseInput(yearsRunOutOfMoneyInput, 0),
     };
 
     if (
@@ -533,17 +533,17 @@ export function ComparisonTable({
 
       // Run calculation for Current Plan
       const currentPlanTable = runGrossRetirementIncomeLoop(
-        parseInput(boxesData.currentAge, 40),
+        parseInput(boxesData.currentAge, 0),
         ageToUse,
-        parseInput(annualContributions, 10000),
-        parseInput(boxesData.currentPlanROR, 6),
-        parseInput(boxesData.retirementTaxRate, 22),
-        parseInput(boxesData.currentPlanFees, 2),
-        parseInput(boxesData.workingTaxRate, 22),
+        parseInput(annualContributions, 0),
+        parseInput(boxesData.currentPlanROR, 0),
+        parseInput(boxesData.retirementTaxRate, 0),
+        parseInput(boxesData.currentPlanFees, 0),
+        parseInput(boxesData.workingTaxRate, 0),
         parseInput(startingBalance, 0),
         parseInput(annualEmployerMatch, 0),
-        parseInput(boxesData.retirementAge, 66),
-        parseInput(boxesData.stopSavingAge, 65)
+        parseInput(boxesData.retirementAge, 0),
+        parseInput(boxesData.stopSavingAge, 0)
       );
 
       // Find row for Current Plan
@@ -572,7 +572,7 @@ export function ComparisonTable({
             ),
             cumulativeTaxesPaid: formatValue(
               currentRow.retirementTaxes *
-                (ageToUse - parseInput(boxesData.retirementAge, 66) + 1)
+                (ageToUse - parseInput(boxesData.retirementAge, 0) + 1)
             ),
             cumulativeFeesPaid: formatValue(currentRow.cumulativeFees),
             cumulativeNetIncome: formatValue(currentRow.cumulativeIncome),
@@ -694,7 +694,7 @@ export function ComparisonTable({
           />
         ),
 
-        taxes: formatValue(parseInput(boxesData.workingTaxRate, 22), true),
+        taxes: formatValue(parseInput(boxesData.workingTaxRate, 0), true),
 
         taxFree: selectedRowData
           ? selectedRowData.taxFree.annualContributions
@@ -753,7 +753,7 @@ export function ComparisonTable({
           ? selectedRowData.current.incomeTax
           : formatValue(currentPlanResults.incomeTax),
 
-        taxes: formatValue(parseInput(boxesData.retirementTaxRate, 28), true),
+        taxes: formatValue(parseInput(boxesData.retirementTaxRate, 0), true),
 
         taxFree: selectedRowData
           ? selectedRowData.taxFree.incomeTax
@@ -1049,6 +1049,7 @@ export function ComparisonTable({
 
       onTotalAdvantageChange?.(totalAdvantage);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     yearsRunOutOfMoneyInput,
     selectedRowData,
