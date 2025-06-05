@@ -160,9 +160,14 @@ const TabContentRenderer = ({
               <Button
                 variant="outline"
                 size="sm"
-                className={`cursor-pointer p-6 min-w-1/5 ${
-                  activeButtons[8] ? "bg-red-300 hover:bg-red-300" : ""
-                }`}
+                className={`cursor-pointer p-6 min-w-1/5 
+                  ${activeButtons[8] ? "bg-red-300 hover:bg-red-300" : ""} 
+                  ${
+                    totalAdvantage.cumulativeTaxesPaid < 0
+                      ? "border-red-500 text-red-500"
+                      : ""
+                  } 
+                `}
                 onClick={() => toggleButton?.(8)}
               >
                 Taxes saved:
@@ -174,7 +179,9 @@ const TabContentRenderer = ({
                 size="sm"
                 className={`cursor-pointer p-6 min-w-1/5 ${
                   activeButtons[9] ? "bg-red-300 hover:bg-red-300" : ""
-                }`}
+                }
+                ${totalAdvantage.fees < 0 ? "border-red-500 text-red-500" : ""} 
+                `}
                 onClick={() => toggleButton?.(9)}
               >
                 Fees Saved: <br /> ${totalAdvantage.fees.toLocaleString()}
@@ -185,7 +192,13 @@ const TabContentRenderer = ({
                 size="sm"
                 className={`cursor-pointer p-6 min-w-1/5 ${
                   activeButtons[10] ? "bg-red-300 hover:bg-red-300" : ""
-                }`}
+                }
+                ${
+                  totalAdvantage.cumulativeIncome < 0
+                    ? "border-red-500 text-red-500"
+                    : ""
+                } 
+                `}
                 onClick={() => toggleButton?.(10)}
               >
                 Extra Income: <br /> $
@@ -197,7 +210,13 @@ const TabContentRenderer = ({
                 size="sm"
                 className={`cursor-pointer p-6 min-w-1/5 ${
                   activeButtons[13] ? "bg-red-300 hover:bg-red-300" : ""
-                }`}
+                }
+                ${
+                  totalAdvantage.deathBenefits < 0
+                    ? "border-red-500 text-red-500"
+                    : ""
+                } 
+                `}
                 onClick={() => toggleButton?.(13)}
               >
                 Death Benefit: <br /> $
