@@ -14,11 +14,13 @@ import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 import { debounce } from "@/lib/utils";
 import { notFound } from "next/navigation";
 
-export default function CalculatorPage({
-  params,
-}: {
-  params: { fileId: string };
-}) {
+interface PageProps {
+  params: {
+    fileId: string;
+  };
+}
+
+export default function CalculatorPage({ params }: PageProps) {
   const { fileId } = params;
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
