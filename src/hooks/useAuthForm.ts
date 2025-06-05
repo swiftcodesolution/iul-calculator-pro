@@ -14,9 +14,14 @@ export function useAuthForm() {
 
   useEffect(() => {
     const initializeFingerprint = async () => {
-      const fp = await FingerprintJS.load();
-      const result = await fp.get();
-      setDeviceFingerprint(result.visitorId);
+      try {
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        setDeviceFingerprint(result.visitorId);
+      } catch (error) {
+        console.error("FingerprintJS error:", error);
+        toast.error("Failed to initialize device fingerprint");
+      }
     };
     initializeFingerprint();
   }, []);
@@ -28,6 +33,11 @@ export function useAuthForm() {
     type: "signup" | "login",
     form: UseFormReturn<T>
   ) => {
+    if (!deviceFingerprint) {
+      toast.error("Device fingerprint not ready. Please try again.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -50,7 +60,7 @@ export function useAuthForm() {
           throw new Error(result.error || "Signup failed");
         }
 
-        toast.success("Signup successful!");
+        toast.success("Signup successful! Logging in...");
 
         const loginResult = await signIn("credentials", {
           redirect: false,
@@ -60,9 +70,10 @@ export function useAuthForm() {
         });
 
         if (loginResult?.ok) {
+          toast.success("Login successful");
           router.push("/dashboard/home");
         } else {
-          toast.error("Signup succeeded, but auto-login failed.");
+          throw new Error(loginResult?.error || "Auto-login failed");
         }
       } else {
         const loginData = data as z.infer<typeof loginSchema>;
@@ -72,25 +83,33 @@ export function useAuthForm() {
           password: loginData.loginPassword,
           deviceFingerprint,
         });
+
         if (result?.error) {
-          toast.error(
+          if (
             result.error === "Login restricted to the device used for signup."
-              ? "This device is not authorized. Use the device you signed up with."
-              : "Invalid credentials"
-          );
+          ) {
+            toast.error(
+              "This device is not authorized. Use the device you signed up with."
+            );
+          } else {
+            toast.error("Invalid email or password");
+          }
         } else {
-          toast.success("login successfull");
+          toast.success("Login successful");
           router.push("/dashboard/home");
         }
       }
-    } catch (error) {
-      toast.error("error occured");
-      console.log(error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred");
+      console.error(`${type} error:`, error);
     } finally {
       setIsSubmitting(false);
-      form.reset();
+      if (type === "signup") {
+        form.reset();
+      }
     }
   };
 
-  return { isSubmitting, handleSubmit };
+  return { isSubmitting, deviceFingerprint, handleSubmit };
 }

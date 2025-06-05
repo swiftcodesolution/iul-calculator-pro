@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/connect";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user?.id) {
@@ -12,6 +12,16 @@ export async function POST(_req: NextRequest) {
   }
 
   try {
+    await prisma.sessionHistory.updateMany({
+      where: {
+        userId: session.user.id,
+        logoutAt: null,
+      },
+      data: {
+        logoutAt: new Date(),
+      },
+    });
+
     const response = NextResponse.json({ message: "Signed out successfully" });
     response.headers.set(
       "Set-Cookie",
@@ -21,7 +31,6 @@ export async function POST(_req: NextRequest) {
     return response;
   } catch (error) {
     console.error("Sign-out error:", error);
-
     return NextResponse.json({ error: "Failed to sign out" }, { status: 500 });
   } finally {
     await prisma.$disconnect();

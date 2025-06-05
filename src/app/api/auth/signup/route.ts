@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import bcrypt from "bcrypt";
 import prisma from "@/lib/connect";
 
 const signupApiSchema = z.object({
@@ -11,10 +12,8 @@ const signupApiSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  console.log("Signup API called");
   try {
     const body = await request.json();
-    console.log("Request body:", body);
     const { email, password, firstName, lastName, deviceFingerprint } =
       signupApiSchema.parse(body);
 
@@ -26,10 +25,11 @@ export async function POST(request: Request) {
       );
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
     await prisma.user.create({
       data: {
         email,
-        password,
+        password: hashedPassword,
         firstName,
         lastName,
         deviceFingerprint,

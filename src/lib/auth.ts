@@ -1,7 +1,10 @@
+// src/lib/auth.ts
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { NextAuthOptions } from "next-auth";
+import bcrypt from "bcrypt";
 import prisma from "./connect";
+import { UAParser } from "ua-parser-js";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -13,36 +16,77 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
         deviceFingerprint: { label: "Device Fingerprint", type: "text" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (
           !credentials?.email ||
           !credentials?.password ||
           !credentials?.deviceFingerprint
-        )
-          return null;
+        ) {
+          throw new Error("Missing credentials");
+        }
 
         try {
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
           });
 
-          if (user && credentials.password === user.password) {
-            if (
-              user.deviceFingerprint &&
-              user.deviceFingerprint !== credentials.deviceFingerprint
-            ) {
-              throw new Error(
-                "Login restricted to the device used for signup."
-              );
-            }
-
-            return {
-              ...user,
-              deviceFingerprint: credentials.deviceFingerprint,
-            };
+          if (!user) {
+            throw new Error("User not found");
           }
 
-          return null;
+          if (!(await bcrypt.compare(credentials.password, user.password))) {
+            throw new Error("Invalid password");
+          }
+
+          if (
+            user.deviceFingerprint &&
+            user.deviceFingerprint !== credentials.deviceFingerprint
+          ) {
+            throw new Error("Login restricted to the device used for signup.");
+          }
+
+          // Extract IP address and user-agent safely
+          const headers = req.headers || {};
+          const ipAddress =
+            (headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+            (headers["x-real-ip"] as string) ||
+            "unknown";
+          const userAgent = (headers["user-agent"] as string) || "unknown";
+
+          // Parse user-agent with ua-parser-js
+          const parser = new UAParser(userAgent);
+          const { browser, os, device } = parser.getResult();
+
+          // Create session history entry
+          await prisma.sessionHistory.create({
+            data: {
+              userId: user.id,
+              sessionToken: crypto.randomUUID(),
+              deviceFingerprint: credentials.deviceFingerprint,
+              ipAddress,
+              userAgent,
+              browserName: browser.name,
+              browserVersion: browser.version,
+              osName: os.name,
+              osVersion: os.version,
+              deviceType: device.type,
+              deviceVendor: device.vendor,
+              deviceModel: device.model,
+              loginAt: new Date(),
+            },
+          });
+
+          return {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName ?? undefined, // Convert null to undefined
+            lastName: user.lastName ?? undefined, // Convert null to undefined
+            role: user.role,
+            deviceFingerprint: credentials.deviceFingerprint,
+          };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+          throw new Error(error.message || "Authentication failed");
         } finally {
           await prisma.$disconnect();
         }

@@ -17,6 +17,35 @@ model User {
   role      String   @default("agent")
   deviceFingerprint String?
   files     ClientFile[]
+  sessions  Session[]
+  sessionHistory  SessionHistory[]
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SessionHistory {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String    @db.ObjectId
+  sessionToken      String
+  deviceFingerprint String?
+  ipAddress         String?
+  userAgent         String?
+  browserName       String?   // e.g., Chrome, Firefox
+  browserVersion    String?   // e.g., 126.0.0
+  osName            String?   // e.g., Windows, macOS
+  osVersion         String?   // e.g., 10, 14.4.1
+  deviceType        String?   // e.g., desktop, mobile, tablet
+  deviceVendor      String?   // e.g., Apple, Samsung
+  deviceModel       String?   // e.g., iPhone, Galaxy S21
+  loginAt           DateTime  @default(now())
+  logoutAt          DateTime?
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ClientFile {
