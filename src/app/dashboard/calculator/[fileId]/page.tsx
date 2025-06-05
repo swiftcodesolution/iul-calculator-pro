@@ -21,7 +21,6 @@ export default function CalculatorPage({ params }: { params: Params }) {
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [hasFetched, setHasFetched] = useState(false);
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
   const [isTableCardExpanded, setIsTableCardExpanded] = useState(false);
   const [isTabCardExpanded, setIsTabCardExpanded] = useState(false);
@@ -75,14 +74,11 @@ export default function CalculatorPage({ params }: { params: Params }) {
     handleCellClick,
   } = useColumnHighlight();
 
-  // Fetch file data (once)
+  // Fetch file data
   useEffect(() => {
-    if (
-      status !== "authenticated" ||
-      !session?.user?.id ||
-      !fileId ||
-      hasFetched
-    ) {
+    if (status !== "authenticated" || !session?.user?.id || !fileId) {
+      setError("Unauthorized or invalid file ID");
+      setLoading(false);
       return;
     }
 
@@ -99,14 +95,15 @@ export default function CalculatorPage({ params }: { params: Params }) {
           return;
         }
         const data: ClientFile = await response.json();
+        console.log("Fetched data:", data); // Debug
         setBoxesData(data.boxesData || {});
         setTables(data.tablesData?.tables || []);
         setStartingBalance(data.tablesData?.startingBalance || 0);
         setAnnualContributions(data.tablesData?.annualContributions || 0);
         setAnnualEmployerMatch(data.tablesData?.annualEmployerMatch || 0);
         setYearsRunOutOfMoney(data.tablesData?.yearsRunOutOfMoney || 0);
-        setHasFetched(true);
-      } catch {
+      } catch (err) {
+        console.error("Fetch error:", err); // Debug
         setError("Error fetching file");
       } finally {
         setLoading(false);
@@ -118,7 +115,6 @@ export default function CalculatorPage({ params }: { params: Params }) {
     fileId,
     session,
     status,
-    hasFetched,
     setBoxesData,
     setTables,
     setStartingBalance,
@@ -146,8 +142,23 @@ export default function CalculatorPage({ params }: { params: Params }) {
             },
           }),
         });
-        if (!response.ok) setError("Failed to save changes");
-      } catch {
+        if (!response.ok) {
+          console.error("Save failed:", response.status); // Debug
+          setError("Failed to save changes");
+        } else {
+          console.log("Saved data:", {
+            boxesData,
+            tablesData: {
+              tables,
+              startingBalance,
+              annualContributions,
+              annualEmployerMatch,
+              yearsRunOutOfMoney,
+            },
+          }); // Debug
+        }
+      } catch (err) {
+        console.error("Save error:", err); // Debug
         setError("Error saving changes");
       }
     },

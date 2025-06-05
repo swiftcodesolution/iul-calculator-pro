@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { use, useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -13,59 +13,169 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { ZoomIn, ZoomOut, Minimize2 } from "lucide-react";
+import { ZoomIn, ZoomOut } from "lucide-react";
 import { useTableStore } from "@/lib/store";
 import { runGrossRetirementIncomeLoop, runTaxFreePlanLoop } from "@/lib/logics";
 import { useRouter } from "next/navigation";
-import { CombinedResult } from "@/lib/types";
+import { useSession } from "next-auth/react";
+import { CombinedResult, ClientFile } from "@/lib/types";
+import { debounce } from "@/lib/utils";
+import { notFound } from "next/navigation";
 
-export default function CombinedPlanTable() {
-  const [evenColumnColor, setEvenColumnColor] = useState("#e6f3ff"); // TFP columns
-  const [oddColumnColor, setOddColumnColor] = useState("#f0f0f0"); // Current Plan columns
-  const [zoomLevel, setZoomLevel] = useState(0.6); // Zoom scale (1 = normal)
-  const [isFullScreen, setIsFullScreen] = useState(false);
+type Params = Promise<{ fileId: string }>;
+
+export default function CombinedPlanTable({ params }: { params: Params }) {
+  const { fileId } = use(params);
+  const { data: session, status } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [evenColumnColor, setEvenColumnColor] = useState("#e6f3ff");
+  const [oddColumnColor, setOddColumnColor] = useState("#f0f0f0");
+  const [zoomLevel, setZoomLevel] = useState(0.6);
+
   const [isScrolled, setIsScrolled] = useState(false);
   const router = useRouter();
+
+  const isFullScreen = false;
 
   const fontSize = `${zoomLevel}rem`;
   const paddingSize = `${0.75 * zoomLevel}rem`;
 
+  const {
+    tables,
+    setTables,
+    boxesData,
+    setBoxesData,
+    startingBalance,
+    setStartingBalance,
+    annualContributions,
+    setAnnualContributions,
+    annualEmployerMatch,
+    setAnnualEmployerMatch,
+    yearsRunOutOfMoney,
+    setYearsRunOutOfMoney,
+    clearStore,
+  } = useTableStore();
+
+  // Auth and file check
+  useEffect(() => {
+    if (status !== "authenticated" || !session?.user?.id || !fileId) {
+      setError("Unauthorized or invalid file ID");
+      setLoading(false);
+      return;
+    }
+
+    const fetchFile = async () => {
+      try {
+        const response = await fetch(`/api/files/${fileId}`);
+        if (!response.ok) {
+          if (response.status === 400 || response.status === 404) {
+            setError("File not found");
+            notFound();
+          } else {
+            setError("Failed to fetch file");
+          }
+          return;
+        }
+        const data: ClientFile = await response.json();
+        console.log("Fetched data:", data); // Debug
+        setBoxesData(data.boxesData || {});
+        setTables(data.tablesData?.tables || []);
+        setStartingBalance(data.tablesData?.startingBalance || 0);
+        setAnnualContributions(data.tablesData?.annualContributions || 0);
+        setAnnualEmployerMatch(data.tablesData?.annualEmployerMatch || 0);
+        setYearsRunOutOfMoney(data.tablesData?.yearsRunOutOfMoney || 0);
+      } catch (err) {
+        console.error("Fetch error:", err); // Debug
+        setError("Error fetching file");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFile();
+  }, [
+    fileId,
+    session,
+    status,
+    setBoxesData,
+    setTables,
+    setStartingBalance,
+    setAnnualContributions,
+    setAnnualEmployerMatch,
+    setYearsRunOutOfMoney,
+  ]);
+
+  // Debounced save
+  const saveChanges = debounce(
+    async () => {
+      if (!fileId || status !== "authenticated" || !session?.user?.id) return;
+      try {
+        const response = await fetch(`/api/files/${fileId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            boxesData,
+            tablesData: {
+              tables,
+              startingBalance,
+              annualContributions,
+              annualEmployerMatch,
+              yearsRunOutOfMoney,
+            },
+          }),
+        });
+        if (!response.ok) {
+          console.error("Save failed:", response.status); // Debug
+          setError("Failed to save changes");
+        } else {
+          console.log("Saved data:", {
+            boxesData,
+            tablesData: {
+              tables,
+              startingBalance,
+              annualContributions,
+              annualEmployerMatch,
+              yearsRunOutOfMoney,
+            },
+          }); // Debug
+        }
+      } catch (err) {
+        console.error("Save error:", err); // Debug
+        setError("Error saving changes");
+      }
+    },
+    1000,
+    { leading: false, trailing: true }
+  );
+
+  // Save on state changes
+  useEffect(() => {
+    saveChanges();
+    return () => saveChanges.cancel();
+  }, [
+    boxesData,
+    tables,
+    startingBalance,
+    annualContributions,
+    annualEmployerMatch,
+    yearsRunOutOfMoney,
+    saveChanges,
+  ]);
+
   const handleZoomIn = () => setZoomLevel((prev) => prev + 0.2);
-  const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 0.2, 0.4)); // Minimum zoom 0.4
-  const handleFullScreenToggle = () => setIsFullScreen((prev) => !prev);
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 0.2, 0.4));
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) =>
     setIsScrolled(e.currentTarget.scrollTop > 50);
-  };
 
-  function getContrastingTextColor(bgColor: string): string {
+  const getContrastingTextColor = (bgColor: string): string => {
     const r = parseInt(bgColor.slice(1, 3), 16);
     const g = parseInt(bgColor.slice(3, 5), 16);
     const b = parseInt(bgColor.slice(5, 7), 16);
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance > 0.5 ? "#000000" : "#FFFFFF";
-  }
+  };
 
-  const {
-    tables = [],
-    boxesData = {
-      currentAge: "",
-      stopSavingAge: "",
-      retirementAge: "",
-      workingTaxRate: "",
-      retirementTaxRate: "",
-      inflationRate: "",
-      currentPlanFees: "",
-      currentPlanROR: "",
-      taxFreePlanROR: "",
-    },
-    yearsRunOutOfMoney = 0,
-    startingBalance = 0,
-    annualContributions = 0,
-    annualEmployerMatch = 0,
-  } = useTableStore();
-
-  // Utility to parse input with fallback
   const parseInput = (
     value: string | number | undefined | null,
     fallback: number
@@ -76,20 +186,19 @@ export default function CombinedPlanTable() {
     return isNaN(parsed) || parsed < 0 ? fallback : parsed;
   };
 
-  // Compute Current Plan results
   const currentPlanResults = useMemo(() => {
     const inputs = {
-      currentAge: parseInput(boxesData.currentAge, 45),
-      yearsRunOutOfMoney: parseInput(yearsRunOutOfMoney, 95),
-      annualContributions: parseInput(annualContributions, 12821),
-      currentPlanROR: parseInput(boxesData.currentPlanROR, 6.3),
-      retirementTaxRate: parseInput(boxesData.retirementTaxRate, 22),
-      currentPlanFees: parseInput(boxesData.currentPlanFees, 2),
-      workingTaxRate: parseInput(boxesData.workingTaxRate, 22),
+      currentAge: parseInput(boxesData.currentAge, 0),
+      yearsRunOutOfMoney: parseInput(yearsRunOutOfMoney, 0),
+      annualContributions: parseInput(annualContributions, 0),
+      currentPlanROR: parseInput(boxesData.currentPlanROR, 0),
+      retirementTaxRate: parseInput(boxesData.retirementTaxRate, 0),
+      currentPlanFees: parseInput(boxesData.currentPlanFees, 0),
+      workingTaxRate: parseInput(boxesData.workingTaxRate, 0),
       startingBalance: parseInput(startingBalance, 0),
       annualEmployerMatch: parseInput(annualEmployerMatch, 0),
-      retirementAge: parseInput(boxesData.retirementAge, 66),
-      stopSavingAge: parseInput(boxesData.stopSavingAge, 65),
+      retirementAge: parseInput(boxesData.retirementAge, 0),
+      stopSavingAge: parseInput(boxesData.stopSavingAge, 0),
     };
 
     if (
@@ -127,11 +236,10 @@ export default function CombinedPlanTable() {
     annualEmployerMatch,
   ]);
 
-  // Compute Tax-Free Plan results
   const taxFreePlanResults = useMemo(() => {
     const inputs = {
-      currentAge: parseInput(boxesData.currentAge, 45),
-      yearsRunOutOfMoney: parseInput(yearsRunOutOfMoney, 95),
+      currentAge: parseInput(boxesData.currentAge, 0),
+      yearsRunOutOfMoney: parseInput(yearsRunOutOfMoney, 0),
     };
 
     if (inputs.currentAge >= inputs.yearsRunOutOfMoney) {
@@ -145,7 +253,6 @@ export default function CombinedPlanTable() {
     );
   }, [tables, boxesData.currentAge, yearsRunOutOfMoney]);
 
-  // Combine results
   const combinedResults = useMemo<CombinedResult[]>(() => {
     const maxLength = Math.max(
       currentPlanResults.length,
@@ -156,7 +263,7 @@ export default function CombinedPlanTable() {
     for (let i = 0; i < maxLength; i++) {
       const current = currentPlanResults[i] || {
         year: i + 1,
-        age: parseInput(boxesData.currentAge, 45) + i,
+        age: parseInput(boxesData.currentAge, 0) + i,
         annualContribution: 0,
         grossRetirementIncome: 0,
         retirementTaxes: 0,
@@ -209,7 +316,6 @@ export default function CombinedPlanTable() {
     return results;
   }, [currentPlanResults, taxFreePlanResults, boxesData.currentAge]);
 
-  // Format values for display
   const formatValue = (
     value: number | string | undefined,
     isPercentage: boolean = false,
@@ -281,11 +387,14 @@ export default function CombinedPlanTable() {
         <CardTitle>Combined Plan Yearly Results</CardTitle>
       </CardHeader>
       <CardContent className="p-0 flex-1 overflow-hidden relative">
-        {isScrolled && (
-          <div
-            className="absolute top-0 left-0 w-full bg-white z-10 shadow-md"
-            style={{ width: "99%" }}
-          >
+        {combinedResults.length === 0 && (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            No data available. Please upload or input data in Import or
+            Calculator.
+          </div>
+        )}
+        {isScrolled && combinedResults.length > 0 && (
+          <div className="absolute top-0 left-0 w-[99%] bg-white z-10 shadow-md">
             <Table className="table-fixed w-full">
               <TableHeader>
                 <TableRow>
@@ -321,63 +430,27 @@ export default function CombinedPlanTable() {
             </Table>
           </div>
         )}
-        <div className="w-full h-full overflow-auto" onScroll={handleScroll}>
-          <div className="min-w-full">
-            <Table className="table-fixed w-full">
-              <TableHeader>
-                <TableRow>
-                  {headers.map((header) => {
-                    const isTFP = header.includes("TFP");
-                    const isFixed = header === "Year" || header === "Age";
-
-                    const bgColor = isFixed
-                      ? "#FFFFFF"
-                      : isTFP
-                      ? evenColumnColor
-                      : oddColumnColor;
-
-                    const textColor = isFixed
-                      ? "#000000"
-                      : getContrastingTextColor(bgColor);
-                    return (
-                      <TableHead
-                        key={header}
-                        className="whitespace-break-spaces border break-words text-wrap align-top text-sm text-center"
-                        style={{
-                          backgroundColor: bgColor,
-                          color: textColor,
-                          fontSize,
-                          padding: paddingSize,
-                          width: "70px",
-                        }}
-                      >
-                        {header}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {combinedResults.map((row, rowIndex) => (
-                  <TableRow key={rowIndex}>
-                    {headers.map((header, colIndex) => {
+        {combinedResults.length > 0 && (
+          <div className="w-full h-full overflow-auto" onScroll={handleScroll}>
+            <div className="min-w-full">
+              <Table className="table-fixed w-full">
+                <TableHeader>
+                  <TableRow>
+                    {headers.map((header) => {
                       const isTFP = header.includes("TFP");
                       const isFixed = header === "Year" || header === "Age";
-
                       const bgColor = isFixed
                         ? "#FFFFFF"
                         : isTFP
                         ? evenColumnColor
                         : oddColumnColor;
-
                       const textColor = isFixed
                         ? "#000000"
                         : getContrastingTextColor(bgColor);
-
                       return (
-                        <TableCell
-                          key={`${rowIndex}-${colIndex}`}
-                          className="border whitespace-nowrap text-sm"
+                        <TableHead
+                          key={header}
+                          className="whitespace-break-spaces border break-words text-wrap align-top text-sm text-center"
                           style={{
                             backgroundColor: bgColor,
                             color: textColor,
@@ -386,27 +459,62 @@ export default function CombinedPlanTable() {
                             width: "70px",
                           }}
                         >
-                          {formatValue(
-                            row[headerToKey[header]],
-                            false,
-                            header === "Year" || header === "Age"
-                          )}
-                        </TableCell>
+                          {header}
+                        </TableHead>
                       );
                     })}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {combinedResults.map((row, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      {headers.map((header, colIndex) => {
+                        const isTFP = header.includes("TFP");
+                        const isFixed = header === "Year" || header === "Age";
+                        const bgColor = isFixed
+                          ? "#FFFFFF"
+                          : isTFP
+                          ? evenColumnColor
+                          : oddColumnColor;
+                        const textColor = isFixed
+                          ? "#000000"
+                          : getContrastingTextColor(bgColor);
+                        return (
+                          <TableCell
+                            key={`${rowIndex}-${colIndex}`}
+                            className="border whitespace-nowrap text-sm"
+                            style={{
+                              backgroundColor: bgColor,
+                              color: textColor,
+                              fontSize,
+                              padding: paddingSize,
+                              width: "70px",
+                            }}
+                          >
+                            {formatValue(
+                              row[headerToKey[header]],
+                              false,
+                              header === "Year" || header === "Age"
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
 
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
+
   return (
     <div className="flex flex-col p-0">
-      {/* Header Controls */}
       <div className="flex items-end justify-between mb-4">
         <div className="flex gap-2">
           <div className="flex items-center gap-2">
@@ -434,7 +542,10 @@ export default function CombinedPlanTable() {
           <Button
             variant="destructive"
             className="cursor-pointer"
-            onClick={() => router.push("/dashboard/import")}
+            onClick={() => {
+              clearStore();
+              router.push(`/dashboard/import/${fileId}`);
+            }}
           >
             Clear
           </Button>
@@ -466,7 +577,6 @@ export default function CombinedPlanTable() {
         </div>
       </div>
 
-      {/* Table Section */}
       <AnimatePresence>
         {!isFullScreen ? (
           <motion.div
@@ -489,9 +599,9 @@ export default function CombinedPlanTable() {
           >
             <Card className="gap-0 p-0 flex-1 flex flex-col">
               <CardHeader className="flex flex-row items-center justify-end">
-                <Button variant="outline" onClick={handleFullScreenToggle}>
+                {/* <Button variant="outline" onClick={handleFullScreenToggle}>
                   <Minimize2 className="h-4 w-4" />
-                </Button>
+                </Button> */}
               </CardHeader>
               <CardContent className="overflow-auto flex-1">
                 {renderTable()}

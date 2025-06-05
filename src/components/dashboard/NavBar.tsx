@@ -28,7 +28,11 @@ const NavBar = () => {
       href: `/dashboard/import/${selectedFileId}`,
       icon: Upload,
     },
-    { label: "Data", href: "/dashboard/data", icon: Database },
+    {
+      label: "Data",
+      href: `/dashboard/data/${selectedFileId}`,
+      icon: Database,
+    },
   ];
 
   useEffect(() => {

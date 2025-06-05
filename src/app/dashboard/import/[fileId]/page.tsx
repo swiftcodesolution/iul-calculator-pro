@@ -52,7 +52,7 @@ export default function ImportPage({ params }: { params: Params }) {
   const [isTableLoading, setIsTableLoading] = useState(false); // Renamed for clarity
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isTableFullScreen, setIsTableFullScreen] = useState(false);
-  const { tables, setTables, clearTables } = useTableStore();
+  const { tables, setTables, clearStore } = useTableStore();
   const router = useRouter();
   const {
     highlightedRows,
@@ -134,7 +134,7 @@ export default function ImportPage({ params }: { params: Params }) {
     if (selectedFile && selectedFile.type === "application/pdf") {
       setFile(selectedFile);
       setError(null); // Match calculator
-      clearTables();
+      clearStore();
       setZoomLevel(1);
       setIsTableFullScreen(false);
     } else {
@@ -191,7 +191,7 @@ export default function ImportPage({ params }: { params: Params }) {
 
   const handleCancel = () => {
     setFile(null);
-    clearTables();
+    clearStore();
     setError(null);
     setZoomLevel(1);
     setIsTableFullScreen(false);

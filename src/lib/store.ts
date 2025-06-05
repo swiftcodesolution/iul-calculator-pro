@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 import { BoxesData, TableData, TabContent } from "./types";
 
 interface TableStore {
@@ -18,16 +17,53 @@ interface TableStore {
   setAnnualEmployerMatch: (value: number | string) => void;
   tabs: TabContent[];
   setTabs: (tabs: TabContent[]) => void;
+  clearStore: () => void; // New action to reset store
 }
 
-export const useTableStore = create<TableStore>()(
-  persist(
-    (set) => ({
+export const useTableStore = create<TableStore>((set) => ({
+  tables: [],
+  setTables: (tables) => set({ tables }),
+  clearTables: () => set({ tables: [] }),
+  yearsRunOutOfMoney: "",
+  setYearsRunOutOfMoney: (age) => set({ yearsRunOutOfMoney: age }),
+  boxesData: {
+    currentAge: "",
+    stopSavingAge: "",
+    retirementAge: "",
+    workingTaxRate: "",
+    retirementTaxRate: "",
+    inflationRate: "",
+    currentPlanFees: "",
+    currentPlanROR: "",
+    taxFreePlanROR: "",
+  },
+  setBoxesData: (updatedData) =>
+    set((state) => ({ boxesData: { ...state.boxesData, ...updatedData } })),
+  startingBalance: "",
+  annualContributions: "",
+  annualEmployerMatch: "",
+  setStartingBalance: (value) => set({ startingBalance: value }),
+  setAnnualContributions: (value) => set({ annualContributions: value }),
+  setAnnualEmployerMatch: (value) => set({ annualEmployerMatch: value }),
+  tabs: [
+    {
+      id: "total-advantage",
+      name: "Total Advantage",
+      type: "totalAdvantage",
+      isVisible: true,
+    },
+    {
+      id: "calculator",
+      name: "Calculator",
+      type: "calculator",
+      isVisible: true,
+    },
+  ],
+  setTabs: (tabs) => set({ tabs }),
+  clearStore: () =>
+    set({
       tables: [],
-      setTables: (tables) => set({ tables }),
-      clearTables: () => set({ tables: [] }),
       yearsRunOutOfMoney: "",
-      setYearsRunOutOfMoney: (age) => set({ yearsRunOutOfMoney: age }),
       boxesData: {
         currentAge: "",
         stopSavingAge: "",
@@ -39,14 +75,9 @@ export const useTableStore = create<TableStore>()(
         currentPlanROR: "",
         taxFreePlanROR: "",
       },
-      setBoxesData: (updatedData) =>
-        set((state) => ({ boxesData: { ...state.boxesData, ...updatedData } })),
       startingBalance: "",
       annualContributions: "",
       annualEmployerMatch: "",
-      setStartingBalance: (value) => set({ startingBalance: value }),
-      setAnnualContributions: (value) => set({ annualContributions: value }),
-      setAnnualEmployerMatch: (value) => set({ annualEmployerMatch: value }),
       tabs: [
         {
           id: "total-advantage",
@@ -61,26 +92,5 @@ export const useTableStore = create<TableStore>()(
           isVisible: true,
         },
       ],
-      setTabs: (tabs) => set({ tabs }),
     }),
-    {
-      name: "table-storage",
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        tables: state.tables,
-        yearsRunOutOfMoney: state.yearsRunOutOfMoney,
-        boxesData: state.boxesData,
-        startingBalance: state.startingBalance,
-        annualContributions: state.annualContributions,
-        annualEmployerMatch: state.annualEmployerMatch,
-        tabs: state.tabs.map((tab) => ({
-          id: tab.id,
-          name: tab.name,
-          type: tab.type,
-          isVisible: tab.isVisible,
-          src: tab.src,
-        })),
-      }),
-    }
-  )
-);
+}));
