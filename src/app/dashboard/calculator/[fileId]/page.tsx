@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { InputParameters } from "@/components/calculator/InputParameters";
 import { ComparisonTable } from "@/components/calculator/ComparisonTable";
@@ -14,14 +14,10 @@ import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 import { debounce } from "@/lib/utils";
 import { notFound } from "next/navigation";
 
-interface PageProps {
-  params: {
-    fileId: string;
-  };
-}
+type Params = Promise<{ fileId: string }>;
 
-export default function CalculatorPage({ params }: PageProps) {
-  const { fileId } = params;
+export default function CalculatorPage({ params }: { params: Params }) {
+  const { fileId } = use(params);
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
