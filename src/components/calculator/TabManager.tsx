@@ -24,8 +24,6 @@ interface TabManagerProps {
   setIsTabCardExpanded: (value: boolean) => void;
   isAddDialogOpen: boolean;
   setIsAddDialogOpen: (value: boolean) => void;
-  isManageDialogOpen: boolean;
-  setIsManageDialogOpen: (value: boolean) => void;
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: (value: boolean) => void;
   setEditTabId: (id: string | null) => void;
@@ -41,6 +39,8 @@ interface TabManagerProps {
   handleMoveDown: (index: number) => void;
   totalAdvantage: TotalAdvantage;
   handleCellClick?: (rowIndex: number) => void;
+  isManageDialogOpen?: boolean; // Optional
+  setIsManageDialogOpen?: (value: boolean) => void; // Optional
 }
 
 // Reusable Tab Navigation Component

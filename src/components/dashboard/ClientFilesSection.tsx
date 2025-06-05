@@ -56,7 +56,7 @@ export default function ClientFilesSection({
 
   const handleOpen = () => {
     if (selectedFileId) {
-      router.push(`/dashboard/calculator?fileId=${selectedFileId}`);
+      router.push(`/dashboard/calculator/${selectedFileId}`);
     }
   };
 

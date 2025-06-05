@@ -296,13 +296,18 @@ export function ComparisonTable({
     }
   };
 
+  const yearsRunOutOfMoneyNumber = Number(yearsRunOutOfMoney);
+
   useEffect(() => {
-    if (ageOptions.length > 0 && !ageOptions.includes(yearsRunOutOfMoney)) {
+    if (
+      ageOptions.length > 0 &&
+      !ageOptions.includes(yearsRunOutOfMoneyNumber)
+    ) {
       const newAge = ageOptions[0] || 0;
       setYearsRunOutOfMoney(newAge);
       setYearsRunOutOfMoneyInput(newAge);
     }
-  }, [ageOptions, yearsRunOutOfMoney, setYearsRunOutOfMoney]);
+  }, [ageOptions, yearsRunOutOfMoneyNumber, setYearsRunOutOfMoney]);
 
   // Utility to parse input with fallback
   const parseInput = (
@@ -452,9 +457,9 @@ export function ComparisonTable({
         yearsRunOutOfMoney,
       };
     }
-    return extractTaxFreeResults(tables, currentAge, yearsRunOutOfMoney);
+    return extractTaxFreeResults(tables, currentAge, yearsRunOutOfMoneyNumber);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tables, currentAge, yearsRunOutOfMoneyInput, yearsRunOutOfMoney]);
+  }, [tables, currentAge, yearsRunOutOfMoneyInput, yearsRunOutOfMoneyNumber]);
 
   const handleYearsRunOutOfMoneyChange = (value: string) => {
     const age = Number(value);

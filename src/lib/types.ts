@@ -28,17 +28,25 @@ export type CompanyInfo = {
   profilePicSrc?: string;
 };
 
+export interface TablesData {
+  tables: TableData[];
+  startingBalance: number | string;
+  annualContributions: number | string;
+  annualEmployerMatch: number | string;
+  yearsRunOutOfMoney: number | string;
+}
+
 export type ClientFile = {
   id: string;
-  fileName: string;
   userId: string;
-  deviceFingerprint: string | null;
+  fileName: string;
+  createdAt: string;
+  updatedAt: string;
   createdByRole: string;
   category: string;
-  boxesData: any | null;
-  tablesData: any[] | null;
-  combinedResults: any[] | null;
-  createdAt: string;
+  boxesData?: BoxesData;
+  tablesData?: TablesData;
+  combinedResults?: any;
 };
 
 export type CropState = {
@@ -53,7 +61,7 @@ export type CropState = {
   } | null;
 };
 
-export type BoxesData = {
+export interface BoxesData {
   currentAge: number | string;
   stopSavingAge: number | string;
   retirementAge: number | string;
@@ -63,7 +71,7 @@ export type BoxesData = {
   currentPlanFees: number | string;
   currentPlanROR: number | string;
   taxFreePlanROR: number | string;
-};
+}
 
 export type BoxesInputField = {
   label: string;
@@ -87,7 +95,7 @@ export type Results = {
   cumulativeAccountBalance: number;
   taxesDue: number; // Percentage
   deathBenefits: number;
-  yearsRunOutOfMoney: number;
+  yearsRunOutOfMoney: number | string;
   currentAge: number;
 };
 
@@ -116,6 +124,7 @@ export interface CombinedResult {
 }
 
 export interface TableData {
+  id?: string;
   source: string;
   page_number: number;
   keyword?: string;
@@ -156,7 +165,7 @@ export interface RowData {
   cumulativeAccountBalance: string;
   taxesDue: string;
   deathBenefits: string;
-  yearsRunOutOfMoney: string;
+  yearsRunOutOfMoney: number | string;
 }
 
 export interface SelectedRowData {

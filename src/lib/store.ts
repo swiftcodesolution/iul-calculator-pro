@@ -1,13 +1,13 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { BoxesData, TableData, TabContent } from "@/lib/types";
+import { BoxesData, TableData, TabContent } from "./types";
 
 interface TableStore {
   tables: TableData[];
   setTables: (tables: TableData[]) => void;
   clearTables: () => void;
-  yearsRunOutOfMoney: number;
-  setYearsRunOutOfMoney: (age: number) => void;
+  yearsRunOutOfMoney: number | string;
+  setYearsRunOutOfMoney: (age: number | string) => void;
   boxesData: BoxesData;
   setBoxesData: (updatedData: Partial<BoxesData>) => void;
   startingBalance: number | string;
@@ -26,26 +26,24 @@ export const useTableStore = create<TableStore>()(
       tables: [],
       setTables: (tables) => set({ tables }),
       clearTables: () => set({ tables: [] }),
-      yearsRunOutOfMoney: 0,
+      yearsRunOutOfMoney: "",
       setYearsRunOutOfMoney: (age) => set({ yearsRunOutOfMoney: age }),
       boxesData: {
-        currentAge: "0",
-        stopSavingAge: "0",
-        retirementAge: "0",
-        workingTaxRate: "0",
-        retirementTaxRate: "0",
-        inflationRate: "0",
-        currentPlanFees: "0",
-        currentPlanROR: "0",
-        taxFreePlanROR: "0",
+        currentAge: "",
+        stopSavingAge: "",
+        retirementAge: "",
+        workingTaxRate: "",
+        retirementTaxRate: "",
+        inflationRate: "",
+        currentPlanFees: "",
+        currentPlanROR: "",
+        taxFreePlanROR: "",
       },
       setBoxesData: (updatedData) =>
-        set((state) => ({
-          boxesData: { ...state.boxesData, ...updatedData },
-        })),
-      startingBalance: 0,
-      annualContributions: 0,
-      annualEmployerMatch: 0,
+        set((state) => ({ boxesData: { ...state.boxesData, ...updatedData } })),
+      startingBalance: "",
+      annualContributions: "",
+      annualEmployerMatch: "",
       setStartingBalance: (value) => set({ startingBalance: value }),
       setAnnualContributions: (value) => set({ annualContributions: value }),
       setAnnualEmployerMatch: (value) => set({ annualEmployerMatch: value }),
@@ -66,7 +64,7 @@ export const useTableStore = create<TableStore>()(
       setTabs: (tabs) => set({ tabs }),
     }),
     {
-      name: "table-storage", // Key in localStorage
+      name: "table-storage",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         tables: state.tables,
@@ -80,7 +78,7 @@ export const useTableStore = create<TableStore>()(
           name: tab.name,
           type: tab.type,
           isVisible: tab.isVisible,
-          src: tab.src, // Store src for media tabs
+          src: tab.src,
         })),
       }),
     }

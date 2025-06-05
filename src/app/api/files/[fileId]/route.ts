@@ -27,7 +27,6 @@ export async function PATCH(
     );
   }
 
-  // For admin-created files, only allow admins to save data changes
   if (file.createdByRole === "admin" && session.user.role !== "admin") {
     return NextResponse.json({
       message: "Changes not saved for Pro Sample Files",
@@ -35,7 +34,6 @@ export async function PATCH(
     });
   }
 
-  // Validate category if provided
   const validCategories = [
     "Pro Sample Files",
     "Your Sample Files",
@@ -46,18 +44,25 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }
 
-  // Update DB for allowed fields
-  const updatedFile = await prisma.clientFile.update({
-    where: { id: fileId },
-    data: {
-      ...(boxesData?.length > 0 && { boxesData }),
-      ...(tablesData?.length > 0 && { tablesData }),
-      ...(combinedResults?.length > 0 && { combinedResults }),
-      ...(category && { category }),
-    },
-  });
-
-  return NextResponse.json(updatedFile);
+  try {
+    const updatedFile = await prisma.clientFile.update({
+      where: { id: fileId },
+      data: {
+        ...(boxesData && { boxesData }),
+        ...(tablesData && { tablesData }),
+        ...(combinedResults && { combinedResults }),
+        ...(category && { category }),
+        updatedAt: new Date(),
+      },
+    });
+    return NextResponse.json(updatedFile);
+  } catch (error) {
+    console.error("Error updating file:", error);
+    return NextResponse.json(
+      { error: "Failed to update file" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function DELETE(

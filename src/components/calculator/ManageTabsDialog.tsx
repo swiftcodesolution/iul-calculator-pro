@@ -16,8 +16,8 @@ import { Input } from "@/components/ui/input";
 interface ManageTabsDialogProps {
   tabs: TabContent[];
   setTabs: (tabs: TabContent[]) => void;
-  isManageDialogOpen: boolean;
-  setIsManageDialogOpen: (value: boolean) => void;
+  isManageDialogOpen?: boolean;
+  setIsManageDialogOpen?: (value: boolean) => void;
   setEditTabId: (id: string | null) => void;
   newTabName: string; // Added
   setNewTabName: (name: string) => void;
@@ -29,7 +29,7 @@ interface ManageTabsDialogProps {
   handleMoveUp: (index: number) => void;
   handleMoveDown: (index: number) => void;
   isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (value: boolean) => void;
+  setIsEditDialogOpen?: (value: boolean) => void;
 }
 
 export function ManageTabsDialog({
@@ -142,7 +142,7 @@ export function ManageTabsDialog({
                         setEditTabId(tab.id);
                         setNewTabName(tab.name);
                         setNewTabFile(null);
-                        setIsEditDialogOpen(true);
+                        setIsEditDialogOpen!(true);
                       }}
                       disabled={
                         tab.id === "total-advantage" || tab.id === "calculator"
@@ -167,7 +167,7 @@ export function ManageTabsDialog({
               ))}
             </div>
             <Button
-              onClick={() => setIsManageDialogOpen(false)}
+              onClick={() => setIsManageDialogOpen!(false)}
               className="w-full"
             >
               Save
