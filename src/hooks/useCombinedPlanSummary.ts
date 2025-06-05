@@ -117,9 +117,11 @@ export function useCombinedPlanSummary(): Record<string, number> {
 
   const taxFreePlanResults = useMemo(() => {
     const currentAge = parseInput(boxesData.currentAge, 45);
-    if (currentAge >= yearsRunOutOfMoney) return [];
 
-    return runTaxFreePlanLoop(tables, currentAge, yearsRunOutOfMoney);
+    const yearsRunOutOfMoneyNumber = Number(yearsRunOutOfMoney);
+    if (currentAge >= yearsRunOutOfMoneyNumber) return [];
+
+    return runTaxFreePlanLoop(tables, currentAge, yearsRunOutOfMoneyNumber);
   }, [tables, boxesData.currentAge, yearsRunOutOfMoney]);
 
   const combinedResults = useMemo(() => {
