@@ -16,6 +16,12 @@ import { TotalAdvantage } from "@/lib/types";
 import { ManageTabsDialog } from "@/components/calculator/ManageTabsDialog";
 import { useTableStore } from "@/lib/store";
 import React, { useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 interface TabManagerProps {
   activeTab: string | null;
@@ -73,14 +79,23 @@ const TabNavigation = ({
           whileTap={{ scale: 1 }}
           title={tab.name}
         >
-          <Button
-            variant={activeTab === tab.id ? "default" : "outline"}
-            onClick={() => setActiveTab(tab.id)}
-            aria-selected={activeTab === tab.id}
-            className="cursor-pointer"
-          >
-            {index + 1}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={activeTab === tab.id ? "default" : "outline"}
+                  onClick={() => setActiveTab(tab.id)}
+                  aria-selected={activeTab === tab.id}
+                  className="cursor-pointer"
+                >
+                  {index + 1}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-sm">{tab.name}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </motion.div>
       ))}
   </div>
