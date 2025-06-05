@@ -23,7 +23,11 @@ const NavBar = () => {
       href: `/dashboard/calculator/${selectedFileId}`,
       icon: Calculator,
     },
-    { label: "Import", href: "/dashboard/import", icon: Upload },
+    {
+      label: "Import",
+      href: `/dashboard/import/${selectedFileId}`,
+      icon: Upload,
+    },
     { label: "Data", href: "/dashboard/data", icon: Database },
   ];
 

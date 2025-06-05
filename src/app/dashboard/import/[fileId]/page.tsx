@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
-import { motion, AnimatePresence } from "motion/react"; // Updated to include AnimatePresence
+import { motion, AnimatePresence } from "motion/react"; // Reverted import
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -15,14 +15,16 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, ZoomIn, ZoomOut, Fullscreen, Minimize2 } from "lucide-react"; // Added Minimize2
+import { Upload, ZoomIn, ZoomOut, Fullscreen, Minimize2 } from "lucide-react";
 import { toast } from "sonner";
 import { useTableStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { useTableHighlight } from "@/hooks/useTableHighlight";
-import { cn } from "@/lib/utils";
+import { useSession } from "next-auth/react";
+import { cn, debounce } from "@/lib/utils";
+import { notFound } from "next/navigation";
+import { ClientFile } from "@/lib/types";
 
-// Define types
 type TableData = {
   source: string;
   page_number: number;
@@ -31,22 +33,27 @@ type TableData = {
 
 type ApiResponse = {
   tables: TableData[];
-  message?: string;
+  message?: string | null;
 };
 
-// API endpoint
+type Params = Promise<{ fileId: string }>;
+
 const API_ENDPOINT =
   "https://iul-calculator-pro-production.up.railway.app/upload-pdf/";
 
-export default function ImportPage() {
+export default function ImportPage({ params }: { params: Params }) {
+  const { fileId } = use(params);
+  const { data: session, status } = useSession();
   const [file, setFile] = useState<File | null>(null);
-  const [error, setError] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [zoomLevel, setZoomLevel] = useState<number>(1); // Added for zoom control
-  const [isTableFullScreen, setIsTableFullScreen] = useState<boolean>(false); // Added for full-screen control
+  const [error, setError] = useState<string | null>(null);
+  // Changed to match calculator
+  const [loading, setLoading] = useState(true);
+  const [hasFetched, setHasFetched] = useState(false); // Single fetch
+  const [isTableLoading, setIsTableLoading] = useState(false); // Renamed for clarity
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [isTableFullScreen, setIsTableFullScreen] = useState(false);
   const { tables, setTables, clearTables } = useTableStore();
   const router = useRouter();
-
   const {
     highlightedRows,
     highlightedColumns,
@@ -54,7 +61,67 @@ export default function ImportPage() {
     handleColumnClick,
   } = useTableHighlight();
 
-  // Handle file change
+  // Auth and file check (single fetch)
+  useEffect(() => {
+    if (
+      status !== "authenticated" ||
+      !session?.user?.id ||
+      !fileId ||
+      hasFetched
+    ) {
+      return;
+    }
+
+    const fetchFile = async () => {
+      try {
+        const response = await fetch(`/api/files/${fileId}`);
+        if (!response.ok) {
+          if (response.status === 400 || response.status === 404) {
+            setError("File not found");
+            notFound();
+          } else {
+            setError("Failed to fetch file");
+          }
+          return;
+        }
+        const data: ClientFile = await response.json();
+        setTables(data.tablesData?.tables || []);
+        setHasFetched(true);
+      } catch {
+        setError("Error fetching file");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFile();
+  }, [fileId, session, status, hasFetched, setTables]);
+
+  // Debounced save
+  const saveChanges = debounce(
+    async () => {
+      if (!fileId || status !== "authenticated" || !session?.user?.id) return;
+      try {
+        const response = await fetch(`/api/files/${fileId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tablesData: { tables } }),
+        });
+        if (!response.ok) setError("Failed to save changes");
+      } catch {
+        setError("Error saving changes");
+      }
+    },
+    1000,
+    { leading: false, trailing: true }
+  );
+
+  // Save on tables change
+  useEffect(() => {
+    if (tables.length > 0) saveChanges();
+    return () => saveChanges.cancel();
+  }, [tables, saveChanges]);
+
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>
   ) => {
@@ -66,8 +133,8 @@ export default function ImportPage() {
     }
     if (selectedFile && selectedFile.type === "application/pdf") {
       setFile(selectedFile);
-      setError("");
-      clearTables(); // Clear previous data
+      setError(null); // Match calculator
+      clearTables();
       setZoomLevel(1);
       setIsTableFullScreen(false);
     } else {
@@ -77,14 +144,13 @@ export default function ImportPage() {
     }
   };
 
-  // Handle upload with API call
   const handleUpload = async () => {
     if (!file) {
       setError("Please select a PDF file.");
       toast("Please select a PDF file.");
       return;
     }
-    setLoading(true);
+    setIsTableLoading(true);
     const formData = new FormData();
     formData.append("file", file);
     try {
@@ -92,11 +158,7 @@ export default function ImportPage() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       if (response.data.tables) {
-        console.log(
-          "Received tables:",
-          JSON.stringify(response.data.tables, null, 2)
-        );
-        setTables(response.data.tables); // Save to persisted store
+        setTables(response.data.tables);
         toast(`Extracted ${response.data.tables.length} tables from PDF.`);
       } else {
         setError(response.data.message || "No tables found.");
@@ -112,53 +174,43 @@ export default function ImportPage() {
       setError(errorMessage);
       toast(errorMessage);
     } finally {
-      setLoading(false);
+      setIsTableLoading(false);
     }
   };
 
-  // Handle drag-over to allow dropping
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
   };
 
-  // Handle import (send data to Pages 2 and 4)
   const handleImport = () => {
     if (!tables.length) return;
-
-    console.log("Importing tables:", tables);
-    // setFile(null);
-    // setTables([]);
-    // setError("");
-    setZoomLevel(1); // Reset zoom on import
-    setIsTableFullScreen(false); // Exit full-screen on import
     toast("Data imported successfully.");
-    router.push("/dashboard/calculator");
+    router.push(`/dashboard/calculator/${fileId}`);
   };
 
-  // Handle cancel (reset form)
   const handleCancel = () => {
     setFile(null);
-    setTables([]);
-    setError("");
-    setZoomLevel(1); // Reset zoom on cancel
-    setIsTableFullScreen(false); // Exit full-screen on cancel
+    clearTables();
+    setError(null);
+    setZoomLevel(1);
+    setIsTableFullScreen(false);
   };
 
-  // Handle zoom in
   const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(prev + 0.1, 2)); // Max zoom: 2x
+    setZoomLevel((prev) => Math.min(prev + 0.1, 2));
   };
 
-  // Handle zoom out
   const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(prev - 0.1, 0.5)); // Min zoom: 0.5x
+    setZoomLevel((prev) => Math.max(prev - 0.1, 0.5));
   };
 
-  // Handle full-screen toggle
   const handleFullScreenToggle = () => {
     setIsTableFullScreen((prev) => !prev);
   };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
     <div className="grow h-full">
@@ -168,7 +220,6 @@ export default function ImportPage() {
         transition={{ duration: 0.4 }}
         className="flex flex-col lg:flex-row gap-4 flex-1"
       >
-        {/* Table Area (fixed 70% width on the left, with scrolling for multiple tables) */}
         <AnimatePresence>
           {!isTableFullScreen ? (
             <motion.div
@@ -179,7 +230,7 @@ export default function ImportPage() {
               className="lg:w-[70%] w-full overflow-y-auto flex h-[90vh]"
             >
               <div className="grow">
-                {tables.length > 0 && !loading && !error ? (
+                {tables.length > 0 && !isTableLoading ? (
                   <>
                     <h3 className="text-lg font-semibold mb-2 sticky top-0 bg-white z-10">
                       Imported Data Preview
@@ -210,9 +261,9 @@ export default function ImportPage() {
                               className={
                                 tables.length === 2
                                   ? index === 0
-                                    ? "w-[80%]" // First table takes 80% width
-                                    : "w-[20%]" // Second table takes 20% width
-                                  : "grow" // Default for other cases
+                                    ? "w-[80%]"
+                                    : "w-[20%]"
+                                  : "grow"
                               }
                             >
                               <Table className="border table-fixed w-full">
@@ -233,9 +284,6 @@ export default function ImportPage() {
                                         onClick={() =>
                                           handleColumnClick(header)
                                         }
-                                        aria-selected={highlightedColumns.has(
-                                          header
-                                        )}
                                       >
                                         {header}
                                       </TableHead>
@@ -253,9 +301,6 @@ export default function ImportPage() {
                                           : ""
                                       )}
                                       onClick={() => handleRowClick(rowIndex)}
-                                      aria-selected={highlightedRows.has(
-                                        rowIndex
-                                      )}
                                     >
                                       {columns.map((col) => (
                                         <TableCell
@@ -299,7 +344,7 @@ export default function ImportPage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
-              className="fixed inset-0 z-50 bg-white p-6 flex flex-col"
+              className="fixed inset-0 z-50 bg-white p-4 flex flex-col"
             >
               <Card className="flex-1 flex flex-col">
                 <CardHeader className="flex flex-row items-center justify-between">
@@ -310,7 +355,7 @@ export default function ImportPage() {
                     variant="outline"
                     size="sm"
                     onClick={handleFullScreenToggle}
-                    disabled={loading}
+                    disabled={isTableLoading}
                     aria-label="Exit full-screen mode"
                   >
                     <Minimize2 className="h-4 w-4" />
@@ -344,8 +389,8 @@ export default function ImportPage() {
                             className={
                               tables.length === 2
                                 ? index === 0
-                                  ? "w-[80%]" // First table takes 80% width
-                                  : "w-[20%]" // Second table takes 20% width
+                                  ? "w-[80%]"
+                                  : "w-[20%]"
                                 : tables.length > 2
                                 ? "flex-1 min-w-[300px] max-w-[500px]"
                                 : "w-full"
@@ -357,10 +402,16 @@ export default function ImportPage() {
                                   {columns.map((header) => (
                                     <TableHead
                                       key={header}
-                                      className="border whitespace-normal break-words min-h-[60px] align-top"
+                                      className={cn(
+                                        "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer",
+                                        highlightedColumns.has(header)
+                                          ? "bg-[#ffa1ad]"
+                                          : ""
+                                      )}
                                       style={{
                                         width: `${100 / columns.length}%`,
                                       }}
+                                      onClick={() => handleColumnClick(header)}
                                     >
                                       {header}
                                     </TableHead>
@@ -371,12 +422,24 @@ export default function ImportPage() {
                                 {table.data.map((row, rowIndex) => (
                                   <TableRow
                                     key={rowIndex}
-                                    className=" hiking-[60px]"
+                                    className={cn(
+                                      "min-h-[60px] cursor-pointer",
+                                      highlightedRows.has(rowIndex)
+                                        ? "bg-[#ffa1ad]"
+                                        : ""
+                                    )}
+                                    onClick={() => handleRowClick(rowIndex)}
                                   >
                                     {columns.map((col) => (
                                       <TableCell
                                         key={col}
-                                        className="border whitespace-normal break-words align-top"
+                                        className={cn(
+                                          "border whitespace-normal break-words align-top",
+                                          highlightedColumns.has(col) ||
+                                            highlightedRows.has(rowIndex)
+                                            ? "bg-[#ffa1ad]"
+                                            : ""
+                                        )}
                                         style={{
                                           width: `${100 / columns.length}%`,
                                         }}
@@ -399,14 +462,13 @@ export default function ImportPage() {
           )}
         </AnimatePresence>
 
-        {/* Upload Area (fixed 30% width on the bottom-right from page load) */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
-          className="lg:w-[30%] w-full flex flex-col justify-between gap-4 lg:mt-auto"
+          className="lg:w-[30%] w-full flex flex-col gap-4 lg:mt-auto"
         >
-          {/* Input Fields (Disabled) */}
+          {/* Disabled Input Fields */}
           <div className="flex flex-col gap-2">
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="policy-number">
@@ -505,15 +567,14 @@ export default function ImportPage() {
               </div>
               <Button
                 onClick={handleUpload}
-                disabled={loading}
+                disabled={isTableLoading}
                 className="w-full"
               >
-                {loading ? "Processing..." : "Upload"}
+                {isTableLoading ? "Processing..." : "Upload"}
               </Button>
             </CardContent>
           </Card>
 
-          {/* Error Message */}
           {error && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -524,8 +585,7 @@ export default function ImportPage() {
               {error}
             </motion.div>
           )}
-          {/* Loading State */}
-          {loading && (
+          {isTableLoading && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -535,8 +595,7 @@ export default function ImportPage() {
               Processing...
             </motion.div>
           )}
-          {/* Action Buttons */}
-          {tables.length > 0 && !loading && !error && (
+          {tables.length > 0 && !isTableLoading && !error && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -546,25 +605,24 @@ export default function ImportPage() {
               <Button
                 variant="default"
                 onClick={handleImport}
-                disabled={loading}
+                disabled={isTableLoading}
               >
                 Import
               </Button>
               <Button
                 variant="outline"
                 onClick={handleCancel}
-                disabled={loading}
+                disabled={isTableLoading}
               >
                 Clear
               </Button>
             </motion.div>
           )}
-          {/* Zoom and Fullscreen Buttons */}
           <div className="flex gap-2">
             <Button
               variant="default"
               onClick={handleZoomIn}
-              disabled={loading || zoomLevel >= 2 || !tables.length}
+              disabled={isTableLoading || zoomLevel >= 2 || !tables.length}
               aria-label="Zoom in on table"
             >
               <ZoomIn className="h-4 w-4" />
@@ -572,7 +630,7 @@ export default function ImportPage() {
             <Button
               variant="default"
               onClick={handleZoomOut}
-              disabled={loading || zoomLevel <= 0.5 || !tables.length}
+              disabled={isTableLoading || zoomLevel <= 0.5 || !tables.length}
               aria-label="Zoom out on table"
             >
               <ZoomOut className="h-4 w-4" />
@@ -580,7 +638,7 @@ export default function ImportPage() {
             <Button
               variant="outline"
               onClick={handleFullScreenToggle}
-              disabled={loading || !tables.length}
+              disabled={isTableLoading || !tables.length}
               aria-label={
                 isTableFullScreen
                   ? "Exit full-screen mode"

@@ -73,17 +73,17 @@ export function useCombinedPlanSummary(): Record<string, number> {
 
   const currentPlanResults = useMemo(() => {
     const inputs = {
-      currentAge: parseInput(boxesData.currentAge, 45),
-      yearsRunOutOfMoney: parseInput(yearsRunOutOfMoney, 95),
-      annualContributions: parseInput(annualContributions, 12821),
-      currentPlanROR: parseInput(boxesData.currentPlanROR, 6.3),
-      retirementTaxRate: parseInput(boxesData.retirementTaxRate, 22),
-      currentPlanFees: parseInput(boxesData.currentPlanFees, 2),
-      workingTaxRate: parseInput(boxesData.workingTaxRate, 22),
+      currentAge: parseInput(boxesData.currentAge, 0),
+      yearsRunOutOfMoney: parseInput(yearsRunOutOfMoney, 0),
+      annualContributions: parseInput(annualContributions, 0),
+      currentPlanROR: parseInput(boxesData.currentPlanROR, 0),
+      retirementTaxRate: parseInput(boxesData.retirementTaxRate, 0),
+      currentPlanFees: parseInput(boxesData.currentPlanFees, 0),
+      workingTaxRate: parseInput(boxesData.workingTaxRate, 0),
       startingBalance: parseInput(startingBalance, 0),
       annualEmployerMatch: parseInput(annualEmployerMatch, 0),
-      retirementAge: parseInput(boxesData.retirementAge, 66),
-      stopSavingAge: parseInput(boxesData.stopSavingAge, 65),
+      retirementAge: parseInput(boxesData.retirementAge, 0),
+      stopSavingAge: parseInput(boxesData.stopSavingAge, 0),
     };
 
     if (
@@ -116,7 +116,7 @@ export function useCombinedPlanSummary(): Record<string, number> {
   ]);
 
   const taxFreePlanResults = useMemo(() => {
-    const currentAge = parseInput(boxesData.currentAge, 45);
+    const currentAge = parseInput(boxesData.currentAge, 0);
 
     const yearsRunOutOfMoneyNumber = Number(yearsRunOutOfMoney);
     if (currentAge >= yearsRunOutOfMoneyNumber) return [];
@@ -134,7 +134,7 @@ export function useCombinedPlanSummary(): Record<string, number> {
     for (let i = 0; i < maxLength; i++) {
       const current = currentPlanResults[i] || {
         year: i + 1,
-        age: parseInput(boxesData.currentAge, 45) + i,
+        age: parseInput(boxesData.currentAge, 0) + i,
         annualContribution: 0,
         grossRetirementIncome: 0,
         retirementTaxes: 0,
