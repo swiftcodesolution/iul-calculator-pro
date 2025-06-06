@@ -51,7 +51,7 @@ export function useAuthForm() {
             password: signupData.password,
             firstName: signupData.firstName,
             lastName: signupData.lastName,
-            ellPhone: signupData.cellPhone,
+            cellPhone: signupData.cellPhone, // Fixed typo: ellPhone -> cellPhone
             officePhone: signupData.officePhone,
             deviceFingerprint,
           }),
@@ -59,7 +59,16 @@ export function useAuthForm() {
 
         const result = await response.json();
         if (!response.ok) {
-          throw new Error(result.error || "Signup failed");
+          if (result.error === "Email already exists") {
+            toast.error("Email already exists");
+          } else if (result.error === "Cell phone number already exists") {
+            toast.error("Cell phone number already exists");
+          } else if (result.error === "Office phone number already exists") {
+            toast.error("Office phone number already exists");
+          } else {
+            throw new Error(result.error || "Signup failed");
+          }
+          return;
         }
 
         toast.success("Signup successful! Logging in...");
