@@ -952,7 +952,7 @@ export function ComparisonTable({
                 placeholder="Enter age"
               />
               {futureAgeError && (
-                <p className="text-red-500 text-xs mt-1 text-wrap">
+                <p className="text-red-500 text-sm mt-1 text-wrap">
                   {futureAgeError}
                 </p>
               )}
@@ -1067,7 +1067,7 @@ export function ComparisonTable({
   return (
     <AnimatePresence>
       {!isTableCardExpanded ? (
-        <Card className="p-2 gap-2">
+        <Card className="p-2 gap-2 grow">
           <CardHeader
             className="flex flex-row items-center justify-between cursor-pointer p-0"
             onClick={() => setIsTableCollapsed(!isTableCollapsed)}
@@ -1099,8 +1099,8 @@ export function ComparisonTable({
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-0">
-            <Table className="w-full table-fixed text-xs">
+          <CardContent className="p-0 h-full">
+            <Table className="w-full table-fixed text-sm h-full">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[300px]"></TableHead>
@@ -1116,7 +1116,7 @@ export function ComparisonTable({
                     aria-label="Toggle Current Plan column text color"
                   >
                     Current Plan <br />
-                    <span className="text-xs">TSP, 401k, 403b, IRA</span>
+                    <span className="text-sm">TSP, 401k, 403b, IRA</span>
                   </TableHead>
                   <TableHead
                     className={cn(
@@ -1141,7 +1141,7 @@ export function ComparisonTable({
                     aria-label="Toggle Tax Free Plan column text color"
                   >
                     Tax Free Plan
-                    <br /> <span className="text-xs">IRS (IRC) 7702</span>
+                    <br /> <span className="text-sm">IRS (IRC) 7702</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -1155,7 +1155,7 @@ export function ComparisonTable({
                   >
                     <TableCell
                       className={cn(
-                        "px-2 py-1 border cursor-pointer whitespace-nowrap",
+                        " border cursor-pointer whitespace-nowrap",
                         highlightedRows.has(index) ? "bg-[#ffa1ad]" : ""
                       )}
                       onClick={() => handleCellClick(index)}
@@ -1165,7 +1165,7 @@ export function ComparisonTable({
                     </TableCell>
                     <TableCell
                       className={cn(
-                        "px-2 py-1 border cursor-pointer whitespace-nowrap",
+                        " border cursor-pointer whitespace-nowrap",
                         highlightedRows.has(index)
                           ? "bg-[#ffa1ad]"
                           : "bg-white",
@@ -1181,7 +1181,7 @@ export function ComparisonTable({
                     </TableCell>
                     <TableCell
                       className={cn(
-                        "px-2 py-1 border cursor-pointer whitespace-nowrap text-center",
+                        " border cursor-pointer whitespace-nowrap text-center",
                         highlightedRows.has(index)
                           ? "bg-[#ffa1ad]"
                           : "bg-white",
@@ -1197,7 +1197,7 @@ export function ComparisonTable({
                     </TableCell>
                     <TableCell
                       className={cn(
-                        "px-2 py-1 border cursor-pointer whitespace-nowrap",
+                        " border cursor-pointer whitespace-nowrap",
                         highlightedRows.has(index)
                           ? "bg-[#ffa1ad]"
                           : "bg-white",

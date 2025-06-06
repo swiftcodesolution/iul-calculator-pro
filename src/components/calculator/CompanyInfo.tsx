@@ -15,7 +15,6 @@ export function CompanyInfo({ companyInfo }: CompanyInfoProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
-      className="grow"
     >
       <Card className="p-2">
         <CardContent className="p-0 flex items-center gap-4">

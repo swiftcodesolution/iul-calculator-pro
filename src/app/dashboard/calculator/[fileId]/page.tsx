@@ -185,8 +185,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
 
   return (
     <div className="h-[90vh] grid grid-cols-2 gap-4">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 relative">
         <InputParameters data={boxesData} onUpdate={setBoxesData} />
+
         <ComparisonTable
           currentAge={Number(boxesData.currentAge) || 0}
           boxesData={boxesData}
@@ -203,9 +204,8 @@ export default function CalculatorPage({ params }: { params: Params }) {
         />
       </div>
       <div className="flex flex-col gap-4 relative">
-        <div className="flex gap-4">
-          <CompanyInfo companyInfo={companyInfo} />
-        </div>
+        <CompanyInfo companyInfo={companyInfo} />
+
         <TabManager
           activeTab={activeTab}
           setActiveTab={setActiveTab}

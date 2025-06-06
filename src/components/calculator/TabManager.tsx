@@ -324,7 +324,7 @@ const TabManager = React.memo(function TabManager({
           transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
           className="grow"
         >
-          <Card className="h-full p-2">
+          <Card className="h-full p-2 grow">
             <CardContent className="p-0 h-full">
               <motion.div
                 className="h-full flex flex-col justify-between"
