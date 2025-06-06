@@ -8,6 +8,8 @@ const signupApiSchema = z.object({
   password: z.string().min(6),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
+  cellPhone: z.string().min(1),
+  officePhone: z.string().min(1),
   deviceFingerprint: z.string().min(1),
 });
 

@@ -51,6 +51,8 @@ export function useAuthForm() {
             password: signupData.password,
             firstName: signupData.firstName,
             lastName: signupData.lastName,
+            ellPhone: signupData.cellPhone,
+            officePhone: signupData.officePhone,
             deviceFingerprint,
           }),
         });

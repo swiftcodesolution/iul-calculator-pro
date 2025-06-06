@@ -22,6 +22,8 @@ const SignupForm = () => {
       firstName: "",
       lastName: "",
       email: "",
+      cellPhone: "",
+      officePhone: "",
       password: "",
       confirmPassword: "",
     },
@@ -35,22 +37,24 @@ const SignupForm = () => {
         )}
         className="space-y-4"
       >
-        <AnimatedInput hasError={!!form.formState.errors.firstName}>
-          <Label htmlFor="firstName">First Name</Label>
-          <Input
-            id="firstName"
-            placeholder="John"
-            {...form.register("firstName")}
-          />
-        </AnimatedInput>
-        <AnimatedInput hasError={!!form.formState.errors.lastName}>
-          <Label htmlFor="lastName">Last Name</Label>
-          <Input
-            id="lastName"
-            placeholder="Doe"
-            {...form.register("lastName")}
-          />
-        </AnimatedInput>
+        <div className="flex gap-2">
+          <AnimatedInput hasError={!!form.formState.errors.firstName}>
+            <Label htmlFor="firstName">First Name</Label>
+            <Input
+              id="firstName"
+              placeholder="John"
+              {...form.register("firstName")}
+            />
+          </AnimatedInput>
+          <AnimatedInput hasError={!!form.formState.errors.lastName}>
+            <Label htmlFor="lastName">Last Name</Label>
+            <Input
+              id="lastName"
+              placeholder="Doe"
+              {...form.register("lastName")}
+            />
+          </AnimatedInput>
+        </div>
         <AnimatedInput hasError={!!form.formState.errors.email}>
           <Label htmlFor="email">Email</Label>
           <Input
@@ -60,6 +64,26 @@ const SignupForm = () => {
             {...form.register("email")}
           />
         </AnimatedInput>
+        <div className="flex gap-2">
+          <AnimatedInput hasError={!!form.formState.errors.cellPhone}>
+            <Label htmlFor="cellPhone">Cell Phone</Label>
+            <Input
+              id="cellPhone"
+              type="tel"
+              placeholder="123-456-7890"
+              {...form.register("cellPhone")}
+            />
+          </AnimatedInput>
+          <AnimatedInput hasError={!!form.formState.errors.officePhone}>
+            <Label htmlFor="officePhone">Office Phone</Label>
+            <Input
+              id="officePhone"
+              type="tel"
+              placeholder="123-456-7890"
+              {...form.register("officePhone")}
+            />
+          </AnimatedInput>
+        </div>
         <AnimatedInput hasError={!!form.formState.errors.password}>
           <Label htmlFor="password">Password</Label>
           <div className="relative">

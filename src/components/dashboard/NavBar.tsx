@@ -77,7 +77,23 @@ const NavBar = () => {
   };
 
   if (pathname === "/dashboard/home") {
-    return null;
+    return (
+      <motion.div>
+        <Button
+          onClick={handleSignOut}
+          variant="outline"
+          size="icon"
+          className="fixed bottom-4 right-0 -translate-x-1/2 rounded-none transition-colors duration-200"
+        >
+          <motion.div
+            whileHover={{ rotate: 0 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+          >
+            <LogOut />
+          </motion.div>
+        </Button>
+      </motion.div>
+    );
   }
 
   return (

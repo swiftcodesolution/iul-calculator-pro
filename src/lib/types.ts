@@ -6,6 +6,8 @@ export const signupSchema = z
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
     email: z.string().email("Invalid email address"),
+    cellPhone: z.string().min(1, "Cell phone is required"),
+    officePhone: z.string().min(1, "Office phone is required"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string().min(8, "Passwords must match"),
   })

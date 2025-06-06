@@ -14,6 +14,8 @@ model User {
   password            String
   firstName           String?
   lastName            String?
+  cellPhone           String?
+  officePhone         String?
   role                String   @default("agent")
   deviceFingerprint   String?
   files               ClientFile[]
