@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
     const sessionToken = req.cookies.get("next-auth.session-token")?.value;
 
     if (sessionToken) {
+      // Update SessionHistory with logoutAt
       await prisma.sessionHistory.updateMany({
         where: {
           userId: session.user.id,
@@ -22,6 +23,14 @@ export async function POST(req: NextRequest) {
         },
         data: {
           logoutAt: new Date(),
+        },
+      });
+
+      // Delete Session record
+      await prisma.session.deleteMany({
+        where: {
+          userId: session.user.id,
+          sessionToken,
         },
       });
     }

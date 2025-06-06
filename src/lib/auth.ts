@@ -1,4 +1,3 @@
-// src/lib/auth.ts
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { NextAuthOptions } from "next-auth";
@@ -57,19 +56,21 @@ export const authOptions: NextAuthOptions = {
           const parser = new UAParser(userAgent);
           const { browser, os, device } = parser.getResult();
 
-          const session = await prisma.session.create({
+          // Create session with unique sessionToken
+          const sessionToken = crypto.randomUUID();
+          await prisma.session.create({
             data: {
               userId: user.id,
-              sessionToken: crypto.randomUUID(),
-              expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // e.g., 30 days
+              sessionToken,
+              expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
             },
           });
 
-          // Create session history entry
+          // Create session history with same sessionToken
           await prisma.sessionHistory.create({
             data: {
               userId: user.id,
-              sessionToken: session.sessionToken,
+              sessionToken,
               deviceFingerprint: credentials.deviceFingerprint,
               ipAddress,
               userAgent,
@@ -87,8 +88,8 @@ export const authOptions: NextAuthOptions = {
           return {
             id: user.id,
             email: user.email,
-            firstName: user.firstName ?? undefined, // Convert null to undefined
-            lastName: user.lastName ?? undefined, // Convert null to undefined
+            firstName: user.firstName ?? undefined,
+            lastName: user.lastName ?? undefined,
             role: user.role,
             deviceFingerprint: credentials.deviceFingerprint,
           };
