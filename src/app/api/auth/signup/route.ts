@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import bcrypt from "bcrypt";
+// import bcrypt from "bcrypt";
 import prisma from "@/lib/connect";
 
 const signupApiSchema = z.object({
@@ -55,11 +55,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // const hashedPassword = await bcrypt.hash(password, 10);
+
     await prisma.user.create({
       data: {
         email,
-        password: hashedPassword,
+        password,
         firstName,
         lastName,
         cellPhone,
