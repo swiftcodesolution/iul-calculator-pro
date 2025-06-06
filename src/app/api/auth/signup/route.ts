@@ -16,13 +16,41 @@ const signupApiSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, firstName, lastName, deviceFingerprint } =
-      signupApiSchema.parse(body);
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      cellPhone,
+      officePhone,
+      deviceFingerprint,
+    } = signupApiSchema.parse(body);
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return NextResponse.json(
         { error: "Email already exists" },
+        { status: 400 }
+      );
+    }
+
+    const existingUserByCellPhone = await prisma.user.findFirst({
+      where: { cellPhone },
+    });
+    if (existingUserByCellPhone) {
+      return NextResponse.json(
+        { error: "Cell phone number already exists" },
+        { status: 400 }
+      );
+    }
+
+    // Check for existing officePhone
+    const existingUserByOfficePhone = await prisma.user.findFirst({
+      where: { officePhone },
+    });
+    if (existingUserByOfficePhone) {
+      return NextResponse.json(
+        { error: "Office phone number already exists" },
         { status: 400 }
       );
     }
@@ -34,6 +62,8 @@ export async function POST(request: Request) {
         password: hashedPassword,
         firstName,
         lastName,
+        cellPhone,
+        officePhone,
         deviceFingerprint,
       },
     });
