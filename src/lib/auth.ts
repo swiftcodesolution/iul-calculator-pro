@@ -57,11 +57,19 @@ export const authOptions: NextAuthOptions = {
           const parser = new UAParser(userAgent);
           const { browser, os, device } = parser.getResult();
 
+          const session = await prisma.session.create({
+            data: {
+              userId: user.id,
+              sessionToken: crypto.randomUUID(),
+              expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // e.g., 30 days
+            },
+          });
+
           // Create session history entry
           await prisma.sessionHistory.create({
             data: {
               userId: user.id,
-              sessionToken: crypto.randomUUID(),
+              sessionToken: session.sessionToken,
               deviceFingerprint: credentials.deviceFingerprint,
               ipAddress,
               userAgent,

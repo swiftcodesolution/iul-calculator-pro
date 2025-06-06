@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/connect";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
@@ -12,15 +11,20 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await prisma.sessionHistory.updateMany({
-      where: {
-        userId: session.user.id,
-        logoutAt: null,
-      },
-      data: {
-        logoutAt: new Date(),
-      },
-    });
+    const sessionToken = req.cookies.get("next-auth.session-token")?.value;
+
+    if (sessionToken) {
+      await prisma.sessionHistory.updateMany({
+        where: {
+          userId: session.user.id,
+          sessionToken,
+          logoutAt: null,
+        },
+        data: {
+          logoutAt: new Date(),
+        },
+      });
+    }
 
     const response = NextResponse.json({ message: "Signed out successfully" });
     response.headers.set(
