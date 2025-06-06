@@ -36,24 +36,25 @@ const NavBar = () => {
   ];
 
   useEffect(() => {
-    const fileId = searchParams.get("fileId");
-    if (fileId && !selectedFileId) {
-      setSelectedFileId(fileId);
+    // Check query parameter first
+    const fileIdFromQuery = searchParams.get("fileId");
+    if (fileIdFromQuery && !selectedFileId) {
+      setSelectedFileId(fileIdFromQuery);
+      return;
     }
-  }, [searchParams, selectedFileId, setSelectedFileId]);
-
-  useEffect(() => {
-    const restrictedPaths = [
-      "/dashboard/calculator",
-      "/dashboard/import",
-      "/dashboard/data",
-    ];
-    const fileId = searchParams.get("fileId");
-    if (!selectedFileId && !fileId && restrictedPaths.includes(pathname)) {
-      router.push("/dashboard/home");
-      toast.error("Please select a file first");
+    // Extract fileId from path
+    const pathSegments = pathname.split("/");
+    const fileIdFromPath = pathSegments[pathSegments.length - 1];
+    if (
+      fileIdFromPath &&
+      !selectedFileId &&
+      ["/dashboard/calculator", "/dashboard/import", "/dashboard/data"].some(
+        (path) => pathname.startsWith(path)
+      )
+    ) {
+      setSelectedFileId(fileIdFromPath);
     }
-  }, [selectedFileId, pathname, router, searchParams]);
+  }, [pathname, searchParams, selectedFileId, setSelectedFileId]);
 
   const handleSignOut = async () => {
     try {
@@ -75,9 +76,12 @@ const NavBar = () => {
     }
   };
 
+  if (pathname === "/dashboard/home") {
+    return null;
+  }
+
   return (
     <>
-      {/* Animated Navigation Bar */}
       <motion.nav
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
@@ -89,58 +93,41 @@ const NavBar = () => {
         }}
         className="fixed bottom-4 left-1/2 -translate-x-1/2 flex gap-2"
       >
-        {navItems.map((item) => {
-          const isDisabled = item.href !== "/dashboard/home" && !selectedFileId;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-label={`Navigate to ${item.label}`}
-              onClick={(e) => {
-                if (isDisabled) {
-                  e.preventDefault();
-                  toast.error("Please select a file first");
-                }
-              }}
-              className={`${isDisabled ? "cursor-not-allowed" : ""}`}
+        {navItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-label={`Navigate to ${item.label}`}
+          >
+            <motion.div
+              whileHover={{ scale: 1.15, rotate: 0 }}
+              whileTap={{ scale: 0.95 }}
+              animate={
+                pathname === item.href
+                  ? {
+                      scale: [1, 1.1, 1],
+                      transition: { duration: 0.8, repeat: Infinity },
+                    }
+                  : {}
+              }
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
-              <motion.div
-                whileHover={{ scale: isDisabled ? 1 : 1.15, rotate: 0 }}
-                whileTap={{ scale: isDisabled ? 1 : 0.95 }}
-                animate={
-                  pathname === item.href && !isDisabled
-                    ? {
-                        scale: [1, 1.1, 1],
-                        transition: { duration: 0.8, repeat: Infinity },
-                      }
-                    : {}
-                }
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              <Button
+                variant={pathname === item.href ? "default" : "outline"}
+                size="icon"
+                className="rounded-none transition-colors duration-200 cursor-pointer"
               >
-                <Button
-                  variant={pathname === item.href ? "default" : "outline"}
-                  size="icon"
-                  className={`rounded-none transition-colors duration-200 ${
-                    isDisabled
-                      ? "opacity-50 cursor-not-allowed"
-                      : "cursor-pointer"
-                  }`}
-                  disabled={isDisabled}
+                <motion.div
+                  whileHover={{ rotate: 0 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
                 >
-                  <motion.div
-                    whileHover={{ rotate: pathname === item.href ? 0 : 0 }}
-                    transition={{ duration: 0.5, ease: "easeInOut" }}
-                  >
-                    <item.icon className="h-5 w-5" />
-                  </motion.div>
-                </Button>
-              </motion.div>
-            </Link>
-          );
-        })}
+                  <item.icon className="h-5 w-5" />
+                </motion.div>
+              </Button>
+            </motion.div>
+          </Link>
+        ))}
       </motion.nav>
-
-      {/* Animated Logout Button */}
 
       <motion.div>
         <Button

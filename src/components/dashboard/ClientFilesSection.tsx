@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ClientFile } from "@/lib/types";
 import DialogContentRenderer from "./DialogContentRenderer";
 import { useRouter } from "next/navigation";
+import { useFileContext } from "@/context/FileContext";
 
 const newClientVariant = {
   hidden: { opacity: 0, scale: 0.8, y: 10 },
@@ -54,8 +55,11 @@ export default function ClientFilesSection({
 }: ClientFilesSectionProps) {
   const router = useRouter();
 
+  const { selectedFileId: contextFileId, setSelectedFileId } = useFileContext();
+
   const handleOpen = () => {
     if (selectedFileId) {
+      setSelectedFileId(selectedFileId);
       router.push(`/dashboard/calculator/${selectedFileId}`);
     }
   };
@@ -202,7 +206,7 @@ export default function ClientFilesSection({
             <Button
               size="sm"
               onClick={handleOpen}
-              disabled={!selectedFileId}
+              disabled={!contextFileId}
               aria-label="Open client file"
             >
               Open

@@ -1,4 +1,3 @@
-// src/app/hooks/useClientFiles.ts
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,7 +15,6 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
   const [selectedFile, setSelectedFile] = useState<ClientFile | null>(null);
   const [dialogAction, setDialogAction] = useState<string | null>(null);
 
-  // Fetch files when session is authenticated
   useEffect(() => {
     async function fetchFiles() {
       if (status !== "authenticated" || !session?.user?.id) return;
@@ -35,7 +33,6 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
     fetchFiles();
   }, [session, status]);
 
-  // Create, open, copy, rename, or delete file
   const handleClientAction = async (
     action: string,
     data?: { id?: string; name?: string }
@@ -59,10 +56,12 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
           setSelectedFileId(newFile.id);
           setNewClientName("");
           setDialogAction(null);
+          router.push(`/dashboard/calculator/${newFile.id}`);
           return { fileId: newFile.id };
         }
       } else if (action === "open" && data?.id) {
-        router.push(`/dashboard/calculator?fileId=${data.id}`);
+        setSelectedFileId(data.id); // Sync to context
+        router.push(`/dashboard/calculator/${data.id}`); // Use path segment
       } else if (action === "copy" && data?.id && data?.name) {
         const fileToCopy = clientFiles.find((file) => file.id === data.id);
         if (fileToCopy) {
@@ -82,7 +81,7 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
           }
         }
       } else if (action === "rename" && data?.id && data?.name) {
-        const response = await fetch(`/api/${data.id}`, {
+        const response = await fetch(`/api/files/${data.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ fileName: data.name }),
@@ -99,7 +98,7 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
           setDialogAction(null);
         }
       } else if (action === "delete" && data?.id) {
-        const response = await fetch(`/api/${data.id}`, {
+        const response = await fetch(`/api/files/${data.id}`, {
           method: "DELETE",
         });
         if (response.ok) {
@@ -116,7 +115,7 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
         if (latestFile) {
           setSelectedFile(latestFile);
           setSelectedFileId(latestFile.id);
-          router.push(`/dashboard/calculator?fileId=${latestFile.id}`);
+          router.push(`/dashboard/calculator/${latestFile.id}`); // Use path segment
         }
       }
     } catch (error) {
