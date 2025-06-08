@@ -36,10 +36,14 @@ export async function POST(req: NextRequest) {
     }
 
     const response = NextResponse.json({ message: "Signed out successfully" });
-    response.headers.set(
-      "Set-Cookie",
-      "next-auth.session-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"
-    );
+
+    // Clear all cookies
+    req.cookies.getAll().forEach((cookie) => {
+      response.headers.append(
+        "Set-Cookie",
+        `${cookie.name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`
+      );
+    });
 
     return response;
   } catch (error) {
