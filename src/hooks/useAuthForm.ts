@@ -26,6 +26,20 @@ export function useAuthForm() {
     initializeFingerprint();
   }, []);
 
+  const generateFingerprint = async () => {
+    try {
+      const fp = await FingerprintJS.load();
+      const result = await fp.get();
+      const newFingerprint = result.visitorId;
+      setDeviceFingerprint(newFingerprint);
+      return newFingerprint;
+    } catch (error) {
+      console.error("FingerprintJS error:", error);
+      toast.error("Failed to generate device fingerprint");
+      return "";
+    }
+  };
+
   const handleSubmit = async <
     T extends z.infer<typeof signupSchema> | z.infer<typeof loginSchema>
   >(
@@ -33,7 +47,15 @@ export function useAuthForm() {
     type: "signup" | "login",
     form: UseFormReturn<T>
   ) => {
-    if (!deviceFingerprint) {
+    let currentFingerprint = deviceFingerprint;
+
+    if (!currentFingerprint && type === "login") {
+      currentFingerprint = await generateFingerprint();
+      if (!currentFingerprint) {
+        toast.error("Failed to generate device fingerprint. Please try again.");
+        return;
+      }
+    } else if (!currentFingerprint) {
       toast.error("Device fingerprint not ready. Please try again.");
       return;
     }
@@ -53,7 +75,7 @@ export function useAuthForm() {
             lastName: signupData.lastName,
             cellPhone: signupData.cellPhone, // Fixed typo: ellPhone -> cellPhone
             officePhone: signupData.officePhone,
-            deviceFingerprint,
+            deviceFingerprint: currentFingerprint,
           }),
         });
 
@@ -77,7 +99,7 @@ export function useAuthForm() {
           redirect: false,
           email: signupData.email,
           password: signupData.password,
-          deviceFingerprint,
+          deviceFingerprint: currentFingerprint,
         });
 
         if (loginResult?.ok) {
@@ -88,11 +110,12 @@ export function useAuthForm() {
         }
       } else {
         const loginData = data as z.infer<typeof loginSchema>;
+
         const result = await signIn("credentials", {
           redirect: false,
           email: loginData.loginEmail,
           password: loginData.loginPassword,
-          deviceFingerprint,
+          deviceFingerprint: currentFingerprint,
         });
 
         if (result?.error) {

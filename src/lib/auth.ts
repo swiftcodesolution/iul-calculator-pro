@@ -7,6 +7,7 @@ import { UAParser } from "ua-parser-js";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -82,6 +83,7 @@ export const authOptions: NextAuthOptions = {
               deviceVendor: device.vendor,
               deviceModel: device.model,
               loginAt: new Date(),
+              logoutAt: null,
             },
           });
 
@@ -102,8 +104,11 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
+
   session: { strategy: "jwt", maxAge: 3600 },
+
   secret: process.env.NEXTAUTH_SECRET,
+
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -125,6 +130,7 @@ export const authOptions: NextAuthOptions = {
       return url.startsWith(baseUrl) ? url : `${baseUrl}/dashboard/home`;
     },
   },
+
   pages: {
     signIn: "/",
     error: "/api/auth/error",

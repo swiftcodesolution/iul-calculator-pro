@@ -4,8 +4,27 @@ import AuthFooter from "@/components/auth/AuthFooter";
 import AuthHeader from "@/components/auth/AuthHeader";
 import AuthTabs from "@/components/auth/AuthTabs";
 import { motion } from "motion/react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const AuthPage = () => {
+  const { status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/dashboard/home");
+    }
+  }, [status, router]);
+
+  if (status === "loading")
+    return (
+      <div className="min-h-screen flex items-center justify-center text-sm text-center">
+        Loading...
+      </div>
+    );
+
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
       <motion.div

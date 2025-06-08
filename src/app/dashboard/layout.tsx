@@ -3,14 +3,32 @@
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import NavBar from "@/components/dashboard/NavBar";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
 };
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const { status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/");
+    }
+  }, [status, router]);
+
+  if (status === "loading")
+    return (
+      <div className="min-h-screen flex items-center justify-center text-sm text-center">
+        Loading...
+      </div>
+    );
+
   return (
     <Suspense>
       <DndProvider backend={HTML5Backend}>
