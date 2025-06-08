@@ -37,11 +37,18 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({ message: "Signed out successfully" });
 
-    // Clear all cookies
-    req.cookies.getAll().forEach((cookie) => {
+    // Clear all NextAuth-related cookies
+    const cookiesToClear = [
+      "next-auth.session-token",
+      "__Host-next-auth.csrf-token",
+      "__Secure-next-auth.callback-url",
+      "__Secure-next-auth.session-token",
+    ];
+
+    cookiesToClear.forEach((cookieName) => {
       response.headers.append(
         "Set-Cookie",
-        `${cookie.name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`
+        `${cookieName}=; Path=/; HttpOnly; Secure; SameSite=Strict; Expires=Thu, 01 Jan 1970 00:00:00 GMT`
       );
     });
 
