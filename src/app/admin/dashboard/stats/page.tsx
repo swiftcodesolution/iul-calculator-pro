@@ -62,11 +62,11 @@ export default function StatsPage() {
 
   return (
     <div className="max-h-screen overflow-y-scroll">
-      <main className="p-2">
-        <h1 className="text-3xl font-bold mb-2 flex items-center">
+      <main className="p-4">
+        <h1 className="text-3xl font-bold mb-4 flex items-center">
           <BarChart className="mr-2" /> Usage Stats
         </h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Active Users Card */}
           <Card>
             <CardHeader>
@@ -91,7 +91,7 @@ export default function StatsPage() {
           </Card>
         </div>
         {/* Recent Sessions Table */}
-        <Card className="mb-2">
+        <Card className="mb-4">
           <CardHeader>
             <CardTitle>Recent Sessions</CardTitle>
           </CardHeader>

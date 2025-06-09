@@ -6,8 +6,18 @@ import {
   BarChart,
   LogOut,
 } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function AdminSidebar() {
+  const pathname = usePathname();
+
+  const hiddenSidebar =
+    pathname.includes("/files/calculator") ||
+    pathname.includes("/files/import") ||
+    pathname.includes("/files/data");
+
+  if (hiddenSidebar) return null;
+
   return (
     <aside className="w-64 bg-gray-800 text-white h-screen p-4">
       <div className="text-2xl font-bold mb-6">Admin Panel</div>
@@ -30,12 +40,12 @@ export default function AdminSidebar() {
         >
           <Users className="mr-2" /> Users
         </Link>
-        <Link
+        {/* <Link
           href="/admin/dashboard/download-resources"
           className="flex items-center p-2 hover:bg-gray-700 rounded"
         >
           <FileText className="mr-2" /> Download Resources
-        </Link>
+        </Link> */}
         <Link
           href="/admin/dashboard/stats"
           className="flex items-center p-2 hover:bg-gray-700 rounded"

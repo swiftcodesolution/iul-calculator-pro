@@ -33,7 +33,7 @@ export default function AdminFilesLayout({ children }: AdminFilesLayoutProps) {
     <Suspense>
       <DndProvider backend={HTML5Backend}>
         <div className="w-full h-full">
-          <main className="p-6 h-full">{children}</main>
+          <main className="p-4 h-full">{children}</main>
           <Suspense fallback={<div>Loading...</div>}>
             <NavBar />
           </Suspense>

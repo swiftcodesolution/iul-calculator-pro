@@ -29,9 +29,9 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex-1">
-      <main className="p-6">
-        <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <main className="p-4">
+        <h1 className="text-xl font-bold mb-4">Admin Dashboard</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
           {/* Pro Sample Files Card */}
           <Card>
             <CardHeader className="flex items-center">
