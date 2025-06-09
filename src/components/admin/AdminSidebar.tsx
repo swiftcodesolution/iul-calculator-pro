@@ -7,9 +7,33 @@ import {
   LogOut,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function AdminSidebar() {
+  const router = useRouter();
   const pathname = usePathname();
+
+  const handleSignOut = async () => {
+    try {
+      const response = await fetch("/api/auth/signout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to sign out");
+      }
+
+      await signOut({ redirect: false });
+      toast.success("Signed out successfully");
+      router.push("/");
+    } catch (error) {
+      toast.error("Error signing out");
+      console.error(error);
+    }
+  };
 
   const hiddenSidebar =
     pathname.includes("/files/calculator") ||
@@ -53,7 +77,8 @@ export default function AdminSidebar() {
           <BarChart className="mr-2" /> Stats
         </Link>
         <Link
-          href="/api/auth/signout"
+          href="#"
+          onClick={handleSignOut}
           className="flex items-center p-2 hover:bg-gray-700 rounded"
         >
           <LogOut className="mr-2" /> Log Out
