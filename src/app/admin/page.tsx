@@ -1,67 +1,45 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuthForm } from "@/hooks/useAuthForm";
-import { loginSchema } from "@/lib/types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import LoginForm from "@/components/auth/LoginForm";
+import AuthHeader from "@/components/auth/AuthHeader";
+import AuthFooter from "@/components/auth/AuthFooter";
 
 export default function AdminAuthPage() {
-  const { isSubmitting, handleSubmit } = useAuthForm();
-  const {
-    register,
-    handleSubmit: formSubmit,
-    formState: { errors },
-  } = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
-  });
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-  const onSubmit = (data: z.infer<typeof loginSchema>) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    handleSubmit(data, "login", { reset: () => {} } as any);
-  };
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push(
+        session.user.role === "admin" ? "/admin/dashboard" : "/dashboard/home"
+      );
+    }
+  }, [session, status, router]);
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-sm">
+        Loading...
+      </div>
+    );
+  }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow">
-        <h2 className="text-2xl font-bold text-center">Admin Login</h2>
-        <form onSubmit={formSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Label htmlFor="loginEmail">Email</Label>
-            <Input
-              id="loginEmail"
-              type="email"
-              {...register("loginEmail")}
-              className={errors.loginEmail ? "border-red-500" : ""}
-            />
-            {errors.loginEmail && (
-              <p className="text-sm text-red-500">
-                {errors.loginEmail.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="loginPassword">Password</Label>
-            <Input
-              id="loginPassword"
-              type="password"
-              {...register("loginPassword")}
-              className={errors.loginPassword ? "border-red-500" : ""}
-            />
-            {errors.loginPassword && (
-              <p className="text-sm text-red-500">
-                {errors.loginPassword.message}
-              </p>
-            )}
-          </div>
-          <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? "Logging in..." : "Login"}
-          </Button>
-        </form>
-      </div>
+    <div className="flex items-center justify-center min-h-[90vh] bg-gray-100">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <AuthHeader />
+          <h1 className="text-2xl font-bold text-center">Admin Login</h1>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <LoginForm />
+          <AuthFooter />
+        </CardContent>
+      </Card>
     </div>
   );
 }

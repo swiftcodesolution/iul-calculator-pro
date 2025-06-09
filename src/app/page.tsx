@@ -9,14 +9,16 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 const AuthPage = () => {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && session.user.role === "admin") {
+      router.push("admin/dashboard/");
+    } else if (status === "authenticated" && session.user.role === "agent") {
       router.push("/dashboard/home");
     }
-  }, [status, router]);
+  }, [session, status, router]);
 
   if (status === "loading")
     return (

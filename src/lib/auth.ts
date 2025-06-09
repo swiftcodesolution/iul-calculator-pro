@@ -127,6 +127,9 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
+      if (url.includes("callbackUrl=%2Fadmin") || url.includes("/admin")) {
+        return `${baseUrl}/admin/dashboard/home`;
+      }
       return url.startsWith(baseUrl) ? url : `${baseUrl}/dashboard/home`;
     },
   },
