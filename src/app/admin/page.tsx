@@ -29,7 +29,7 @@ export default function AdminAuthPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[90vh] bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <Card className="w-full max-w-md">
         <CardHeader>
           <AuthHeader />

@@ -53,9 +53,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const navItems = [
     { label: "Home", href: "/admin/dashboard/users", icon: Users },
-    { label: "Calculator", href: "/admin/dashboard/media", icon: Images },
+    { label: "Media", href: "/admin/dashboard/media", icon: Images },
     {
-      label: "Import",
+      label: "Stats",
       href: "/admin/dashboard/stats",
       icon: ChartColumnDecreasing,
     },
@@ -63,7 +63,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div className="min-h-screen w-full bg-gray-100 flex flex-col">
-      <main className="w-full min-h-[95vh] mx-auto p-4 flex flex-col">
+      <main className="w-full min-h-screen mx-auto p-4 flex flex-col">
         {children}
       </main>
 
