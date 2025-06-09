@@ -3,12 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
+import AdminSidebar from "@/components/admin/AdminSidebar";
 
-type AdminLayoutProps = {
+type AdminDashboardLayoutProps = {
   children: React.ReactNode;
 };
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+export default function AdminDashboardLayout({
+  children,
+}: AdminDashboardLayoutProps) {
   const router = useRouter();
   const { status } = useSession();
 
@@ -27,7 +30,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div className="min-h-screen w-full bg-gray-100 flex flex-col">
-      {children}
+      <div className="flex">
+        <AdminSidebar />
+        {children}
+      </div>
     </div>
   );
 }
