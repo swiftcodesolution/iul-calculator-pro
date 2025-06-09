@@ -4,13 +4,12 @@ import { use, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { InputParameters } from "@/components/calculator/InputParameters";
 import { ComparisonTable } from "@/components/calculator/ComparisonTable";
-import { CompanyInfo } from "@/components/calculator/CompanyInfo";
 import TabManager from "@/components/calculator/TabManager";
 import { useTabs } from "@/hooks/useTabs";
 import { useColumnHighlight } from "@/hooks/useColumnHighlight";
 import { TotalAdvantage, ClientFile } from "@/lib/types";
 import { useTableStore } from "@/lib/store";
-import { useCompanyInfo } from "@/hooks/useCompanyInfo";
+
 import { debounce } from "@/lib/utils";
 import { notFound } from "next/navigation";
 
@@ -47,7 +46,6 @@ export default function CalculatorPage({ params }: { params: Params }) {
     setYearsRunOutOfMoney,
   } = useTableStore();
 
-  const { companyInfo } = useCompanyInfo();
   const {
     setEditTabId,
     activeTab,
@@ -183,53 +181,53 @@ export default function CalculatorPage({ params }: { params: Params }) {
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
-  return (
-    <div className="h-[90vh] grid grid-cols-2 gap-4">
-      <div className="flex flex-col gap-4 relative">
-        <InputParameters data={boxesData} onUpdate={setBoxesData} />
+  if (status === "authenticated" && session.user.role === "admin") {
+    return (
+      <div className="h-[90vh] grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-4 relative">
+          <InputParameters data={boxesData} onUpdate={setBoxesData} />
 
-        <ComparisonTable
-          currentAge={Number(boxesData.currentAge) || 0}
-          boxesData={boxesData}
-          columnTextWhite={columnTextWhite}
-          highlightedRows={highlightedRows}
-          isTableCollapsed={isTableCollapsed}
-          isTableCardExpanded={isTableCardExpanded}
-          setIsTableCollapsed={setIsTableCollapsed}
-          setIsTableCardExpanded={setIsTableCardExpanded}
-          handleHeaderClick={handleHeaderClick}
-          handleCellClick={handleCellClick}
-          defaultResults={boxesData as never}
-          onTotalAdvantageChange={setTotalAdvantage}
-        />
+          <ComparisonTable
+            currentAge={Number(boxesData.currentAge) || 0}
+            boxesData={boxesData}
+            columnTextWhite={columnTextWhite}
+            highlightedRows={highlightedRows}
+            isTableCollapsed={isTableCollapsed}
+            isTableCardExpanded={isTableCardExpanded}
+            setIsTableCollapsed={setIsTableCollapsed}
+            setIsTableCardExpanded={setIsTableCardExpanded}
+            handleHeaderClick={handleHeaderClick}
+            handleCellClick={handleCellClick}
+            defaultResults={boxesData as never}
+            onTotalAdvantageChange={setTotalAdvantage}
+          />
+        </div>
+        <div className="flex flex-col gap-4 relative">
+          <TabManager
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            isTabCardExpanded={isTabCardExpanded}
+            setIsTabCardExpanded={setIsTabCardExpanded}
+            isAddDialogOpen={isAddDialogOpen}
+            setIsAddDialogOpen={setIsAddDialogOpen}
+            isEditDialogOpen={isEditDialogOpen}
+            setIsEditDialogOpen={setIsEditDialogOpen}
+            newTabName={newTabName}
+            setNewTabName={setNewTabName}
+            newTabFile={newTabFile}
+            setNewTabFile={setNewTabFile}
+            handleAddTab={handleAddTab}
+            handleEditTab={handleEditTab}
+            handleDeleteTab={handleDeleteTab}
+            handleToggleVisibility={handleToggleVisibility}
+            handleMoveUp={handleMoveUp}
+            handleMoveDown={handleMoveDown}
+            totalAdvantage={totalAdvantage}
+            handleCellClick={handleCellClick}
+            setEditTabId={setEditTabId}
+          />
+        </div>
       </div>
-      <div className="flex flex-col gap-4 relative">
-        <CompanyInfo companyInfo={companyInfo} />
-
-        <TabManager
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          isTabCardExpanded={isTabCardExpanded}
-          setIsTabCardExpanded={setIsTabCardExpanded}
-          isAddDialogOpen={isAddDialogOpen}
-          setIsAddDialogOpen={setIsAddDialogOpen}
-          isEditDialogOpen={isEditDialogOpen}
-          setIsEditDialogOpen={setIsEditDialogOpen}
-          newTabName={newTabName}
-          setNewTabName={setNewTabName}
-          newTabFile={newTabFile}
-          setNewTabFile={setNewTabFile}
-          handleAddTab={handleAddTab}
-          handleEditTab={handleEditTab}
-          handleDeleteTab={handleDeleteTab}
-          handleToggleVisibility={handleToggleVisibility}
-          handleMoveUp={handleMoveUp}
-          handleMoveDown={handleMoveDown}
-          totalAdvantage={totalAdvantage}
-          handleCellClick={handleCellClick}
-          setEditTabId={setEditTabId}
-        />
-      </div>
-    </div>
-  );
+    );
+  }
 }
