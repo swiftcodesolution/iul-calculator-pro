@@ -29,11 +29,9 @@ export default function AdminDashboardLayout({
     );
 
   return (
-    <div className="min-h-screen w-full bg-gray-100 flex flex-col">
-      <div className="flex">
-        <AdminSidebar />
-        {children}
-      </div>
+    <div className="min-h-screen w-full bg-gray-100 flex">
+      <AdminSidebar />
+      <div className="flex-1">{children}</div>
     </div>
   );
 }
