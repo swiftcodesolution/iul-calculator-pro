@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LogOut, Home, Calculator, Upload, Database } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useFileContext } from "@/context/FileContext";
 import { useEffect } from "react";
@@ -15,22 +15,39 @@ const NavBar = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { selectedFileId, setSelectedFileId } = useFileContext();
+  const { data: session } = useSession();
 
   const navItems = [
-    { label: "Home", href: "/dashboard/home", icon: Home },
+    {
+      label: "Home",
+      href:
+        session?.user.role === "admin"
+          ? "/admin/dashboard/files"
+          : "/dashboard/home",
+      icon: Home,
+    },
     {
       label: "Calculator",
-      href: `/dashboard/calculator/${selectedFileId}`,
+      href:
+        session?.user.role === "admin"
+          ? `/admin/dashboard/files/calculator/${selectedFileId}`
+          : `/dashboard/calculator/${selectedFileId}`,
       icon: Calculator,
     },
     {
       label: "Import",
-      href: `/dashboard/import/${selectedFileId}`,
+      href:
+        session?.user.role === "admin"
+          ? `/admin/dashboard/files/import/${selectedFileId}`
+          : `/dashboard/import/${selectedFileId}`,
       icon: Upload,
     },
     {
       label: "Data",
-      href: `/dashboard/data/${selectedFileId}`,
+      href:
+        session?.user.role === "admin"
+          ? `/admin/dashboard/files/data/${selectedFileId}`
+          : `/dashboard/data/${selectedFileId}`,
       icon: Database,
     },
   ];
