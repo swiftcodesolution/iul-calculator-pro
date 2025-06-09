@@ -1038,8 +1038,8 @@ export function ComparisonTable({
         : taxFreeResults.deathBenefits;
 
       const cumulativeTaxesPaid = Math.abs(taxFreeTaxesPaid - currentTaxesPaid);
-      const fees = Math.abs(taxFreeFees - currentFees);
-      const cumulativeIncome = Math.abs(taxFreeIncome - currentIncome);
+      const fees = taxFreeFees - currentFees;
+      const cumulativeIncome = taxFreeIncome - currentIncome;
       const deathBenefits = Math.abs(
         taxFreeDeathBenefits - currentDeathBenefits
       );
