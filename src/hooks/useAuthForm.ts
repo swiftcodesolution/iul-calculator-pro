@@ -49,15 +49,15 @@ export function useAuthForm() {
   ) => {
     let currentFingerprint = deviceFingerprint;
 
-    if (!currentFingerprint && type === "login") {
+    // Check if deviceFingerprint is null, undefined, or empty string
+    if (!currentFingerprint || currentFingerprint === "") {
       currentFingerprint = await generateFingerprint();
+      console.log("Generated fingerprint:", currentFingerprint); // Debug
       if (!currentFingerprint) {
-        toast.error("Failed to generate device fingerprint. Please try again.");
+        toast.error("Failed to generate device fingerprint. Try again.");
         return;
       }
-    } else if (!currentFingerprint) {
-      toast.error("Device fingerprint not ready. Please try again.");
-      return;
+      setDeviceFingerprint(currentFingerprint);
     }
 
     setIsSubmitting(true);
@@ -69,11 +69,11 @@ export function useAuthForm() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: signupData.email,
+            email: signupData.email.toLowerCase(),
             password: signupData.password,
             firstName: signupData.firstName,
             lastName: signupData.lastName,
-            cellPhone: signupData.cellPhone, // Fixed typo: ellPhone -> cellPhone
+            cellPhone: signupData.cellPhone,
             officePhone: signupData.officePhone,
             deviceFingerprint: currentFingerprint,
           }),
@@ -97,7 +97,7 @@ export function useAuthForm() {
 
         const loginResult = await signIn("credentials", {
           redirect: false,
-          email: signupData.email,
+          email: signupData.email.toLowerCase(),
           password: signupData.password,
           deviceFingerprint: currentFingerprint,
         });
@@ -110,10 +110,11 @@ export function useAuthForm() {
         }
       } else {
         const loginData = data as z.infer<typeof loginSchema>;
+        const loginEmail = loginData.loginEmail.toLowerCase();
 
         const result = await signIn("credentials", {
           redirect: false,
-          email: loginData.loginEmail,
+          email: loginEmail,
           password: loginData.loginPassword,
           deviceFingerprint: currentFingerprint,
         });
@@ -135,8 +136,8 @@ export function useAuthForm() {
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      toast.error(error.message || "An error occurred");
       console.error(`${type} error:`, error);
+      toast.error(error.message || "An error occurred");
     } finally {
       setIsSubmitting(false);
       if (type === "signup") {

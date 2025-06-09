@@ -26,8 +26,9 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
+          const normalizedEmail = credentials.email.toLowerCase();
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
+            where: { email: normalizedEmail },
           });
 
           if (!user) {
@@ -38,10 +39,19 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Invalid password");
           }
 
-          if (
-            user.deviceFingerprint &&
-            user.deviceFingerprint !== credentials.deviceFingerprint
-          ) {
+          if (!user.deviceFingerprint || user.deviceFingerprint === "") {
+            console.log(
+              "Updating deviceFingerprint for user:",
+              normalizedEmail,
+              "to:",
+              credentials.deviceFingerprint
+            );
+            await prisma.user.update({
+              where: { email: normalizedEmail },
+              data: { deviceFingerprint: credentials.deviceFingerprint },
+            });
+            console.log("Updated deviceFingerprint for user:", normalizedEmail);
+          } else if (user.deviceFingerprint !== credentials.deviceFingerprint) {
             throw new Error("Login restricted to the device used for signup.");
           }
 

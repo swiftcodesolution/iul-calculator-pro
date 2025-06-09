@@ -15,6 +15,8 @@ import { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import { use } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 interface SessionHistory {
   id: string;
@@ -84,6 +86,39 @@ export default function UserDetailsPage({
     fetchUser();
   }, [userId]);
 
+  const handleRemoveDevice = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to remove this device? This will clear the device fingerprint for the user."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "Failed to remove device");
+      }
+
+      toast.success("Device removed successfully");
+      // Optionally refetch user data to update the UI
+      const updatedResponse = await fetch(`/api/users/${userId}`);
+      if (updatedResponse.ok) {
+        const updatedData = await updatedResponse.json();
+        setUser(updatedData);
+      }
+    } catch (err) {
+      toast.error("Failed to remove device");
+      console.error("Remove device error:", err);
+    }
+  };
+
   if (!user && !error) {
     return <div>Loading...</div>;
   }
@@ -120,9 +155,18 @@ export default function UserDetailsPage({
               <p>
                 <strong>Office Phone:</strong> {user?.officePhone || "N/A"}
               </p>
-              <p className="text-blue-500 hover:underline">
-                <Link href="/admin/dashboard/users">Back to Users</Link>
-              </p>
+              <div className="flex space-x-4">
+                <p className="text-blue-500 hover:underline">
+                  <Link href="/admin/dashboard/users">Back to Users</Link>
+                </p>
+                <Button
+                  variant="destructive"
+                  onClick={handleRemoveDevice}
+                  className="ml-4"
+                >
+                  Remove Device
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

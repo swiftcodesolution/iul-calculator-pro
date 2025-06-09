@@ -43,10 +43,9 @@ export async function GET(
             logoutAt: true,
           },
         },
-        // Include CompanyInfo where email matches user's email
         _count: {
           select: {
-            files: true, // Optional: count user's files for potential future use
+            files: true,
           },
         },
       },
@@ -56,7 +55,6 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Fetch CompanyInfo based on email match
     const companyInfo = await prisma.companyInfo.findFirst({
       where: { email: user.email },
       select: {
@@ -75,6 +73,45 @@ export async function GET(
     console.error("Error fetching user:", error);
     return NextResponse.json(
       { error: "Failed to fetch user" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ userId: string }> }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id || session.user.role !== "admin") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { userId } = await params;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Clear deviceFingerprint in sessionHistory
+    await prisma.user.updateMany({
+      where: { id: userId },
+      data: { deviceFingerprint: null },
+    });
+
+    return NextResponse.json({
+      message: "Device fingerprint cleared successfully",
+    });
+  } catch (error) {
+    console.error("Error clearing device fingerprint:", error);
+    return NextResponse.json(
+      { error: "Failed to clear device fingerprint" },
       { status: 500 }
     );
   }
