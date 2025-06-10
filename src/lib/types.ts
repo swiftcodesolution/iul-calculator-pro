@@ -153,6 +153,7 @@ export interface TaxesData {
 }
 
 export interface RowData {
+  taxesDuePercentage?: string | null;
   startingBalance: string;
   annualContributions: string;
   annualEmployerMatch: string;

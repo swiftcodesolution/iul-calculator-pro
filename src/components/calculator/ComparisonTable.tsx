@@ -442,6 +442,10 @@ export function ComparisonTable({
 
       taxesDue: taxesDueSum,
 
+      taxesDuePercentage:
+        (targetResult.retirementTaxes / targetResult.grossRetirementIncome) *
+        100,
+
       deathBenefits: targetResult.deathBenefit,
       yearsRunOutOfMoney: inputs.yearsRunOutOfMoney,
       currentAge: inputs.currentAge,
@@ -881,7 +885,9 @@ export function ComparisonTable({
           ? selectedRowData.current.taxesDue
           : formatValue(currentPlanResults.taxesDue),
 
-        taxes: "",
+        taxes: selectedRowData
+          ? selectedRowData.current.taxesDuePercentage
+          : formatValue(currentPlanResults.taxesDuePercentage, true),
 
         taxFree: selectedRowData
           ? selectedRowData.taxFree.taxesDue
