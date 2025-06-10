@@ -697,13 +697,24 @@ export function runGrossRetirementIncomeLoop(
     // if (year === 1) {
     //   cumulativeTaxesDeferred = annualContribution * decimalWorkingTaxRate;
     // } else
-    if (age < retirementAge) {
-      const X = annualContribution * decimalWorkingTaxRate;
+    // if (age < retirementAge) {
+    //   const X = annualContribution * decimalWorkingTaxRate;
+    //   cumulativeTaxesDeferred = previousCumulativeTaxesDeferred + X;
+    // } else if (age >= retirementAge) {
+    //   cumulativeTaxesDeferred =
+    //     previousCumulativeTaxesDeferred - retirementTaxes;
+    // }
+    if (results.length === 0) {
+      cumulativeTaxesDeferred = annualContrib * decimalWorkingTaxRate;
+    } else if (age < retirementAge) {
+      const X = annualContrib * decimalWorkingTaxRate;
       cumulativeTaxesDeferred = previousCumulativeTaxesDeferred + X;
-    } else if (age >= retirementAge) {
+    } else {
       cumulativeTaxesDeferred =
         previousCumulativeTaxesDeferred - retirementTaxes;
     }
+
+    console.log(annualContrib, decimalWorkingTaxRate);
 
     // Death benefit calculation unchanged
     let deathBenefit = 0;
