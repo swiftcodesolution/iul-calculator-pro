@@ -25,7 +25,7 @@ import {
 
 interface TabManagerProps {
   activeTab: string | null;
-  setActiveTab: (id: string) => void;
+  setActiveTab: (id: string | null) => void;
   isTabCardExpanded: boolean;
   setIsTabCardExpanded: (value: boolean) => void;
   isAddDialogOpen: boolean;
@@ -63,7 +63,7 @@ const TabNavigation = ({
     src?: string;
   }[];
   activeTab: string | null;
-  setActiveTab: (id: string) => void;
+  setActiveTab: (id: string | null) => void;
 }) => (
   <div className="flex gap-2 overflow-x-auto">
     {tabs
@@ -84,7 +84,9 @@ const TabNavigation = ({
               <TooltipTrigger asChild>
                 <Button
                   variant={activeTab === tab.id ? "default" : "outline"}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() =>
+                    setActiveTab(activeTab === tab.id ? null : tab.id)
+                  }
                   aria-selected={activeTab === tab.id}
                   className="cursor-pointer"
                 >
