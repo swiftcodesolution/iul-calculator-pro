@@ -120,7 +120,6 @@ export function ComparisonTable({
   };
 
   const onFutureAgeChange = (age: number) => {
-    console.log("onFutureAgeChange called with age:", age, "tables:", tables);
     if (!isNaN(age) || age > currentAge || tables[0]?.data?.length > 0) {
       setFutureAge(age);
       setFutureAgeInput(age);
@@ -141,7 +140,29 @@ export function ComparisonTable({
       const currentRow = currentPlanTable.find((r) => r.age === age);
       const taxFreeRow = taxFreeTable.find((r) => r.yearsRunOutOfMoney === age);
 
-      console.log("Rows found:", { currentRow, taxFreeRow });
+      const taxesDueSum = currentPlanTable
+        .filter((row) => {
+          const inRange =
+            row.age >= age && row.age <= parseInput(yearsRunOutOfMoneyInput, 0);
+          console.log(
+            "Filter: Age",
+            row.age,
+            "InRange",
+            inRange,
+            "RetirementTaxes",
+            row.retirementTaxes
+          );
+          return inRange;
+        })
+        .reduce((sum, row) => sum + row.retirementTaxes, 0);
+      console.log(
+        "TaxesDueSum:",
+        taxesDueSum,
+        "FutureAge:",
+        age,
+        "YearsRunOut:",
+        yearsRunOutOfMoneyInput
+      );
 
       if (currentRow && taxFreeRow) {
         setSelectedRowData({
@@ -165,7 +186,10 @@ export function ComparisonTable({
             cumulativeFeesPaid: formatValue(currentRow.cumulativeFees),
             cumulativeNetIncome: formatValue(currentRow.cumulativeIncome),
             cumulativeAccountBalance: formatValue(currentRow.endOfYearBalance),
-            taxesDue: formatValue(currentPlanResults.taxesDue, true),
+
+            // taxesDue: formatValue(currentPlanResults.taxesDue, true),
+            taxesDue: formatValue(taxesDueSum),
+
             deathBenefits: formatValue(currentRow.deathBenefit),
             yearsRunOutOfMoney: formatValue(age),
           },
@@ -188,15 +212,13 @@ export function ComparisonTable({
             cumulativeAccountBalance: formatValue(
               taxFreeRow.cumulativeAccountBalance
             ),
-            taxesDue: formatValue(taxFreeRow.taxesDue, true),
+            taxesDue: formatValue(taxFreeRow.taxesDue),
             deathBenefits: formatValue(taxFreeRow.deathBenefits),
             yearsRunOutOfMoney: age.toString(),
           },
         });
       } else {
         setSelectedRowData(null);
-
-        console.log("No matching rows for age:", age);
       }
     } else {
       setSelectedRowData(null);
@@ -219,7 +241,7 @@ export function ComparisonTable({
   const futureAgeOptions = useMemo(() => {
     const start = Number(boxesData.currentAge) || currentAge;
     const end = Number(yearsRunOutOfMoney || yearsRunOutOfMoneyInput) || 0;
-    console.log("Future age options:", { start, end });
+
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }, [
     boxesData.currentAge,
@@ -241,7 +263,7 @@ export function ComparisonTable({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleFutureAgeChange = (value: string) => {
     const age = Number(value);
-    console.log("Selected futureAge:", age);
+
     if (!isNaN(age) && age >= 0) {
       setFutureAge(age);
       setFutureAgeInput(age);
@@ -390,6 +412,13 @@ export function ComparisonTable({
       loopResults[loopResults.length - 1] ||
       getEmptyResults();
 
+    const futureAgeNum = Number(futureAge);
+    const taxesDueSum = loopResults
+      .filter(
+        (row) => row.age >= futureAgeNum && row.age <= inputs.yearsRunOutOfMoney
+      )
+      .reduce((sum, row) => sum + row.retirementTaxes, 0);
+
     return {
       xValue: targetResult.age,
       startingBalance: inputs.startingBalance,
@@ -406,20 +435,18 @@ export function ComparisonTable({
       cumulativeFeesPaid: targetResult.cumulativeFees,
       cumulativeNetIncome: targetResult.cumulativeIncome,
       cumulativeAccountBalance: targetResult.endOfYearBalance,
+
       // taxesDue:
-      //   targetResult.grossRetirementIncome > 0
-      //     ? (targetResult.retirementTaxes /
-      //         targetResult.grossRetirementIncome) *
-      //       100
-      //     : 0,
-      taxesDue:
-        (targetResult.retirementTaxes / targetResult.grossRetirementIncome) *
-        100,
-      // taxesDue: boxesData.currentPlanFees,
+      //   (targetResult.retirementTaxes / targetResult.grossRetirementIncome) *
+      //   100,
+
+      taxesDue: taxesDueSum,
+
       deathBenefits: targetResult.deathBenefit,
       yearsRunOutOfMoney: inputs.yearsRunOutOfMoney,
       currentAge: inputs.currentAge,
     };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     boxesData.currentAge,
@@ -434,6 +461,7 @@ export function ComparisonTable({
     annualContributions,
     annualEmployerMatch,
     startingBalance,
+    futureAgeInput,
   ]);
 
   // Handle missing tables data during SSG
@@ -560,6 +588,14 @@ export function ComparisonTable({
         (r) => r.yearsRunOutOfMoney === ageToUse
       );
 
+      const taxesDueSum = currentPlanTable
+        .filter(
+          (row) =>
+            row.age >= ageToUse &&
+            row.age <= parseInput(yearsRunOutOfMoneyInput, 0)
+        )
+        .reduce((sum, row) => sum + row.retirementTaxes, 0);
+
       if (currentRow && taxFreeRow) {
         setSelectedRowData({
           current: {
@@ -582,7 +618,10 @@ export function ComparisonTable({
             cumulativeFeesPaid: formatValue(currentRow.cumulativeFees),
             cumulativeNetIncome: formatValue(currentRow.cumulativeIncome),
             cumulativeAccountBalance: formatValue(currentRow.endOfYearBalance),
-            taxesDue: formatValue(currentPlanResults.taxesDue, true),
+
+            // taxesDue: formatValue(currentPlanResults.taxesDue, true),
+            taxesDue: formatValue(taxesDueSum),
+
             deathBenefits: formatValue(currentRow.deathBenefit),
             yearsRunOutOfMoney: formatValue(ageToUse),
           },
@@ -840,13 +879,13 @@ export function ComparisonTable({
         label: "Taxes Due",
         current: selectedRowData
           ? selectedRowData.current.taxesDue
-          : formatValue(currentPlanResults.taxesDue, true),
+          : formatValue(currentPlanResults.taxesDue),
 
         taxes: "",
 
         taxFree: selectedRowData
           ? selectedRowData.taxFree.taxesDue
-          : formatValue(taxFreeResults.taxesDue, true),
+          : formatValue(taxFreeResults.taxesDue),
       },
       {
         label: "Death Benefits",

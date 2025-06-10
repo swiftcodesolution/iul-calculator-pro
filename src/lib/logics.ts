@@ -714,8 +714,6 @@ export function runGrossRetirementIncomeLoop(
         previousCumulativeTaxesDeferred - retirementTaxes;
     }
 
-    console.log(annualContrib, decimalWorkingTaxRate);
-
     // Death benefit calculation unchanged
     let deathBenefit = 0;
     if (age < retirementAge) {
