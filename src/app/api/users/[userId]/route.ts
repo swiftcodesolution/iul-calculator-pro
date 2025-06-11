@@ -62,9 +62,9 @@ export async function GET(
         businessName: true,
         agentName: true,
         email: true,
-        phoneNumber: true,
-        companyLogo: true,
-        agentProfilePic: true,
+        phone: true,
+        logoSrc: true,
+        profilePicSrc: true,
       },
     });
 
