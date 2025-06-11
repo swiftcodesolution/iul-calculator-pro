@@ -10,7 +10,7 @@ import { useTabs } from "@/hooks/useTabs";
 import { useColumnHighlight } from "@/hooks/useColumnHighlight";
 import { TotalAdvantage, ClientFile } from "@/lib/types";
 import { useTableStore } from "@/lib/store";
-import { useCompanyInfo } from "@/hooks/useCompanyInfo";
+
 import { debounce } from "@/lib/utils";
 import { notFound } from "next/navigation";
 
@@ -47,7 +47,6 @@ export default function CalculatorPage({ params }: { params: Params }) {
     setYearsRunOutOfMoney,
   } = useTableStore();
 
-  const { companyInfo } = useCompanyInfo();
   const {
     setEditTabId,
     activeTab,
@@ -204,7 +203,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
         />
       </div>
       <div className="flex flex-col gap-4 relative">
-        <CompanyInfo companyInfo={companyInfo} />
+        <CompanyInfo />
 
         <TabManager
           activeTab={activeTab}

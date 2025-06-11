@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 const trainingResources = [
-  { title: "View the Training Page", link: "/dashboard/training-content" },
+  {
+    title: "Training Videos & Training Documents",
+    link: "/dashboard/training-content",
+  },
   { title: "Downloads", link: "/dashboard/downloads-content" },
 ];
 

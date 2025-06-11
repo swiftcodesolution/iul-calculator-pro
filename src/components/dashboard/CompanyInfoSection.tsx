@@ -140,7 +140,7 @@ export default function CompanyInfoSection({
                       whileTap={{ scale: 0.95 }}
                     >
                       <Image
-                        src={getImageKey(form.watch("logoSrc"))}
+                        src={getImageSrc(form.watch("logoSrc"))}
                         alt="Company Logo"
                         width={300}
                         height={300}
