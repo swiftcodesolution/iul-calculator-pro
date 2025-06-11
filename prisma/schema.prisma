@@ -22,7 +22,7 @@ model User {
   sessions            Session[]
   sessionHistory      SessionHistory[]
   companyInfo         CompanyInfo?  @relation(name: "UserCompanyInfo")
-  companyInfoId       String?       @unique @db.ObjectId
+  companyInfoId       String?       @db.ObjectId
 }
 
 model CompanyInfo {
