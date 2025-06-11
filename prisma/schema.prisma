@@ -21,17 +21,22 @@ model User {
   files               ClientFile[]
   sessions            Session[]
   sessionHistory      SessionHistory[]
+  companyInfo         CompanyInfo?  @relation(name: "UserCompanyInfo")
+  companyInfoId       String?       @unique @db.ObjectId
 }
 
 model CompanyInfo {
-  id  String  @id @default(auto()) @map("_id") @db.ObjectId
-  businessName    String
-  agentName       String
-  email           String
-  phoneNumber     String
-  companyLogo     String?
-  agentProfilePic String?
-
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  businessName  String
+  agentName     String
+  email         String
+  phone         String
+  logoSrc       String?
+  profilePicSrc String?
+  userId        String    @unique @db.ObjectId
+  user          User      @relation(name: "UserCompanyInfo", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Session {

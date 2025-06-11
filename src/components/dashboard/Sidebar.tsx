@@ -8,7 +8,6 @@ import InsuranceCompaniesSection from "./InsuranceCompaniesSection";
 import TrainingResourcesSection from "./TrainingResourcesSection";
 import { CompanyInfo } from "@/lib/types";
 
-// Animation variants
 const sidebarVariants = {
   open: {
     x: 0,
@@ -37,22 +36,33 @@ const contentVisibility = {
 
 interface SidebarProps {
   companyInfo: CompanyInfo;
-  updateCompanyInfo: (info: Partial<CompanyInfo>) => void;
+  updateCompanyInfo: (
+    info: Partial<CompanyInfo>,
+    logoFile?: File | null,
+    profilePicFile?: File | null
+  ) => Promise<void>;
+  deleteCompanyInfo: () => Promise<void>;
   isEditing: boolean;
   toggleEdit: () => void;
-  save: () => void;
   isSidebarCollapsed: boolean;
   toggleSidebar: () => void;
-  handleFileUpload: (file: File | null, type: "logo" | "profilePic") => void;
-  handleCropExistingImage: (type: "logo" | "profilePic") => void;
+  handleFileUpload: (
+    file: File | null,
+    type: "logo" | "profilePic",
+    setValue: (field: string, value: File | string) => void
+  ) => void;
+  handleCropExistingImage: (
+    type: "logo" | "profilePic",
+    imageSrc: string
+  ) => void;
 }
 
 export default function Sidebar({
   companyInfo,
   updateCompanyInfo,
+  deleteCompanyInfo,
   isEditing,
   toggleEdit,
-  save,
   isSidebarCollapsed,
   toggleSidebar,
   handleFileUpload,
@@ -95,10 +105,12 @@ export default function Sidebar({
             <CompanyInfoSection
               companyInfo={companyInfo}
               updateCompanyInfo={updateCompanyInfo}
+              deleteCompanyInfo={deleteCompanyInfo}
               isEditing={isEditing}
               toggleEdit={toggleEdit}
-              save={save}
-              handleFileUpload={handleFileUpload}
+              isLoading={false}
+              error={null}
+              handleFileUpload={handleFileUpload} // Pass useImageCrop functions
               handleCropExistingImage={handleCropExistingImage}
             />
             <InsuranceCompaniesSection />

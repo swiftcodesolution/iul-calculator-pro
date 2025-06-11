@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import Cropper from "react-easy-crop";
 import { throttle } from "lodash";
-import { CropState } from "@/lib/types";
+import { CompanyInfo, CropState } from "@/lib/types";
 
 interface CropDialogProps {
   open: boolean;
@@ -29,9 +29,23 @@ interface CropDialogProps {
   cropType: "logo" | "profilePic" | null;
   cropState: CropState;
   setCropState: (state: CropState) => void;
-  handleCropImage: () => void;
+  handleCropImage: (
+    updateCompanyInfo: (
+      info: Partial<CompanyInfo>,
+      logoFile?: File | null,
+      profilePicFile?: File | null
+    ) => Promise<void>,
+    setValue: (field: string, value: File | string) => void
+  ) => Promise<void>;
   setImageToCrop: (src: string | null) => void;
   setCropType: (type: "logo" | "profilePic" | null) => void;
+  updateCompanyInfo: (
+    info: Partial<CompanyInfo>,
+    logoFile?: File | null,
+    profilePicFile?: File | null
+  ) => Promise<void>;
+  setValue: (field: string, value: File | string) => void;
+  originalImages: { logo?: string; profilePic?: string };
 }
 
 const CropDialog = memo(
@@ -45,12 +59,23 @@ const CropDialog = memo(
     handleCropImage,
     setImageToCrop,
     setCropType,
+    updateCompanyInfo,
+    setValue,
   }: CropDialogProps) => {
     const isInitialMount = useRef(true);
     const isClosing = useRef(false);
     const [selectedAspect, setSelectedAspect] = useState<number>(
       cropState.aspect
     );
+
+    useEffect(() => {
+      console.log("CropDialog open state:", open, "imageToCrop:", imageToCrop);
+      isInitialMount.current = false;
+      return () => {
+        isInitialMount.current = true;
+        isClosing.current = false;
+      };
+    }, [open, imageToCrop]);
 
     const handleCropChange = useCallback(
       throttle((crop: { x: number; y: number }) => {
@@ -72,12 +97,15 @@ const CropDialog = memo(
 
     const handleCropComplete = useCallback(
       throttle(
-        (croppedAreaPixels: {
-          x: number;
-          y: number;
-          width: number;
-          height: number;
-        }) => {
+        (
+          _: unknown,
+          croppedAreaPixels: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+          }
+        ) => {
           if (!isInitialMount.current) {
             setCropState({ ...cropState, croppedAreaPixels });
           }
@@ -96,15 +124,8 @@ const CropDialog = memo(
       [setCropState, cropState]
     );
 
-    useEffect(() => {
-      isInitialMount.current = false;
-      return () => {
-        isInitialMount.current = true;
-        isClosing.current = false;
-      };
-    }, []);
-
     const handleDialogClose = useCallback(() => {
+      console.log("Closing CropDialog");
       isClosing.current = true;
       onOpenChange(false);
       setImageToCrop(null);
@@ -118,13 +139,11 @@ const CropDialog = memo(
       setSelectedAspect(1);
     }, [onOpenChange, setImageToCrop, setCropType, setCropState]);
 
-    const memoizedCrop = useMemo(() => cropState.crop, [cropState.crop]);
-    const memoizedZoom = useMemo(() => cropState.zoom, [cropState.zoom]);
-
     return (
       <Dialog
         open={open}
         onOpenChange={(newOpen) => {
+          console.log("Dialog onOpenChange:", newOpen);
           if (!newOpen && !isClosing.current) {
             handleDialogClose();
           }
@@ -141,14 +160,12 @@ const CropDialog = memo(
               {imageToCrop && open && (
                 <Cropper
                   image={imageToCrop}
-                  crop={memoizedCrop}
-                  zoom={memoizedZoom}
+                  crop={cropState.crop}
+                  zoom={cropState.zoom}
                   aspect={cropState.aspect}
                   onCropChange={handleCropChange}
                   onZoomChange={handleZoomChange}
-                  onCropComplete={(_croppedArea, croppedAreaPixels) =>
-                    handleCropComplete(croppedAreaPixels)
-                  }
+                  onCropComplete={handleCropComplete}
                   restrictPosition={false}
                   minZoom={0.5}
                 />
@@ -186,7 +203,14 @@ const CropDialog = memo(
               <Button variant="outline" onClick={handleDialogClose}>
                 Cancel
               </Button>
-              <Button onClick={handleCropImage}>Crop & Save</Button>
+              <Button
+                onClick={() => {
+                  console.log("Crop & Save clicked, cropState:", cropState);
+                  handleCropImage(updateCompanyInfo, setValue);
+                }}
+              >
+                Crop & Save
+              </Button>
             </div>
           </div>
         </DialogContent>

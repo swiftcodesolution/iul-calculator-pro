@@ -138,3 +138,11 @@ export function throttle<T extends (...args: unknown[]) => R, R>(
     return lastResult;
   };
 }
+
+export const getImageSrc = (
+  src: string | File | undefined
+): string | undefined => {
+  if (typeof src === "string") return src;
+  if (src instanceof File) return URL.createObjectURL(src);
+  return undefined;
+};

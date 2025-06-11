@@ -1,4 +1,3 @@
-// src/app/dashboard/home/page.tsx
 "use client";
 
 import Sidebar from "@/components/dashboard/Sidebar";
@@ -10,9 +9,10 @@ import { useImageCrop } from "@/hooks/useImageCrop";
 import CropDialog from "@/components/dashboard/CropDialog";
 import { useFileContext } from "@/context/FileContext";
 import { useEffect, useRef } from "react";
-import { ClientFile } from "@/lib/types";
+import { ClientFile, CompanyInfo, companyInfoSchema } from "@/lib/types";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-// Animation variants
 const contentVariants = {
   open: {
     marginLeft: "0px",
@@ -29,9 +29,9 @@ export default function DashboardPage() {
   const {
     companyInfo,
     updateCompanyInfo,
+    deleteCompanyInfo,
     isEditing,
     toggleEdit,
-    save,
     isSidebarCollapsed,
     toggleSidebar,
   } = useCompanyInfo();
@@ -59,17 +59,24 @@ export default function DashboardPage() {
     handleFileUpload,
     handleCropImage,
     handleCropExistingImage,
-  } = useImageCrop(companyInfo, updateCompanyInfo);
+    originalImages,
+  } = useImageCrop();
+  const form = useForm<CompanyInfo>({
+    resolver: zodResolver(companyInfoSchema),
+    defaultValues: companyInfo,
+  });
+
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Clear selection when page mounts
   useEffect(() => {
     clearSelectedFileId();
     setSelectedFile(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [clearSelectedFileId, setSelectedFile]);
 
-  // Handle click outside file items to deselect
+  useEffect(() => {
+    console.log("CropDialog state:", { cropDialogOpen, imageToCrop, cropType });
+  }, [cropDialogOpen, imageToCrop, cropType]);
+
   const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
     if (containerRef.current && !target.closest(".file-item")) {
@@ -78,7 +85,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Handle file selection
   const handleFileSelection = (file: ClientFile) => {
     setSelectedFile(file);
     setSelectedFileId(file.id);
@@ -93,12 +99,12 @@ export default function DashboardPage() {
       <Sidebar
         companyInfo={companyInfo}
         updateCompanyInfo={updateCompanyInfo}
+        deleteCompanyInfo={deleteCompanyInfo}
         isEditing={isEditing}
         toggleEdit={toggleEdit}
-        save={save}
         isSidebarCollapsed={isSidebarCollapsed}
         toggleSidebar={toggleSidebar}
-        handleFileUpload={handleFileUpload}
+        handleFileUpload={handleFileUpload} // Pass useImageCrop functions
         handleCropExistingImage={handleCropExistingImage}
       />
       <motion.div
@@ -131,6 +137,11 @@ export default function DashboardPage() {
         handleCropImage={handleCropImage}
         setImageToCrop={setImageToCrop}
         setCropType={setCropType}
+        updateCompanyInfo={updateCompanyInfo}
+        setValue={(field: string, value: File | string) =>
+          form.setValue(field as keyof CompanyInfo, value)
+        }
+        originalImages={originalImages}
       />
     </div>
   );

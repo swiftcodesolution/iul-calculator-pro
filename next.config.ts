@@ -11,6 +11,16 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true, // Skips ESLint during Vercel build
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "x1pmtwto3h70vgs8.public.blob.vercel-storage.com",
+        port: "",
+        pathname: "/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

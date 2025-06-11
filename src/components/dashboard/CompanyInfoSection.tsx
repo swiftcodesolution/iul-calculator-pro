@@ -3,11 +3,21 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { Trash2, Upload, Crop } from "lucide-react";
-import { CompanyInfo } from "@/lib/types";
+import { CompanyInfo, companyInfoSchema } from "@/lib/types";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 const imageUploadVariant = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -20,328 +30,537 @@ const imageUploadVariant = {
 
 interface CompanyInfoSectionProps {
   companyInfo: CompanyInfo;
-  updateCompanyInfo: (info: Partial<CompanyInfo>) => void;
+  updateCompanyInfo: (
+    info: Partial<CompanyInfo>,
+    logoFile?: File | null,
+    profilePicFile?: File | null
+  ) => Promise<void>;
+  deleteCompanyInfo: () => Promise<void>;
   isEditing: boolean;
   toggleEdit: () => void;
-  save: () => void;
-  handleFileUpload: (file: File | null, type: "logo" | "profilePic") => void;
-  handleCropExistingImage: (type: "logo" | "profilePic") => void;
+  isLoading: boolean;
+  error: null | string;
+  handleFileUpload: (
+    file: File | null,
+    type: "logo" | "profilePic",
+    setValue: (field: string, value: File | string) => void
+  ) => void;
+  handleCropExistingImage: (
+    type: "logo" | "profilePic",
+    imageSrc: string
+  ) => void;
 }
 
 export default function CompanyInfoSection({
   companyInfo,
   updateCompanyInfo,
+  deleteCompanyInfo,
   isEditing,
   toggleEdit,
-  save,
+  isLoading,
+  error,
   handleFileUpload,
   handleCropExistingImage,
 }: CompanyInfoSectionProps) {
+  const form = useForm<CompanyInfo>({
+    resolver: zodResolver(companyInfoSchema),
+    defaultValues: companyInfo,
+  });
+
+  useEffect(() => {
+    form.reset(companyInfo);
+  }, [companyInfo, form]);
+
   const handleDeleteUpload = (type: "logo" | "profilePic") => {
-    updateCompanyInfo(
-      type === "logo" ? { logoSrc: undefined } : { profilePicSrc: undefined }
-    );
+    form.setValue(type === "logo" ? "logoSrc" : "profilePicSrc", "");
+    updateCompanyInfo({ [type === "logo" ? "logoSrc" : "profilePicSrc"]: "" });
+  };
+
+  const onSubmit = async (data: CompanyInfo) => {
+    try {
+      // const logoFile =
+      //   form.getValues("logoSrc") instanceof File
+      //     ? form.getValues("logoSrc")
+      //     : null;
+      // const profilePicFile =
+      //   form.getValues("profilePicSrc") instanceof File
+      //     ? form.getValues("profilePicSrc")
+      //     : null;
+
+      const rawLogo = form.getValues("logoSrc");
+      const logoFile = rawLogo instanceof File ? rawLogo : null;
+
+      const rawProfilePic = form.getValues("profilePicSrc");
+      const profilePicFile =
+        rawProfilePic instanceof File ? rawProfilePic : null;
+
+      await updateCompanyInfo(data, logoFile, profilePicFile);
+    } catch (err) {
+      console.error("Error submitting form:", err);
+    }
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  const getImageKey = (src: string | File | undefined | null): string => {
+    if (src instanceof File) {
+      return `file-${Date.now()}`;
+    }
+    return src || `empty-${Date.now()}`;
+  };
+
+  const getImageSrc = (src: string | File | undefined | null): string => {
+    if (src instanceof File) {
+      return URL.createObjectURL(src);
+    }
+    return src || "";
   };
 
   return (
     <Card className="flex-1 p-2 gap-0 mb-2">
-      <CardContent className="p-0 space-y-2 h-full">
-        <div className="flex gap-4">
-          {/* Company Logo */}
-          <div className="flex flex-col items-center">
-            {companyInfo.logoSrc ? (
-              <motion.div
-                key={companyInfo.logoSrc}
-                variants={imageUploadVariant}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-col items-center"
-              >
+      <CardContent className="p-0 space-y-2">
+        {error && <div className="text-red-500 text-sm">{error}</div>}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+            <div className="flex gap-2">
+              {/* Company Logo */}
+              <div className="flex flex-col items-center w-full">
+                {form.watch("logoSrc") ? (
+                  <motion.div
+                    key={getImageKey(form.watch("logoSrc"))}
+                    variants={imageUploadVariant}
+                    initial="hidden"
+                    animate="visible"
+                    className="flex flex-col items-center"
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Image
+                        src={getImageKey(form.watch("logoSrc"))}
+                        alt="Company Logo"
+                        width={300}
+                        height={300}
+                        className="object-contain w-[200px] h-[100px]"
+                      />
+                    </motion.div>
+                    {isEditing && (
+                      <div className="flex gap-2 mt-2 justify-center">
+                        <motion.div
+                          whileHover={{
+                            scale: 1.1,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteUpload("logo")}
+                            type="button"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </motion.div>
+                        <motion.div
+                          whileHover={{
+                            scale: 1.1,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          <Button asChild variant="outline" size="sm">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              Replace
+                              <Upload className="h-4 w-4" />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  console.log(
+                                    "Logo upload triggered:",
+                                    e.target.files?.[0]
+                                  );
+                                  const file = e.target.files?.[0] || null;
+                                  handleFileUpload(
+                                    file,
+                                    "logo",
+                                    (field, value) => {
+                                      form.setValue(
+                                        field as keyof CompanyInfo,
+                                        value
+                                      );
+                                    }
+                                  );
+                                }}
+                                disabled={!isEditing}
+                              />
+                            </label>
+                          </Button>
+                        </motion.div>
+                        <motion.div
+                          whileHover={{
+                            scale: 1.1,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            onClick={() => {
+                              const logoSrc = form.watch("logoSrc");
+                              console.log(
+                                "Crop logo clicked, logoSrc:",
+                                logoSrc
+                              );
+                              if (typeof logoSrc === "string") {
+                                handleCropExistingImage("logo", logoSrc);
+                              }
+                            }}
+                          >
+                            <Crop className="h-4 w-4 mr-1" /> Crop
+                          </Button>
+                        </motion.div>
+                      </div>
+                    )}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    whileHover={{ scale: 1.05, backgroundColor: "#e5e7eb" }}
+                    className="h-[100px] w-full bg-slate-200 flex items-center justify-center text-center rounded-sm"
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        console.log(
+                          "Initial logo upload triggered:",
+                          e.target.files?.[0]
+                        );
+                        const file = e.target.files?.[0] || null;
+                        handleFileUpload(file, "logo", (field, value) => {
+                          form.setValue(field as keyof CompanyInfo, value);
+                        });
+                      }}
+                      id="logo-upload"
+                      disabled={!isEditing}
+                    />
+                    <label
+                      htmlFor="logo-upload"
+                      className={`cursor-pointer p-2 rounded text-sm font-bold text-gray-400 text-center ${
+                        !isEditing ? "pointer-events-none opacity-50" : ""
+                      }`}
+                    >
+                      upload company logo
+                    </label>
+                  </motion.div>
+                )}
+              </div>
+              {/* Agent Profile Pic */}
+              <div className="flex flex-col items-center w-full">
+                {form.watch("profilePicSrc") ? (
+                  <motion.div
+                    key={getImageKey(form.watch("profilePicSrc"))}
+                    variants={imageUploadVariant}
+                    initial="hidden"
+                    animate="visible"
+                    className="flex flex-col items-center"
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Image
+                        src={getImageSrc(form.watch("profilePicSrc"))}
+                        alt="Agent Profile"
+                        width={300}
+                        height={300}
+                        className="object-cover rounded-full w-[100px] h-[100px]"
+                      />
+                    </motion.div>
+                    {isEditing && (
+                      <div className="flex gap-2 mt-2 justify-center">
+                        <motion.div
+                          whileHover={{
+                            scale: 1.1,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteUpload("profilePic")}
+                            type="button"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </motion.div>
+                        <motion.div
+                          whileHover={{
+                            scale: 1.1,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          <Button asChild variant="outline" size="sm">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              Replace
+                              <Upload className="h-4 w-4" />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  console.log(
+                                    "Profile pic upload triggered:",
+                                    e.target.files?.[0]
+                                  );
+                                  const file = e.target.files?.[0] || null;
+                                  handleFileUpload(
+                                    file,
+                                    "profilePic",
+                                    (field, value) => {
+                                      form.setValue(
+                                        field as keyof CompanyInfo,
+                                        value
+                                      );
+                                    }
+                                  );
+                                }}
+                                disabled={!isEditing}
+                              />
+                            </label>
+                          </Button>
+                        </motion.div>
+                        <motion.div
+                          whileHover={{
+                            scale: 1.1,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            onClick={() => {
+                              const profilePicSrc = form.watch("profilePicSrc");
+                              console.log(
+                                "Crop profile pic clicked, profilePicSrc:",
+                                profilePicSrc
+                              );
+                              if (typeof profilePicSrc === "string") {
+                                handleCropExistingImage(
+                                  "profilePic",
+                                  profilePicSrc
+                                );
+                              }
+                            }}
+                          >
+                            <Crop className="h-4 w-4 mr-1" /> Crop
+                          </Button>
+                        </motion.div>
+                      </div>
+                    )}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    whileHover={{ scale: 1.05, backgroundColor: "#e5e7eb" }}
+                    className="h-[100px] w-full bg-slate-200 flex items-center justify-center text-center rounded-sm"
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        console.log(
+                          "Initial profile pic upload triggered:",
+                          e.target.files?.[0]
+                        );
+                        const file = e.target.files?.[0] || null;
+                        handleFileUpload(file, "profilePic", (field, value) => {
+                          form.setValue(field as keyof CompanyInfo, value);
+                        });
+                      }}
+                      id="profile-upload"
+                      disabled={!isEditing}
+                    />
+                    <label
+                      htmlFor="profile-upload"
+                      className={`cursor-pointer p-2 rounded text-sm font-bold text-gray-400 text-center ${
+                        !isEditing ? "pointer-events-none opacity-50" : ""
+                      }`}
+                    >
+                      upload profile picture
+                    </label>
+                  </motion.div>
+                )}
+              </div>
+            </div>
+            <div className="space-y-2 mt-4">
+              <div className="flex gap-2 w-full">
+                <FormField
+                  control={form.control}
+                  name="businessName"
+                  render={({ field }) => (
+                    <FormItem className="grow">
+                      <FormLabel className="text-xs">Business Name</FormLabel>
+                      <FormControl>
+                        <motion.div
+                          whileFocus={{
+                            scale: 1.02,
+                            boxShadow: "0 0 0 2px #3b82f6",
+                          }}
+                        >
+                          <Input
+                            {...field}
+                            disabled={!isEditing}
+                            className="h-6 text-xs"
+                          />
+                        </motion.div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="agentName"
+                  render={({ field }) => (
+                    <FormItem className="grow">
+                      <FormLabel className="text-xs">Agent Name</FormLabel>
+                      <FormControl>
+                        <motion.div
+                          whileFocus={{
+                            scale: 1.02,
+                            boxShadow: "0 0 0 2px #3b82f6",
+                          }}
+                        >
+                          <Input
+                            {...field}
+                            disabled={!isEditing}
+                            className="h-6 text-xs"
+                          />
+                        </motion.div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex gap-2 w-full">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem className="grow">
+                      <FormLabel className="text-xs">Email</FormLabel>
+                      <FormControl>
+                        <motion.div
+                          whileFocus={{
+                            scale: 1.02,
+                            boxShadow: "0 0 0 2px #3b82f6",
+                          }}
+                        >
+                          <Input
+                            {...field}
+                            disabled={!isEditing}
+                            className="h-6 text-xs"
+                          />
+                        </motion.div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem className="grow">
+                      <FormLabel className="text-xs">Phone Number</FormLabel>
+                      <FormControl>
+                        <motion.div
+                          whileFocus={{
+                            scale: 1.02,
+                            boxShadow: "0 0 0 2px #3b82f6",
+                          }}
+                        >
+                          <Input
+                            {...field}
+                            disabled={!isEditing}
+                            className="h-6 text-xs"
+                          />
+                        </motion.div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex gap-2 w-full">
                 <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{
+                    scale: 1.1,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  }}
                 >
-                  <Image
-                    src={companyInfo.logoSrc}
-                    alt="Company Logo"
-                    width={300}
-                    height={300}
-                    className="object-contain w-[200px] h-[100px]"
-                  />
+                  <Button
+                    type="button"
+                    className="grow"
+                    size="sm"
+                    onClick={toggleEdit}
+                  >
+                    {isEditing ? "Cancel" : "Edit"}
+                  </Button>
                 </motion.div>
-                <div className="flex gap-2 mt-2 justify-center">
-                  <motion.div
-                    whileHover={{
-                      scale: 1.1,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteUpload("logo")}
+                {isEditing && (
+                  <>
+                    <motion.div
+                      whileHover={{
+                        scale: 1.1,
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                      }}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{
-                      scale: 1.1,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button asChild variant="outline" size="sm">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        Replace
-                        <Upload className="h-4 w-4" />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) =>
-                            handleFileUpload(
-                              e.target.files?.[0] || null,
-                              "logo"
-                            )
-                          }
-                        />
-                      </label>
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{
-                      scale: 1.1,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCropExistingImage("logo")}
-                    >
-                      <Crop className="h-4 w-4 mr-1" /> Crop
-                    </Button>
-                  </motion.div>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                whileHover={{ scale: 1.05, backgroundColor: "#e5e7eb" }}
-                className="h-[100px] bg-gray-200 flex flex-col items-center justify-center"
-              >
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) =>
-                    handleFileUpload(e.target.files?.[0] || null, "logo")
-                  }
-                  id="logo-upload"
-                />
-                <label
-                  htmlFor="logo-upload"
-                  className="cursor-pointer p-2 rounded text-sm"
-                >
-                  Drag and Drop Logo
-                </label>
-              </motion.div>
-            )}
-          </div>
-          {/* Agent Profile Pic */}
-          <div className="flex flex-col items-center">
-            {companyInfo.profilePicSrc ? (
-              <motion.div
-                key={companyInfo.profilePicSrc}
-                variants={imageUploadVariant}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-col items-center"
-              >
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Image
-                    src={companyInfo.profilePicSrc}
-                    alt="Agent Profile"
-                    width={300}
-                    height={300}
-                    className="object-cover rounded-full w-[100px] h-[100px]"
-                  />
-                </motion.div>
-                <div className="flex gap-2 mt-2 justify-center">
-                  <motion.div
-                    whileHover={{
-                      scale: 1.1,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteUpload("profilePic")}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{
-                      scale: 1.1,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button asChild variant="outline" size="sm">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        Replace
-                        <Upload className="h-4 w-4" />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) =>
-                            handleFileUpload(
-                              e.target.files?.[0] || null,
-                              "profilePic"
-                            )
-                          }
-                        />
-                      </label>
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{
-                      scale: 1.1,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCropExistingImage("profilePic")}
-                    >
-                      <Crop className="h-4 w-4 mr-1" /> Crop
-                    </Button>
-                  </motion.div>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                whileHover={{ scale: 1.05, backgroundColor: "#e5e7eb" }}
-                className="h-[100px] bg-gray-200 flex flex-col items-center justify-center"
-              >
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) =>
-                    handleFileUpload(e.target.files?.[0] || null, "profilePic")
-                  }
-                  id="profile-upload"
-                />
-                <label
-                  htmlFor="profile-upload"
-                  className="cursor-pointer p-2 rounded text-sm"
-                >
-                  Drag and Drop Profile Pic
-                </label>
-              </motion.div>
-            )}
-          </div>
-        </div>
-        <div className="space-y-2 mt-4">
-          <div className="flex gap-2 w-full">
-            <div className="grow">
-              <Label className="text-xs">Business Name</Label>
-              <motion.div
-                whileFocus={{ scale: 1.02, boxShadow: "0 0 0 2px #3b82f6" }}
-              >
-                <Input
-                  value={companyInfo.businessName}
-                  onChange={(e) =>
-                    updateCompanyInfo({ businessName: e.target.value })
-                  }
-                  disabled={!isEditing}
-                  className="h-6 text-xs"
-                />
-              </motion.div>
+                      <Button type="submit" className="grow" size="sm">
+                        Save
+                      </Button>
+                    </motion.div>
+                    {companyInfo.id && (
+                      <motion.div
+                        whileHover={{
+                          scale: 1.1,
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        }}
+                      >
+                        <Button
+                          variant="destructive"
+                          className="grow"
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              await deleteCompanyInfo();
+                            } catch (err) {
+                              console.error(
+                                "Error deleting company info:",
+                                err
+                              );
+                            }
+                          }}
+                          type="button"
+                        >
+                          Delete
+                        </Button>
+                      </motion.div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
-            <div className="grow">
-              <Label className="text-xs">Agent Name</Label>
-              <motion.div
-                whileFocus={{ scale: 1.02, boxShadow: "0 0 0 2px #3b82f6" }}
-              >
-                <Input
-                  value={companyInfo.agentName}
-                  onChange={(e) =>
-                    updateCompanyInfo({ agentName: e.target.value })
-                  }
-                  disabled={!isEditing}
-                  className="h-6 text-xs"
-                />
-              </motion.div>
-            </div>
-          </div>
-          <div className="flex gap-2 w-full">
-            <div className="grow">
-              <Label className="text-xs">Email</Label>
-              <motion.div
-                whileFocus={{ scale: 1.02, boxShadow: "0 0 0 2px #3b82f6" }}
-              >
-                <Input
-                  value={companyInfo.email}
-                  onChange={(e) => updateCompanyInfo({ email: e.target.value })}
-                  disabled={!isEditing}
-                  className="h-6 text-xs"
-                />
-              </motion.div>
-            </div>
-            <div className="grow">
-              <Label className="text-xs">Phone Number</Label>
-              <motion.div
-                whileFocus={{ scale: 1.02, boxShadow: "0 0 0 2px #3b82f6" }}
-              >
-                <Input
-                  value={companyInfo.phone}
-                  onChange={(e) => updateCompanyInfo({ phone: e.target.value })}
-                  disabled={!isEditing}
-                  className="h-6 text-xs"
-                />
-              </motion.div>
-            </div>
-          </div>
-          <div className="flex gap-2 w-full">
-            <motion.div
-              whileHover={{
-                scale: 1.1,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button className="grow" size="sm" onClick={toggleEdit}>
-                {isEditing ? "Cancel" : "Edit"}
-              </Button>
-            </motion.div>
-            {isEditing && (
-              <motion.div
-                whileHover={{
-                  scale: 1.1,
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button className="grow" size="sm" onClick={save}>
-                  Save
-                </Button>
-              </motion.div>
-            )}
-          </div>
-        </div>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

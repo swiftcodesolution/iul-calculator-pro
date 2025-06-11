@@ -21,13 +21,23 @@ export const loginSchema = z.object({
   loginPassword: z.string().min(8, "Password must be at least 8 characters"),
 });
 
+export const companyInfoSchema = z.object({
+  logoSrc: z.union([z.string(), z.instanceof(File)]).optional(),
+  profilePicSrc: z.union([z.string(), z.instanceof(File)]).optional(),
+  businessName: z.string().min(1),
+  agentName: z.string().min(1),
+  email: z.string().email(),
+  phone: z.string(),
+});
+
 export type CompanyInfo = {
+  id?: string;
   businessName: string;
   agentName: string;
   email: string;
   phone: string;
-  logoSrc?: string;
-  profilePicSrc?: string;
+  logoSrc?: string | File;
+  profilePicSrc?: string | File;
 };
 
 export interface TablesData {
@@ -55,7 +65,7 @@ export type CropState = {
   crop: { x: number; y: number };
   zoom: number;
   aspect: number;
-  croppedAreaPixels: {
+  croppedAreaPixels?: {
     x: number;
     y: number;
     width: number;
