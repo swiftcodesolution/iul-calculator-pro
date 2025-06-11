@@ -2,12 +2,12 @@ import { useState } from "react";
 import { CompanyInfo } from "@/lib/types";
 
 const initialCompanyInfo: CompanyInfo = {
-  businessName: "IUL Calculator Pro",
-  agentName: "Steven Johnson",
-  email: "steve@iulcalculatorpro.com",
-  phone: "760-517-8105",
-  logoSrc: "/logo.png",
-  profilePicSrc: "/profile.jpg",
+  businessName: "",
+  agentName: "",
+  email: "",
+  phone: "",
+  logoSrc: "",
+  profilePicSrc: "",
 };
 
 export function useCompanyInfo() {

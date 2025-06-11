@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { memo, useCallback, useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useRef, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,8 +11,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Cropper from "react-easy-crop";
-import { debounce } from "@/lib/utils";
+import { throttle } from "lodash";
 import { CropState } from "@/lib/types";
 
 interface CropDialogProps {
@@ -40,76 +48,50 @@ const CropDialog = memo(
   }: CropDialogProps) => {
     const isInitialMount = useRef(true);
     const isClosing = useRef(false);
+    const [selectedAspect, setSelectedAspect] = useState<number>(
+      cropState.aspect
+    );
 
     const handleCropChange = useCallback(
-      (crop: { x: number; y: number }) => {
+      throttle((crop: { x: number; y: number }) => {
         if (!isInitialMount.current) {
-          const debounced = debounce(
-            (newCrop: { x: number; y: number }) => {
-              setCropState({
-                ...cropState,
-                crop: newCrop,
-              });
-            },
-            100,
-            { leading: false, trailing: true }
-          );
-          debounced(crop);
-          return () => debounced.cancel();
+          setCropState({ ...cropState, crop });
         }
-        return () => {};
-      },
+      }, 50),
       [setCropState, cropState]
     );
 
     const handleZoomChange = useCallback(
-      (zoom: number) => {
+      throttle((zoom: number) => {
         if (!isInitialMount.current) {
-          const debounced = debounce(
-            (newZoom: number) => {
-              setCropState({
-                ...cropState,
-                zoom: newZoom,
-              });
-            },
-            100,
-            { leading: false, trailing: true }
-          );
-          debounced(zoom);
-          return () => debounced.cancel();
+          setCropState({ ...cropState, zoom });
         }
-        return () => {};
-      },
+      }, 50),
       [setCropState, cropState]
     );
 
     const handleCropComplete = useCallback(
-      (croppedAreaPixels: {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-      }) => {
-        if (!isInitialMount.current) {
-          const debounced = debounce(
-            (newCroppedAreaPixels: {
-              x: number;
-              y: number;
-              width: number;
-              height: number;
-            }) => {
-              setCropState({
-                ...cropState,
-                croppedAreaPixels: newCroppedAreaPixels,
-              });
-            },
-            100,
-            { leading: false, trailing: true }
-          );
-          debounced(croppedAreaPixels);
-          return () => debounced.cancel();
-        }
-        return () => {};
+      throttle(
+        (croppedAreaPixels: {
+          x: number;
+          y: number;
+          width: number;
+          height: number;
+        }) => {
+          if (!isInitialMount.current) {
+            setCropState({ ...cropState, croppedAreaPixels });
+          }
+        },
+        50
+      ),
+      [setCropState, cropState]
+    );
+
+    const handleAspectChange = useCallback(
+      (value: string) => {
+        const newAspect = parseFloat(value);
+        setSelectedAspect(newAspect);
+        setCropState({ ...cropState, aspect: newAspect });
       },
       [setCropState, cropState]
     );
@@ -133,7 +115,11 @@ const CropDialog = memo(
         aspect: 1,
         croppedAreaPixels: null,
       });
+      setSelectedAspect(1);
     }, [onOpenChange, setImageToCrop, setCropType, setCropState]);
+
+    const memoizedCrop = useMemo(() => cropState.crop, [cropState.crop]);
+    const memoizedZoom = useMemo(() => cropState.zoom, [cropState.zoom]);
 
     return (
       <Dialog
@@ -155,23 +141,41 @@ const CropDialog = memo(
               {imageToCrop && open && (
                 <Cropper
                   image={imageToCrop}
-                  crop={cropState.crop}
-                  zoom={cropState.zoom}
+                  crop={memoizedCrop}
+                  zoom={memoizedZoom}
                   aspect={cropState.aspect}
                   onCropChange={handleCropChange}
                   onZoomChange={handleZoomChange}
                   onCropComplete={(_croppedArea, croppedAreaPixels) =>
                     handleCropComplete(croppedAreaPixels)
                   }
+                  restrictPosition={false}
+                  minZoom={0.5}
                 />
               )}
+            </div>
+            <div>
+              <Label>Aspect Ratio</Label>
+              <Select
+                onValueChange={handleAspectChange}
+                value={selectedAspect.toString()}
+              >
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Select aspect ratio" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1:1 (Square)</SelectItem>
+                  <SelectItem value="3">3:1 (Wide)</SelectItem>
+                  <SelectItem value="1.33">4:3 (Standard)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Zoom</Label>
               <Slider
                 value={[cropState.zoom]}
                 onValueChange={([zoom]) => handleZoomChange(zoom)}
-                min={1}
+                min={0.5}
                 max={3}
                 step={0.1}
                 className="mt-2"

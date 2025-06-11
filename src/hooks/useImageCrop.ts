@@ -8,6 +8,11 @@ export function useImageCrop(
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [cropType, setCropType] = useState<"logo" | "profilePic" | null>(null);
+  // NEW: Store original image for each type
+  const [originalImages, setOriginalImages] = useState<{
+    logo?: string;
+    profilePic?: string;
+  }>({});
   const [cropState, setCropState] = useState<CropState>({
     crop: { x: 0, y: 0 },
     zoom: 1,
@@ -20,9 +25,12 @@ export function useImageCrop(
       if (file) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          setImageToCrop(reader.result as string);
+          const imageSrc = reader.result as string;
+          setImageToCrop(imageSrc);
           setCropType(type);
           setCropDialogOpen(true);
+          // NEW: Store original image
+          setOriginalImages((prev) => ({ ...prev, [type]: imageSrc }));
           setCropState({
             crop: { x: 0, y: 0 },
             zoom: 1,
@@ -38,8 +46,8 @@ export function useImageCrop(
 
   const handleCropExistingImage = useCallback(
     (type: "logo" | "profilePic") => {
-      const imageSrc =
-        type === "logo" ? companyInfo.logoSrc : companyInfo.profilePicSrc;
+      // NEW: Use original image instead of cropped image
+      const imageSrc = originalImages[type];
       if (imageSrc) {
         setImageToCrop(imageSrc);
         setCropType(type);
@@ -52,7 +60,7 @@ export function useImageCrop(
         setTimeout(() => setCropDialogOpen(true), 0);
       }
     },
-    [companyInfo.logoSrc, companyInfo.profilePicSrc]
+    [originalImages]
   );
 
   const handleCropImage = useCallback(async () => {
@@ -88,6 +96,8 @@ export function useImageCrop(
     handleFileUpload,
     handleCropExistingImage,
     handleCropImage,
+    // NEW: Expose originalImages for potential use
+    originalImages,
   };
 }
 
@@ -105,6 +115,9 @@ async function getCroppedImg(
 
   canvas.width = croppedAreaPixels.width;
   canvas.height = croppedAreaPixels.height;
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.drawImage(
     image,
