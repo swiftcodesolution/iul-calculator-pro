@@ -93,7 +93,10 @@ const NavBar = () => {
     }
   };
 
-  if (pathname === "/dashboard/home") {
+  if (
+    pathname === "/dashboard/home" ||
+    pathname === "/dashboard/downloads-content"
+  ) {
     return (
       <motion.div>
         <Button

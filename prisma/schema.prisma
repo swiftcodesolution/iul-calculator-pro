@@ -23,6 +23,7 @@ model User {
   sessionHistory      SessionHistory[]
   companyInfo         CompanyInfo?  @relation(name: "UserCompanyInfo")
   companyInfoId       String?       @db.ObjectId
+  DownloadResources DownloadResources[]
 }
 
 model CompanyInfo {
@@ -79,4 +80,15 @@ model ClientFile {
   combinedResults Json?  
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model DownloadResources {
+  id  String  @id @default(auto()) @map("_id") @db.ObjectId
+  fileName  String
+  filePath  String
+  fileFormat  String
+  uploadedBy  String  @db.ObjectId
+  uploadedByUser  User  @relation(fields: [uploadedBy],references: [id],onDelete: Restrict)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
