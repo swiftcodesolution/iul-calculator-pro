@@ -96,7 +96,7 @@ const TabNavigation = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="text-sm">{tab.name}</p>
+                <p className="text-lg">{tab.name}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

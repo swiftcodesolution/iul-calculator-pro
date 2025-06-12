@@ -2,13 +2,17 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { useTableStore } from "@/lib/store";
 
 export default function InflationCalculator() {
   const [currentExpenses, setCurrentExpenses] = useState("");
   const [futureExpenses, setFutureExpenses] = useState("");
-  const [currentAge, setCurrentAge] = useState(45);
+
   const [targetAge, setTargetAge] = useState(95);
   const [inflationRate, setInflationRate] = useState(1);
+
+  const currentAgeRaw = useTableStore((state) => state.boxesData.currentAge);
+  const currentAge = Number(currentAgeRaw);
 
   const calculateFutureExpenses = (
     current: number,
@@ -74,14 +78,7 @@ export default function InflationCalculator() {
           </div>
           <div className="flex items-center gap-4">
             <Label className="w-1/2 text-right">Current Age</Label>
-            <Input
-              className="w-1/2"
-              type="number"
-              value={currentAge}
-              onChange={(e) => handleAgeChange(e.target.value, setCurrentAge)}
-              placeholder="Enter age"
-              min="0"
-            />
+            <Label className="w-1/2">{currentAge}</Label>
           </div>
           <div className="flex items-center gap-4">
             <Label className="w-1/2 text-right">Target Age</Label>
@@ -105,20 +102,27 @@ export default function InflationCalculator() {
               min="0"
             />
           </div>
-          <div className="flex items-center gap-4">
-            <Label className="w-1/2 text-right">
-              Expenses at Age {targetAge} - Inflation rate {inflationRate}%
-            </Label>
-            <Input
-              className="w-1/2"
-              type="number"
-              value={futureExpenses}
-              readOnly
-              placeholder="Calculated amount"
-            />
-          </div>
         </CardContent>
       </Card>
+      <div className="flex flex-col items-center gap-4">
+        <Label className="text-center text-4xl font-bold">
+          Expenses at Age {targetAge} - Inflation rate {inflationRate}%
+        </Label>
+        {!futureExpenses ? (
+          <p className="text-center text-4xl font-bold text-gray-400">
+            Calculated Amount
+          </p>
+        ) : (
+          <p className="text-center text-4xl font-bold">{futureExpenses}</p>
+        )}
+        {/* <Input
+          className="w-1/2 text-4xl font-bold"
+          type="number"
+          value={futureExpenses}
+          readOnly
+          placeholder="Calculated amount"
+        /> */}
+      </div>
     </div>
   );
 }
