@@ -5,6 +5,7 @@ import {
   FileText,
   BarChart,
   LogOut,
+  Video,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -69,6 +70,12 @@ export default function AdminSidebar() {
           className="flex items-center p-2 hover:bg-gray-700 rounded"
         >
           <FileText className="mr-2" /> Download Resources
+        </Link>
+        <Link
+          href="/admin/dashboard/training-videos"
+          className="flex items-center p-2 hover:bg-gray-700 rounded"
+        >
+          <Video className="mr-2" /> Training Videos
         </Link>
         <Link
           href="/admin/dashboard/stats"
