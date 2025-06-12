@@ -64,6 +64,18 @@ export const useTableStore = create<TableStore>((set) => ({
       type: "calculator",
       isVisible: true,
     },
+    {
+      id: "inflationCalculatorOg",
+      name: "Inflation Calculator Original",
+      type: "inflationCalculatorOg",
+      isVisible: true,
+    },
+    {
+      id: "inflationCalculator",
+      name: "Inflation Calculator Redesign",
+      type: "inflationCalculator",
+      isVisible: true,
+    },
   ],
   setTabs: (tabs) => set({ tabs }),
   clearStore: () =>

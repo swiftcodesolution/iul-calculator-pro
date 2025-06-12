@@ -191,7 +191,15 @@ export type TabContent = {
   name: string;
   file?: File;
   src?: string;
-  type: "image" | "video" | "pdf" | "other" | "totalAdvantage" | "calculator";
+  type:
+    | "image"
+    | "video"
+    | "pdf"
+    | "other"
+    | "totalAdvantage"
+    | "calculator"
+    | "inflationCalculator"
+    | "inflationCalculatorOg";
   isVisible: boolean;
 };
 

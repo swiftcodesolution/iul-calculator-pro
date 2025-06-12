@@ -22,6 +22,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import InflationCalculator from "../InflationCalculator";
+import InflationCalculatorOg from "../InflationCalculatorOg";
 
 interface TabManagerProps {
   activeTab: string | null;
@@ -231,6 +233,16 @@ const TabContentRenderer = ({
       {tab.type === "calculator" && (
         <div className="h-full w-full flex items-center justify-center gap-4 text-center">
           <TabCalculator />
+        </div>
+      )}
+      {tab.type === "inflationCalculator" && (
+        <div className="h-full w-full flex items-center justify-center gap-4 text-center">
+          <InflationCalculator />
+        </div>
+      )}
+      {tab.type === "inflationCalculatorOg" && (
+        <div className="h-full w-full flex items-center justify-center gap-4 text-center">
+          <InflationCalculatorOg />
         </div>
       )}
       {tab.type === "image" && tab.src && (
