@@ -95,7 +95,8 @@ const NavBar = () => {
 
   if (
     pathname === "/dashboard/home" ||
-    pathname === "/dashboard/downloads-content"
+    pathname === "/dashboard/downloads-content" ||
+    pathname === "/dashboard/training-content"
   ) {
     return (
       <motion.div>
