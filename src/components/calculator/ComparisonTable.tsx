@@ -82,7 +82,7 @@ export function ComparisonTable({
 }: ComparisonTableProps) {
   const {
     tables = [],
-    yearsRunOutOfMoney = 0,
+    yearsRunOutOfMoney,
     setYearsRunOutOfMoney,
     startingBalance,
     annualContributions,
@@ -321,15 +321,22 @@ export function ComparisonTable({
   const yearsRunOutOfMoneyNumber = Number(yearsRunOutOfMoney);
 
   useEffect(() => {
-    if (
-      ageOptions.length > 0 &&
-      !ageOptions.includes(yearsRunOutOfMoneyNumber)
-    ) {
-      const newAge = ageOptions[0] || 0;
-      setYearsRunOutOfMoney(newAge);
-      setYearsRunOutOfMoneyInput(newAge);
+    if (ageOptions.length > 0) {
+      const currentYearsRunOut = Number(yearsRunOutOfMoney);
+
+      if (
+        isYearsRunOutOfMoneyInvalid(currentYearsRunOut) ||
+        !ageOptions.includes(currentYearsRunOut)
+      ) {
+        const newAge =
+          ageOptions.find((age) => age > currentAge) ||
+          ageOptions[ageOptions.length - 1] ||
+          currentAge + 1;
+        setYearsRunOutOfMoney(newAge);
+        setYearsRunOutOfMoneyInput(newAge);
+      }
     }
-  }, [ageOptions, yearsRunOutOfMoneyNumber, setYearsRunOutOfMoney]);
+  }, [ageOptions, yearsRunOutOfMoney, currentAge, setYearsRunOutOfMoney]);
 
   // Utility to parse input with fallback
   const parseInput = (
@@ -1108,6 +1115,38 @@ export function ComparisonTable({
     onTotalAdvantageChange,
   ]);
   // 31 MAY
+
+  useEffect(() => {
+    const validStartingBalance = parseInput(startingBalance, 0);
+    const validContributions = parseInput(annualContributions, 0);
+    const validEmployerMatch = parseInput(annualEmployerMatch, 0);
+    setStartingBalance(validStartingBalance);
+    setAnnualContributions(validContributions);
+    setAnnualEmployerMatch(validEmployerMatch);
+
+    if (isNaN(Number(startingBalance)) || Number(startingBalance) < 0) {
+      setStartingBalance(validStartingBalance);
+    }
+    if (isNaN(Number(annualContributions)) || Number(annualContributions) < 0) {
+      setAnnualContributions(validContributions);
+    }
+    if (isNaN(Number(annualEmployerMatch)) || Number(annualEmployerMatch) < 0) {
+      setAnnualEmployerMatch(validEmployerMatch);
+    }
+
+    const initialAge = parseInput(yearsRunOutOfMoney, currentAge + 1);
+    if (!isYearsRunOutOfMoneyInvalid(initialAge)) {
+      setYearsRunOutOfMoney(initialAge);
+      setYearsRunOutOfMoneyInput(initialAge);
+      onFutureAgeChange(initialAge);
+    }
+  }, [
+    startingBalance,
+    annualContributions,
+    annualEmployerMatch,
+    yearsRunOutOfMoney,
+    currentAge,
+  ]);
 
   return (
     <AnimatePresence>

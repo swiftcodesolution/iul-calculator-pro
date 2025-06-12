@@ -6,7 +6,10 @@ interface TableStore {
   setTables: (tables: TableData[]) => void;
   clearTables: () => void;
   yearsRunOutOfMoney: number | string;
+  isYearsRunOutOfMoneyUserSelected: boolean;
   setYearsRunOutOfMoney: (age: number | string) => void;
+  futureAge: number | string;
+  setFutureAge: (age: number | string) => void;
   boxesData: BoxesData;
   setBoxesData: (updatedData: Partial<BoxesData>) => void;
   startingBalance: number | string;
@@ -25,7 +28,10 @@ export const useTableStore = create<TableStore>((set) => ({
   setTables: (tables) => set({ tables }),
   clearTables: () => set({ tables: [] }),
   yearsRunOutOfMoney: "",
+  isYearsRunOutOfMoneyUserSelected: false,
   setYearsRunOutOfMoney: (age) => set({ yearsRunOutOfMoney: age }),
+  futureAge: "",
+  setFutureAge: (age) => set({ futureAge: age }),
   boxesData: {
     currentAge: "",
     stopSavingAge: "",
@@ -61,7 +67,7 @@ export const useTableStore = create<TableStore>((set) => ({
   ],
   setTabs: (tabs) => set({ tabs }),
   clearStore: () =>
-    set({
+    set((state) => ({
       tables: [],
       yearsRunOutOfMoney: "",
       boxesData: {
@@ -75,9 +81,9 @@ export const useTableStore = create<TableStore>((set) => ({
         currentPlanROR: "",
         taxFreePlanROR: "",
       },
-      startingBalance: "",
-      annualContributions: "",
-      annualEmployerMatch: "",
+      startingBalance: state.startingBalance,
+      annualContributions: state.annualContributions,
+      annualEmployerMatch: state.annualEmployerMatch,
       tabs: [
         {
           id: "total-advantage",
@@ -92,5 +98,5 @@ export const useTableStore = create<TableStore>((set) => ({
           isVisible: true,
         },
       ],
-    }),
+    })),
 }));
