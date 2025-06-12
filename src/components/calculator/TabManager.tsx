@@ -23,7 +23,7 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import InflationCalculator from "../InflationCalculator";
-import InflationCalculatorOg from "../InflationCalculatorOg";
+import CagrChart from "../CagrChart";
 
 interface TabManagerProps {
   activeTab: string | null;
@@ -240,9 +240,10 @@ const TabContentRenderer = ({
           <InflationCalculator />
         </div>
       )}
-      {tab.type === "inflationCalculatorOg" && (
+
+      {tab.type === "cagrChart" && (
         <div className="h-full w-full flex items-center justify-center gap-4 text-center">
-          <InflationCalculatorOg />
+          <CagrChart />
         </div>
       )}
       {tab.type === "image" && tab.src && (

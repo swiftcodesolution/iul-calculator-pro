@@ -199,7 +199,7 @@ export type TabContent = {
     | "totalAdvantage"
     | "calculator"
     | "inflationCalculator"
-    | "inflationCalculatorOg";
+    | "cagrChart";
   isVisible: boolean;
 };
 
