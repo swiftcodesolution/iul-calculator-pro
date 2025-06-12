@@ -4,8 +4,31 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useTableStore } from "@/lib/store";
 
+const formatMoney = (amount: number): string => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(amount);
+};
+
+const formatInputValue = (value: string | number): string => {
+  if (value === "" || value == null) return "";
+  const num = parseFloat(String(value).replace(/[^0-9.]/g, ""));
+  if (isNaN(num)) return "";
+  return `$${num.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+const parseInputValue = (value: string): number | string => {
+  if (value === "") return "";
+  const num = parseFloat(value.replace(/[^0-9.]/g, ""));
+  return isNaN(num) || num < 0 ? "" : num;
+};
+
 export default function InflationCalculator() {
-  const [currentExpenses, setCurrentExpenses] = useState("");
+  const [currentExpenses, setCurrentExpenses] = useState<string | number>("");
   const [futureExpenses, setFutureExpenses] = useState("");
 
   const [targetAge, setTargetAge] = useState(95);
@@ -19,41 +42,44 @@ export default function InflationCalculator() {
     years: number,
     rate: number
   ) => {
-    const inflation = rate / 100; // Convert percentage to decimal
+    const inflation = rate / 100;
     return current * Math.pow(1 + inflation, years);
   };
 
   const years = targetAge - currentAge;
 
-  const handleCurrentExpensesChange = (value: string) => {
+  const handleCurrentExpensesChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = parseInputValue(e.target.value);
     setCurrentExpenses(value);
-    const currentValue = parseFloat(value) || 0;
+    const currentValue = typeof value === "number" ? value : 0;
     const futureValue = calculateFutureExpenses(
       currentValue,
       years,
       inflationRate
     );
-    setFutureExpenses(futureValue.toFixed(2));
+    setFutureExpenses(formatMoney(futureValue));
   };
 
   const handleAgeChange = (value: string, setter: (value: number) => void) => {
     const newAge = parseFloat(value) || 0;
     setter(newAge);
-    const currentValue = parseFloat(currentExpenses) || 0;
+    const currentValue = parseFloat(String(currentExpenses)) || 0;
     const futureValue = calculateFutureExpenses(
       currentValue,
-      targetAge - currentAge,
+      newAge - currentAge,
       inflationRate
     );
-    setFutureExpenses(futureValue.toFixed(2));
+    setFutureExpenses(formatMoney(futureValue));
   };
 
   const handleInflationChange = (value: string) => {
     const newRate = parseFloat(value) || 0;
     setInflationRate(newRate);
-    const currentValue = parseFloat(currentExpenses) || 0;
+    const currentValue = parseFloat(String(currentExpenses)) || 0;
     const futureValue = calculateFutureExpenses(currentValue, years, newRate);
-    setFutureExpenses(futureValue.toFixed(2));
+    setFutureExpenses(formatMoney(futureValue));
   };
 
   return (
@@ -66,15 +92,15 @@ export default function InflationCalculator() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
               <Label className="w-1/2 text-right">
-                Current Monthly Expenses $
+                Current Monthly Expenses
               </Label>
               <Input
                 className="w-1/2"
-                type="number"
-                value={currentExpenses}
-                onChange={(e) => handleCurrentExpensesChange(e.target.value)}
-                placeholder="Enter amount"
-                min="0"
+                type="text"
+                value={formatInputValue(currentExpenses)}
+                onChange={handleCurrentExpensesChange}
+                placeholder="$0.00"
+                aria-label="Current Monthly Expenses"
               />
             </div>
             <div className="flex items-center gap-4">
@@ -86,6 +112,7 @@ export default function InflationCalculator() {
                 onChange={(e) => handleAgeChange(e.target.value, setTargetAge)}
                 placeholder="Enter age"
                 min="0"
+                aria-label="Target Age"
               />
             </div>
             <div className="flex items-center gap-4">
@@ -97,6 +124,7 @@ export default function InflationCalculator() {
                 onChange={(e) => handleInflationChange(e.target.value)}
                 placeholder="Enter rate"
                 min="0"
+                aria-label="Inflation Rate"
               />
             </div>
           </div>
