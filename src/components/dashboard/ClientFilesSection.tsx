@@ -64,6 +64,9 @@ export default function ClientFilesSection({
     }
   };
 
+  console.log("ClientFilesSection: selectedFile", selectedFile);
+  console.log("ClientFilesSection: selectedFileId", selectedFileId);
+
   return (
     <Card className="h-full">
       <CardContent className="space-y-4 flex flex-col h-full">

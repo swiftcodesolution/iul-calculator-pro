@@ -61,6 +61,7 @@ export default function DashboardPage() {
     handleCropExistingImage,
     originalImages,
   } = useImageCrop();
+
   const form = useForm<CompanyInfo>({
     resolver: zodResolver(companyInfoSchema),
     defaultValues: companyInfo,
@@ -71,7 +72,8 @@ export default function DashboardPage() {
   useEffect(() => {
     clearSelectedFileId();
     setSelectedFile(null);
-  }, [clearSelectedFileId, setSelectedFile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     console.log("CropDialog state:", { cropDialogOpen, imageToCrop, cropType });
@@ -82,12 +84,15 @@ export default function DashboardPage() {
     if (containerRef.current && !target.closest(".file-item")) {
       setSelectedFile(null);
       clearSelectedFileId();
+      console.log(selectedFile);
     }
+    console.log("click outside");
   };
 
   const handleFileSelection = (file: ClientFile) => {
     setSelectedFile(file);
     setSelectedFileId(file.id);
+    console.log(file);
   };
 
   return (
