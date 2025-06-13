@@ -99,9 +99,10 @@ model DownloadResources {
 
 model TrainingVideos {
   id  String  @id @default(auto()) @map("_id") @db.ObjectId
-  fileName  String
-  filePath  String
-  fileFormat  String
+  fileName  String?
+  filePath  String?
+  fileFormat  String?
+  link  String?
   uploadedBy  String  @db.ObjectId
   uploadedByUser  User  @relation(fields: [uploadedBy],references: [id],onDelete: Restrict)
   createdAt DateTime @default(now())

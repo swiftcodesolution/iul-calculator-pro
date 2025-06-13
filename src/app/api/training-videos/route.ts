@@ -13,26 +13,39 @@ export async function POST(request: Request) {
   }
 
   const formData = await request.formData();
-  const file = formData.get("file") as File;
+  const file = formData.get("file") as File | null;
   const fileName = formData.get("fileName") as string;
+  const link = formData.get("link") as string | null;
 
-  if (!file || !fileName) {
+  if (!file && (!link || link.trim() === "")) {
     return NextResponse.json(
-      { error: "Missing required fields" },
+      { error: "Either a file or a link is required" },
       { status: 400 }
     );
   }
 
   try {
-    const blob = await put(`training-videos/${Date.now()}-${file.name}`, file, {
-      access: "public",
-    });
+    let filePath: string | null = null;
+    let fileFormat: string | null = null;
+
+    if (file) {
+      const blob = await put(
+        `training-videos/${Date.now()}-${file.name}`,
+        file,
+        {
+          access: "public",
+        }
+      );
+      filePath = blob.url;
+      fileFormat = file.name.split(".").pop() || null;
+    }
 
     const resource = await prisma.trainingVideos.create({
       data: {
         fileName,
-        filePath: blob.url,
-        fileFormat: file.name.split(".")[1],
+        filePath,
+        fileFormat,
+        link,
         uploadedBy: session.user.id,
       },
     });
@@ -75,10 +88,9 @@ export async function PATCH(request: Request) {
   const id = formData.get("id") as string;
   const fileName = formData.get("fileName") as string;
   const file = formData.get("file") as File | null;
+  const link = formData.get("link") as string | null;
 
-  const resource = await prisma.trainingVideos.findUnique({
-    where: { id },
-  });
+  const resource = await prisma.trainingVideos.findUnique({ where: { id } });
   if (!resource) {
     return NextResponse.json({ error: "Resource not found" }, { status: 404 });
   }
@@ -96,7 +108,14 @@ export async function PATCH(request: Request) {
         }
       );
       filePath = blob.url;
-      fileFormat = file.name.split(".")[1];
+      fileFormat = file.name.split(".").pop() || null;
+    }
+
+    if (!file && (!link || link.trim() === "") && !filePath && !resource.link) {
+      return NextResponse.json(
+        { error: "At least a file or a link must be provided" },
+        { status: 400 }
+      );
     }
 
     const updatedResource = await prisma.trainingVideos.update({
@@ -105,6 +124,7 @@ export async function PATCH(request: Request) {
         fileName,
         filePath,
         fileFormat,
+        link,
         updatedAt: new Date(),
       },
     });

@@ -27,6 +27,7 @@ interface Resource {
   fileName: string;
   filePath: string;
   fileFormat: string;
+  link: string;
   createdAt: string;
 }
 
@@ -35,6 +36,7 @@ export default function AdminTrainingVideosPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState("");
+  const [link, setLink] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
   const [editFileName, setEditFileName] = useState("");
   const [open, setOpen] = useState(false);
@@ -57,10 +59,11 @@ export default function AdminTrainingVideosPage() {
   }, []);
 
   const handleUpload = async () => {
-    if (!file || !fileName) {
-      setError("File and name are required");
+    if (!fileName || (!file && !link)) {
+      setError("Video title and either a file or link are required.");
       return;
     }
+
     if (session?.user?.role !== "admin") {
       setError("Unauthorized");
       return;
@@ -68,8 +71,9 @@ export default function AdminTrainingVideosPage() {
 
     setLoading(true);
     const formData = new FormData();
-    formData.append("file", file);
     formData.append("fileName", fileName);
+    if (file) formData.append("file", file);
+    if (link) formData.append("link", link);
 
     try {
       const response = await fetch("/api/training-videos", {
@@ -81,6 +85,7 @@ export default function AdminTrainingVideosPage() {
       setResources([...resources, newResource]);
       setFile(null);
       setFileName("");
+      setLink("");
       setError(null);
     } catch (err) {
       setError("Error uploading resource");
@@ -180,6 +185,12 @@ export default function AdminTrainingVideosPage() {
                 accept="video/*"
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
               />
+              <Input
+                type="url"
+                placeholder="Or provide a video link (e.g. YouTube)"
+                value={link}
+                onChange={(e) => setLink(e.target.value)}
+              />
               <Button onClick={handleUpload} disabled={loading}>
                 {loading ? "Uploading..." : "Upload Video"}
               </Button>
@@ -207,14 +218,35 @@ export default function AdminTrainingVideosPage() {
                   {resources.map((resource) => (
                     <TableRow key={resource.id}>
                       <TableCell>
-                        <a
+                        {/* <a
                           href={resource.filePath}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
                           {resource.fileName}
-                        </a>
+                        </a> */}
+
+                        {resource.filePath ? (
+                          <a
+                            href={resource.filePath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {resource.fileName}
+                          </a>
+                        ) : resource.link ? (
+                          <a
+                            href={resource.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {resource.fileName}
+                          </a>
+                        ) : (
+                          resource.fileName
+                        )}
                       </TableCell>
+
                       <TableCell>{resource.fileFormat}</TableCell>
                       <TableCell>Admin</TableCell>
                       <TableCell>
@@ -226,9 +258,14 @@ export default function AdminTrainingVideosPage() {
                             variant="outline"
                             size="icon"
                             onClick={() =>
-                              window.open(resource.filePath, "_blank")
+                              window.open(
+                                resource.filePath || resource.link || "#",
+                                "_blank"
+                              )
                             }
-                            disabled={loading}
+                            disabled={
+                              loading || (!resource.filePath && !resource.link)
+                            }
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
