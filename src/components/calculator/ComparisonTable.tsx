@@ -114,8 +114,6 @@ export function ComparisonTable({
     const numValue = Number(value);
     if (isNaN(numValue)) return true;
     if (numValue <= currentAge - 1) return true;
-    if (numValue > Number(yearsRunOutOfMoney || yearsRunOutOfMoneyInput))
-      return true;
     return false;
   };
 
@@ -123,6 +121,7 @@ export function ComparisonTable({
     if (!isNaN(age) || age > currentAge || tables[0]?.data?.length > 0) {
       setFutureAge(age);
       setFutureAgeInput(age);
+      setFutureAgeError(null);
       const currentPlanTable = runGrossRetirementIncomeLoop(
         parseInput(boxesData.currentAge, 0),
         parseInput(yearsRunOutOfMoneyInput, 0),
@@ -222,7 +221,7 @@ export function ComparisonTable({
       }
     } else {
       setSelectedRowData(null);
-      setFutureAge(currentAge);
+
       setFutureAgeInput(currentAge);
     }
   };
@@ -301,15 +300,7 @@ export function ComparisonTable({
 
     const numValue = Number(value);
     if (isFutureAgeInvalid(numValue)) {
-      if (numValue <= currentAge) {
-        setFutureAgeError("Future age must be greater than current age");
-      } else if (
-        numValue > Number(yearsRunOutOfMoney || yearsRunOutOfMoneyInput)
-      ) {
-        setFutureAgeError("Future age cannot exceed years run out of money");
-      } else {
-        setFutureAgeError("Invalid future age");
-      }
+      setFutureAgeError("Future age must be greater than current age");
       setSelectedRowData(null);
     } else {
       setFutureAgeError(null);
@@ -505,8 +496,8 @@ export function ComparisonTable({
     if (!isNaN(age)) {
       setYearsRunOutOfMoney(age);
       setYearsRunOutOfMoneyInput(age);
-      onFutureAgeChange(age);
       setActiveInput("yearsRunOutOfMoney");
+      refreshResults();
     }
   };
 
@@ -555,25 +546,23 @@ export function ComparisonTable({
     const numValue = Number(value);
     if (!isNaN(numValue) && numValue > currentAge) {
       setYearsRunOutOfMoney(numValue);
-      onFutureAgeChange(futureAge);
-      setActiveInput("yearsRunOutOfMoney");
+      // onFutureAgeChange(futureAge);
+      // setActiveInput("yearsRunOutOfMoney");
+      // refreshResults();
     }
   };
 
   // 29 MAY
   const refreshResults = () => {
-    const ageToUse =
-      activeInput === "futureAge"
-        ? Number(futureAgeInput)
-        : Number(yearsRunOutOfMoneyInput);
+    const ageToUse = Number(futureAgeInput);
 
-    const maxAge = Number(yearsRunOutOfMoneyInput); // Convert to number explicitly
+    // const maxAge = Number(yearsRunOutOfMoneyInput); // Convert to number explicitly
 
-    if (!isNaN(ageToUse) && ageToUse > currentAge && ageToUse <= maxAge) {
+    if (!isNaN(ageToUse) && ageToUse > currentAge) {
       setFutureAgeError(null);
-      setFutureAge(ageToUse);
-      setYearsRunOutOfMoney(ageToUse);
-      setYearsRunOutOfMoneyInput(ageToUse);
+      // setFutureAge(ageToUse);
+      // setYearsRunOutOfMoney(ageToUse);
+      // setYearsRunOutOfMoneyInput(ageToUse);
 
       // Run calculation for Current Plan
       const currentPlanTable = runGrossRetirementIncomeLoop(
@@ -600,11 +589,7 @@ export function ComparisonTable({
       );
 
       const taxesDueSum = currentPlanTable
-        .filter(
-          (row) =>
-            row.age >= ageToUse &&
-            row.age <= parseInput(yearsRunOutOfMoneyInput, 0)
-        )
+        .filter((row) => row.age === ageToUse)
         .reduce((sum, row) => sum + row.retirementTaxes, 0);
 
       if (currentRow && taxFreeRow) {
@@ -1138,7 +1123,6 @@ export function ComparisonTable({
     if (!isYearsRunOutOfMoneyInvalid(initialAge)) {
       setYearsRunOutOfMoney(initialAge);
       setYearsRunOutOfMoneyInput(initialAge);
-      onFutureAgeChange(initialAge);
     }
   }, [
     startingBalance,
