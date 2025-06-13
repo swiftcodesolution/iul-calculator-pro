@@ -26,6 +26,8 @@ model User {
   DownloadResources DownloadResources[]
 
   TrainingVideos TrainingVideos[]
+
+  TrainingDocuments TrainingDocuments[]
 }
 
 model CompanyInfo {
@@ -96,6 +98,17 @@ model DownloadResources {
 }
 
 model TrainingVideos {
+  id  String  @id @default(auto()) @map("_id") @db.ObjectId
+  fileName  String
+  filePath  String
+  fileFormat  String
+  uploadedBy  String  @db.ObjectId
+  uploadedByUser  User  @relation(fields: [uploadedBy],references: [id],onDelete: Restrict)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TrainingDocuments {
   id  String  @id @default(auto()) @map("_id") @db.ObjectId
   fileName  String
   filePath  String

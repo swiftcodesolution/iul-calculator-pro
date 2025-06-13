@@ -23,7 +23,8 @@ interface Resource {
 }
 
 export default function TrainingContentPage() {
-  const [resources, setResources] = useState<Resource[]>([]);
+  const [videos, setVideos] = useState<Resource[]>([]);
+  const [documents, setDocuments] = useState<Resource[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +34,23 @@ export default function TrainingContentPage() {
       const response = await fetch("/api/training-videos");
       if (!response.ok) throw new Error("Failed to fetch resources");
       const data = await response.json();
-      setResources(data);
+      setVideos(data);
+      setError(null);
+    } catch (err) {
+      setError("Error loading resources");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTrainingDocuments = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/training-documents");
+      if (!response.ok) throw new Error("Failed to fetch resources");
+      const data = await response.json();
+      setDocuments(data);
       setError(null);
     } catch (err) {
       setError("Error loading resources");
@@ -45,6 +62,7 @@ export default function TrainingContentPage() {
 
   useEffect(() => {
     fetchTrainingVideos();
+    fetchTrainingDocuments();
   }, []);
 
   return (
@@ -79,7 +97,7 @@ export default function TrainingContentPage() {
           <CardContent className="flex-1 overflow-hidden">
             {error ? (
               <p className="text-red-500">{error}</p>
-            ) : resources.length > 0 ? (
+            ) : videos.length > 0 ? (
               <div className="h-full overflow-y-auto">
                 <Table>
                   <TableHeader className="sticky top-0 bg-white z-10">
@@ -91,7 +109,7 @@ export default function TrainingContentPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {resources.map((resource) => (
+                    {videos.map((resource) => (
                       <TableRow key={resource.id}>
                         <TableCell>{resource.fileName}</TableCell>
                         <TableCell>{resource.fileFormat}</TableCell>
@@ -134,7 +152,7 @@ export default function TrainingContentPage() {
                 </Table>
               </div>
             ) : (
-              <p>No resources available.</p>
+              <p>No videos available.</p>
             )}
           </CardContent>
         </Card>
@@ -145,7 +163,7 @@ export default function TrainingContentPage() {
           <CardContent className="flex-1 overflow-hidden">
             {error ? (
               <p className="text-red-500">{error}</p>
-            ) : resources.length > 0 ? (
+            ) : documents.length > 0 ? (
               <div className="h-full overflow-y-auto">
                 <Table>
                   <TableHeader className="sticky top-0 bg-white z-10">
@@ -157,7 +175,7 @@ export default function TrainingContentPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {resources.map((resource) => (
+                    {documents.map((resource) => (
                       <TableRow key={resource.id}>
                         <TableCell>{resource.fileName}</TableCell>
                         <TableCell>{resource.fileFormat}</TableCell>
@@ -200,7 +218,7 @@ export default function TrainingContentPage() {
                 </Table>
               </div>
             ) : (
-              <p>No resources available.</p>
+              <p>No documents available.</p>
             )}
           </CardContent>
         </Card>
