@@ -81,7 +81,12 @@ export default function DashboardPage() {
 
   const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
-    if (containerRef.current && !target.closest(".file-item")) {
+    if (
+      containerRef.current &&
+      !target.closest(".file-item") &&
+      !target.closest("button") &&
+      !target.closest(".dialog-content")
+    ) {
       setSelectedFile(null);
       clearSelectedFileId();
       console.log(selectedFile);
