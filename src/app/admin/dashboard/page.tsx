@@ -1,79 +1,148 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Users, BarChart, Download } from "lucide-react";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import {
+  FileText,
+  Users,
+  BarChart,
+  Download,
+  Video,
+  BookOpen,
+  RefreshCw,
+} from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
+interface Resource {
+  id: string;
+  fileName: string;
+  fileFormat: string;
+  createdAt: string;
+}
+
+interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  lastLogin?: string;
+}
+
+interface Stat {
+  metric: string;
+  value: number;
+}
 
 export default function AdminDashboard() {
-  const mockFiles = [
-    { id: 1, name: "Sample Plan A", type: "PDF", size: "2.5MB" },
-    { id: 2, name: "Sample Plan B", type: "CSV", size: "1.8MB" },
-    { id: 3, name: "Sample Plan C", type: "XLSX", size: "3.2MB" },
-  ];
+  const [downloadResources, setDownloadResources] = useState<Resource[]>([]);
+  const [trainingDocuments, setTrainingDocuments] = useState<Resource[]>([]);
+  const [trainingVideos, setTrainingVideos] = useState<Resource[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [stats, setStats] = useState<Stat[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const mockUsers = [
-    { id: 1, name: "John Doe", email: "john@example.com", role: "User" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Admin" },
-    { id: 3, name: "Bob Johnson", email: "bob@example.com", role: "User" },
-  ];
+  const fetchResources = async (
+    endpoint: string,
+    setter: (data: Resource[]) => void
+  ) => {
+    try {
+      const response = await fetch(`/api/${endpoint}`);
+      if (!response.ok) throw new Error(`Failed to fetch ${endpoint}`);
+      const data = await response.json();
+      setter(data);
+    } catch (err) {
+      setError(`Error loading ${endpoint}`);
+      console.error(err);
+    }
+  };
 
-  const mockResources = [
-    { id: 1, name: "Guide.pdf", type: "PDF", downloads: 120 },
-    { id: 2, name: "Tutorial.mp4", type: "Video", downloads: 85 },
-    { id: 3, name: "Template.docx", type: "Document", downloads: 45 },
-  ];
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch("/api/users");
+      if (!response.ok) throw new Error("Failed to fetch users");
+      const data = await response.json();
+      setUsers(data);
+    } catch (err) {
+      setError("Error loading users");
+      console.error(err);
+    }
+  };
 
-  const mockStats = [
-    { id: 1, metric: "Active Users", value: 150 },
-    { id: 2, metric: "File Uploads", value: 320 },
-    { id: 3, metric: "Downloads", value: 200 },
-  ];
+  const fetchStats = async () => {
+    try {
+      const response = await fetch("/api/stats");
+      if (!response.ok) throw new Error("Failed to fetch stats");
+      const data = await response.json();
+      setStats([
+        { metric: "Active Users", value: data.activeUsers },
+        { metric: "Total Files", value: data.totalFiles },
+        { metric: "Recent Downloads", value: data.downloads || 0 },
+        { metric: "New Users (30d)", value: data.newUsers || 0 },
+      ]);
+    } catch (err) {
+      setError("Error loading stats");
+      console.error(err);
+    }
+  };
+
+  const refreshAll = async () => {
+    setLoading(true);
+    setError(null);
+    await Promise.all([
+      fetchResources("download-resources", setDownloadResources),
+      fetchResources("training-documents", setTrainingDocuments),
+      fetchResources("training-videos", setTrainingVideos),
+      fetchUsers(),
+      fetchStats(),
+    ]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    refreshAll();
+  }, []);
 
   return (
     <div className="flex-1">
-      <main className="p-4">
-        <h1 className="text-xl font-bold mb-4">Admin Dashboard</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-          {/* Pro Sample Files Card */}
-          <Card>
+      <main className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshAll}
+            disabled={loading}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            {loading ? "Refreshing..." : "Refresh"}
+          </Button>
+        </div>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Overview Stats Card */}
+          <Card className="col-span-1 md:col-span-2 lg:col-span-3">
             <CardHeader className="flex items-center">
-              <FileText className="mr-2" />
-              <CardTitle>Pro Sample Files</CardTitle>
+              <BarChart className="mr-2" />
+              <CardTitle>Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2">
-                {mockFiles.map((file) => (
-                  <li key={file.id} className="text-sm">
-                    {file.name} ({file.type}, {file.size})
-                  </li>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {stats.map((stat, index) => (
+                  <div key={index} className="text-center">
+                    <p className="text-lg font-semibold">{stat.value}</p>
+                    <p className="text-sm text-gray-500">{stat.metric}</p>
+                  </div>
                 ))}
-              </ul>
+              </div>
               <Link
-                href="/admin/dashboard/files"
+                href="/admin/dashboard/stats"
                 className="text-blue-500 hover:underline mt-4 block"
               >
-                Manage Files
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Users Card */}
-          <Card>
-            <CardHeader className="flex items-center">
-              <Users className="mr-2" />
-              <CardTitle>Users</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {mockUsers.map((user) => (
-                  <li key={user.id} className="text-sm">
-                    {user.name} ({user.email}, {user.role})
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/admin/dashboard/users"
-                className="text-blue-500 hover:underline mt-4 block"
-              >
-                Manage Users
+                View Detailed Stats
               </Link>
             </CardContent>
           </Card>
@@ -85,14 +154,25 @@ export default function AdminDashboard() {
               <CardTitle>Download Resources</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2">
-                {mockResources.map((resource) => (
-                  <li key={resource.id} className="text-sm">
-                    {resource.name} ({resource.type}, {resource.downloads}{" "}
-                    downloads)
-                  </li>
-                ))}
-              </ul>
+              <Table>
+                <TableBody>
+                  {downloadResources.length > 0 ? (
+                    downloadResources.slice(0, 3).map((resource) => (
+                      <TableRow key={resource.id}>
+                        <TableCell className="text-sm">
+                          {resource.fileName} ({resource.fileFormat})
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell className="text-sm">
+                        No resources available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
               <Link
                 href="/admin/dashboard/downloads-content"
                 className="text-blue-500 hover:underline mt-4 block"
@@ -102,25 +182,148 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          {/* Stats Card */}
+          {/* Training Documents Card */}
           <Card>
             <CardHeader className="flex items-center">
-              <BarChart className="mr-2" />
-              <CardTitle>Stats</CardTitle>
+              <BookOpen className="mr-2" />
+              <CardTitle>Training Documents</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2">
-                {mockStats.map((stat) => (
-                  <li key={stat.id} className="text-sm">
-                    {stat.metric}: {stat.value}
-                  </li>
-                ))}
-              </ul>
+              <Table>
+                <TableBody>
+                  {trainingDocuments.length > 0 ? (
+                    trainingDocuments.slice(0, 3).map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell className="text-sm">
+                          {doc.fileName} ({doc.fileFormat})
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell className="text-sm">
+                        No documents available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
               <Link
-                href="/admin/dashboard/stats"
+                href="/admin/dashboard/training-documents"
                 className="text-blue-500 hover:underline mt-4 block"
               >
-                View Stats
+                Manage Documents
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Training Videos Card */}
+          <Card>
+            <CardHeader className="flex items-center">
+              <Video className="mr-2" />
+              <CardTitle>Training Videos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableBody>
+                  {trainingVideos.length > 0 ? (
+                    trainingVideos.slice(0, 3).map((video) => (
+                      <TableRow key={video.id}>
+                        <TableCell className="text-sm">
+                          {video.fileName} ({video.fileFormat})
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell className="text-sm">
+                        No videos available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              <Link
+                href="/admin/dashboard/training-videos"
+                className="text-blue-500 hover:underline mt-4 block"
+              >
+                Manage Videos
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Recent Users Card */}
+          <Card>
+            <CardHeader className="flex items-center">
+              <Users className="mr-2" />
+              <CardTitle>Recent Users</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableBody>
+                  {users.length > 0 ? (
+                    users.slice(0, 3).map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="text-sm">
+                          {user.firstName} {user.lastName} ({user.role})
+                          <br />
+                          <span className="text-gray-500">
+                            {user.lastLogin
+                              ? new Date(user.lastLogin).toLocaleDateString()
+                              : "No login"}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell className="text-sm">
+                        No users available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              <Link
+                href="/admin/dashboard/users"
+                className="text-blue-500 hover:underline mt-4 block"
+              >
+                Manage Users
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Pro Sample Files Card */}
+          <Card>
+            <CardHeader className="flex items-center">
+              <FileText className="mr-2" />
+              <CardTitle>Pro Sample Files</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableBody>
+                  {downloadResources.length > 0 ? (
+                    downloadResources.slice(0, 3).map((file) => (
+                      <TableRow key={file.id}>
+                        <TableCell className="text-sm">
+                          {file.fileName} ({file.fileFormat})
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell className="text-sm">
+                        No files available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              <Link
+                href="/admin/dashboard/files"
+                className="text-blue-500 hover:underline mt-4 block"
+              >
+                Manage Files
               </Link>
             </CardContent>
           </Card>
