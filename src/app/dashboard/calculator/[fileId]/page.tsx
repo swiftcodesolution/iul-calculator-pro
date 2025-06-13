@@ -100,16 +100,10 @@ export default function CalculatorPage({ params }: { params: Params }) {
         setBoxesData(data.boxesData || {});
         setTables(data.tablesData?.tables || []);
 
-        setStartingBalance(data.tablesData?.startingBalance || startingBalance);
-        setAnnualContributions(
-          data.tablesData?.annualContributions || annualContributions
-        );
-        setAnnualEmployerMatch(
-          data.tablesData?.annualEmployerMatch || annualEmployerMatch
-        );
-        setYearsRunOutOfMoney(
-          data.tablesData?.yearsRunOutOfMoney || yearsRunOutOfMoney
-        );
+        setStartingBalance(data.tablesData?.startingBalance || 0);
+        setAnnualContributions(data.tablesData?.annualContributions || 0);
+        setAnnualEmployerMatch(data.tablesData?.annualEmployerMatch || 0);
+        setYearsRunOutOfMoney(data.tablesData?.yearsRunOutOfMoney || 0);
       } catch (err) {
         console.error("Fetch error:", err); // Debug
         setError("Error fetching file");
