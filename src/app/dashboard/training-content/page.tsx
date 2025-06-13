@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 interface Resource {
+  link: string;
   id: string;
   fileName: string;
   filePath: string;
@@ -103,6 +104,7 @@ export default function TrainingContentPage() {
                   <TableHeader className="sticky top-0 bg-white z-10">
                     <TableRow>
                       <TableHead>File Name</TableHead>
+                      <TableHead>File Link</TableHead>
                       <TableHead>Format</TableHead>
                       <TableHead>Uploaded At</TableHead>
                       <TableHead>Action</TableHead>
@@ -112,6 +114,7 @@ export default function TrainingContentPage() {
                     {videos.map((resource) => (
                       <TableRow key={resource.id}>
                         <TableCell>{resource.fileName}</TableCell>
+                        <TableCell>{resource.link}</TableCell>
                         <TableCell>{resource.fileFormat}</TableCell>
                         <TableCell>
                           {new Date(resource.createdAt).toLocaleString()}
