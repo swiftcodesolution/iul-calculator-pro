@@ -26,17 +26,19 @@ export function CompanyInfo() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
     >
-      <Card className="p-2">
-        <CardContent className="p-0 flex items-center gap-4">
+      <Card className="p-4">
+        <CardContent className="flex items-center justify-between gap-4">
           <motion.div
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1, duration: 0.3 }}
-            className="grow text-left"
+            className="grow text-left w-1/3"
           >
-            <h3 className="font-bold">{companyInfo.businessName || "N/A"}</h3>
-            <p>{companyInfo.agentName || "N/A"}</p>
-            <p>{companyInfo.phone || "N/A"}</p>
+            <h3 className="font-bold text-2xl">
+              {companyInfo.businessName || "enter your company name on page 1"}
+            </h3>
+            <p>{companyInfo.agentName || "enter your name on page 1"}</p>
+            <p>{companyInfo.phone || "enter phone number on page 1"}</p>
           </motion.div>
           {logoSrc ? (
             <motion.div
@@ -45,14 +47,14 @@ export function CompanyInfo() {
               transition={{ delay: 0.2, duration: 0.3 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="grow"
+              className="grow w-10/12"
             >
               <Image
                 src={logoSrc}
                 alt="Logo"
                 width={300}
                 height={300}
-                className="object-contain w-full"
+                className="object-contain w-full h-[120px]"
               />
             </motion.div>
           ) : (
@@ -65,14 +67,14 @@ export function CompanyInfo() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.3 }}
-              className="grow"
+              className="grow w-1/3"
             >
               <Image
                 src={profilePicSrc}
                 width={200}
                 height={200}
                 alt="Profile Picture"
-                className="w-[120px] h-[120px] object-cover rounded-[900px]"
+                className="w-[120px] h-[120px] ml-auto object-cover rounded-[900px]"
               />
             </motion.div>
           ) : (
