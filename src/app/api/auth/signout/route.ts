@@ -5,6 +5,10 @@ import prisma from "@/lib/connect";
 
 const tokenBlacklist = new Set<string>();
 
+export async function isTokenBlacklisted(token: string): Promise<boolean> {
+  return tokenBlacklist.has(token);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -52,8 +56,4 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
-
-export async function isTokenBlacklisted(token: string): Promise<boolean> {
-  return tokenBlacklist.has(token);
 }
