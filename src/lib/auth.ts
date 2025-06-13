@@ -4,7 +4,6 @@ import type { NextAuthOptions } from "next-auth";
 // import bcrypt from "bcrypt";
 import prisma from "./connect";
 import { UAParser } from "ua-parser-js";
-import { isTokenBlacklisted } from "@/app/api/auth/signout/route";
 
 // Sanitize IP address
 const sanitizeIpAddress = (ip: string): string => {
@@ -146,10 +145,6 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, user }) {
-      if (token.jti && (await isTokenBlacklisted(token.jti as string))) {
-        throw new Error("Token is blacklisted");
-      }
-
       if (user) {
         token.id = user.id;
         token.deviceFingerprint = user.deviceFingerprint;
@@ -186,11 +181,7 @@ export const authOptions: NextAuthOptions = {
   },
 
   events: {
-    async signOut({ token }) {
-      if (token.jti) {
-        await isTokenBlacklisted(token.jti as string);
-      }
-    },
+    async signOut() {},
   },
 };
 
