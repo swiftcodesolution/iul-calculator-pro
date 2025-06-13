@@ -43,7 +43,5 @@ export async function PATCH(request: Request) {
   } catch (error) {
     console.error("Update fingerprint error:", error);
     return NextResponse.json({ error: "An error occurred" }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }

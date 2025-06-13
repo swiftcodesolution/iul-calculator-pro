@@ -56,7 +56,5 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Sign-out error:", error);
     return NextResponse.json({ error: "Failed to sign out" }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }

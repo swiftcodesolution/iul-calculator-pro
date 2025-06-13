@@ -25,7 +25,5 @@ export async function GET(req: NextRequest) {
       { error: "Failed to fetch session history" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
