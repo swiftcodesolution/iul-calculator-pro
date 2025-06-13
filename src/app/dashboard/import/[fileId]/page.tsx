@@ -189,12 +189,29 @@ export default function ImportPage({ params }: { params: Params }) {
     router.push(`/dashboard/calculator/${fileId}`);
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     setFile(null);
     clearStore();
     setError(null);
     setZoomLevel(1);
     setIsTableFullScreen(false);
+
+    if (fileId && status === "authenticated" && session?.user?.id) {
+      try {
+        const response = await fetch(`/api/files/${fileId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "clearTablesData" }),
+        });
+        if (!response.ok) {
+          setError("Failed to clear tables data");
+          toast("Failed to clear tables data");
+        }
+      } catch {
+        setError("Error clearing tables data");
+        toast("Error clearing tables data");
+      }
+    }
   };
 
   const handleZoomIn = () => {
