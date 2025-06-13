@@ -75,21 +75,14 @@ const NavBar = () => {
 
   const handleSignOut = async () => {
     try {
-      const response = await fetch("/api/auth/signout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to sign out");
-      }
-
       await signOut({ redirect: false });
+
       toast.success("Signed out successfully");
+
       router.push("/");
     } catch (error) {
-      toast.error("Error signing out");
-      console.error(error);
+      console.error("Signout error:", error);
+      toast.error("Failed to sign out");
     }
   };
 

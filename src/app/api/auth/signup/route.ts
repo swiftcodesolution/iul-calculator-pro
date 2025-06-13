@@ -26,40 +26,38 @@ export async function POST(request: Request) {
       deviceFingerprint,
     } = signupApiSchema.parse(body);
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ email: email.toLowerCase() }, { cellPhone }, { officePhone }],
+      },
+    });
+
     if (existingUser) {
-      return NextResponse.json(
-        { error: "Email already exists" },
-        { status: 400 }
-      );
-    }
-
-    const existingUserByCellPhone = await prisma.user.findFirst({
-      where: { cellPhone },
-    });
-    if (existingUserByCellPhone) {
-      return NextResponse.json(
-        { error: "Cell phone number already exists" },
-        { status: 400 }
-      );
-    }
-
-    // Check for existing officePhone
-    const existingUserByOfficePhone = await prisma.user.findFirst({
-      where: { officePhone },
-    });
-    if (existingUserByOfficePhone) {
-      return NextResponse.json(
-        { error: "Office phone number already exists" },
-        { status: 400 }
-      );
+      if (existingUser.email === email.toLowerCase()) {
+        return NextResponse.json(
+          { error: "User with this email already exists" },
+          { status: 409 }
+        );
+      }
+      if (existingUser.cellPhone === cellPhone) {
+        return NextResponse.json(
+          { error: "User with this cell phone already exists" },
+          { status: 409 }
+        );
+      }
+      if (existingUser.officePhone === officePhone) {
+        return NextResponse.json(
+          { error: "User with this office phone already exists" },
+          { status: 409 }
+        );
+      }
     }
 
     // const hashedPassword = await bcrypt.hash(password, 10);
 
-    await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
-        email,
+        email: email.toLowerCase(),
         password,
         firstName,
         lastName,
@@ -69,9 +67,23 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({ message: "Signup successful" }, { status: 201 });
+    return NextResponse.json(
+      {
+        message: "Signup successful",
+        user: { id: user.id, email: user.email, firstName, lastName },
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Signup error:", error);
-    return NextResponse.json({ error: "An error occurred" }, { status: 500 });
+
+    const message =
+      error instanceof z.ZodError
+        ? "Invalid input data"
+        : error instanceof Error
+        ? error.message
+        : "Signup failed";
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

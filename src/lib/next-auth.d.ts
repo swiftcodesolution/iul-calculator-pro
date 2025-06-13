@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { JWT } from "next-auth/jwt";
 
 // Extend NextRequest for next-auth token in middleware
@@ -9,35 +10,53 @@ declare module "next/server" {
   }
 }
 
+// Shared User interface
+interface CustomUser {
+  id: string;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  deviceFingerprint?: string | null;
+  role: string;
+}
+
 // Extend next-auth types for Session and User
 declare module "next-auth" {
+  // interface Session {
+  //   user: {
+  //     id: string;
+  //     email: string;
+  //     deviceFingerprint?: string;
+  //     role: string;
+  //   };
+  // }
+
+  // interface User {
+  //   id: string;
+  //   email: string;
+  //   firstName?: string;
+  //   lastName?: string;
+  //   deviceFingerprint?: string;
+  //   role: string;
+  // }
+
   interface Session {
-    user: {
-      id: string;
-      email: string;
-      deviceFingerprint?: string;
-      role: string;
-    };
+    user: CustomUser;
   }
 
-  interface User {
-    id: string;
-    email: string;
-    firstName?: string;
-    lastName?: string;
-    deviceFingerprint?: string;
-    role: string;
-  }
+  interface User extends CustomUser {}
 }
 
 // Extend @prisma/client types for User
 declare module "@prisma/client" {
-  interface User {
-    id: string;
-    email: string;
-    firstName?: string;
-    lastName?: string;
-    deviceFingerprint?: string;
-    role: string;
-  }
+  // interface User {
+  //   id: string;
+  //   email: string;
+  //   firstName?: string;
+  //   lastName?: string;
+  //   deviceFingerprint?: string;
+  //   role: string;
+  // }
+
+  interface User extends CustomUser {}
 }

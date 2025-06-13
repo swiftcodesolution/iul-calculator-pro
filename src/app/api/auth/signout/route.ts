@@ -3,58 +3,57 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/connect";
 
+const tokenBlacklist = new Set<string>();
+
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-
-  if (!session || !session.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
-    const sessionToken = req.cookies.get("next-auth.session-token")?.value;
+    const session = await getServerSession(authOptions);
 
-    if (sessionToken) {
-      // Update SessionHistory with logoutAt
-      await prisma.sessionHistory.updateMany({
-        where: {
-          userId: session.user.id,
-          sessionToken,
-          logoutAt: null,
-        },
-        data: {
-          logoutAt: new Date(),
-        },
-      });
-
-      // Delete Session record
-      await prisma.session.deleteMany({
-        where: {
-          userId: session.user.id,
-          sessionToken,
-        },
-      });
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const response = NextResponse.json({ message: "Signed out successfully" });
+    const sessionToken = req.headers
+      .get("cookie")
+      ?.split("; ")
+      .find((cookie) => cookie.startsWith("next-auth.session-token="))
+      ?.split("=")[1];
 
-    // Clear all NextAuth-related cookies
-    const cookiesToClear = [
-      "next-auth.session-token",
-      "__Host-next-auth.csrf-token",
-      "__Secure-next-auth.callback-url",
-      "__Secure-next-auth.session-token",
-    ];
-
-    cookiesToClear.forEach((cookieName) => {
-      response.headers.append(
-        "Set-Cookie",
-        `${cookieName}=; Path=/; HttpOnly; Secure; SameSite=Strict; Expires=Thu, 01 Jan 1970 00:00:00 GMT`
+    if (!sessionToken) {
+      return NextResponse.json(
+        { error: "No session token found" },
+        { status: 401 }
       );
+    }
+
+    console.log("Signout request:", { sessionToken });
+
+    await prisma.session.deleteMany({
+      where: { sessionToken },
     });
+
+    await prisma.sessionHistory.updateMany({
+      where: { sessionToken, logoutAt: null },
+      data: { logoutAt: new Date() },
+    });
+
+    const response = NextResponse.json({ message: "Signed out successfully" });
+    response.headers.set(
+      "Set-Cookie",
+      "next-auth.session-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax"
+    );
 
     return response;
   } catch (error) {
     console.error("Sign-out error:", error);
-    return NextResponse.json({ error: "Failed to sign out" }, { status: 500 });
+
+    const message =
+      error instanceof Error ? error.message : "Sign-out process failed";
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
+}
+
+export async function isTokenBlacklisted(token: string): Promise<boolean> {
+  return tokenBlacklist.has(token);
 }

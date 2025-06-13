@@ -4,6 +4,14 @@ import type { NextAuthOptions } from "next-auth";
 // import bcrypt from "bcrypt";
 import prisma from "./connect";
 import { UAParser } from "ua-parser-js";
+import { isTokenBlacklisted } from "@/app/api/auth/signout/route";
+
+// Sanitize IP address
+const sanitizeIpAddress = (ip: string): string => {
+  const ipv4Regex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+  const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+  return ipv4Regex.test(ip) || ipv6Regex.test(ip) ? ip : "unknown";
+};
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -15,18 +23,22 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
         deviceFingerprint: { label: "Device Fingerprint", type: "text" },
+        loginPath: { label: "Login Path", type: "text" },
       },
       async authorize(credentials, req) {
         if (
           !credentials?.email ||
           !credentials?.password ||
-          !credentials?.deviceFingerprint
+          !credentials?.deviceFingerprint ||
+          !credentials.loginPath
         ) {
           throw new Error("Missing credentials");
         }
 
         try {
           const normalizedEmail = credentials.email.toLowerCase();
+          const loginPath = credentials.loginPath;
+
           const user = await prisma.user.findUnique({
             where: { email: normalizedEmail },
           });
@@ -39,45 +51,52 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Invalid password");
           }
 
-          if (!user.deviceFingerprint || user.deviceFingerprint === "") {
-            console.log(
-              "Updating deviceFingerprint for user:",
-              normalizedEmail,
-              "to:",
-              credentials.deviceFingerprint
-            );
+          const finalFingerprint = credentials.deviceFingerprint;
+          if (!user.deviceFingerprint) {
             await prisma.user.update({
-              where: { email: normalizedEmail },
-              data: { deviceFingerprint: credentials.deviceFingerprint },
+              where: { id: user.id },
+              data: { deviceFingerprint: finalFingerprint },
             });
-            console.log("Updated deviceFingerprint for user:", normalizedEmail);
+            user.deviceFingerprint = finalFingerprint;
           } else if (user.deviceFingerprint !== credentials.deviceFingerprint) {
             throw new Error("Login restricted to the device used for signup.");
           }
 
-          // Extract IP address and user-agent safely
+          if (user.deviceFingerprint !== credentials.deviceFingerprint) {
+            throw new Error("Login restricted to the device used for signup.");
+          }
+
+          if (loginPath === "/admin" && user.role !== "admin") {
+            throw new Error("Only admin accounts can log in here");
+          }
+          if (loginPath === "/" && user.role === "admin") {
+            throw new Error(
+              "Admin accounts can only be logged in from admin login page"
+            );
+          }
+
           const headers = req.headers || {};
-          const ipAddress =
+          const ipAddress = sanitizeIpAddress(
             (headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
-            (headers["x-real-ip"] as string) ||
-            "unknown";
+              (headers["x-real-ip"] as string) ||
+              "unknown"
+          );
           const userAgent = (headers["user-agent"] as string) || "unknown";
 
-          // Parse user-agent with ua-parser-js
           const parser = new UAParser(userAgent);
           const { browser, os, device } = parser.getResult();
 
-          // Create session with unique sessionToken
           const sessionToken = crypto.randomUUID();
+          const sessionExpires = new Date(Date.now() + 3600 * 100);
+
           await prisma.session.create({
             data: {
               userId: user.id,
               sessionToken,
-              expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+              expires: sessionExpires,
             },
           });
 
-          // Create session history with same sessionToken
           await prisma.sessionHistory.create({
             data: {
               userId: user.id,
@@ -107,9 +126,15 @@ export const authOptions: NextAuthOptions = {
           };
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-          throw new Error(error.message || "Authentication failed");
-        } finally {
-          await prisma.$disconnect();
+          throw new Error(
+            error.message.includes("User not found")
+              ? "User not found"
+              : error.message.includes("Invalid password")
+              ? "Invalid password"
+              : error.message.includes("device")
+              ? "Device not authorized"
+              : "Authentication failed"
+          );
         }
       },
     }),
@@ -121,14 +146,24 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, user }) {
+      if (token.jti && (await isTokenBlacklisted(token.jti as string))) {
+        throw new Error("Token is blacklisted");
+      }
+
       if (user) {
         token.id = user.id;
         token.deviceFingerprint = user.deviceFingerprint;
         token.role = user.role;
+        token.jti = crypto.randomUUID();
       }
       return token;
     },
+
     async session({ session, token }) {
+      if (!token) {
+        throw new Error("Invalid session: token blacklisted");
+      }
+
       if (session.user) {
         session.user.id = token.id as string;
         session.user.deviceFingerprint = token.deviceFingerprint as string;
@@ -136,6 +171,7 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+
     async redirect({ url, baseUrl }) {
       if (url.includes("callbackUrl=%2Fadmin") || url.includes("/admin")) {
         return `${baseUrl}/admin/dashboard/home`;
@@ -148,4 +184,16 @@ export const authOptions: NextAuthOptions = {
     signIn: "/",
     error: "/api/auth/error",
   },
+
+  events: {
+    async signOut({ token }) {
+      if (token.jti) {
+        await isTokenBlacklisted(token.jti as string);
+      }
+    },
+  },
 };
+
+process.on("exit", async () => {
+  await prisma.$disconnect();
+});
