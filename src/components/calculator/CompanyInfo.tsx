@@ -26,19 +26,23 @@ export function CompanyInfo() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
     >
-      <Card className="p-4">
-        <CardContent className="flex items-center justify-between gap-4">
+      <Card className="">
+        <CardContent className="h-[90px] px-4 py-2 flex items-center justify-between gap-6">
           <motion.div
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1, duration: 0.3 }}
-            className="grow text-left w-1/3"
+            className="grow text-left w-1/3 flex flex-col gap-2"
           >
-            <h3 className="font-bold text-2xl">
+            <h3 className="font-bold text-xl">
               {companyInfo.businessName || "enter your company name on page 1"}
             </h3>
-            <p>{companyInfo.agentName || "enter your name on page 1"}</p>
-            <p>{companyInfo.phone || "enter phone number on page 1"}</p>
+            <p className="text-sm">
+              {companyInfo.agentName || "enter your name on page 1"}
+            </p>
+            <p className="text-sm">
+              {companyInfo.phone || "enter phone number on page 1"}
+            </p>
           </motion.div>
           {logoSrc ? (
             <motion.div
@@ -58,7 +62,7 @@ export function CompanyInfo() {
               />
             </motion.div>
           ) : (
-            <h2 className="grow text-center text-lg font-bold bg-slate-100 px-8 py-3 w-1/3">
+            <h2 className="h-[80px] grow text-center text-lg font-bold bg-slate-100 px-8 py-3 w-1/3">
               NO LOGO UPLOADED YET!
             </h2>
           )}
@@ -78,7 +82,7 @@ export function CompanyInfo() {
               />
             </motion.div>
           ) : (
-            <h2 className="grow text-center text-lg font-bold bg-slate-100 px-8 py-3 w-1/3">
+            <h2 className="h-[80px] grow text-center text-lg font-bold bg-slate-100 px-8 py-3 w-1/3">
               NO PROFILE PICTURE UPLOADED YET!
             </h2>
           )}
