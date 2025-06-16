@@ -167,7 +167,11 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
 
-    async redirect({ url, baseUrl }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async redirect({ url, baseUrl, token }: any) {
+      if (url.includes("/api/auth/signout")) {
+        return token?.role === "admin" ? `${baseUrl}/admin` : `${baseUrl}/`;
+      }
       if (url.includes("callbackUrl=%2Fadmin") || url.includes("/admin")) {
         return `${baseUrl}/admin/dashboard/home`;
       }
@@ -181,7 +185,15 @@ export const authOptions: NextAuthOptions = {
   },
 
   events: {
-    async signOut() {},
+    async signOut({ token }) {
+      if (token?.jti) {
+        await prisma.session.deleteMany({ where: { sessionToken: token.jti } });
+        await prisma.sessionHistory.updateMany({
+          where: { sessionToken: token.jti, logoutAt: null },
+          data: { logoutAt: new Date() },
+        });
+      }
+    },
   },
 };
 

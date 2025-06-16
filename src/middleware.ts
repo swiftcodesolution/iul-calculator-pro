@@ -58,8 +58,8 @@ export default withAuth(
 
         // Protect dashboard routes
         if (pathname.startsWith("/dashboard")) {
-          return !!token; // Allow any authenticated user for testing
-          // return !!token && token?.role === "agent"; // Re-enable for strict role check
+          // return !!token; // Allow any authenticated user for testing
+          return !!token && token?.role === "agent"; // Re-enable for strict role check
         }
 
         // Protect admin dashboard routes

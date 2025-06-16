@@ -75,7 +75,7 @@ const NavBar = () => {
 
   const handleSignOut = async () => {
     try {
-      await signOut({ redirect: false });
+      await signOut({ redirect: true });
 
       toast.success("Signed out successfully");
 

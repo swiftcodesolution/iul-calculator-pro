@@ -19,21 +19,14 @@ export default function AdminSidebar() {
 
   const handleSignOut = async () => {
     try {
-      const response = await fetch("/api/auth/signout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+      await signOut({ redirect: true });
 
-      if (!response.ok) {
-        throw new Error("Failed to sign out");
-      }
-
-      await signOut({ redirect: false });
       toast.success("Signed out successfully");
-      router.push("/");
+
+      router.push("/admin");
     } catch (error) {
-      toast.error("Error signing out");
-      console.error(error);
+      console.error("Signout error:", error);
+      toast.error("Failed to sign out");
     }
   };
 

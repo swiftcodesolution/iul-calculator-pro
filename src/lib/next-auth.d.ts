@@ -45,6 +45,18 @@ declare module "next-auth" {
   }
 
   interface User extends CustomUser {}
+
+  interface CallbacksOptions {
+    redirect({
+      url,
+      baseUrl,
+      token,
+    }: {
+      url: string;
+      baseUrl: string;
+      token?: JWT;
+    }): Promise<string>;
+  }
 }
 
 // Extend @prisma/client types for User
