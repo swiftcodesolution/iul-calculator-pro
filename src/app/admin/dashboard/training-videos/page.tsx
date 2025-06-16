@@ -18,7 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Upload, Trash2, Pencil, Eye } from "lucide-react";
+import { Upload, Trash2, Pencil, Eye, Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
@@ -218,14 +218,6 @@ export default function AdminTrainingVideosPage() {
                   {resources.map((resource) => (
                     <TableRow key={resource.id}>
                       <TableCell>
-                        {/* <a
-                          href={resource.filePath}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {resource.fileName}
-                        </a> */}
-
                         {resource.filePath ? (
                           <a
                             href={resource.filePath}
@@ -246,7 +238,6 @@ export default function AdminTrainingVideosPage() {
                           resource.fileName
                         )}
                       </TableCell>
-
                       <TableCell>{resource.fileFormat}</TableCell>
                       <TableCell>Admin</TableCell>
                       <TableCell>
@@ -259,7 +250,7 @@ export default function AdminTrainingVideosPage() {
                             size="icon"
                             onClick={() =>
                               window.open(
-                                resource.filePath || resource.link || "#",
+                                resource.link || resource.filePath || "#",
                                 "_blank"
                               )
                             }
@@ -269,6 +260,22 @@ export default function AdminTrainingVideosPage() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
+                          {!resource.link && resource.filePath && (
+                            <a
+                              href={resource.filePath}
+                              download
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                disabled={loading}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </a>
+                          )}
                           <Dialog
                             open={open && editId === resource.id}
                             onOpenChange={setOpen}
