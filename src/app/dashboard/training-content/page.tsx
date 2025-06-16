@@ -125,28 +125,33 @@ export default function TrainingContentPage() {
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                window.open(resource.filePath, "_blank")
+                                window.open(
+                                  resource.link || resource.filePath,
+                                  "_blank"
+                                )
                               }
                               disabled={loading}
                             >
                               <Eye className="h-4 w-4 mr-2" />
                               View
                             </Button>
-                            <a
-                              href={resource.filePath}
-                              download
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={loading}
+                            {!resource.link && (
+                              <a
+                                href={resource.filePath}
+                                download
+                                target="_blank"
+                                rel="noopener noreferrer"
                               >
-                                <Download className="h-4 w-4 mr-2" />
-                                Download
-                              </Button>
-                            </a>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={loading}
+                                >
+                                  <Download className="h-4 w-4 mr-2" />
+                                  Download
+                                </Button>
+                              </a>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
