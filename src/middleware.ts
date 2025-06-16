@@ -13,7 +13,7 @@ export default withAuth(
       isAuthenticated: !!token,
       role: token?.role,
       sessionToken,
-    }); // Debug
+    });
 
     // Allow unauthenticated access to login pages
     if (pathname === "/" || pathname === "/admin") {

@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.redirect(new URL("/", req.url));
     }
 
     const sessionToken = req.headers
@@ -18,10 +18,7 @@ export async function POST(req: NextRequest) {
       ?.split("=")[1];
 
     if (!sessionToken) {
-      return NextResponse.json(
-        { error: "No session token found" },
-        { status: 401 }
-      );
+      return NextResponse.redirect(new URL("/", req.url));
     }
 
     console.log("Signout request:", { sessionToken });
@@ -36,12 +33,22 @@ export async function POST(req: NextRequest) {
     });
 
     const response = NextResponse.json({ message: "Signed out successfully" });
-    response.headers.set(
-      "Set-Cookie",
-      "next-auth.session-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax"
-    );
 
-    return response;
+    const cookies = req.headers.get("cookie")?.split("; ") || [];
+    cookies.forEach((cookie) => {
+      const cookieName = cookie.split("=")[0];
+      response.headers.append(
+        "Set-Cookie",
+        `${cookieName}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`
+      );
+    });
+
+    // Redirect based on user role or URL
+    const isAdmin =
+      session.user.role === "admin" ||
+      req.nextUrl.pathname.startsWith("/admin");
+    const redirectPath = isAdmin ? "/admin" : "/";
+    return NextResponse.redirect(new URL(redirectPath, req.url));
   } catch (error) {
     console.error("Sign-out error:", error);
 
