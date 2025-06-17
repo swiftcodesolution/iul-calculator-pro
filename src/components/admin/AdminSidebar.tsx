@@ -78,6 +78,12 @@ export default function AdminSidebar() {
           <File className="mr-2" /> Training Documents
         </Link>
         <Link
+          href="/admin/dashboard/tab-content"
+          className="flex items-center p-2 hover:bg-gray-700 rounded"
+        >
+          <File className="mr-2" /> Tab Content
+        </Link>
+        <Link
           href="/admin/dashboard/stats"
           className="flex items-center p-2 hover:bg-gray-700 rounded"
         >

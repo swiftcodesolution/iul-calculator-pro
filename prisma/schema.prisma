@@ -124,9 +124,11 @@ model TabContent {
   userId      String   @db.ObjectId
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   tabName     String
-  fileName    String
-  filePath    String
-  fileFormat  String
+  fileName    String?
+  filePath    String?
+  fileFormat  String?
+  link        String?
+  createdByRole String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

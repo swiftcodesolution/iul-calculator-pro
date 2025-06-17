@@ -14,29 +14,43 @@ export async function POST(request: Request) {
 
   const formData = await request.formData();
   const tabName = formData.get("tabName") as string;
-  const file = formData.get("file") as File;
+  const file = formData.get("file") as File | null;
+  const link = formData.get("link") as string | null;
 
-  if (!tabName || !file) {
+  if (!tabName || (!file && !link)) {
     return NextResponse.json(
-      { error: "Missing required fields" },
+      { error: "Tab name and either file or link are required" },
       { status: 400 }
     );
   }
 
   try {
-    const blob = await put(
-      `tab-content/${session.user.id}/${Date.now()}-${file.name}`,
-      file,
-      { access: "public" }
-    );
+    let fileName: string | null = null;
+    let filePath: string | null = null;
+    let fileFormat: string | null = null;
+
+    if (file) {
+      const blob = await put(
+        `tab-content/${session.user.id}/${Date.now()}-${file.name}`,
+        file,
+        { access: "public" }
+      );
+      fileName = file.name;
+      filePath = blob.url;
+      fileFormat = file.type;
+    }
 
     const tabContent = await prisma.tabContent.create({
       data: {
-        userId: session.user.id,
+        user: {
+          connect: { id: session.user.id },
+        },
         tabName,
-        fileName: file.name,
-        filePath: blob.url,
-        fileFormat: file.type,
+        fileName,
+        filePath,
+        fileFormat,
+        link: link || null,
+        createdByRole: session.user.role,
       },
     });
 
@@ -59,7 +73,9 @@ export async function GET() {
 
   try {
     const tabContents = await prisma.tabContent.findMany({
-      where: { userId: session.user.id },
+      where: {
+        OR: [{ userId: session.user.id }, { createdByRole: "admin" }],
+      },
     });
     return NextResponse.json(tabContents);
   } catch (error) {
@@ -82,15 +98,26 @@ export async function PATCH(request: Request) {
   const id = formData.get("id") as string;
   const tabName = formData.get("tabName") as string;
   const file = formData.get("file") as File | null;
+  const link = formData.get("link") as string | null;
 
   const tabContent = await prisma.tabContent.findUnique({
-    where: { id, userId: session.user.id },
+    where: { id },
   });
-  if (!tabContent) {
+  if (
+    !tabContent ||
+    (tabContent.userId !== session.user.id && session.user.role !== "admin")
+  ) {
     return NextResponse.json(
-      { error: "Tab content not found" },
+      { error: "Tab content not found or unauthorized" },
       { status: 400 }
     );
+  }
+
+  if (tabContent.createdByRole === "admin" && session.user.role !== "admin") {
+    return NextResponse.json({
+      message: "Cannot modify admin-created tab content",
+      tabContent,
+    });
   }
 
   try {
@@ -110,12 +137,13 @@ export async function PATCH(request: Request) {
     }
 
     const updatedTabContent = await prisma.tabContent.update({
-      where: { id, userId: session.user.id },
+      where: { id },
       data: {
         tabName,
         fileName,
         filePath,
         fileFormat,
+        link: link || undefined,
         updatedAt: new Date(),
       },
     });
@@ -140,18 +168,21 @@ export async function DELETE(request: Request) {
   const { id } = await request.json();
 
   const tabContent = await prisma.tabContent.findUnique({
-    where: { id, userId: session.user.id },
+    where: { id },
   });
-  if (!tabContent) {
+  if (
+    !tabContent ||
+    (tabContent.userId !== session.user.id && session.user.role !== "admin")
+  ) {
     return NextResponse.json(
-      { error: "Tab content not found" },
+      { error: "Tab content not found or unauthorized" },
       { status: 400 }
     );
   }
 
   try {
     await prisma.tabContent.delete({
-      where: { id, userId: session.user.id },
+      where: { id },
     });
     return NextResponse.json({ message: "Tab content deleted" });
   } catch (error) {
