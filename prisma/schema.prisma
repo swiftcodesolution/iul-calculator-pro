@@ -24,10 +24,9 @@ model User {
   companyInfo         CompanyInfo?  @relation(name: "UserCompanyInfo")
   companyInfoId       String?       @db.ObjectId
   DownloadResources DownloadResources[]
-
   TrainingVideos TrainingVideos[]
-
   TrainingDocuments TrainingDocuments[]
+  TabContent  TabContent[]
 }
 
 model CompanyInfo {
@@ -118,4 +117,16 @@ model TrainingDocuments {
   uploadedByUser  User  @relation(fields: [uploadedBy],references: [id],onDelete: Restrict)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model TabContent {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tabName     String
+  fileName    String
+  filePath    String
+  fileFormat  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

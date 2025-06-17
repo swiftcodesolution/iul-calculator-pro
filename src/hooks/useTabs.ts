@@ -13,12 +13,6 @@ export const useTabs = () => {
   const [newTabFile, setNewTabFile] = useState<File | null>(null);
 
   const handleAddTab = useCallback(() => {
-    if (tabs.length >= 4) {
-      alert(
-        "Demo version: Storage not connected. Cannot add more than 4 tabs."
-      );
-      return;
-    }
     if (newTabName && newTabFile) {
       const reader = new FileReader();
       reader.onloadend = () => {
