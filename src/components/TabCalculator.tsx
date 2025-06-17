@@ -3,14 +3,40 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 
+// Utility functions from InflationCalculator
+const formatInputValue = (value: string | number): string => {
+  if (value === "" || value == null) return "";
+  const num = parseFloat(String(value).replace(/[^0-9.]/g, ""));
+  if (isNaN(num)) return "";
+  return `$${num.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+const parseInputValue = (value: string): number | string => {
+  if (value === "") return "";
+  const num = parseFloat(value.replace(/[^0-9.]/g, ""));
+  return isNaN(num) || num < 0 ? "" : num;
+};
+
 export default function TabCalculator() {
-  const [amount, setAmount] = useState(100000);
+  // Changed to string | number to match InflationCalculator
+  const [amount, setAmount] = useState<string | number>(100000);
   const [age, setAge] = useState(45);
   const [taxRate, setTaxRate] = useState(22);
 
-  const penalty = age < 59.5 ? amount * 0.1 : 0;
-  const taxes = (amount - penalty) * (taxRate / 100);
-  const netWithdrawal = amount - penalty - taxes;
+  // Handle amount input change
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInputValue(e.target.value);
+    setAmount(value);
+  };
+
+  // Convert amount to number for calculations, default to 0 if empty
+  const amountNum = typeof amount === "number" ? amount : 0;
+  const penalty = age < 59.5 ? amountNum * 0.1 : 0;
+  const taxes = (amountNum - penalty) * (taxRate / 100);
+  const netWithdrawal = amountNum - penalty - taxes;
 
   return (
     <div className="w-full mx-auto p-4 space-y-5">
@@ -23,9 +49,11 @@ export default function TabCalculator() {
             <Label className="grow">Amount to Withdraw</Label>
             <Input
               className="w-1/2"
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+              type="text" // Changed to text for $ formatting
+              value={formatInputValue(amount)}
+              onChange={handleAmountChange}
+              placeholder="$0.00"
+              aria-label="Amount to Withdraw"
             />
           </div>
           <div className="flex items-center gap-4">
