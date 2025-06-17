@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
-import { motion, AnimatePresence } from "motion/react"; // Reverted import
+import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -46,12 +46,13 @@ export default function ImportPage({ params }: { params: Params }) {
   const { data: session, status } = useSession();
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Changed to match calculator
   const [loading, setLoading] = useState(true);
-  const [hasFetched, setHasFetched] = useState(false); // Single fetch
-  const [isTableLoading, setIsTableLoading] = useState(false); // Renamed for clarity
+  const [hasFetched, setHasFetched] = useState(false);
+  const [isTableLoading, setIsTableLoading] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isTableFullScreen, setIsTableFullScreen] = useState(false);
+  // NEW: Add isScrolled state
+  const [isScrolled, setIsScrolled] = useState(false);
   const { tables, setTables, clearStore } = useTableStore();
   const router = useRouter();
   const {
@@ -133,7 +134,7 @@ export default function ImportPage({ params }: { params: Params }) {
     }
     if (selectedFile && selectedFile.type === "application/pdf") {
       setFile(selectedFile);
-      setError(null); // Match calculator
+      setError(null);
       clearStore();
       setZoomLevel(1);
       setIsTableFullScreen(false);
@@ -226,6 +227,10 @@ export default function ImportPage({ params }: { params: Params }) {
     setIsTableFullScreen((prev) => !prev);
   };
 
+  // NEW: Scroll handler
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) =>
+    setIsScrolled(e.currentTarget.scrollTop > 50);
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
@@ -244,20 +249,73 @@ export default function ImportPage({ params }: { params: Params }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
-              className="lg:w-[70%] w-full overflow-y-auto flex h-[90vh]"
+              className="lg:w-[70%] w-full flex h-[90vh]"
             >
-              <div className="grow">
+              <div className="grow relative">
                 {tables.length > 0 && !isTableLoading ? (
                   <>
                     <h3 className="text-lg font-semibold mb-2 sticky top-0 bg-white z-10">
                       Imported Data Preview
                     </h3>
+                    {/* NEW: Sticky header */}
+                    {isScrolled && (
+                      <div className="absolute top-[30px] left-0 w-[98.5%] bg-white z-10 shadow-md transition-all flex">
+                        {tables.map((table, index) => {
+                          const columns = Object.keys(
+                            table.data[0] || {}
+                          ).filter(
+                            (key) =>
+                              key !== "Source_Text" && key !== "Page_Number"
+                          );
+                          return (
+                            <div
+                              key={index}
+                              className={
+                                tables.length === 2
+                                  ? index === 0
+                                    ? "w-[80%]"
+                                    : "w-[20%]"
+                                  : "grow"
+                              }
+                            >
+                              <Table className="border table-fixed w-full">
+                                <TableHeader>
+                                  <TableRow>
+                                    {columns.map((header) => (
+                                      <TableHead
+                                        key={header}
+                                        className={cn(
+                                          "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer",
+                                          highlightedColumns.has(header)
+                                            ? "bg-[#ffa1ad]"
+                                            : ""
+                                        )}
+                                        style={{
+                                          width: `${100 / columns.length}%`,
+                                        }}
+                                        onClick={() =>
+                                          handleColumnClick(header)
+                                        }
+                                      >
+                                        {header}
+                                      </TableHead>
+                                    ))}
+                                  </TableRow>
+                                </TableHeader>
+                              </Table>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                     <div
                       style={{
                         transform: `scale(${zoomLevel})`,
                         transformOrigin: "top left",
                         transition: "transform 0.3s ease",
                       }}
+                      className="w-full h-[calc(90vh-40px)] overflow-auto"
+                      onScroll={handleScroll}
                     >
                       <div
                         className={
@@ -379,15 +437,66 @@ export default function ImportPage({ params }: { params: Params }) {
                   </Button>
                 </CardHeader>
                 <CardContent
-                  className="overflow-y-auto flex-1"
+                  className="overflow-y-auto flex-1 relative"
                   style={{ maxHeight: "calc(100vh - 80px)" }}
                 >
+                  {/* NEW: Sticky header for full-screen mode */}
+                  {isScrolled && tables.length > 0 && (
+                    <div className="absolute top-0 left-0 w-[99%] bg-white z-10 shadow-md">
+                      {tables.map((table, index) => {
+                        const columns = Object.keys(table.data[0] || {}).filter(
+                          (key) =>
+                            key !== "Source_Text" && key !== "Page_Number"
+                        );
+                        return (
+                          <div
+                            key={index}
+                            className={
+                              tables.length === 2
+                                ? index === 0
+                                  ? "w-[80%]"
+                                  : "w-[20%]"
+                                : tables.length > 2
+                                ? "flex-1 min-w-[300px] max-w-[500px]"
+                                : "w-full"
+                            }
+                          >
+                            <Table className="border table-fixed w-full">
+                              <TableHeader>
+                                <TableRow>
+                                  {columns.map((header) => (
+                                    <TableHead
+                                      key={header}
+                                      className={cn(
+                                        "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer",
+                                        highlightedColumns.has(header)
+                                          ? "bg-[#ffa1ad]"
+                                          : ""
+                                      )}
+                                      style={{
+                                        width: `${100 / columns.length}%`,
+                                      }}
+                                      onClick={() => handleColumnClick(header)}
+                                    >
+                                      {header}
+                                    </TableHead>
+                                  ))}
+                                </TableRow>
+                              </TableHeader>
+                            </Table>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                   <div
                     style={{
                       transform: `scale(${zoomLevel})`,
                       transformOrigin: "top left",
                       transition: "transform 0.3s ease",
                     }}
+                    className="w-full h-full overflow-auto"
+                    onScroll={handleScroll}
                   >
                     <div
                       className={
