@@ -109,6 +109,18 @@ export const useTableStore = create<TableStore>((set) => ({
           type: "calculator",
           isVisible: true,
         },
+        {
+          id: "inflationCalculator",
+          name: "Inflation Calculator Redesign",
+          type: "inflationCalculator",
+          isVisible: true,
+        },
+        {
+          id: "cagrChart",
+          name: "S&P Average vs Tax Free Plan",
+          type: "cagrChart",
+          isVisible: true,
+        },
       ],
     })),
 }));
