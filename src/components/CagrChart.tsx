@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Chart as ChartJS,
   ChartOptions,
@@ -142,14 +142,14 @@ export default function CagrChart() {
   ];
 
   return (
-    <Card className="w-full">
+    <div className="w-full p-0">
       <CardHeader>
         <CardTitle>S&P Average vs Tax Free Plan</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex gap-4 w-full">
           <div className="flex flex-col justify-around w-1/2">
-            <div className="w-full h-[400px] relative">
+            <div className="w-full h-[380px] relative">
               <Line data={data} options={options} className="w-full h-full" />
             </div>
             <div className="mt-2 w-full border border-gray-300 p-4 rounded">
@@ -221,6 +221,6 @@ export default function CagrChart() {
           </div>
         </div>
       </CardContent>
-    </Card>
+    </div>
   );
 }

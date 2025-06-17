@@ -289,8 +289,6 @@ const TabManager = React.memo(function TabManager({
   setIsTabCardExpanded,
   isAddDialogOpen,
   setIsAddDialogOpen,
-  isManageDialogOpen,
-  setIsManageDialogOpen,
   isEditDialogOpen,
   setIsEditDialogOpen,
   setEditTabId,
@@ -308,6 +306,8 @@ const TabManager = React.memo(function TabManager({
   handleCellClick,
 }: TabManagerProps) {
   const { tabs, setTabs } = useTableStore();
+
+  const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
 
   // Single content render for active tab
   const content = activeTab && tabs.find((tab) => tab.id === activeTab) && (

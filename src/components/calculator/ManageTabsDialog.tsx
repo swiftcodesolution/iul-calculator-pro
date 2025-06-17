@@ -145,7 +145,10 @@ export function ManageTabsDialog({
                         setIsEditDialogOpen!(true);
                       }}
                       disabled={
-                        tab.id === "total-advantage" || tab.id === "calculator"
+                        tab.id === "total-advantage" ||
+                        tab.id === "calculator" ||
+                        tab.id === "inflationCalculator" ||
+                        tab.id === "cagrChart"
                       }
                       aria-label={`Edit ${tab.name}`}
                     >
@@ -156,7 +159,10 @@ export function ManageTabsDialog({
                       size="sm"
                       onClick={() => handleDeleteTab(tab.id)}
                       disabled={
-                        tab.id === "total-advantage" || tab.id === "calculator"
+                        tab.id === "total-advantage" ||
+                        tab.id === "calculator" ||
+                        tab.id === "inflationCalculator" ||
+                        tab.id === "cagrChart"
                       }
                       aria-label={`Delete ${tab.name}`}
                     >
