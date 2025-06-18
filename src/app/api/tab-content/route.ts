@@ -71,9 +71,33 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // If admin, fetch all tab content with user data
+    if (session.user.role === "admin") {
+      const tabContents = await prisma.tabContent.findMany({
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              email: true,
+            },
+          },
+        },
+      });
+      return NextResponse.json(tabContents);
+    }
+
+    // For non-admins, fetch only their own or admin-created content
     const tabContents = await prisma.tabContent.findMany({
       where: {
         OR: [{ userId: session.user.id }, { createdByRole: "admin" }],
+      },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            email: true,
+          },
+        },
       },
     });
     return NextResponse.json(tabContents);

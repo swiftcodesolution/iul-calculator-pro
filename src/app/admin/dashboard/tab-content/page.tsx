@@ -26,6 +26,10 @@ interface TabContent {
   createdByRole: string;
   userId: string;
   createdAt: string;
+  user: {
+    firstName: string | null;
+    email: string | null;
+  } | null; // Include user data
 }
 
 export default function AdminTabContentPage() {
@@ -88,7 +92,7 @@ export default function AdminTabContentPage() {
         body: formData,
       });
       if (!response.ok) throw new Error("Failed to upload tab content");
-      const newTabContent = await response.json();
+      const newTabContent: TabContent = await response.json();
       setOwnTabContent([...ownTabContent, newTabContent]);
       setFile(null);
       setTabName("");
@@ -124,7 +128,7 @@ export default function AdminTabContentPage() {
         body: formData,
       });
       if (!response.ok) throw new Error("Failed to rename tab content");
-      const updatedTabContent = await response.json();
+      const updatedTabContent: TabContent = await response.json();
       setOwnTabContent(
         ownTabContent.map((item) =>
           item.id === editId ? updatedTabContent : item
@@ -178,7 +182,7 @@ export default function AdminTabContentPage() {
 
   const getIcon = (fileFormat: string | null, link: string | null) => {
     if (link) {
-      return "/icons/link.png"; // Icon for links (e.g., YouTube)
+      return "/icons/link.png";
     }
     if (!fileFormat) return "/icons/file.png";
     if (fileFormat.startsWith("image/")) return fileFormat;
@@ -207,7 +211,7 @@ export default function AdminTabContentPage() {
         : link.split("/").pop();
       return `https://www.youtube.com/embed/${videoId}`;
     }
-    return link; // Fallback for other links
+    return link;
   };
 
   if (!session || session.user.role !== "admin") {
@@ -296,6 +300,12 @@ export default function AdminTabContentPage() {
                           <p className="text-xs text-gray-500">
                             {new Date(item.createdAt).toLocaleDateString()}
                           </p>
+                          <p className="text-xs text-gray-500">
+                            By: {item.user?.firstName || "Unknown"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Email: {item.user?.email || "N/A"}
+                          </p>
                           <div className="flex gap-2 mt-2">
                             <Dialog
                               open={viewOpen && viewContent?.id === item.id}
@@ -315,6 +325,8 @@ export default function AdminTabContentPage() {
                                 <DialogHeader>
                                   <DialogTitle>{item.tabName}</DialogTitle>
                                 </DialogHeader>
+                                <p>By: {item.user?.firstName || "Unknown"}</p>
+                                <p>Email: {item.user?.email || "N/A"}</p>
                                 {item.link && getEmbedUrl(item.link) ? (
                                   <iframe
                                     src={getEmbedUrl(item.link)!}
@@ -491,6 +503,12 @@ export default function AdminTabContentPage() {
                             Role: {item.createdByRole}
                           </p>
                           <p className="text-xs text-gray-500">
+                            By: {item.user?.firstName || "Unknown"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Email: {item.user?.email || "N/A"}
+                          </p>
+                          <p className="text-xs text-gray-500">
                             {new Date(item.createdAt).toLocaleDateString()}
                           </p>
                           <div className="flex gap-2 mt-2">
@@ -512,6 +530,8 @@ export default function AdminTabContentPage() {
                                 <DialogHeader>
                                   <DialogTitle>{item.tabName}</DialogTitle>
                                 </DialogHeader>
+                                <p>By: {item.user?.firstName || "Unknown"}</p>
+                                <p>Email: {item.user?.email || "N/A"}</p>
                                 {item.link && getEmbedUrl(item.link) ? (
                                   <iframe
                                     src={getEmbedUrl(item.link)!}
