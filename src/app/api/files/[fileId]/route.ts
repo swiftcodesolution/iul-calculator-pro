@@ -13,7 +13,7 @@ export async function PATCH(
   }
 
   const { fileId } = await params;
-  const { boxesData, tablesData, combinedResults, category } =
+  const { boxesData, tablesData, combinedResults, fields, category } =
     await request.json();
 
   const file = await prisma.clientFile.findUnique({ where: { id: fileId } });
@@ -51,6 +51,7 @@ export async function PATCH(
         ...(boxesData && { boxesData }),
         ...(tablesData && { tablesData }),
         ...(combinedResults && { combinedResults }),
+        ...(fields && { fields }),
         ...(category && { category }),
         updatedAt: new Date(),
       },
@@ -146,7 +147,6 @@ export async function POST(
 
   if (action === "clearTablesData") {
     try {
-      // Step 1: Fetch current tablesData
       const currentFile = await prisma.clientFile.findUnique({
         where: { id: fileId },
         select: { tablesData: true },
@@ -154,13 +154,10 @@ export async function POST(
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updatedTablesData = (currentFile?.tablesData as any) || {};
-
-      // Step 2: Clear only the 'tables' array if it exists and is an array
       if (Array.isArray(updatedTablesData.tables)) {
         updatedTablesData.tables = [];
       }
 
-      // Step 3: Update the file with modified tablesData
       const updatedFile = await prisma.clientFile.update({
         where: { id: fileId },
         data: {
@@ -177,6 +174,40 @@ export async function POST(
       console.error("Error clearing tables array:", error);
       return NextResponse.json(
         { error: "Failed to clear tables array" },
+        { status: 500 }
+      );
+    }
+  }
+
+  if (action === "clearFieldsData") {
+    try {
+      const currentFile = await prisma.clientFile.findUnique({
+        where: { id: fileId },
+        select: { fields: true },
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const updatedFieldsData = (currentFile?.fields as any) || {};
+      if (Array.isArray(updatedFieldsData.fields)) {
+        updatedFieldsData.fields = [];
+      }
+
+      const updatedFile = await prisma.clientFile.update({
+        where: { id: fileId },
+        data: {
+          fields: updatedFieldsData,
+          updatedAt: new Date(),
+        },
+      });
+
+      return NextResponse.json({
+        message: "Fields array cleared",
+        file: updatedFile,
+      });
+    } catch (error) {
+      console.error("Error clearing fields array:", error);
+      return NextResponse.json(
+        { error: "Failed to clear fields array" },
         { status: 500 }
       );
     }

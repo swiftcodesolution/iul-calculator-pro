@@ -48,7 +48,16 @@ export interface TablesData {
   yearsRunOutOfMoney: number | string;
 }
 
+export type ClientFields = {
+  illustration_date: string | null;
+  insured_name: string | null;
+  initial_death_benefit: string | null;
+  assumed_ror: string | null;
+  minimum_initial_pmt: string | null;
+};
+
 export type ClientFile = {
+  fields: ClientFields;
   id: string;
   userId: string;
   fileName: string;
@@ -185,23 +194,6 @@ export interface SelectedRowData {
   current: RowData;
   taxFree: RowData;
 }
-
-// export type TabContent = {
-//   id: string;
-//   name: string;
-//   file?: File;
-//   src?: string;
-//   type:
-//     | "image"
-//     | "video"
-//     | "pdf"
-//     | "other"
-//     | "totalAdvantage"
-//     | "calculator"
-//     | "inflationCalculator"
-//     | "cagrChart";
-//   isVisible: boolean;
-// };
 
 export interface TabContent {
   id: string;

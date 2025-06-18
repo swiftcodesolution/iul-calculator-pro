@@ -23,7 +23,7 @@ import { useTableHighlight } from "@/hooks/useTableHighlight";
 import { useSession } from "next-auth/react";
 import { cn, debounce } from "@/lib/utils";
 import { notFound } from "next/navigation";
-import { ClientFile } from "@/lib/types";
+import { ClientFields, ClientFile } from "@/lib/types";
 
 type TableData = {
   source: string;
@@ -33,6 +33,13 @@ type TableData = {
 
 type ApiResponse = {
   tables: TableData[];
+  fields: {
+    illustration_date: string | null;
+    insured_name: string | null;
+    initial_death_benefit: string | null;
+    assumed_ror: string | null;
+    minimum_initial_pmt: string | null;
+  };
   message?: string | null;
 };
 
@@ -51,8 +58,14 @@ export default function ImportPage({ params }: { params: Params }) {
   const [isTableLoading, setIsTableLoading] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isTableFullScreen, setIsTableFullScreen] = useState(false);
-  // NEW: Add isScrolled state
   const [isScrolled, setIsScrolled] = useState(false);
+  const [fields, setFields] = useState<ClientFields>({
+    illustration_date: null,
+    insured_name: null,
+    initial_death_benefit: null,
+    assumed_ror: null,
+    minimum_initial_pmt: null,
+  });
   const { tables, setTables, clearStore } = useTableStore();
   const router = useRouter();
   const {
@@ -62,7 +75,6 @@ export default function ImportPage({ params }: { params: Params }) {
     handleColumnClick,
   } = useTableHighlight();
 
-  // Auth and file check (single fetch)
   useEffect(() => {
     if (
       status !== "authenticated" ||
@@ -87,6 +99,7 @@ export default function ImportPage({ params }: { params: Params }) {
         }
         const data: ClientFile = await response.json();
         setTables(data.tablesData?.tables || []);
+        setFields(data.fields || {});
         setHasFetched(true);
       } catch {
         setError("Error fetching file");
@@ -98,7 +111,6 @@ export default function ImportPage({ params }: { params: Params }) {
     fetchFile();
   }, [fileId, session, status, hasFetched, setTables]);
 
-  // Debounced save
   const saveChanges = debounce(
     async () => {
       if (!fileId || status !== "authenticated" || !session?.user?.id) return;
@@ -106,7 +118,7 @@ export default function ImportPage({ params }: { params: Params }) {
         const response = await fetch(`/api/files/${fileId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tablesData: { tables } }),
+          body: JSON.stringify({ tablesData: { tables }, fields }),
         });
         if (!response.ok) setError("Failed to save changes");
       } catch {
@@ -117,11 +129,11 @@ export default function ImportPage({ params }: { params: Params }) {
     { leading: false, trailing: true }
   );
 
-  // Save on tables change
   useEffect(() => {
-    if (tables.length > 0) saveChanges();
+    if (tables.length > 0 || Object.values(fields).some((v) => v !== null))
+      saveChanges();
     return () => saveChanges.cancel();
-  }, [tables, saveChanges]);
+  }, [tables, fields, saveChanges]);
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>
@@ -136,6 +148,13 @@ export default function ImportPage({ params }: { params: Params }) {
       setFile(selectedFile);
       setError(null);
       clearStore();
+      setFields({
+        illustration_date: null,
+        insured_name: null,
+        initial_death_benefit: null,
+        assumed_ror: null,
+        minimum_initial_pmt: null,
+      });
       setZoomLevel(1);
       setIsTableFullScreen(false);
     } else {
@@ -160,6 +179,7 @@ export default function ImportPage({ params }: { params: Params }) {
       });
       if (response.data.tables) {
         setTables(response.data.tables);
+        setFields(response.data.fields || {});
         toast(`Extracted ${response.data.tables.length} tables from PDF.`);
       } else {
         setError(response.data.message || "No tables found.");
@@ -196,6 +216,13 @@ export default function ImportPage({ params }: { params: Params }) {
     setError(null);
     setZoomLevel(1);
     setIsTableFullScreen(false);
+    setFields({
+      illustration_date: null,
+      insured_name: null,
+      initial_death_benefit: null,
+      assumed_ror: null,
+      minimum_initial_pmt: null,
+    });
 
     if (fileId && status === "authenticated" && session?.user?.id) {
       try {
@@ -207,6 +234,16 @@ export default function ImportPage({ params }: { params: Params }) {
         if (!response.ok) {
           setError("Failed to clear tables data");
           toast("Failed to clear tables data");
+        }
+
+        const fieldsResponse = await fetch(`/api/files/${fileId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "clearFieldsData" }), // Added to clear fields
+        });
+        if (!fieldsResponse.ok) {
+          setError("Failed to clear fields data");
+          toast("Failed to clear fields data");
         }
       } catch {
         setError("Error clearing tables data");
@@ -227,7 +264,6 @@ export default function ImportPage({ params }: { params: Params }) {
     setIsTableFullScreen((prev) => !prev);
   };
 
-  // NEW: Scroll handler
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) =>
     setIsScrolled(e.currentTarget.scrollTop > 50);
 
@@ -257,7 +293,6 @@ export default function ImportPage({ params }: { params: Params }) {
                     <h3 className="text-lg font-semibold mb-2 sticky top-0 bg-white z-10">
                       Imported Data Preview
                     </h3>
-                    {/* NEW: Sticky header */}
                     {isScrolled && (
                       <div className="absolute top-[30px] left-0 w-[98.5%] bg-white z-10 shadow-md transition-all flex">
                         {tables.map((table, index) => {
@@ -440,7 +475,6 @@ export default function ImportPage({ params }: { params: Params }) {
                   className="overflow-y-auto flex-1 relative"
                   style={{ maxHeight: "calc(100vh - 80px)" }}
                 >
-                  {/* NEW: Sticky header for full-screen mode */}
                   {isScrolled && tables.length > 0 && (
                     <div className="absolute top-0 left-0 w-[99%] bg-white z-10 shadow-md">
                       {tables.map((table, index) => {
@@ -594,61 +628,60 @@ export default function ImportPage({ params }: { params: Params }) {
           transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
           className="lg:w-[30%] w-full flex flex-col gap-4 lg:mt-auto"
         >
-          {/* Disabled Input Fields */}
           <div className="flex flex-col gap-2">
             <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="policy-number">
+              <Label className="grow" htmlFor="illustration-date">
                 Illustration Date
               </Label>
               <Input
                 className="w-2/4"
-                id="policy-number"
+                id="illustration-date"
                 disabled
-                placeholder="POL12345"
-              />
-            </div>
-            <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="start-date">
-                Insured Name
-              </Label>
-              <Input
-                className="w-2/4"
-                id="start-date"
-                disabled
-                placeholder="2025-01-01"
-              />
-            </div>
-            <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="premium-amount">
-                Initial Death Benefit
-              </Label>
-              <Input
-                className="w-2/4"
-                id="premium-amount"
-                disabled
-                placeholder="20000"
+                value={fields.illustration_date || ""}
               />
             </div>
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="insured-name">
-                Assumed ROR
+                Insured Name
               </Label>
               <Input
                 className="w-2/4"
                 id="insured-name"
                 disabled
-                placeholder="John Doe"
+                value={fields.insured_name || ""}
+              />
+            </div>
+            <div className="space-y-2 flex gap-2">
+              <Label className="grow" htmlFor="initial-death-benefit">
+                Initial Death Benefit
+              </Label>
+              <Input
+                className="w-2/4"
+                id="initial-death-benefit"
+                disabled
+                value={fields.initial_death_benefit || ""}
               />
             </div>
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="assumed-ror">
-                Minimum Initial Pmt
+                Assumed ROR
               </Label>
               <Input
                 className="w-2/4"
                 id="assumed-ror"
                 disabled
-                placeholder="6.3%"
+                value={fields.assumed_ror || ""}
+              />
+            </div>
+            <div className="space-y-2 flex gap-2">
+              <Label className="grow" htmlFor="minimum-initial-pmt">
+                Minimum Initial Pmt
+              </Label>
+              <Input
+                className="w-2/4"
+                id="minimum-initial-pmt"
+                disabled
+                value={fields.minimum_initial_pmt || ""}
               />
             </div>
           </div>
