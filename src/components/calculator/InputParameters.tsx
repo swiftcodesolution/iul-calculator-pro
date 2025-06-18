@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { BoxesData, BoxesInputField } from "@/lib/types";
+import { useTableStore } from "@/lib/store";
 
 interface InputParametersProps {
   data: BoxesData;
@@ -10,6 +11,8 @@ interface InputParametersProps {
 }
 
 export function InputParameters({ data, onUpdate }: InputParametersProps) {
+  const { fields } = useTableStore();
+
   const handleInputChange = (key: keyof BoxesData, rawValue: string) => {
     const parsed = rawValue === "" ? "" : parseFloat(rawValue);
     onUpdate({ [key]: parsed }); // Pass raw input value (string or empty)
@@ -38,6 +41,10 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
     }
     return false;
   };
+
+  const parsedAssumedRor = fields.assumed_ror
+    ? parseFloat(fields.assumed_ror.replace("%", ""))
+    : "";
 
   return (
     <motion.div
@@ -89,7 +96,7 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                   transition={{ delay: 0.2, duration: 0.3 }}
                 >
                   <Input
-                    className={`w-[80px] text-sm border-2 ${
+                    className={`w-[100px] text-sm border-2 ${
                       isInvalid(key, value)
                         ? "border-red-500"
                         : "border-gray-500"
@@ -147,7 +154,7 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                   className="relative"
                 >
                   <Input
-                    className={`w-[80px] text-sm border-2 pr-6 ${
+                    className={`w-[100px] text-sm border-2 pr-6 ${
                       isInvalid(key, value)
                         ? "border-red-500"
                         : "border-gray-500"
@@ -191,7 +198,7 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                 {
                   label: "Tax Free Plan ROR",
                   key: "taxFreePlanROR",
-                  value: data.taxFreePlanROR,
+                  value: parsedAssumedRor || "",
                 },
               ] as BoxesInputField[]
             ).map(({ label, key, value }) => (
@@ -208,13 +215,16 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                   className="relative"
                 >
                   <Input
-                    className={`w-[80px] text-sm border-2 pr-6 ${
+                    className={`w-[100px] text-sm border-2 pr-6 ${
                       isInvalid(key, value)
                         ? "border-red-500"
                         : "border-gray-500"
                     }`}
                     value={value.toString()} // Convert to string
-                    onChange={(e) => handleInputChange(key, e.target.value)}
+                    onChange={(e) =>
+                      key !== "taxFreePlanROR" &&
+                      handleInputChange(key, e.target.value)
+                    }
                     type="number"
                     step={decimalFields.includes(key) ? "0.1" : "1"}
                     min="0"

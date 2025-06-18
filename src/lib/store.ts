@@ -20,7 +20,15 @@ interface TableStore {
   setAnnualEmployerMatch: (value: number | string) => void;
   tabs: TabContent[];
   setTabs: (tabs: TabContent[]) => void;
-  clearStore: () => void; // New action to reset store
+  clearStore: () => void;
+  fields: {
+    illustration_date: string | null;
+    insured_name: string | null;
+    initial_death_benefit: string | null;
+    assumed_ror: string | null;
+    minimum_initial_pmt: string | null;
+  };
+  setFields: (fields: TableStore["fields"]) => void;
 }
 
 export const useTableStore = create<TableStore>((set) => ({
@@ -51,6 +59,15 @@ export const useTableStore = create<TableStore>((set) => ({
   setStartingBalance: (value) => set({ startingBalance: value }),
   setAnnualContributions: (value) => set({ annualContributions: value }),
   setAnnualEmployerMatch: (value) => set({ annualEmployerMatch: value }),
+  fields: {
+    // Initialize fields
+    illustration_date: null,
+    insured_name: null,
+    initial_death_benefit: null,
+    assumed_ror: null,
+    minimum_initial_pmt: null,
+  },
+  setFields: (fields) => set({ fields }),
   tabs: [
     {
       id: "total-advantage",

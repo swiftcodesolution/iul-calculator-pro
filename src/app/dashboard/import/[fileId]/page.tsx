@@ -23,7 +23,7 @@ import { useTableHighlight } from "@/hooks/useTableHighlight";
 import { useSession } from "next-auth/react";
 import { cn, debounce } from "@/lib/utils";
 import { notFound } from "next/navigation";
-import { ClientFields, ClientFile } from "@/lib/types";
+import { ClientFile } from "@/lib/types";
 
 type TableData = {
   source: string;
@@ -59,14 +59,8 @@ export default function ImportPage({ params }: { params: Params }) {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isTableFullScreen, setIsTableFullScreen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [fields, setFields] = useState<ClientFields>({
-    illustration_date: null,
-    insured_name: null,
-    initial_death_benefit: null,
-    assumed_ror: null,
-    minimum_initial_pmt: null,
-  });
-  const { tables, setTables, clearStore } = useTableStore();
+
+  const { tables, setTables, fields, setFields, clearStore } = useTableStore();
   const router = useRouter();
   const {
     highlightedRows,
@@ -109,7 +103,7 @@ export default function ImportPage({ params }: { params: Params }) {
     };
 
     fetchFile();
-  }, [fileId, session, status, hasFetched, setTables]);
+  }, [fileId, session, status, hasFetched, setTables, setFields]);
 
   const saveChanges = debounce(
     async () => {
@@ -148,13 +142,7 @@ export default function ImportPage({ params }: { params: Params }) {
       setFile(selectedFile);
       setError(null);
       clearStore();
-      setFields({
-        illustration_date: null,
-        insured_name: null,
-        initial_death_benefit: null,
-        assumed_ror: null,
-        minimum_initial_pmt: null,
-      });
+
       setZoomLevel(1);
       setIsTableFullScreen(false);
     } else {
@@ -216,13 +204,6 @@ export default function ImportPage({ params }: { params: Params }) {
     setError(null);
     setZoomLevel(1);
     setIsTableFullScreen(false);
-    setFields({
-      illustration_date: null,
-      insured_name: null,
-      initial_death_benefit: null,
-      assumed_ror: null,
-      minimum_initial_pmt: null,
-    });
 
     if (fileId && status === "authenticated" && session?.user?.id) {
       try {
