@@ -1,10 +1,11 @@
+// src/hooks/useTabs.ts
 import { useState, useCallback } from "react";
 import { TabContent } from "@/lib/types";
 import { useTableStore } from "@/lib/store";
 
 export const useTabs = () => {
   const { tabs, setTabs } = useTableStore();
-  const [activeTab, setActiveTab] = useState<string | null>(null); // Initialize as null
+  const [activeTab, setActiveTab] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
@@ -12,80 +13,68 @@ export const useTabs = () => {
   const [newTabName, setNewTabName] = useState("");
   const [newTabFile, setNewTabFile] = useState<File | null>(null);
 
-  const handleAddTab = useCallback(() => {
-    if (newTabName && newTabFile) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const src = reader.result as string;
-        const type = newTabFile.type.startsWith("image")
-          ? "image"
-          : newTabFile.type.startsWith("video")
-          ? "video"
-          : newTabFile.type === "application/pdf"
-          ? "pdf"
-          : "other";
-        const newTab: TabContent = {
-          id: Date.now().toString(),
-          name: newTabName,
-          src,
-          type,
-          isVisible: true,
-        };
-        setTabs([...tabs, newTab]);
-        setIsAddDialogOpen(false);
-        setNewTabName("");
-        setNewTabFile(null);
-      };
-      reader.readAsDataURL(newTabFile);
+  const handleAddTab = useCallback(async () => {
+    if (!newTabName || !newTabFile) return;
+
+    const formData = new FormData();
+    formData.append("tabName", newTabName);
+    formData.append("file", newTabFile);
+
+    try {
+      const response = await fetch("/api/tab-content", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) throw new Error("Failed to add tab");
+      const newTab: TabContent = await response.json();
+      setTabs([...tabs, newTab]);
+      setIsAddDialogOpen(false);
+      setNewTabName("");
+      setNewTabFile(null);
+    } catch (err) {
+      console.error("Error adding tab:", err);
     }
   }, [newTabName, newTabFile, tabs, setTabs]);
 
-  const handleEditTab = useCallback(() => {
-    if (editTabId && newTabName) {
-      if (newTabFile) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const src = reader.result as string;
-          const type = newTabFile.type.startsWith("image")
-            ? "image"
-            : newTabFile.type.startsWith("video")
-            ? "video"
-            : newTabFile.type === "application/pdf"
-            ? "pdf"
-            : "other";
-          setTabs(
-            tabs.map((tab) =>
-              tab.id === editTabId
-                ? { ...tab, name: newTabName, src, type }
-                : tab
-            )
-          );
-          setIsEditDialogOpen(false);
-          setNewTabName("");
-          setNewTabFile(null);
-          setEditTabId(null);
-        };
-        reader.readAsDataURL(newTabFile);
-      } else {
-        setTabs(
-          tabs.map((tab) =>
-            tab.id === editTabId ? { ...tab, name: newTabName } : tab
-          )
-        );
-        setIsEditDialogOpen(false);
-        setNewTabName("");
-        setNewTabFile(null);
-        setEditTabId(null);
-      }
+  const handleEditTab = useCallback(async () => {
+    if (!editTabId || !newTabName) return;
+
+    const formData = new FormData();
+    formData.append("id", editTabId);
+    formData.append("tabName", newTabName);
+    if (newTabFile) formData.append("file", newTabFile);
+
+    try {
+      const response = await fetch("/api/tab-content", {
+        method: "PATCH",
+        body: formData,
+      });
+      if (!response.ok) throw new Error("Failed to edit tab");
+      const updatedTab: TabContent = await response.json();
+      setTabs(tabs.map((tab) => (tab.id === editTabId ? updatedTab : tab)));
+      setIsEditDialogOpen(false);
+      setNewTabName("");
+      setNewTabFile(null);
+      setEditTabId(null);
+    } catch (err) {
+      console.error("Error editing tab:", err);
     }
   }, [editTabId, newTabName, newTabFile, tabs, setTabs]);
 
   const handleDeleteTab = useCallback(
-    (id: string) => {
+    async (id: string) => {
       if (id === "total-advantage" || id === "calculator") return;
-      setTabs(tabs.filter((tab) => tab.id !== id));
-      if (activeTab === id) {
-        setActiveTab(null); // Set to null instead of selecting another tab
+      try {
+        const response = await fetch("/api/tab-content", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
+        if (!response.ok) throw new Error("Failed to delete tab");
+        setTabs(tabs.filter((tab) => tab.id !== id));
+        if (activeTab === id) setActiveTab(null);
+      } catch (err) {
+        console.error("Error deleting tab:", err);
       }
     },
     [activeTab, tabs, setTabs]
@@ -104,7 +93,6 @@ export const useTabs = () => {
 
   const handleMoveUp = useCallback(
     (index: number) => {
-      if (index === 0) return;
       if (index === 0) return;
       const newTabs = [...tabs];
       [newTabs[index - 1], newTabs[index]] = [
