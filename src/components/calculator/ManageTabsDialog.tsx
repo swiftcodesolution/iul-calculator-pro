@@ -91,15 +91,15 @@ export function ManageTabsDialog({
             <Button variant="outline">Manage</Button>
           </motion.div>
         </DialogTrigger>
-        <DialogContent className="bg-gray-50 p-6">
+        <DialogContent className="bg-gray-50 p-6 min-w-1/2 flex flex-col">
           <DialogHeader>
             <DialogTitle>Manage Tabs</DialogTitle>
             <DialogDescription>
               Reorder, enable/disable, edit, or delete tabs.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
+          <div className="space-y-4 flex gap-4">
+            <div className="space-y-2 grow">
               <h3 className="font-semibold">Content from Admin</h3>
               {adminTabs.map((tab, index) => (
                 <motion.div
@@ -222,7 +222,7 @@ export function ManageTabsDialog({
                 </motion.div>
               ))}
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 grow">
               <h3 className="font-semibold">Your Content</h3>
               {userTabs.map((tab, index) => (
                 <motion.div
@@ -312,13 +312,13 @@ export function ManageTabsDialog({
                 </motion.div>
               ))}
             </div>
-            <Button
-              onClick={() => setIsManageDialogOpen!(false)}
-              className="w-full"
-            >
-              Save
-            </Button>
           </div>
+          <Button
+            onClick={() => setIsManageDialogOpen!(false)}
+            className="w-full"
+          >
+            Save
+          </Button>
         </DialogContent>
       </Dialog>
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
