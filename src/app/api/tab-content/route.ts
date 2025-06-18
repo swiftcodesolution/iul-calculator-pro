@@ -65,13 +65,12 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const tabContents = await prisma.tabContent.findMany({
       where: {
         OR: [{ userId: session.user.id }, { createdByRole: "admin" }],

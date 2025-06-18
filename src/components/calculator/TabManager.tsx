@@ -1,3 +1,4 @@
+// src/components/TabManager.tsx
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -12,10 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Upload, Maximize2, Minimize2 } from "lucide-react";
 import Image from "next/image";
 import TabCalculator from "@/components/TabCalculator";
-import { TotalAdvantage } from "@/lib/types";
+import { TotalAdvantage, TabContent } from "@/lib/types";
 import { ManageTabsDialog } from "@/components/calculator/ManageTabsDialog";
 import { useTableStore } from "@/lib/store";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -24,32 +25,44 @@ import {
 } from "../ui/tooltip";
 import InflationCalculator from "../InflationCalculator";
 import CagrChart from "../CagrChart";
+import { useSession } from "next-auth/react";
 
 interface TabManagerProps {
   activeTab: string | null;
   setActiveTab: (id: string | null) => void;
   isTabCardExpanded: boolean;
   setIsTabCardExpanded: (value: boolean) => void;
-  isAddDialogOpen: boolean;
-  setIsAddDialogOpen: (value: boolean) => void;
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (value: boolean) => void;
-  setEditTabId: (id: string | null) => void;
-  newTabName: string;
-  setNewTabName: (name: string) => void;
-  newTabFile: File | null;
-  setNewTabFile: (file: File | null) => void;
-  handleAddTab: () => void;
-  handleEditTab: () => void;
-  handleDeleteTab: (id: string) => void;
-  handleToggleVisibility: (id: string) => void;
-  handleMoveUp: (index: number) => void;
-  handleMoveDown: (index: number) => void;
   totalAdvantage: TotalAdvantage;
   handleCellClick?: (rowIndex: number) => void;
-  isManageDialogOpen?: boolean; // Optional
-  setIsManageDialogOpen?: (value: boolean) => void; // Optional
 }
+
+// Static tabs (always present)
+const staticTabs: TabContent[] = [
+  {
+    id: "total-advantage",
+    name: "Total Advantage",
+    type: "totalAdvantage",
+    isVisible: true,
+  },
+  {
+    id: "calculator",
+    name: "Calculator",
+    type: "calculator",
+    isVisible: true,
+  },
+  {
+    id: "inflationCalculator",
+    name: "Inflation Calculator",
+    type: "inflationCalculator",
+    isVisible: true,
+  },
+  {
+    id: "cagrChart",
+    name: "CAGR Chart",
+    type: "cagrChart",
+    isVisible: true,
+  },
+];
 
 // Reusable Tab Navigation Component
 const TabNavigation = ({
@@ -57,13 +70,7 @@ const TabNavigation = ({
   activeTab,
   setActiveTab,
 }: {
-  tabs: {
-    id: string;
-    name: string;
-    type: string;
-    isVisible: boolean;
-    src?: string;
-  }[];
+  tabs: TabContent[];
   activeTab: string | null;
   setActiveTab: (id: string | null) => void;
 }) => (
@@ -133,7 +140,7 @@ const TabContentRenderer = ({
   totalAdvantage,
   handleCellClick,
 }: {
-  tab: { id: string; name: string; type: string; src?: string };
+  tab: TabContent;
   totalAdvantage: TotalAdvantage;
   handleCellClick?: (rowIndex: number) => void;
 }) => {
@@ -147,6 +154,17 @@ const TabContentRenderer = ({
       [id]: !prev[id],
     }));
     handleCellClick?.(id);
+  };
+
+  const getEmbedUrl = (link: string | null) => {
+    if (!link) return null;
+    if (link.includes("youtube.com") || link.includes("youtu.be")) {
+      const videoId = link.includes("youtube.com")
+        ? new URL(link).searchParams.get("v")
+        : link.split("/").pop();
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    return link;
   };
 
   return (
@@ -177,7 +195,6 @@ const TabContentRenderer = ({
                 Taxes saved:
                 <br />${totalAdvantage.cumulativeTaxesPaid.toLocaleString()}
               </Button>
-
               <Button
                 variant="outline"
                 size="sm"
@@ -190,7 +207,6 @@ const TabContentRenderer = ({
               >
                 Fees Saved: <br /> ${totalAdvantage.fees.toLocaleString()}
               </Button>
-
               <Button
                 variant="outline"
                 size="sm"
@@ -208,7 +224,6 @@ const TabContentRenderer = ({
                 Extra Income: <br /> $
                 {totalAdvantage.cumulativeIncome.toLocaleString()}
               </Button>
-
               <Button
                 variant="outline"
                 size="sm"
@@ -240,43 +255,52 @@ const TabContentRenderer = ({
           <InflationCalculator />
         </div>
       )}
-
       {tab.type === "cagrChart" && (
         <div className="h-full w-full flex items-center justify-center gap-4 text-center">
           <CagrChart />
         </div>
       )}
-      {tab.type === "image" && tab.src && (
+      {tab.type === "image" && tab.filePath && (
         <div>
           <Image
-            src={tab.src}
+            src={tab.filePath}
             alt={tab.name}
-            width={300}
-            height={200}
+            width={600}
+            height={400}
             className="object-contain w-full h-[400px]"
           />
         </div>
       )}
-      {tab.type === "video" && tab.src && (
+      {tab.type === "video" && tab.filePath && (
         <div>
           <video
-            src={tab.src}
+            src={tab.filePath}
             controls
             className="w-full h-auto max-h-[400px]"
           />
         </div>
       )}
-      {tab.type === "pdf" && tab.src && (
+      {tab.type === "pdf" && tab.filePath && (
         <div>
           <embed
-            src={tab.src}
+            src={tab.filePath}
             type="application/pdf"
             className="w-full h-[400px]"
           />
         </div>
       )}
-      {tab.type === "other" && tab.src && (
-        <p>Unsupported file type: {tab.name}</p>
+      {tab.type === "link" && tab.link && getEmbedUrl(tab.link) && (
+        <div>
+          <iframe
+            src={getEmbedUrl(tab.link)!}
+            className="w-full h-[400px]"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+          />
+        </div>
+      )}
+      {tab.type === "other" && (tab.filePath || tab.link) && (
+        <p>Unsupported content: {tab.name}</p>
       )}
     </div>
   );
@@ -287,29 +311,217 @@ const TabManager = React.memo(function TabManager({
   setActiveTab,
   isTabCardExpanded,
   setIsTabCardExpanded,
-  isAddDialogOpen,
-  setIsAddDialogOpen,
-  isEditDialogOpen,
-  setIsEditDialogOpen,
-  setEditTabId,
-  newTabName,
-  setNewTabName,
-  newTabFile,
-  setNewTabFile,
-  handleAddTab,
-  handleEditTab,
-  handleDeleteTab,
-  handleToggleVisibility,
-  handleMoveUp,
-  handleMoveDown,
   totalAdvantage,
   handleCellClick,
 }: TabManagerProps) {
+  const { data: session } = useSession();
   const { tabs, setTabs } = useTableStore();
-
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editTabId, setEditTabId] = useState<string | null>(null);
+  const [newTabName, setNewTabName] = useState("");
+  const [newTabFile, setNewTabFile] = useState<File | null>(null);
+  const [newTabLink, setNewTabLink] = useState("");
   const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Single content render for active tab
+  useEffect(() => {
+    async function fetchTabContent() {
+      try {
+        const response = await fetch("/api/tab-content");
+        if (response.status === 401) {
+          setError("Please log in to view tab content");
+          return;
+        }
+        if (!response.ok) throw new Error("Failed to fetch tab content");
+        const data: {
+          id: string;
+          tabName: string;
+          filePath?: string | null;
+          fileFormat?: string | null;
+          link?: string | null;
+          createdByRole?: string;
+          userId?: string;
+        }[] = await response.json();
+        const dynamicTabs: TabContent[] = data.map((item) => ({
+          id: item.id,
+          name: item.tabName, // Map tabName to name
+          type: (item.link
+            ? "link"
+            : item.fileFormat?.startsWith("image/")
+            ? "image"
+            : item.fileFormat?.startsWith("video/")
+            ? "video"
+            : item.fileFormat === "application/pdf"
+            ? "pdf"
+            : "other") as TabContent["type"], // Explicitly cast to TabContent["type"]
+          filePath: item.filePath,
+          fileFormat: item.fileFormat,
+          link: item.link,
+          isVisible: true,
+          createdByRole: item.createdByRole,
+          userId: item.userId,
+        }));
+        setTabs([...staticTabs, ...dynamicTabs]);
+      } catch (err) {
+        setError("Error loading tab content");
+        console.error(err);
+      }
+    }
+    if (session?.user?.id) {
+      fetchTabContent();
+    }
+  }, [session, setTabs]);
+
+  const handleAddTab = async () => {
+    if (!newTabName || (!newTabFile && !newTabLink)) {
+      setError("Tab name and either file or link are required.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("tabName", newTabName);
+    if (newTabFile) formData.append("file", newTabFile);
+    if (newTabLink) formData.append("link", newTabLink);
+
+    try {
+      const response = await fetch("/api/tab-content", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) throw new Error("Failed to add tab");
+      const newTab: {
+        id: string;
+        tabName: string;
+        filePath?: string | null;
+        fileFormat?: string | null;
+        link?: string | null;
+        createdByRole?: string;
+        userId?: string;
+      } = await response.json();
+      setTabs([
+        ...tabs,
+        {
+          id: newTab.id,
+          name: newTab.tabName, // Map tabName to name
+          type: (newTab.link
+            ? "link"
+            : newTab.fileFormat?.startsWith("image/")
+            ? "image"
+            : newTab.fileFormat?.startsWith("video/")
+            ? "video"
+            : newTab.fileFormat === "application/pdf"
+            ? "pdf"
+            : "other") as TabContent["type"], // Explicitly cast to TabContent["type"]
+          filePath: newTab.filePath,
+          fileFormat: newTab.fileFormat,
+          link: newTab.link,
+          isVisible: true,
+          createdByRole: session?.user?.role || "user",
+          userId: session?.user?.id || "",
+        },
+      ]);
+      setIsAddDialogOpen(false);
+      setNewTabName("");
+      setNewTabFile(null);
+      setNewTabLink("");
+      setError(null);
+    } catch (err) {
+      setError("Error adding tab");
+      console.error(err);
+    }
+  };
+
+  const handleEditTab = async () => {
+    if (!editTabId || !newTabName) {
+      setError("Tab name is required.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("id", editTabId);
+    formData.append("tabName", newTabName);
+    if (newTabFile) formData.append("file", newTabFile);
+    if (newTabLink) formData.append("link", newTabLink);
+
+    try {
+      const response = await fetch("/api/tab-content", {
+        method: "PATCH",
+        body: formData,
+      });
+      if (!response.ok) throw new Error("Failed to edit tab");
+      const updatedTab: TabContent = await response.json();
+      setTabs(
+        tabs.map((tab) =>
+          tab.id === editTabId
+            ? {
+                ...tab,
+                name: updatedTab.name,
+                filePath: updatedTab.filePath,
+                fileFormat: updatedTab.fileFormat,
+                link: updatedTab.link,
+                type: updatedTab.link
+                  ? "link"
+                  : updatedTab.fileFormat?.startsWith("image/")
+                  ? "image"
+                  : updatedTab.fileFormat?.startsWith("video/")
+                  ? "video"
+                  : updatedTab.fileFormat === "application/pdf"
+                  ? "pdf"
+                  : "other",
+              }
+            : tab
+        )
+      );
+      setIsEditDialogOpen(false);
+      setEditTabId(null);
+      setNewTabName("");
+      setNewTabFile(null);
+      setNewTabLink("");
+      setError(null);
+    } catch (err) {
+      setError("Error editing tab");
+      console.error(err);
+    }
+  };
+
+  const handleDeleteTab = async (id: string) => {
+    try {
+      const response = await fetch("/api/tab-content", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!response.ok) throw new Error("Failed to delete tab");
+      setTabs(tabs.filter((tab) => tab.id !== id));
+    } catch (err) {
+      setError("Error deleting tab");
+      console.error(err);
+    }
+  };
+
+  const handleToggleVisibility = (id: string) => {
+    setTabs(
+      tabs.map((tab) =>
+        tab.id === id ? { ...tab, isVisible: !tab.isVisible } : tab
+      )
+    );
+  };
+
+  const handleMoveUp = (index: number) => {
+    if (index <= staticTabs.length) return; // Prevent moving static tabs
+    const newTabs = [...tabs];
+    [newTabs[index], newTabs[index - 1]] = [newTabs[index - 1], newTabs[index]];
+    setTabs(newTabs);
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index < staticTabs.length || index >= tabs.length - 1) return; // Prevent moving static tabs or last tab
+    const newTabs = [...tabs];
+    [newTabs[index], newTabs[index + 1]] = [newTabs[index + 1], newTabs[index]];
+    setTabs(newTabs);
+  };
+
   const content = activeTab && tabs.find((tab) => tab.id === activeTab) && (
     <motion.div
       key={activeTab}
@@ -396,14 +608,23 @@ const TabManager = React.memo(function TabManager({
                                 />
                               </label>
                             </Button>
+                            <Input
+                              type="url"
+                              placeholder="Or provide a link (e.g., YouTube)"
+                              value={newTabLink}
+                              onChange={(e) => setNewTabLink(e.target.value)}
+                            />
                             {newTabFile && <p>Selected: {newTabFile.name}</p>}
                             <Button
                               onClick={handleAddTab}
-                              disabled={!newTabName || !newTabFile}
+                              disabled={
+                                !newTabName || (!newTabFile && !newTabLink)
+                              }
                               className="w-full"
                             >
                               Add Tab
                             </Button>
+                            {error && <p className="text-red-500">{error}</p>}
                           </div>
                         </DialogContent>
                       </Dialog>
@@ -417,6 +638,8 @@ const TabManager = React.memo(function TabManager({
                         setNewTabName={setNewTabName}
                         newTabFile={newTabFile}
                         setNewTabFile={setNewTabFile}
+                        newTabLink={newTabLink}
+                        setNewTabLink={setNewTabLink}
                         handleEditTab={handleEditTab}
                         handleDeleteTab={handleDeleteTab}
                         handleToggleVisibility={handleToggleVisibility}
@@ -432,7 +655,6 @@ const TabManager = React.memo(function TabManager({
                     />
                   </div>
                 </div>
-
                 <AnimatePresence mode="wait">
                   <div className="my-auto flex flex-col">{content}</div>
                 </AnimatePresence>
@@ -502,14 +724,21 @@ const TabManager = React.memo(function TabManager({
                             />
                           </label>
                         </Button>
+                        <Input
+                          type="url"
+                          placeholder="Or provide a link (e.g., YouTube)"
+                          value={newTabLink}
+                          onChange={(e) => setNewTabLink(e.target.value)}
+                        />
                         {newTabFile && <p>Selected: {newTabFile.name}</p>}
                         <Button
                           onClick={handleAddTab}
-                          disabled={!newTabName || !newTabFile}
+                          disabled={!newTabName || (!newTabFile && !newTabLink)}
                           className="w-full"
                         >
                           Add Tab
                         </Button>
+                        {error && <p className="text-red-500">{error}</p>}
                       </div>
                     </DialogContent>
                   </Dialog>
@@ -523,6 +752,8 @@ const TabManager = React.memo(function TabManager({
                     setNewTabName={setNewTabName}
                     newTabFile={newTabFile}
                     setNewTabFile={setNewTabFile}
+                    newTabLink={newTabLink}
+                    setNewTabLink={setNewTabLink}
                     handleEditTab={handleEditTab}
                     handleDeleteTab={handleDeleteTab}
                     handleToggleVisibility={handleToggleVisibility}
@@ -538,7 +769,6 @@ const TabManager = React.memo(function TabManager({
                 />
               </div>
             </div>
-
             <AnimatePresence mode="wait">{content}</AnimatePresence>
           </motion.div>
         </motion.div>

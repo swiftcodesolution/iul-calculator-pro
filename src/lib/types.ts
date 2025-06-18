@@ -186,22 +186,44 @@ export interface SelectedRowData {
   taxFree: RowData;
 }
 
-export type TabContent = {
+// export type TabContent = {
+//   id: string;
+//   name: string;
+//   file?: File;
+//   src?: string;
+//   type:
+//     | "image"
+//     | "video"
+//     | "pdf"
+//     | "other"
+//     | "totalAdvantage"
+//     | "calculator"
+//     | "inflationCalculator"
+//     | "cagrChart";
+//   isVisible: boolean;
+// };
+
+export interface TabContent {
   id: string;
   name: string;
-  file?: File;
-  src?: string;
+
   type:
-    | "image"
-    | "video"
-    | "pdf"
-    | "other"
     | "totalAdvantage"
     | "calculator"
     | "inflationCalculator"
-    | "cagrChart";
+    | "cagrChart"
+    | "image"
+    | "video"
+    | "pdf"
+    | "link"
+    | "other";
   isVisible: boolean;
-};
+  filePath?: string | null;
+  fileFormat?: string | null;
+  link?: string | null;
+  createdByRole?: string;
+  userId?: string;
+}
 
 export type TotalAdvantage = {
   total: number;
