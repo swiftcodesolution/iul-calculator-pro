@@ -5,11 +5,9 @@ import { useSession } from "next-auth/react";
 import { InputParameters } from "@/components/calculator/InputParameters";
 import { ComparisonTable } from "@/components/calculator/ComparisonTable";
 import TabManager from "@/components/calculator/TabManager";
-import { useTabs } from "@/hooks/useTabs";
 import { useColumnHighlight } from "@/hooks/useColumnHighlight";
 import { TotalAdvantage, ClientFile } from "@/lib/types";
 import { useTableStore } from "@/lib/store";
-
 import { debounce } from "@/lib/utils";
 import { notFound } from "next/navigation";
 
@@ -23,6 +21,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
   const [isTableCardExpanded, setIsTableCardExpanded] = useState(false);
   const [isTabCardExpanded, setIsTabCardExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState<string | null>(null);
   const [totalAdvantage, setTotalAdvantage] = useState<TotalAdvantage>({
     total: 0,
     cumulativeTaxesPaid: 0,
@@ -46,25 +45,6 @@ export default function CalculatorPage({ params }: { params: Params }) {
     setYearsRunOutOfMoney,
   } = useTableStore();
 
-  const {
-    setEditTabId,
-    activeTab,
-    setActiveTab,
-    isAddDialogOpen,
-    setIsAddDialogOpen,
-    isEditDialogOpen,
-    setIsEditDialogOpen,
-    newTabName,
-    setNewTabName,
-    newTabFile,
-    setNewTabFile,
-    handleAddTab,
-    handleEditTab,
-    handleDeleteTab,
-    handleToggleVisibility,
-    handleMoveUp,
-    handleMoveDown,
-  } = useTabs();
   const {
     columnTextWhite,
     highlightedRows,
@@ -208,26 +188,13 @@ export default function CalculatorPage({ params }: { params: Params }) {
             setActiveTab={setActiveTab}
             isTabCardExpanded={isTabCardExpanded}
             setIsTabCardExpanded={setIsTabCardExpanded}
-            isAddDialogOpen={isAddDialogOpen}
-            setIsAddDialogOpen={setIsAddDialogOpen}
-            isEditDialogOpen={isEditDialogOpen}
-            setIsEditDialogOpen={setIsEditDialogOpen}
-            newTabName={newTabName}
-            setNewTabName={setNewTabName}
-            newTabFile={newTabFile}
-            setNewTabFile={setNewTabFile}
-            handleAddTab={handleAddTab}
-            handleEditTab={handleEditTab}
-            handleDeleteTab={handleDeleteTab}
-            handleToggleVisibility={handleToggleVisibility}
-            handleMoveUp={handleMoveUp}
-            handleMoveDown={handleMoveDown}
             totalAdvantage={totalAdvantage}
             handleCellClick={handleCellClick}
-            setEditTabId={setEditTabId}
           />
         </div>
       </div>
     );
   }
+
+  return <div>Unauthorized</div>;
 }
