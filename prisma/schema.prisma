@@ -27,6 +27,8 @@ model User {
   TrainingVideos TrainingVideos[]
   TrainingDocuments TrainingDocuments[]
   TabContent  TabContent[]
+  InsuranceCompany InsuranceCompany[]
+  InsuranceCompanyRequest InsuranceCompanyRequest[]
 }
 
 model CompanyInfo {
@@ -132,4 +134,24 @@ model TabContent {
   createdByRole String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model InsuranceCompany {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String    @unique
+  website     String?
+  createdBy   String    @db.ObjectId
+  createdByUser User    @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model InsuranceCompanyRequest {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  website     String?
+  submittedBy String    @db.ObjectId
+  submittedByUser User  @relation(fields: [submittedBy], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }

@@ -7,6 +7,8 @@ import {
   LogOut,
   Video,
   File,
+  SquareMousePointer,
+  Handshake,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -81,7 +83,13 @@ export default function AdminSidebar() {
           href="/admin/dashboard/tab-content"
           className="flex items-center p-2 hover:bg-gray-700 rounded"
         >
-          <File className="mr-2" /> Tab Content
+          <SquareMousePointer className="mr-2" /> Tab Content
+        </Link>
+        <Link
+          href="/admin/dashboard/insurance-companies"
+          className="flex items-center p-2 hover:bg-gray-700 rounded"
+        >
+          <Handshake className="mr-2" /> Insurance Companies
         </Link>
         <Link
           href="/admin/dashboard/stats"

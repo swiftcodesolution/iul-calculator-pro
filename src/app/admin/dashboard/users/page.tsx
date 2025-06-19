@@ -44,7 +44,7 @@ export default function UsersPage() {
   }, []);
 
   return (
-    <div className="flex-1">
+    <div className="max-h-screen overflow-y-scroll">
       <main className="p-6">
         <h1 className="text-3xl font-bold mb-6 flex items-center">
           <Users className="mr-2" /> Manage Users

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// src/app/admin/dashboard/page.tsx
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +13,7 @@ import {
   Video,
   BookOpen,
   RefreshCw,
+  Building,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -36,18 +39,28 @@ interface Stat {
   value: number;
 }
 
+interface InsuranceCompany {
+  id: string;
+  name: string;
+  website?: string;
+  createdAt: string;
+}
+
 export default function AdminDashboard() {
   const [downloadResources, setDownloadResources] = useState<Resource[]>([]);
   const [trainingDocuments, setTrainingDocuments] = useState<Resource[]>([]);
   const [trainingVideos, setTrainingVideos] = useState<Resource[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<Stat[]>([]);
+  const [insuranceCompanies, setInsuranceCompanies] = useState<
+    InsuranceCompany[]
+  >([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const fetchResources = async (
     endpoint: string,
-    setter: (data: Resource[]) => void
+    setter: (data: any[]) => void
   ) => {
     try {
       const response = await fetch(`/api/${endpoint}`);
@@ -96,6 +109,7 @@ export default function AdminDashboard() {
       fetchResources("download-resources", setDownloadResources),
       fetchResources("training-documents", setTrainingDocuments),
       fetchResources("training-videos", setTrainingVideos),
+      fetchResources("insurance-companies", setInsuranceCompanies),
       fetchUsers(),
       fetchStats(),
     ]);
@@ -210,7 +224,7 @@ export default function AdminDashboard() {
               </Table>
               <Link
                 href="/admin/dashboard/training-documents"
-                className="text-blue-500 hover:underline mt-4 block"
+                className="text-blue-500 hover:underline mt-2 block"
               >
                 Manage Documents
               </Link>
@@ -245,9 +259,57 @@ export default function AdminDashboard() {
               </Table>
               <Link
                 href="/admin/dashboard/training-videos"
-                className="text-blue-500 hover:underline mt-4 block"
+                className="text-blue-500 hover:underline mt-2 block"
               >
                 Manage Videos
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Insurance Companies Card */}
+          <Card>
+            <CardHeader className="flex items-center">
+              <Building className="mr-2" />
+              <CardTitle>Insurance Companies</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableBody>
+                  {insuranceCompanies.length > 0 ? (
+                    insuranceCompanies.slice(0, 2).map((company) => (
+                      <TableRow key={company.id}>
+                        <TableCell className="text-sm">
+                          {company.name}
+                          {company.website && (
+                            <span className="text-gray-500">
+                              <br />
+                              <a
+                                href={company.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:underline"
+                              >
+                                Website
+                              </a>
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell className="text-sm">
+                        No companies available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              <Link
+                href="/admin/insurance-companies"
+                className="text-blue-500 hover:underline mt-2 block"
+              >
+                Manage Companies
               </Link>
             </CardContent>
           </Card>
@@ -262,7 +324,7 @@ export default function AdminDashboard() {
               <Table>
                 <TableBody>
                   {users.length > 0 ? (
-                    users.slice(0, 3).map((user) => (
+                    users.slice(0, 2).map((user) => (
                       <TableRow key={user.id}>
                         <TableCell className="text-sm">
                           {user.firstName} {user.lastName} ({user.role})
@@ -286,7 +348,7 @@ export default function AdminDashboard() {
               </Table>
               <Link
                 href="/admin/dashboard/users"
-                className="text-blue-500 hover:underline mt-4 block"
+                className="text-blue-500 hover:underline mt-2 block"
               >
                 Manage Users
               </Link>
@@ -303,7 +365,7 @@ export default function AdminDashboard() {
               <Table>
                 <TableBody>
                   {downloadResources.length > 0 ? (
-                    downloadResources.slice(0, 3).map((file) => (
+                    downloadResources.slice(0, 2).map((file) => (
                       <TableRow key={file.id}>
                         <TableCell className="text-sm">
                           {file.fileName} ({file.fileFormat})
@@ -321,7 +383,7 @@ export default function AdminDashboard() {
               </Table>
               <Link
                 href="/admin/dashboard/files"
-                className="text-blue-500 hover:underline mt-4 block"
+                className="text-blue-500 hover:underline mt-2 block"
               >
                 Manage Files
               </Link>
