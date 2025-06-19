@@ -10,7 +10,7 @@ const AuthTabs = () => {
       <TabsList className="grid w-full grid-cols-2 mb-4">
         <TabsTrigger value="signup" asChild>
           <motion.button
-            whileHover={{ scale: 1.05, backgroundColor: "#f5f6f5" }}
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
           >
@@ -19,7 +19,7 @@ const AuthTabs = () => {
         </TabsTrigger>
         <TabsTrigger value="login" asChild>
           <motion.button
-            whileHover={{ scale: 1.01, backgroundColor: "#f5f6f5" }}
+            whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
           >

@@ -9,6 +9,7 @@ import { signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useFileContext } from "@/context/FileContext";
 import { useEffect } from "react";
+import { ThemeToggle } from "../ThemeToggle";
 
 const NavBar = () => {
   const pathname = usePathname();
@@ -92,12 +93,13 @@ const NavBar = () => {
     pathname === "/dashboard/training-content"
   ) {
     return (
-      <motion.div>
+      <motion.div className="flex gap-4 fixed bottom-4 right-0 -translate-x-1/2">
+        <ThemeToggle />
         <Button
           onClick={handleSignOut}
           variant="outline"
           size="icon"
-          className="fixed bottom-4 right-0 -translate-x-1/2 rounded-none transition-colors duration-200"
+          className="rounded-none transition-colors duration-200"
         >
           <motion.div
             whileHover={{ rotate: 0 }}
@@ -159,12 +161,13 @@ const NavBar = () => {
         ))}
       </motion.nav>
 
-      <motion.div>
+      <motion.div className="fixed bottom-4 right-0 -translate-x-1/2 flex items-center gap-4">
+        <ThemeToggle />
         <Button
           onClick={handleSignOut}
           variant="outline"
           size="icon"
-          className="fixed bottom-4 right-0 -translate-x-1/2 rounded-none transition-colors duration-200"
+          className="rounded-none transition-colors duration-200"
         >
           <motion.div
             whileHover={{ rotate: 0 }}

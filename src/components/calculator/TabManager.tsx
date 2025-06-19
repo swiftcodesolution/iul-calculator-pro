@@ -265,9 +265,9 @@ const TabContentRenderer = ({
           <Image
             src={tab.filePath}
             alt={tab.name}
-            width={600}
-            height={400}
-            className="object-contain w-full h-[400px]"
+            width={1000}
+            height={1000}
+            className={`object-contain w-full h-[600px] max-h-full`}
           />
         </div>
       )}
@@ -276,7 +276,7 @@ const TabContentRenderer = ({
           <video
             src={tab.filePath}
             controls
-            className="w-full h-auto max-h-[400px]"
+            className="w-full h-auto max-h-full"
           />
         </div>
       )}
@@ -285,7 +285,7 @@ const TabContentRenderer = ({
           <embed
             src={tab.filePath}
             type="application/pdf"
-            className="w-full h-[400px]"
+            className="w-full h-[600px] max-h-full"
           />
         </div>
       )}
@@ -293,7 +293,7 @@ const TabContentRenderer = ({
         <div>
           <iframe
             src={getEmbedUrl(tab.link)!}
-            className="w-full h-[400px]"
+            className="w-full h-[600px] max-h-full"
             allow="autoplay; encrypted-media"
             allowFullScreen
           />
@@ -582,7 +582,7 @@ const TabManager = React.memo(function TabManager({
                             <Button variant="outline">Add</Button>
                           </motion.div>
                         </DialogTrigger>
-                        <DialogContent className="bg-gray-50 p-6">
+                        <DialogContent className="p-6">
                           <DialogHeader>
                             <DialogTitle>Add New Tab</DialogTitle>
                           </DialogHeader>
@@ -668,7 +668,7 @@ const TabManager = React.memo(function TabManager({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
-          className="fixed inset-0 z-50 bg-white p-6 flex flex-col"
+          className="fixed inset-0 z-50 bg-black p-6 flex flex-col"
         >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -698,7 +698,7 @@ const TabManager = React.memo(function TabManager({
                         <Button variant="outline">Add</Button>
                       </motion.div>
                     </DialogTrigger>
-                    <DialogContent className="bg-gray-50 p-6">
+                    <DialogContent className="p-6">
                       <DialogHeader>
                         <DialogTitle>Add New Tab</DialogTitle>
                       </DialogHeader>

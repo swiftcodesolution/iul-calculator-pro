@@ -10,6 +10,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import SessionProviderWrapper from "@/components/auth/SessionProviderWrapper";
 import { FileProvider } from "@/context/FileContext";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,17 +28,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={cn(
-          inter.className,
-          "min-h-screen bg-gray-100 text-gray-900"
-        )}
-      >
+      <body className={cn(inter.className, "min-h-screen")}>
         <SessionProviderWrapper>
           <FileProvider>
-            <AnimatePresence mode="wait" initial={false}>
-              <main className="min-h-dvh">{children}</main>
-            </AnimatePresence>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                <main className="min-h-dvh">{children}</main>
+              </AnimatePresence>
+            </ThemeProvider>
           </FileProvider>
           <Toaster />
         </SessionProviderWrapper>

@@ -91,7 +91,7 @@ export function ManageTabsDialog({
             <Button variant="outline">Manage</Button>
           </motion.div>
         </DialogTrigger>
-        <DialogContent className="bg-gray-50 p-6 min-w-1/2 flex flex-col">
+        <DialogContent className="p-6 min-w-1/2 flex flex-col">
           <DialogHeader>
             <DialogTitle>Manage Tabs</DialogTitle>
             <DialogDescription>
@@ -111,7 +111,7 @@ export function ManageTabsDialog({
                       "inflationCalculator",
                       "cagrChart",
                     ].includes(tab.id)
-                      ? "bg-gray-100"
+                      ? ""
                       : "cursor-move"
                   }`}
                   draggable={
@@ -322,7 +322,7 @@ export function ManageTabsDialog({
         </DialogContent>
       </Dialog>
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-gray-50 p-6">
+        <DialogContent className="p-6">
           <DialogHeader>
             <DialogTitle>Edit Tab</DialogTitle>
           </DialogHeader>

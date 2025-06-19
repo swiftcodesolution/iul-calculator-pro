@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <Suspense>
       <DndProvider backend={HTML5Backend}>
-        <div className="min-h-screen w-full bg-gray-100 flex flex-col">
+        <div className="min-h-screen w-full flex flex-col">
           <main className="w-full min-h-[95vh] mx-auto p-4 flex flex-col">
             {children}
           </main>

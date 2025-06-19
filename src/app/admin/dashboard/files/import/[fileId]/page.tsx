@@ -270,11 +270,11 @@ export default function ImportPage({ params }: { params: Params }) {
               <div className="grow relative">
                 {tables.length > 0 && !isTableLoading ? (
                   <>
-                    <h3 className="text-lg font-semibold mb-2 sticky top-0 bg-white z-10">
+                    <h3 className="text-lg font-semibold mb-2 sticky top-0 z-10">
                       Imported Data Preview
                     </h3>
                     {isScrolled && (
-                      <div className="absolute top-[30px] left-0 w-[98.5%] bg-white z-10 shadow-md transition-all flex">
+                      <div className="absolute top-[30px] left-0 w-[98.5%] z-10 shadow-md transition-all flex">
                         {tables.map((table, index) => {
                           const columns = Object.keys(
                             table.data[0] || {}

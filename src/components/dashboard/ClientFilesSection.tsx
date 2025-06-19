@@ -103,8 +103,8 @@ export default function ClientFilesSection({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
-              whileHover={{ scale: 1, backgroundColor: "#f5f5f5" }}
-              className="border p-1 bg-gray-100 overflow-hidden"
+              whileHover={{ scale: 1 }}
+              className="border p-1 overflow-hidden"
               onDragOver={(e: React.DragEvent<HTMLDivElement>) =>
                 e.preventDefault()
               }
@@ -133,11 +133,11 @@ export default function ClientFilesSection({
                       variants={newClientVariant}
                       initial="hidden"
                       animate="visible"
-                      whileHover={{ backgroundColor: "#e5e7eb" }}
+                      whileHover={{ backgroundColor: "#e5e7eb", color: "#000" }}
                       whileDrag={{ scale: 1.1, opacity: 0.8 }}
                       className={`file-item p-1 border-b cursor-pointer text-sm rounded-md transition-colors ${
                         selectedFile?.id === file.id
-                          ? "bg-blue-100 border-blue-500 border"
+                          ? "bg-blue-600 border-blue-500 border"
                           : "bg-transparent"
                       }`}
                       draggable

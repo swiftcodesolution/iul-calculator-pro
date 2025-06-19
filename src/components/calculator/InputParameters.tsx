@@ -86,8 +86,8 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
             ).map(({ label, key, value }) => (
               <motion.div
                 key={label}
-                className="bg-gray-50 p-0 text-end flex items-center justify-between rounded-sm"
-                whileHover={{ scale: 1.02, backgroundColor: "#e5e7eb" }}
+                className="p-0 text-end flex items-center justify-between rounded-sm"
+                whileHover={{ scale: 1.02 }}
               >
                 <Label>{label}</Label>
                 <motion.p
@@ -143,8 +143,8 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
             ).map(({ label, key, value }) => (
               <motion.div
                 key={label}
-                className="bg-gray-50 p-0 text-end flex items-center justify-between rounded-sm"
-                whileHover={{ scale: 1.02, backgroundColor: "#e5e7eb" }}
+                className="p-0 text-end flex items-center justify-between rounded-sm"
+                whileHover={{ scale: 1.02 }}
               >
                 <Label>{label}</Label>
                 <motion.p
@@ -204,8 +204,8 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
             ).map(({ label, key, value }) => (
               <motion.div
                 key={label}
-                className="bg-gray-50 p-0 text-end flex items-center justify-between rounded-sm"
-                whileHover={{ scale: 1.02, backgroundColor: "#e5e7eb" }}
+                className="p-0 text-end flex items-center justify-between rounded-sm"
+                whileHover={{ scale: 1.02 }}
               >
                 <Label>{label}</Label>
                 <motion.p

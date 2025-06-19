@@ -1022,9 +1022,9 @@ export function ComparisonTable({
           //   </Select>
           // </div>
 
-          <div className="flex flex-col items-center justify-center gap-0 text-black">
+          <div className="flex flex-col items-center justify-center gap-0">
             <p>Future Age</p>
-            <div className="w-[80px] relative">
+            <div className="w-full max-w-[80px] relative">
               <Input
                 type="text"
                 value={futureAgeInput}
@@ -1281,12 +1281,10 @@ export function ComparisonTable({
                     <TableCell
                       className={cn(
                         " border cursor-pointer whitespace-nowrap",
-                        highlightedRows.has(index)
-                          ? "bg-[#ffa1ad]"
-                          : "bg-white",
+                        highlightedRows.has(index) ? "bg-[#ffa1ad]" : "",
                         columnTextWhite.currentPlan
                           ? "text-white opacity-0"
-                          : "text-black",
+                          : "",
                         "transition-colors duration-300"
                       )}
                       onClick={() => handleCellClick(index)}
@@ -1297,9 +1295,7 @@ export function ComparisonTable({
                     <TableCell
                       className={cn(
                         " border cursor-pointer whitespace-nowrap text-center",
-                        highlightedRows.has(index)
-                          ? "bg-[#ffa1ad]"
-                          : "bg-white",
+                        highlightedRows.has(index) ? "bg-[#ffa1ad]" : "",
                         columnTextWhite.taxes
                           ? "text-white opacity-0"
                           : "text-red-600",
@@ -1313,12 +1309,10 @@ export function ComparisonTable({
                     <TableCell
                       className={cn(
                         " border cursor-pointer whitespace-nowrap",
-                        highlightedRows.has(index)
-                          ? "bg-[#ffa1ad]"
-                          : "bg-white",
+                        highlightedRows.has(index) ? "bg-[#ffa1ad]" : "",
                         columnTextWhite.taxFreePlan
                           ? "text-white opacity-0"
-                          : "text-black",
+                          : "",
                         "transition-colors duration-300"
                       )}
                       onClick={() => handleCellClick(index)}
@@ -1338,7 +1332,7 @@ export function ComparisonTable({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
-          className="fixed inset-0 z-50 bg-white p-6 flex flex-col"
+          className="fixed inset-0 z-50 p-6 flex flex-col"
         >
           <Card className="flex-1">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -1347,9 +1341,7 @@ export function ComparisonTable({
                 <p
                   className={cn(
                     "text-sm",
-                    activeInput === "futureAge"
-                      ? "text-zinc-900"
-                      : "text-zinc-900"
+                    activeInput === "futureAge" ? "" : ""
                   )}
                 >
                   Data displayed based on{" "}
@@ -1429,12 +1421,10 @@ export function ComparisonTable({
                         <TableCell
                           className={cn(
                             "border cursor-pointer whitespace-nowrap",
-                            highlightedRows.has(index)
-                              ? "bg-[#ffa1ad]"
-                              : "bg-white",
+                            highlightedRows.has(index) ? "bg-[#ffa1ad]" : "",
                             columnTextWhite.currentPlan
                               ? "text-white opacity-0"
-                              : "text-black",
+                              : "",
                             "transition-colors duration-300"
                           )}
                           onClick={() => handleCellClick(index)}
@@ -1445,9 +1435,7 @@ export function ComparisonTable({
                         <TableCell
                           className={cn(
                             "border cursor-pointer whitespace-nowrap",
-                            highlightedRows.has(index)
-                              ? "bg-[#ffa1ad]"
-                              : "bg-white",
+                            highlightedRows.has(index) ? "bg-[#ffa1ad]" : "",
                             columnTextWhite.taxes
                               ? "text-white opacity-0"
                               : "text-red-600",
@@ -1461,12 +1449,10 @@ export function ComparisonTable({
                         <TableCell
                           className={cn(
                             "border cursor-pointer whitespace-nowrap",
-                            highlightedRows.has(index)
-                              ? "bg-[#ffa1ad]"
-                              : "bg-white",
+                            highlightedRows.has(index) ? "bg-[#ffa1ad]" : "",
                             columnTextWhite.taxFreePlan
                               ? "text-white opacity-0"
-                              : "text-black",
+                              : "",
                             "transition-colors duration-300"
                           )}
                           onClick={() => handleCellClick(index)}
