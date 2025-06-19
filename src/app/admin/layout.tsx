@@ -25,5 +25,5 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </div>
     );
 
-  return <div className="min-h-screen w-full bg-gray-100">{children}</div>;
+  return <div className="min-h-screen w-full">{children}</div>;
 }

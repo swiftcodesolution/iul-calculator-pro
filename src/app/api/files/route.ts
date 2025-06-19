@@ -52,6 +52,14 @@ export async function GET(request: Request) {
           { createdByRole: "admin" }, // Admin-created files (Pro Sample Files)
         ],
       },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(files);

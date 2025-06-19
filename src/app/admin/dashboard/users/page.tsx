@@ -49,7 +49,7 @@ export default function UsersPage() {
         <h1 className="text-3xl font-bold mb-6 flex items-center">
           <Users className="mr-2" /> Manage Users
         </h1>
-        <div className="bg-white p-4 rounded shadow">
+        <div className="p-4 rounded shadow">
           {error ? (
             <p className="text-red-500">{error}</p>
           ) : users.length === 0 ? (

@@ -68,6 +68,10 @@ export type ClientFile = {
   boxesData?: BoxesData;
   tablesData?: TablesData;
   combinedResults?: any;
+  user?: {
+    firstName?: string;
+    lastName?: string;
+  };
 };
 
 export type CropState = {

@@ -1,10 +1,18 @@
-// src/components/dashboard/AdminFilesSection.tsx
 "use client";
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input"; // Added for search
 import { ClientFile } from "@/lib/types";
 import DialogContentRenderer from "@/components/dashboard/DialogContentRenderer";
 import { useRouter } from "next/navigation";
@@ -26,7 +34,10 @@ export default function AdminFilesSection() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { setSelectedFileId, clearSelectedFileId } = useFileContext();
-  const [clientFiles, setClientFiles] = useState<ClientFile[]>([]);
+  const [adminFiles, setAdminFiles] = useState<ClientFile[]>([]);
+  const [userFiles, setUserFiles] = useState<ClientFile[]>([]);
+  const [filteredUserFiles, setFilteredUserFiles] = useState<ClientFile[]>([]); // Added for search
+  const [searchQuery, setSearchQuery] = useState(""); // Added for search
   const [newClientName, setNewClientName] = useState("");
   const [selectedFile, setSelectedFile] = useState<ClientFile | null>(null);
   const [dialogAction, setDialogAction] = useState<string | null>(null);
@@ -35,10 +46,16 @@ export default function AdminFilesSection() {
     async function fetchFiles() {
       if (status !== "authenticated" || !session?.user?.id) return;
       try {
-        const response = await fetch("/api/files");
+        const response = await fetch("/api/files/all");
         if (response.ok) {
-          const files = await response.json();
-          setClientFiles(files);
+          const files: ClientFile[] = await response.json();
+          setAdminFiles(
+            files.filter((file) => file.userId === session.user.id)
+          );
+          setUserFiles(files.filter((file) => file.userId !== session.user.id));
+          setFilteredUserFiles(
+            files.filter((file) => file.userId !== session.user.id)
+          ); // Initialize filtered
         } else {
           console.error("Failed to fetch files:", response.statusText);
         }
@@ -48,6 +65,23 @@ export default function AdminFilesSection() {
     }
     fetchFiles();
   }, [session, status]);
+
+  // Handle search filtering
+  useEffect(() => {
+    const lowerQuery = searchQuery.toLowerCase();
+    setFilteredUserFiles(
+      userFiles.filter((file) => {
+        const fullName =
+          file.user?.firstName && file.user?.lastName
+            ? `${file.user.firstName} ${file.user.lastName}`.toLowerCase()
+            : "";
+        return (
+          file.fileName.toLowerCase().includes(lowerQuery) ||
+          fullName.includes(lowerQuery)
+        );
+      })
+    );
+  }, [searchQuery, userFiles]);
 
   const handleClientAction = async (
     action: string,
@@ -67,7 +101,7 @@ export default function AdminFilesSection() {
         });
         if (response.ok) {
           const newFile = await response.json();
-          setClientFiles((prev) => [...prev, newFile]);
+          setAdminFiles((prev) => [...prev, newFile]);
           setSelectedFile(newFile);
           setSelectedFileId(newFile.id);
           setNewClientName("");
@@ -76,7 +110,7 @@ export default function AdminFilesSection() {
           return { fileId: newFile.id };
         }
       } else if (action === "copy" && data?.id && data?.name) {
-        const fileToCopy = clientFiles.find((file) => file.id === data.id);
+        const fileToCopy = adminFiles.find((file) => file.id === data.id);
         if (fileToCopy) {
           const response = await fetch("/api/files", {
             method: "POST",
@@ -85,7 +119,7 @@ export default function AdminFilesSection() {
           });
           if (response.ok) {
             const newFile = await response.json();
-            setClientFiles((prev) => [...prev, newFile]);
+            setAdminFiles((prev) => [...prev, newFile]);
             setSelectedFile(newFile);
             setSelectedFileId(newFile.id);
             setNewClientName("");
@@ -100,7 +134,7 @@ export default function AdminFilesSection() {
           body: JSON.stringify({ fileName: data.name }),
         });
         if (response.ok) {
-          setClientFiles((prev) =>
+          setAdminFiles((prev) =>
             prev.map((file) =>
               file.id === data.id ? { ...file, fileName: data.name! } : file
             )
@@ -115,7 +149,7 @@ export default function AdminFilesSection() {
           method: "DELETE",
         });
         if (response.ok) {
-          setClientFiles((prev) => prev.filter((file) => file.id !== data.id));
+          setAdminFiles((prev) => prev.filter((file) => file.id !== data.id));
           setSelectedFile(null);
           clearSelectedFileId();
           setDialogAction(null);
@@ -139,106 +173,158 @@ export default function AdminFilesSection() {
   };
 
   return (
-    <Card className="h-full">
-      <CardContent className="flex flex-col h-full space-y-4">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
-          className="text-xl font-bold"
-        >
-          Admin: Manage Sample Files
-        </motion.h2>
+    <div className="h-[90vh] overflow-y-scroll">
+      <div className="space-y-6">
+        {/* Section 1: Your Sample Files */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Sample Files</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col space-y-4">
+            <div className="flex-1 overflow-y-auto border rounded-md p-2 space-y-1">
+              {adminFiles.length > 0 ? (
+                adminFiles.map((file) => (
+                  <motion.div
+                    key={file.id}
+                    variants={fileItemVariant}
+                    initial="hidden"
+                    animate="visible"
+                    whileHover={{ backgroundColor: "#f3f4f6" }}
+                    className={`p-2 border rounded cursor-pointer text-sm transition-colors ${
+                      selectedFile?.id === file.id
+                        ? "bg-blue-100 border-blue-500"
+                        : "bg-white"
+                    }`}
+                    onClick={() => setSelectedFile(file)}
+                  >
+                    {file.fileName}
+                  </motion.div>
+                ))
+              ) : (
+                <div className="p-2 text-sm text-gray-500">
+                  No sample files available
+                </div>
+              )}
+            </div>
 
-        <div className="flex-1 overflow-y-auto border rounded-md p-2 bg-gray-100 space-y-1">
-          {clientFiles?.map((file) => (
             <motion.div
-              key={file.id}
-              variants={fileItemVariant}
+              className="flex flex-wrap gap-2 justify-end"
               initial="hidden"
               animate="visible"
-              whileHover={{ backgroundColor: "#f3f4f6" }}
-              className={`p-2 border rounded cursor-pointer text-sm transition-colors ${
-                selectedFile?.id === file.id
-                  ? "bg-blue-100 border-blue-500"
-                  : "bg-white"
-              }`}
-              onClick={() => setSelectedFile(file)}
-            >
-              {file.fileName}
-            </motion.div>
-          ))}
-        </div>
-
-        <motion.div
-          className="flex flex-wrap gap-2 justify-end"
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: { opacity: 0 },
-            visible: {
-              opacity: 1,
-              transition: { staggerChildren: 0.1 },
-            },
-          }}
-        >
-          <Button
-            size="sm"
-            onClick={() => setDialogAction("new")}
-            aria-label="Create new file"
-          >
-            Create New
-          </Button>
-
-          <motion.div
-            variants={fileItemVariant}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Button
-              size="sm"
-              onClick={handleOpen}
-              disabled={!selectedFile?.id}
-              aria-label="Open file"
-            >
-              Open
-            </Button>
-          </motion.div>
-
-          {["copy", "rename", "delete"].map((action) => (
-            <motion.div
-              key={action}
-              variants={fileItemVariant}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { staggerChildren: 0.1 },
+                },
+              }}
             >
               <Button
                 size="sm"
-                onClick={() => setDialogAction(action)}
-                disabled={!selectedFile?.id}
-                aria-label={`${action} file`}
+                onClick={() => setDialogAction("new")}
+                aria-label="Create new sample file"
               >
-                {action.charAt(0).toUpperCase() + action.slice(1)}
+                Create New
               </Button>
+              <motion.div
+                variants={fileItemVariant}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  size="sm"
+                  onClick={handleOpen}
+                  disabled={!selectedFile?.id}
+                  aria-label="Open sample file"
+                >
+                  Open
+                </Button>
+              </motion.div>
+              {["copy", "rename", "delete"].map((action) => (
+                <motion.div
+                  key={action}
+                  variants={fileItemVariant}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    size="sm"
+                    onClick={() => setDialogAction(action)}
+                    disabled={!selectedFile?.id}
+                    aria-label={`${action} sample file`}
+                  >
+                    {action.charAt(0).toUpperCase() + action.slice(1)}
+                  </Button>
+                </motion.div>
+              ))}
             </motion.div>
-          ))}
-        </motion.div>
 
-        <Dialog
-          open={!!dialogAction}
-          onOpenChange={(open) => !open && handleDialogClose()}
-        >
-          <DialogContent>
-            <DialogContentRenderer
-              dialogAction={dialogAction}
-              newClientName={newClientName}
-              setNewClientName={setNewClientName}
-              selectedFile={selectedFile}
-              handleClientAction={handleClientAction}
+            <Dialog
+              open={!!dialogAction}
+              onOpenChange={(open) => !open && handleDialogClose()}
+            >
+              <DialogContent>
+                <DialogContentRenderer
+                  dialogAction={dialogAction}
+                  newClientName={newClientName}
+                  setNewClientName={setNewClientName}
+                  selectedFile={selectedFile}
+                  handleClientAction={handleClientAction}
+                />
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </Card>
+
+        {/* Section 2: User's Files */}
+        <Card>
+          <CardHeader>
+            <CardTitle>User Files</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Input
+              placeholder="Search by file name or created by"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="max-w-md"
             />
-          </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>File Name</TableHead>
+                  <TableHead>Created By</TableHead>
+                  <TableHead>Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredUserFiles.length > 0 ? (
+                  filteredUserFiles.map((file) => (
+                    <TableRow key={file.id}>
+                      <TableCell>{file.fileName}</TableCell>
+                      <TableCell>
+                        {file.user?.firstName && file.user?.lastName
+                          ? `${file.user.firstName} ${file.user.lastName}`
+                          : "Unknown"}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(file.createdAt).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center">
+                      {searchQuery
+                        ? "No matching user files found"
+                        : "No user files available"}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
