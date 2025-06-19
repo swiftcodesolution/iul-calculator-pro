@@ -15,6 +15,17 @@ interface TableStore {
   startingBalance: number | string;
   annualContributions: number | string;
   annualEmployerMatch: number | string;
+
+  withdrawalAmount: number | string;
+  iulStartingBalance: number | string;
+  calculatorAge: number | string; // New: Store TabCalculator age
+  calculatorTaxRate: number | string; // New: Store TabCalculator tax rate
+
+  setWithdrawalAmount: (value: number | string) => void;
+  setIulStartingBalance: (value: number | string) => void;
+  setCalculatorAge: (value: number | string) => void; // New
+  setCalculatorTaxRate: (value: number | string) => void; // New
+
   setStartingBalance: (value: number | string) => void;
   setAnnualContributions: (value: number | string) => void;
   setAnnualEmployerMatch: (value: number | string) => void;
@@ -56,6 +67,17 @@ export const useTableStore = create<TableStore>((set) => ({
   startingBalance: "",
   annualContributions: "",
   annualEmployerMatch: "",
+
+  withdrawalAmount: 0,
+  iulStartingBalance: "",
+  calculatorAge: 45, // Default to match TabCalculator
+  calculatorTaxRate: 22, // Default to match TabCalculator
+
+  setWithdrawalAmount: (value) => set({ withdrawalAmount: value }),
+  setIulStartingBalance: (value) => set({ iulStartingBalance: value }),
+  setCalculatorAge: (value) => set({ calculatorAge: value }), // New
+  setCalculatorTaxRate: (value) => set({ calculatorTaxRate: value }), // New
+
   setStartingBalance: (value) => set({ startingBalance: value }),
   setAnnualContributions: (value) => set({ annualContributions: value }),
   setAnnualEmployerMatch: (value) => set({ annualEmployerMatch: value }),
@@ -113,6 +135,12 @@ export const useTableStore = create<TableStore>((set) => ({
       startingBalance: state.startingBalance,
       annualContributions: state.annualContributions,
       annualEmployerMatch: state.annualEmployerMatch,
+
+      withdrawalAmount: state.withdrawalAmount,
+      iulStartingBalance: state.iulStartingBalance,
+      calculatorAge: state.calculatorAge,
+      calculatorTaxRate: state.calculatorTaxRate,
+
       tabs: [
         {
           id: "total-advantage",

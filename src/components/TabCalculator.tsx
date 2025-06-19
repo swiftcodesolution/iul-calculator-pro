@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { useTableStore } from "@/lib/store";
 
 // Utility functions from InflationCalculator
 const formatInputValue = (value: string | number): string => {
@@ -22,9 +23,35 @@ const parseInputValue = (value: string): number | string => {
 
 export default function TabCalculator() {
   // Changed to string | number to match InflationCalculator
-  const [amount, setAmount] = useState<string | number>(100000);
-  const [age, setAge] = useState(45);
-  const [taxRate, setTaxRate] = useState(22);
+  const {
+    withdrawalAmount,
+    startingBalance,
+    calculatorAge,
+    calculatorTaxRate,
+    setWithdrawalAmount,
+    setCalculatorAge,
+    setCalculatorTaxRate,
+  } = useTableStore();
+
+  const [amount, setAmount] = useState<string | number>(withdrawalAmount);
+  const [age, setAge] = useState(calculatorAge);
+  const [taxRate, setTaxRate] = useState(calculatorTaxRate);
+
+  useEffect(() => {
+    if (startingBalance) {
+      setAmount(startingBalance);
+      setWithdrawalAmount(startingBalance);
+    }
+  }, [startingBalance, setWithdrawalAmount]);
+
+  useEffect(() => {
+    setWithdrawalAmount(amount);
+  }, [amount, setWithdrawalAmount]);
+
+  useEffect(() => {
+    setCalculatorAge(age);
+    setCalculatorTaxRate(taxRate);
+  }, [age, taxRate, setCalculatorAge, setCalculatorTaxRate]);
 
   // Handle amount input change
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,10 +59,27 @@ export default function TabCalculator() {
     setAmount(value);
   };
 
+  const handleAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value) || "";
+    setAge(value);
+  };
+
+  const handleTaxRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value) || "";
+    setTaxRate(value);
+  };
+
   // Convert amount to number for calculations, default to 0 if empty
+  // const amountNum = typeof amount === "number" ? amount : 0;
+  // const penalty = age < 59.5 ? amountNum * 0.1 : 0;
+  // const taxes = (amountNum - penalty) * (taxRate / 100);
+  // const netWithdrawal = amountNum - penalty - taxes;
+
   const amountNum = typeof amount === "number" ? amount : 0;
-  const penalty = age < 59.5 ? amountNum * 0.1 : 0;
-  const taxes = (amountNum - penalty) * (taxRate / 100);
+  const ageNum = typeof age === "number" ? age : 0;
+  const taxRateNum = typeof taxRate === "number" ? taxRate : 0;
+  const penalty = ageNum < 59.5 ? amountNum * 0.1 : 0;
+  const taxes = (amountNum - penalty) * (taxRateNum / 100);
   const netWithdrawal = amountNum - penalty - taxes;
 
   return (
@@ -62,7 +106,9 @@ export default function TabCalculator() {
               className="w-1/2"
               type="number"
               value={age}
-              onChange={(e) => setAge(parseFloat(e.target.value) || 0)}
+              onChange={handleAgeChange}
+              placeholder="Current Age"
+              aria-label="Current Age"
             />
           </div>
           <div className="flex items-center gap-4">
@@ -71,7 +117,9 @@ export default function TabCalculator() {
               className="w-1/2"
               type="number"
               value={taxRate}
-              onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
+              onChange={handleTaxRateChange}
+              placeholder="Tax Rate"
+              aria-label="Income Tax Rate"
             />
           </div>
         </CardContent>

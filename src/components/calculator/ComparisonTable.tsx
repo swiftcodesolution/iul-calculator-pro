@@ -83,14 +83,47 @@ export function ComparisonTable({
   const {
     tables = [],
     yearsRunOutOfMoney,
-    setYearsRunOutOfMoney,
     startingBalance,
     annualContributions,
     annualEmployerMatch,
+    withdrawalAmount,
+    iulStartingBalance,
+    calculatorAge,
+    calculatorTaxRate,
+    setYearsRunOutOfMoney,
     setStartingBalance,
     setAnnualContributions,
     setAnnualEmployerMatch,
+    setIulStartingBalance,
   } = useTableStore();
+
+  const [hasInitializedIulBalance, setHasInitializedIulBalance] =
+    useState(false);
+
+  // Update to use calculatorAge and calculatorTaxRate
+  const calculateNetWithdrawal = (amount: number | string): number => {
+    const amountNum = typeof amount === "number" ? amount : 0;
+    const age = parseFloat(String(calculatorAge)) || 45;
+    const taxRate = parseFloat(String(calculatorTaxRate)) || 22;
+    const penalty = age < 59.5 ? amountNum * 0.1 : 0;
+    const taxes = (amountNum - penalty) * (taxRate / 100);
+    return amountNum - penalty - taxes;
+  };
+
+  // Initialize IUL starting balance on first load
+  useEffect(() => {
+    if (!hasInitializedIulBalance && withdrawalAmount) {
+      const netWithdrawal = calculateNetWithdrawal(withdrawalAmount);
+      setIulStartingBalance(netWithdrawal);
+      setHasInitializedIulBalance(true);
+    }
+  }, [
+    withdrawalAmount,
+    calculatorAge,
+    calculatorTaxRate,
+    setIulStartingBalance,
+    hasInitializedIulBalance,
+  ]);
 
   const [yearsRunOutOfMoneyInput, setYearsRunOutOfMoneyInput] = useState<
     number | string
@@ -193,7 +226,7 @@ export function ComparisonTable({
             yearsRunOutOfMoney: formatValue(age),
           },
           taxFree: {
-            startingBalance: formatValue(taxFreeRow.startingBalance),
+            startingBalance: formatValue(iulStartingBalance),
             annualContributions: formatValue(taxFreeRow.annualContributions),
             annualEmployerMatch: formatValue(taxFreeRow.annualEmployerMatch),
             annualFees: formatValue(taxFreeRow.annualFees),
@@ -470,7 +503,7 @@ export function ComparisonTable({
   const taxFreeResults = useMemo(() => {
     if (!tables || !tables[0]?.data || tables[0].data.length === 0) {
       return {
-        startingBalance: 0,
+        startingBalance: parseInput(iulStartingBalance, 0),
         annualContributions: 0,
         annualEmployerMatch: 0,
         annualFees: 0,
@@ -487,9 +520,23 @@ export function ComparisonTable({
         yearsRunOutOfMoney,
       };
     }
-    return extractTaxFreeResults(tables, currentAge, yearsRunOutOfMoneyNumber);
+    const results = extractTaxFreeResults(
+      tables,
+      currentAge,
+      yearsRunOutOfMoneyNumber
+    );
+    return {
+      ...results,
+      startingBalance: parseInput(iulStartingBalance, results.startingBalance),
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tables, currentAge, yearsRunOutOfMoneyInput, yearsRunOutOfMoneyNumber]);
+  }, [
+    tables,
+    currentAge,
+    yearsRunOutOfMoneyInput,
+    yearsRunOutOfMoneyNumber,
+    iulStartingBalance,
+  ]);
 
   const handleYearsRunOutOfMoneyChange = (value: string) => {
     const age = Number(value);
