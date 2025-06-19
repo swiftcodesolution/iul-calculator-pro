@@ -188,7 +188,7 @@ export default function AdminDashboard() {
                 </TableBody>
               </Table>
               <Link
-                href="/admin/dashboard/downloads-content"
+                href="/admin/dashboard/download-resources"
                 className="text-blue-500 hover:underline mt-4 block"
               >
                 Manage Resources
@@ -306,7 +306,7 @@ export default function AdminDashboard() {
                 </TableBody>
               </Table>
               <Link
-                href="/admin/insurance-companies"
+                href="/admin/dashboard/insurance-companies"
                 className="text-blue-500 hover:underline mt-2 block"
               >
                 Manage Companies
