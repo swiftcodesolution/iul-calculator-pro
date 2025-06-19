@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
-import { motion, AnimatePresence } from "motion/react"; // Reverted import
+import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -33,6 +33,13 @@ type TableData = {
 
 type ApiResponse = {
   tables: TableData[];
+  fields: {
+    illustration_date: string | null;
+    insured_name: string | null;
+    initial_death_benefit: string | null;
+    assumed_ror: string | null;
+    minimum_initial_pmt: string | null;
+  };
   message?: string | null;
 };
 
@@ -46,13 +53,14 @@ export default function ImportPage({ params }: { params: Params }) {
   const { data: session, status } = useSession();
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Changed to match calculator
   const [loading, setLoading] = useState(true);
-  const [hasFetched, setHasFetched] = useState(false); // Single fetch
-  const [isTableLoading, setIsTableLoading] = useState(false); // Renamed for clarity
+  const [hasFetched, setHasFetched] = useState(false);
+  const [isTableLoading, setIsTableLoading] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isTableFullScreen, setIsTableFullScreen] = useState(false);
-  const { tables, setTables, clearStore } = useTableStore();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  const { tables, setTables, fields, setFields, clearStore } = useTableStore();
   const router = useRouter();
   const {
     highlightedRows,
@@ -61,7 +69,6 @@ export default function ImportPage({ params }: { params: Params }) {
     handleColumnClick,
   } = useTableHighlight();
 
-  // Auth and file check (single fetch)
   useEffect(() => {
     if (
       status !== "authenticated" ||
@@ -86,6 +93,7 @@ export default function ImportPage({ params }: { params: Params }) {
         }
         const data: ClientFile = await response.json();
         setTables(data.tablesData?.tables || []);
+        setFields(data.fields || {});
         setHasFetched(true);
       } catch {
         setError("Error fetching file");
@@ -95,9 +103,8 @@ export default function ImportPage({ params }: { params: Params }) {
     };
 
     fetchFile();
-  }, [fileId, session, status, hasFetched, setTables]);
+  }, [fileId, session, status, hasFetched, setTables, setFields]);
 
-  // Debounced save
   const saveChanges = debounce(
     async () => {
       if (!fileId || status !== "authenticated" || !session?.user?.id) return;
@@ -105,7 +112,7 @@ export default function ImportPage({ params }: { params: Params }) {
         const response = await fetch(`/api/files/${fileId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tablesData: { tables } }),
+          body: JSON.stringify({ tablesData: { tables }, fields }),
         });
         if (!response.ok) setError("Failed to save changes");
       } catch {
@@ -116,11 +123,11 @@ export default function ImportPage({ params }: { params: Params }) {
     { leading: false, trailing: true }
   );
 
-  // Save on tables change
   useEffect(() => {
-    if (tables.length > 0) saveChanges();
+    if (tables.length > 0 || Object.values(fields).some((v) => v !== null))
+      saveChanges();
     return () => saveChanges.cancel();
-  }, [tables, saveChanges]);
+  }, [tables, fields, saveChanges]);
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>
@@ -133,7 +140,7 @@ export default function ImportPage({ params }: { params: Params }) {
     }
     if (selectedFile && selectedFile.type === "application/pdf") {
       setFile(selectedFile);
-      setError(null); // Match calculator
+      setError(null);
       clearStore();
       setZoomLevel(1);
       setIsTableFullScreen(false);
@@ -159,6 +166,7 @@ export default function ImportPage({ params }: { params: Params }) {
       });
       if (response.data.tables) {
         setTables(response.data.tables);
+        setFields(response.data.fields || {});
         toast(`Extracted ${response.data.tables.length} tables from PDF.`);
       } else {
         setError(response.data.message || "No tables found.");
@@ -189,12 +197,39 @@ export default function ImportPage({ params }: { params: Params }) {
     router.push(`/dashboard/calculator/${fileId}`);
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     setFile(null);
     clearStore();
     setError(null);
     setZoomLevel(1);
     setIsTableFullScreen(false);
+
+    if (fileId && status === "authenticated" && session?.user?.id) {
+      try {
+        const response = await fetch(`/api/files/${fileId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "clearTablesData" }),
+        });
+        if (!response.ok) {
+          setError("Failed to clear tables data");
+          toast("Failed to clear tables data");
+        }
+
+        const fieldsResponse = await fetch(`/api/files/${fileId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "clearFieldsData" }),
+        });
+        if (!fieldsResponse.ok) {
+          setError("Failed to clear fields data");
+          toast("Failed to clear fields data");
+        }
+      } catch {
+        setError("Error clearing tables data");
+        toast("Error clearing tables data");
+      }
+    }
   };
 
   const handleZoomIn = () => {
@@ -208,6 +243,9 @@ export default function ImportPage({ params }: { params: Params }) {
   const handleFullScreenToggle = () => {
     setIsTableFullScreen((prev) => !prev);
   };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) =>
+    setIsScrolled(e.currentTarget.scrollTop > 50);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -227,20 +265,72 @@ export default function ImportPage({ params }: { params: Params }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
-              className="lg:w-[70%] w-full overflow-y-auto flex h-[90vh]"
+              className="lg:w-[70%] w-full flex h-[90vh]"
             >
-              <div className="grow">
+              <div className="grow relative">
                 {tables.length > 0 && !isTableLoading ? (
                   <>
                     <h3 className="text-lg font-semibold mb-2 sticky top-0 bg-white z-10">
                       Imported Data Preview
                     </h3>
+                    {isScrolled && (
+                      <div className="absolute top-[30px] left-0 w-[98.5%] bg-white z-10 shadow-md transition-all flex">
+                        {tables.map((table, index) => {
+                          const columns = Object.keys(
+                            table.data[0] || {}
+                          ).filter(
+                            (key) =>
+                              key !== "Source_Text" && key !== "Page_Number"
+                          );
+                          return (
+                            <div
+                              key={index}
+                              className={
+                                tables.length === 2
+                                  ? index === 0
+                                    ? "w-[80%]"
+                                    : "w-[20%]"
+                                  : "grow"
+                              }
+                            >
+                              <Table className="border table-fixed w-full">
+                                <TableHeader>
+                                  <TableRow>
+                                    {columns.map((header) => (
+                                      <TableHead
+                                        key={header}
+                                        className={cn(
+                                          "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer",
+                                          highlightedColumns.has(header)
+                                            ? "bg-[#ffa1ad]"
+                                            : ""
+                                        )}
+                                        style={{
+                                          width: `${100 / columns.length}%`,
+                                        }}
+                                        onClick={() =>
+                                          handleColumnClick(header)
+                                        }
+                                      >
+                                        {header}
+                                      </TableHead>
+                                    ))}
+                                  </TableRow>
+                                </TableHeader>
+                              </Table>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                     <div
                       style={{
                         transform: `scale(${zoomLevel})`,
                         transformOrigin: "top left",
                         transition: "transform 0.3s ease",
                       }}
+                      className="w-full h-[calc(90vh-40px)] overflow-auto"
+                      onScroll={handleScroll}
                     >
                       <div
                         className={
@@ -362,15 +452,65 @@ export default function ImportPage({ params }: { params: Params }) {
                   </Button>
                 </CardHeader>
                 <CardContent
-                  className="overflow-y-auto flex-1"
+                  className="overflow-y-auto flex-1 relative"
                   style={{ maxHeight: "calc(100vh - 80px)" }}
                 >
+                  {isScrolled && tables.length > 0 && (
+                    <div className="absolute top-0 left-0 w-[99%] bg-white z-10 shadow-md">
+                      {tables.map((table, index) => {
+                        const columns = Object.keys(table.data[0] || {}).filter(
+                          (key) =>
+                            key !== "Source_Text" && key !== "Page_Number"
+                        );
+                        return (
+                          <div
+                            key={index}
+                            className={
+                              tables.length === 2
+                                ? index === 0
+                                  ? "w-[80%]"
+                                  : "w-[20%]"
+                                : tables.length > 2
+                                ? "flex-1 min-w-[300px] max-w-[500px]"
+                                : "w-full"
+                            }
+                          >
+                            <Table className="border table-fixed w-full">
+                              <TableHeader>
+                                <TableRow>
+                                  {columns.map((header) => (
+                                    <TableHead
+                                      key={header}
+                                      className={cn(
+                                        "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer",
+                                        highlightedColumns.has(header)
+                                          ? "bg-[#ffa1ad]"
+                                          : ""
+                                      )}
+                                      style={{
+                                        width: `${100 / columns.length}%`,
+                                      }}
+                                      onClick={() => handleColumnClick(header)}
+                                    >
+                                      {header}
+                                    </TableHead>
+                                  ))}
+                                </TableRow>
+                              </TableHeader>
+                            </Table>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                   <div
                     style={{
                       transform: `scale(${zoomLevel})`,
                       transformOrigin: "top left",
                       transition: "transform 0.3s ease",
                     }}
+                    className="w-full h-full overflow-auto"
+                    onScroll={handleScroll}
                   >
                     <div
                       className={
@@ -468,61 +608,60 @@ export default function ImportPage({ params }: { params: Params }) {
           transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
           className="lg:w-[30%] w-full flex flex-col gap-4 lg:mt-auto"
         >
-          {/* Disabled Input Fields */}
           <div className="flex flex-col gap-2">
             <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="policy-number">
+              <Label className="grow" htmlFor="illustration-date">
                 Illustration Date
               </Label>
               <Input
                 className="w-2/4"
-                id="policy-number"
+                id="illustration-date"
                 disabled
-                placeholder="POL12345"
-              />
-            </div>
-            <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="start-date">
-                Insured Name
-              </Label>
-              <Input
-                className="w-2/4"
-                id="start-date"
-                disabled
-                placeholder="2025-01-01"
-              />
-            </div>
-            <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="premium-amount">
-                Initial Death Benefit
-              </Label>
-              <Input
-                className="w-2/4"
-                id="premium-amount"
-                disabled
-                placeholder="20000"
+                value={fields.illustration_date || ""}
               />
             </div>
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="insured-name">
-                Assumed ROR
+                Insured Name
               </Label>
               <Input
                 className="w-2/4"
                 id="insured-name"
                 disabled
-                placeholder="John Doe"
+                value={fields.insured_name || ""}
+              />
+            </div>
+            <div className="space-y-2 flex gap-2">
+              <Label className="grow" htmlFor="initial-death-benefit">
+                Initial Death Benefit
+              </Label>
+              <Input
+                className="w-2/4"
+                id="initial-death-benefit"
+                disabled
+                value={fields.initial_death_benefit || ""}
               />
             </div>
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="assumed-ror">
-                Minimum Initial Pmt
+                Assumed ROR
               </Label>
               <Input
                 className="w-2/4"
                 id="assumed-ror"
                 disabled
-                placeholder="6.3%"
+                value={fields.assumed_ror || ""}
+              />
+            </div>
+            <div className="space-y-2 flex gap-2">
+              <Label className="grow" htmlFor="minimum-initial-pmt">
+                Minimum Initial Pmt
+              </Label>
+              <Input
+                className="w-2/4"
+                id="minimum-initial-pmt"
+                disabled
+                value={fields.minimum_initial_pmt || ""}
               />
             </div>
           </div>
