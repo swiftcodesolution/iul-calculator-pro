@@ -3,8 +3,20 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/connect";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import nodemailer from "nodemailer";
 
-// POST: Submit a new insurance company request
+// Configure Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
+// POST: Submit a new insurance company request and send email
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
 
@@ -22,18 +34,49 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Save request to database and include submitter's email
     const companyRequest = await prisma.insuranceCompanyRequest.create({
       data: {
         name,
         website,
         submittedBy: session.user.id,
       },
+      include: {
+        submittedByUser: {
+          select: { email: true },
+        },
+      },
     });
+
+    // Send email to admin
+    await transporter.sendMail({
+      from: `"Insurance App" <${process.env.SMTP_USER}>`,
+      to: process.env.ADMIN_EMAIL,
+      subject: "New Insurance Company Request",
+      text: `
+        A new insurance company request has been submitted.
+        
+        Company Name: ${name}
+        Website: ${website || "Not provided"}
+        Submitted By: ${companyRequest.submittedByUser.email}
+        Submitted At: ${new Date().toLocaleString()}
+      `,
+      html: `
+        <h2>New Insurance Company Request</h2>
+        <p><strong>Company Name:</strong> ${name}</p>
+        <p><strong>Website:</strong> ${website || "Not provided"}</p>
+        <p><strong>Submitted By:</strong> ${
+          companyRequest.submittedByUser.email
+        }</p>
+        <p><strong>Submitted At:</strong> ${new Date().toLocaleString()}</p>
+      `,
+    });
+
     return NextResponse.json(companyRequest, { status: 201 });
   } catch (error) {
-    console.error("Error creating insurance company request:", error);
+    console.error("Error processing request:", error);
     return NextResponse.json(
-      { error: "Failed to create request" },
+      { error: "Failed to process request" },
       { status: 500 }
     );
   }
