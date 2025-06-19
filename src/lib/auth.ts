@@ -50,15 +50,21 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Invalid password");
           }
 
-          const finalFingerprint = credentials.deviceFingerprint;
-          if (!user.deviceFingerprint) {
-            await prisma.user.update({
-              where: { id: user.id },
-              data: { deviceFingerprint: finalFingerprint },
-            });
-            user.deviceFingerprint = finalFingerprint;
-          } else if (user.deviceFingerprint !== credentials.deviceFingerprint) {
-            throw new Error("Login restricted to the device used for signup.");
+          if (user.role !== "admin") {
+            const finalFingerprint = credentials.deviceFingerprint;
+            if (!user.deviceFingerprint) {
+              await prisma.user.update({
+                where: { id: user.id },
+                data: { deviceFingerprint: finalFingerprint },
+              });
+              user.deviceFingerprint = finalFingerprint;
+            } else if (
+              user.deviceFingerprint !== credentials.deviceFingerprint
+            ) {
+              throw new Error(
+                "Login restricted to the device used for signup."
+              );
+            }
           }
 
           if (user.deviceFingerprint !== credentials.deviceFingerprint) {
