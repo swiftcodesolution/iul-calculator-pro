@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -59,6 +59,7 @@ export default function ImportPage({ params }: { params: Params }) {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isTableFullScreen, setIsTableFullScreen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [highlightColor, setHighlightColor] = useState("#ffa1ad");
 
   const { tables, setTables, fields, setFields, clearStore } = useTableStore();
   const router = useRouter();
@@ -142,7 +143,6 @@ export default function ImportPage({ params }: { params: Params }) {
       setFile(selectedFile);
       setError(null);
       clearStore();
-
       setZoomLevel(1);
       setIsTableFullScreen(false);
     } else {
@@ -220,7 +220,7 @@ export default function ImportPage({ params }: { params: Params }) {
         const fieldsResponse = await fetch(`/api/files/${fileId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "clearFieldsData" }), // Added to clear fields
+          body: JSON.stringify({ action: "clearFieldsData" }),
         });
         if (!fieldsResponse.ok) {
           setError("Failed to clear fields data");
@@ -248,6 +248,166 @@ export default function ImportPage({ params }: { params: Params }) {
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) =>
     setIsScrolled(e.currentTarget.scrollTop > 50);
 
+  const getContrastingTextColor = (bgColor: string): string => {
+    const r = parseInt(bgColor.slice(1, 3), 16);
+    const g = parseInt(bgColor.slice(3, 5), 16);
+    const b = parseInt(bgColor.slice(5, 7), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5 ? "#000000" : "#FFFFFF";
+  };
+
+  const renderTable = () => (
+    <>
+      <h3 className="text-lg font-semibold mb-2 sticky top-0 z-10">
+        Imported Data Preview
+      </h3>
+      {isScrolled && tables.length > 0 && (
+        <div className="absolute top-[30px] left-0 w-[98.5%] bg-white z-10 shadow-md transition-all flex">
+          {tables.map((table, index) => {
+            const columns = Object.keys(table.data[0] || {}).filter(
+              (key) => key !== "Source_Text" && key !== "Page_Number"
+            );
+            return (
+              <div
+                key={index}
+                className={
+                  tables.length === 2
+                    ? index === 0
+                      ? "w-[80%]"
+                      : "w-[20%]"
+                    : "grow"
+                }
+              >
+                <Table className="border table-fixed w-full">
+                  <TableHeader>
+                    <TableRow>
+                      {columns.map((header) => {
+                        const bgColor = highlightedColumns.has(header)
+                          ? highlightColor
+                          : "#FFFFFF";
+                        return (
+                          <TableHead
+                            key={header}
+                            className={cn(
+                              "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer"
+                            )}
+                            style={{
+                              width: `${100 / columns.length}%`,
+                              backgroundColor: bgColor,
+                              color: getContrastingTextColor(bgColor),
+                            }}
+                            onClick={() => handleColumnClick(header)}
+                          >
+                            {header}
+                          </TableHead>
+                        );
+                      })}
+                    </TableRow>
+                  </TableHeader>
+                </Table>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <div
+        style={{
+          transform: `scale(${zoomLevel})`,
+          transformOrigin: "top left",
+          transition: "transform 0.3s ease",
+        }}
+        className="w-full h-[calc(90vh-40px)] overflow-auto"
+        onScroll={handleScroll}
+      >
+        <div className={tables.length > 2 ? "flex gap-0" : "flex gap-0"}>
+          {tables.map((table, index) => {
+            const columns = Object.keys(table.data[0] || {}).filter(
+              (key) => key !== "Source_Text" && key !== "Page_Number"
+            );
+
+            return (
+              <div
+                key={index}
+                className={
+                  tables.length === 2
+                    ? index === 0
+                      ? "w-[80%]"
+                      : "w-[20%]"
+                    : "grow"
+                }
+              >
+                <Table className="border table-fixed w-full">
+                  <TableHeader>
+                    <TableRow>
+                      {columns.map((header) => {
+                        const bgColor = highlightedColumns.has(header)
+                          ? highlightColor
+                          : "#FFFFFF";
+                        return (
+                          <TableHead
+                            key={header}
+                            className={cn(
+                              "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer"
+                            )}
+                            style={{
+                              width: `${100 / columns.length}%`,
+                              backgroundColor: bgColor,
+                              color: getContrastingTextColor(bgColor),
+                            }}
+                            onClick={() => handleColumnClick(header)}
+                          >
+                            {header}
+                          </TableHead>
+                        );
+                      })}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {table.data.map((row, rowIndex) => (
+                      <TableRow
+                        key={rowIndex}
+                        className={cn("min-h-[60px] cursor-pointer")}
+                        style={{
+                          backgroundColor: highlightedRows.has(rowIndex)
+                            ? highlightColor
+                            : "#FFFFFF",
+                        }}
+                        onClick={() => handleRowClick(rowIndex)}
+                      >
+                        {columns.map((col) => {
+                          const bgColor =
+                            highlightedColumns.has(col) ||
+                            highlightedRows.has(rowIndex)
+                              ? highlightColor
+                              : "#FFFFFF";
+                          return (
+                            <TableCell
+                              key={col}
+                              className={cn(
+                                "border whitespace-normal break-words align-top"
+                              )}
+                              style={{
+                                width: `${100 / columns.length}%`,
+                                backgroundColor: bgColor,
+                                color: getContrastingTextColor(bgColor),
+                              }}
+                            >
+                              {row[col] ?? "-"}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
@@ -270,156 +430,7 @@ export default function ImportPage({ params }: { params: Params }) {
             >
               <div className="grow relative">
                 {tables.length > 0 && !isTableLoading ? (
-                  <>
-                    <h3 className="text-lg font-semibold mb-2 sticky top-0 z-10">
-                      Imported Data Preview
-                    </h3>
-                    {isScrolled && (
-                      <div className="absolute top-[30px] left-0 w-[98.5%]  z-10 shadow-md transition-all flex">
-                        {tables.map((table, index) => {
-                          const columns = Object.keys(
-                            table.data[0] || {}
-                          ).filter(
-                            (key) =>
-                              key !== "Source_Text" && key !== "Page_Number"
-                          );
-                          return (
-                            <div
-                              key={index}
-                              className={
-                                tables.length === 2
-                                  ? index === 0
-                                    ? "w-[80%]"
-                                    : "w-[20%]"
-                                  : "grow"
-                              }
-                            >
-                              <Table className="border table-fixed w-full">
-                                <TableHeader>
-                                  <TableRow>
-                                    {columns.map((header) => (
-                                      <TableHead
-                                        key={header}
-                                        className={cn(
-                                          "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer",
-                                          highlightedColumns.has(header)
-                                            ? "bg-[#ffa1ad]"
-                                            : ""
-                                        )}
-                                        style={{
-                                          width: `${100 / columns.length}%`,
-                                        }}
-                                        onClick={() =>
-                                          handleColumnClick(header)
-                                        }
-                                      >
-                                        {header}
-                                      </TableHead>
-                                    ))}
-                                  </TableRow>
-                                </TableHeader>
-                              </Table>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                    <div
-                      style={{
-                        transform: `scale(${zoomLevel})`,
-                        transformOrigin: "top left",
-                        transition: "transform 0.3s ease",
-                      }}
-                      className="w-full h-[calc(90vh-40px)] overflow-auto"
-                      onScroll={handleScroll}
-                    >
-                      <div
-                        className={
-                          tables.length > 2 ? "flex gap-0" : "flex gap-0"
-                        }
-                      >
-                        {tables.map((table, index) => {
-                          const columns = Object.keys(
-                            table.data[0] || {}
-                          ).filter(
-                            (key) =>
-                              key !== "Source_Text" && key !== "Page_Number"
-                          );
-
-                          return (
-                            <div
-                              key={index}
-                              className={
-                                tables.length === 2
-                                  ? index === 0
-                                    ? "w-[80%]"
-                                    : "w-[20%]"
-                                  : "grow"
-                              }
-                            >
-                              <Table className="border table-fixed w-full">
-                                <TableHeader>
-                                  <TableRow>
-                                    {columns.map((header) => (
-                                      <TableHead
-                                        key={header}
-                                        className={cn(
-                                          "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer",
-                                          highlightedColumns.has(header)
-                                            ? "bg-[#ffa1ad]"
-                                            : ""
-                                        )}
-                                        style={{
-                                          width: `${100 / columns.length}%`,
-                                        }}
-                                        onClick={() =>
-                                          handleColumnClick(header)
-                                        }
-                                      >
-                                        {header}
-                                      </TableHead>
-                                    ))}
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {table.data.map((row, rowIndex) => (
-                                    <TableRow
-                                      key={rowIndex}
-                                      className={cn(
-                                        "min-h-[60px] cursor-pointer",
-                                        highlightedRows.has(rowIndex)
-                                          ? "bg-[#ffa1ad]"
-                                          : ""
-                                      )}
-                                      onClick={() => handleRowClick(rowIndex)}
-                                    >
-                                      {columns.map((col) => (
-                                        <TableCell
-                                          key={col}
-                                          className={cn(
-                                            "border whitespace-normal break-words align-top",
-                                            highlightedColumns.has(col) ||
-                                              highlightedRows.has(rowIndex)
-                                              ? "bg-[#ffa1ad]"
-                                              : ""
-                                          )}
-                                          style={{
-                                            width: `${100 / columns.length}%`,
-                                          }}
-                                        >
-                                          {row[col] ?? "-"}
-                                        </TableCell>
-                                      ))}
-                                    </TableRow>
-                                  ))}
-                                </TableBody>
-                              </Table>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </>
+                  renderTable()
                 ) : (
                   <Card className="flex items-center justify-center h-full">
                     <p className="text-gray-500 text-center">
@@ -456,147 +467,7 @@ export default function ImportPage({ params }: { params: Params }) {
                   className="overflow-y-auto flex-1 relative"
                   style={{ maxHeight: "calc(100vh - 80px)" }}
                 >
-                  {isScrolled && tables.length > 0 && (
-                    <div className="absolute top-0 left-0 w-[99%] bg-white z-10 shadow-md">
-                      {tables.map((table, index) => {
-                        const columns = Object.keys(table.data[0] || {}).filter(
-                          (key) =>
-                            key !== "Source_Text" && key !== "Page_Number"
-                        );
-                        return (
-                          <div
-                            key={index}
-                            className={
-                              tables.length === 2
-                                ? index === 0
-                                  ? "w-[80%]"
-                                  : "w-[20%]"
-                                : tables.length > 2
-                                ? "flex-1 min-w-[300px] max-w-[500px]"
-                                : "w-full"
-                            }
-                          >
-                            <Table className="border table-fixed w-full">
-                              <TableHeader>
-                                <TableRow>
-                                  {columns.map((header) => (
-                                    <TableHead
-                                      key={header}
-                                      className={cn(
-                                        "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer",
-                                        highlightedColumns.has(header)
-                                          ? "bg-[#ffa1ad]"
-                                          : ""
-                                      )}
-                                      style={{
-                                        width: `${100 / columns.length}%`,
-                                      }}
-                                      onClick={() => handleColumnClick(header)}
-                                    >
-                                      {header}
-                                    </TableHead>
-                                  ))}
-                                </TableRow>
-                              </TableHeader>
-                            </Table>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                  <div
-                    style={{
-                      transform: `scale(${zoomLevel})`,
-                      transformOrigin: "top left",
-                      transition: "transform 0.3s ease",
-                    }}
-                    className="w-full h-full overflow-auto"
-                    onScroll={handleScroll}
-                  >
-                    <div
-                      className={
-                        tables.length > 2 ? "flex gap-0" : "flex gap-0"
-                      }
-                    >
-                      {tables.map((table, index) => {
-                        const columns = Object.keys(table.data[0] || {}).filter(
-                          (key) =>
-                            key !== "Source_Text" && key !== "Page_Number"
-                        );
-
-                        return (
-                          <div
-                            key={index}
-                            className={
-                              tables.length === 2
-                                ? index === 0
-                                  ? "w-[80%]"
-                                  : "w-[20%]"
-                                : tables.length > 2
-                                ? "flex-1 min-w-[300px] max-w-[500px]"
-                                : "w-full"
-                            }
-                          >
-                            <Table className="border table-fixed w-full">
-                              <TableHeader>
-                                <TableRow>
-                                  {columns.map((header) => (
-                                    <TableHead
-                                      key={header}
-                                      className={cn(
-                                        "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer",
-                                        highlightedColumns.has(header)
-                                          ? "bg-[#ffa1ad]"
-                                          : ""
-                                      )}
-                                      style={{
-                                        width: `${100 / columns.length}%`,
-                                      }}
-                                      onClick={() => handleColumnClick(header)}
-                                    >
-                                      {header}
-                                    </TableHead>
-                                  ))}
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {table.data.map((row, rowIndex) => (
-                                  <TableRow
-                                    key={rowIndex}
-                                    className={cn(
-                                      "min-h-[60px] cursor-pointer",
-                                      highlightedRows.has(rowIndex)
-                                        ? "bg-[#ffa1ad]"
-                                        : ""
-                                    )}
-                                    onClick={() => handleRowClick(rowIndex)}
-                                  >
-                                    {columns.map((col) => (
-                                      <TableCell
-                                        key={col}
-                                        className={cn(
-                                          "border whitespace-normal break-words align-top",
-                                          highlightedColumns.has(col) ||
-                                            highlightedRows.has(rowIndex)
-                                            ? "bg-[#ffa1ad]"
-                                            : ""
-                                        )}
-                                        style={{
-                                          width: `${100 / columns.length}%`,
-                                        }}
-                                      >
-                                        {row[col] ?? "-"}
-                                      </TableCell>
-                                    ))}
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  {tables.length > 0 && !isTableLoading && renderTable()}
                 </CardContent>
               </Card>
             </motion.div>
@@ -610,6 +481,16 @@ export default function ImportPage({ params }: { params: Params }) {
           className="lg:w-[30%] w-full flex flex-col gap-4 lg:mt-auto"
         >
           <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="highlight-color">Highlight Color</Label>
+              <input
+                id="highlight-color"
+                type="color"
+                value={highlightColor}
+                onChange={(e) => setHighlightColor(e.target.value)}
+                className="w-8 h-8 border rounded"
+              />
+            </div>
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="illustration-date">
                 Illustration Date
@@ -632,17 +513,6 @@ export default function ImportPage({ params }: { params: Params }) {
                 value={fields.insured_name || ""}
               />
             </div>
-            {/* <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="initial-death-benefit">
-                Initial Death Benefit
-              </Label>
-              <Input
-                className="w-2/4"
-                id="initial-death-benefit"
-                disabled
-                value={fields.initial_death_benefit || ""}
-              />
-            </div> */}
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="assumed-ror">
                 Assumed ROR
