@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const file = await prisma.clientFile.create({
     data: {
       userId: session.user.id,
-      deviceFingerprint: session.user.deviceFingerprint || null,
+      // deviceFingerprint: session.user.deviceFingerprint || null,
       fileName,
       createdByRole: session.user.role,
       category,
