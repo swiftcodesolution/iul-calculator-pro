@@ -29,7 +29,7 @@ export async function GET(
           select: {
             id: true,
             sessionToken: true,
-            deviceFingerprint: true,
+            // deviceFingerprint: true,
             ipAddress: true,
             userAgent: true,
             browserName: true,
@@ -102,7 +102,9 @@ export async function DELETE(
     // Clear deviceFingerprint in sessionHistory
     await prisma.user.updateMany({
       where: { id: userId },
-      data: { deviceFingerprint: null },
+      data: {
+        // deviceFingerprint: null
+      },
     });
 
     return NextResponse.json({
