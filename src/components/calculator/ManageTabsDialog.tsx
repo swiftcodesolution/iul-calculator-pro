@@ -105,39 +105,16 @@ export function ManageTabsDialog({
                 <motion.div
                   key={tab.id}
                   className={`flex items-center justify-between p-2 border rounded-md ${
-                    [
-                      "total-advantage",
-                      "calculator",
-                      "inflationCalculator",
-                      "cagrChart",
-                    ].includes(tab.id)
-                      ? ""
-                      : "cursor-move"
+                    tab.id === "total-advantage" ? "" : "cursor-move"
                   }`}
-                  draggable={
-                    ![
-                      "total-advantage",
-                      "calculator",
-                      "inflationCalculator",
-                      "cagrChart",
-                    ].includes(tab.id)
-                  }
+                  draggable={tab.id !== "total-advantage"}
                   onDragStartCapture={(e) =>
-                    ![
-                      "total-advantage",
-                      "calculator",
-                      "inflationCalculator",
-                      "cagrChart",
-                    ].includes(tab.id) && handleTabDragStart(e, tab.id)
+                    tab.id !== "total-advantage" &&
+                    handleTabDragStart(e, tab.id)
                   }
                   onDragOver={handleTabDragOver}
                   onDrop={(e) =>
-                    ![
-                      "total-advantage",
-                      "calculator",
-                      "inflationCalculator",
-                      "cagrChart",
-                    ].includes(tab.id) && handleTabDrop(e, tab.id)
+                    tab.id !== "total-advantage" && handleTabDrop(e, tab.id)
                   }
                   whileDrag={{ scale: 1.05, opacity: 0.8 }}
                   aria-describedby={`drag-tab-${tab.id}`}
@@ -147,12 +124,7 @@ export function ManageTabsDialog({
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                       className={
-                        [
-                          "total-advantage",
-                          "calculator",
-                          "inflationCalculator",
-                          "cagrChart",
-                        ].includes(tab.id)
+                        ["total-advantage"].includes(tab.id)
                           ? "cursor-default"
                           : "cursor-grab"
                       }
@@ -190,12 +162,7 @@ export function ManageTabsDialog({
                       onClick={() => handleMoveUp(tabs.indexOf(tab))}
                       disabled={
                         tabs.indexOf(tab) === 0 ||
-                        [
-                          "total-advantage",
-                          "calculator",
-                          "inflationCalculator",
-                          "cagrChart",
-                        ].includes(tab.id)
+                        ["total-advantage"].includes(tab.id)
                       }
                       aria-label={`Move ${tab.name} up`}
                     >
@@ -207,12 +174,7 @@ export function ManageTabsDialog({
                       onClick={() => handleMoveDown(tabs.indexOf(tab))}
                       disabled={
                         tabs.indexOf(tab) === tabs.length - 1 ||
-                        [
-                          "total-advantage",
-                          "calculator",
-                          "inflationCalculator",
-                          "cagrChart",
-                        ].includes(tab.id)
+                        ["total-advantage"].includes(tab.id)
                       }
                       aria-label={`Move ${tab.name} down`}
                     >
