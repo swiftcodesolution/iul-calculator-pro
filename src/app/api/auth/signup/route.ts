@@ -10,7 +10,8 @@ const signupApiSchema = z.object({
   lastName: z.string().min(1),
   cellPhone: z.string().min(1),
   officePhone: z.string().min(1),
-  deviceFingerprint: z.string().min(1),
+
+  // deviceFingerprint: z.string().min(1),
 });
 
 export async function POST(request: Request) {
@@ -23,7 +24,8 @@ export async function POST(request: Request) {
       lastName,
       cellPhone,
       officePhone,
-      deviceFingerprint,
+
+      // deviceFingerprint,
     } = signupApiSchema.parse(body);
 
     const existingUser = await prisma.user.findFirst({
@@ -63,7 +65,8 @@ export async function POST(request: Request) {
         lastName,
         cellPhone,
         officePhone,
-        deviceFingerprint,
+
+        // deviceFingerprint,
       },
     });
 

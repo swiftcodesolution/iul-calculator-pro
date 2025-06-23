@@ -1,3 +1,4 @@
+// src/lib/auth.ts
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { NextAuthOptions } from "next-auth";
@@ -21,16 +22,19 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
-        deviceFingerprint: { label: "Device Fingerprint", type: "text" },
+
+        // deviceFingerprint: { label: "Device Fingerprint", type: "text" },
+
         loginPath: { label: "Login Path", type: "text" },
       },
       async authorize(credentials, req) {
         if (
           !credentials?.email ||
           !credentials?.password ||
-          !credentials?.deviceFingerprint ||
+          // !credentials?.deviceFingerprint ||
           !credentials.loginPath
         ) {
+          console.log("Authorize: Missing credentials", credentials);
           throw new Error("Missing credentials");
         }
 
@@ -43,13 +47,16 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!user) {
+            console.log("Authorize: User not found", normalizedEmail);
             throw new Error("User not found");
           }
 
           if (credentials.password !== user.password) {
+            console.log("Authorize: Invalid password", normalizedEmail);
             throw new Error("Invalid password");
           }
 
+          /*
           if (user.role !== "admin") {
             const finalFingerprint = credentials.deviceFingerprint;
             if (!user.deviceFingerprint) {
@@ -70,11 +77,14 @@ export const authOptions: NextAuthOptions = {
           if (user.deviceFingerprint !== credentials.deviceFingerprint) {
             throw new Error("Login restricted to the device used for signup.");
           }
+          */
 
           if (loginPath === "/admin" && user.role !== "admin") {
+            console.log("Authorize: Non-admin on admin path", normalizedEmail);
             throw new Error("Only admin accounts can log in here");
           }
           if (loginPath === "/" && user.role === "admin") {
+            console.log("Authorize: Admin on non-admin path", normalizedEmail);
             throw new Error(
               "Admin accounts can only be logged in from admin login page"
             );
@@ -92,7 +102,7 @@ export const authOptions: NextAuthOptions = {
           const { browser, os, device } = parser.getResult();
 
           const sessionToken = crypto.randomUUID();
-          const sessionExpires = new Date(Date.now() + 3600 * 100);
+          const sessionExpires = new Date(Date.now() + 3600 * 1000);
 
           await prisma.session.create({
             data: {
@@ -102,11 +112,18 @@ export const authOptions: NextAuthOptions = {
             },
           });
 
+          console.log("Authorize: Session created", {
+            sessionToken,
+            userId: user.id,
+          });
+
           await prisma.sessionHistory.create({
             data: {
               userId: user.id,
               sessionToken,
-              deviceFingerprint: credentials.deviceFingerprint,
+
+              // deviceFingerprint: credentials.deviceFingerprint,
+
               ipAddress,
               userAgent,
               browserName: browser.name,
@@ -121,16 +138,21 @@ export const authOptions: NextAuthOptions = {
             },
           });
 
-          return {
+          const userReturn = {
             id: user.id,
             email: user.email,
             firstName: user.firstName ?? undefined,
             lastName: user.lastName ?? undefined,
             role: user.role,
-            deviceFingerprint: credentials.deviceFingerprint,
+
+            // deviceFingerprint: credentials.deviceFingerprint,
           };
+          console.log("Authorize: Returning User", userReturn);
+          return userReturn;
+
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
+          console.log("Authorize: Error", error.message);
           throw new Error(
             error.message.includes("User not found")
               ? "User not found"
@@ -147,13 +169,13 @@ export const authOptions: NextAuthOptions = {
 
   session: { strategy: "jwt", maxAge: 3600 },
 
-  secret: process.env.NEXTAUTH_SECRET,
-
   callbacks: {
     async jwt({ token, user }) {
+      console.log("JWT Callback:", { token, user });
+
       if (user) {
         token.id = user.id;
-        token.deviceFingerprint = user.deviceFingerprint;
+        // token.deviceFingerprint = user.deviceFingerprint;
         token.role = user.role;
         token.jti = crypto.randomUUID();
       }
@@ -161,13 +183,17 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
+      console.log("JWT Callback:", { session, token });
+
       if (!token) {
+        console.log("Session Callback: No token");
+
         throw new Error("Invalid session: token blacklisted");
       }
 
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.deviceFingerprint = token.deviceFingerprint as string;
+        // session.user.deviceFingerprint = token.deviceFingerprint as string;
         session.user.role = token.role as string;
       }
       return session;
@@ -175,6 +201,8 @@ export const authOptions: NextAuthOptions = {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async redirect({ url, baseUrl, token }: any) {
+      console.log("Redirect Callback:", { url, baseUrl, token });
+
       if (url.includes("/api/auth/signout")) {
         return token?.role === "admin" ? `${baseUrl}/admin` : `${baseUrl}/`;
       }

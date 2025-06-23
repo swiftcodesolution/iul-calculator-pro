@@ -1,19 +1,25 @@
-import { useState, useEffect } from "react";
+// src/hooks/useAuthForm.ts
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { loginSchema, signupSchema } from "@/lib/types";
 import { getSession, signIn } from "next-auth/react";
-import FingerprintJS from "@fingerprintjs/fingerprintjs";
+
+// import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
 export function useAuthForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
+
+  // const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
+
   const router = useRouter();
   const pathname = usePathname();
-  const maxRetries = 100;
 
+  // const maxRetries = 100;
+
+  /*
   useEffect(() => {
     let retries = 0;
 
@@ -49,7 +55,9 @@ export function useAuthForm() {
 
     initializeFingerprint();
   }, []);
+  */
 
+  /*
   const generateFingerprint = async () => {
     try {
       const fp = await FingerprintJS.load();
@@ -84,6 +92,7 @@ export function useAuthForm() {
 
     return "";
   };
+  */
 
   const handleSubmit = async <
     T extends z.infer<typeof signupSchema> | z.infer<typeof loginSchema>
@@ -92,6 +101,7 @@ export function useAuthForm() {
     type: "signup" | "login",
     form: UseFormReturn<T>
   ) => {
+    /*
     let currentFingerprint = deviceFingerprint;
 
     if (!currentFingerprint) {
@@ -101,6 +111,7 @@ export function useAuthForm() {
         return;
       }
     }
+    */
 
     setIsSubmitting(true);
 
@@ -108,7 +119,7 @@ export function useAuthForm() {
       if (type === "signup") {
         const signupData = data as z.infer<typeof signupSchema>;
 
-        console.log("signup fp: ", currentFingerprint);
+        // console.log("signup fp: ", currentFingerprint);
 
         const response = await fetch("/api/auth/signup", {
           method: "POST",
@@ -122,7 +133,7 @@ export function useAuthForm() {
             lastName: signupData.lastName,
             cellPhone: signupData.cellPhone,
             officePhone: signupData.officePhone,
-            deviceFingerprint: currentFingerprint,
+            // deviceFingerprint: currentFingerprint,
           }),
         });
 
@@ -138,19 +149,24 @@ export function useAuthForm() {
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        console.log("login fp: ", currentFingerprint);
+        // console.log("login fp: ", currentFingerprint);
 
         const loginResult = await signIn("credentials", {
           redirect: false,
 
           email: signupData.email.toLowerCase(),
           password: signupData.password,
-          deviceFingerprint: currentFingerprint,
+          // deviceFingerprint: currentFingerprint,
           loginPath: pathname,
         });
 
+        console.log("signIn Result:", loginResult);
+
         if (loginResult?.ok) {
           const session = await getSession();
+
+          console.log("Session after signIn:", session);
+
           const userRole = session?.user?.role;
           const isAdminPage = pathname === "/admin";
 
@@ -177,14 +193,14 @@ export function useAuthForm() {
         const loginData = data as z.infer<typeof loginSchema>;
         const loginEmail = loginData.loginEmail.toLowerCase();
 
-        console.log("Login fingerprint:", currentFingerprint);
+        // console.log("Login fingerprint:", currentFingerprint);
 
         const result = await signIn("credentials", {
           redirect: false,
 
           email: loginEmail,
           password: loginData.loginPassword,
-          deviceFingerprint: currentFingerprint,
+          // deviceFingerprint: currentFingerprint,
           loginPath: pathname,
         });
 
@@ -236,5 +252,6 @@ export function useAuthForm() {
     }
   };
 
-  return { isSubmitting, deviceFingerprint, handleSubmit };
+  // return { isSubmitting, deviceFingerprint, handleSubmit };
+  return { isSubmitting, handleSubmit };
 }

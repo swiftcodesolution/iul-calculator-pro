@@ -13,6 +13,8 @@ export default withAuth(
       isAuthenticated: !!token,
       role: token?.role,
       sessionToken,
+
+      cookies: req.cookies.getAll(),
     });
 
     // Allow unauthenticated access to login pages
@@ -34,7 +36,9 @@ export default withAuth(
         pathname.startsWith("/admin/dashboard"))
     ) {
       console.log("Redirecting to /");
-      return NextResponse.redirect(new URL("/", req.url));
+      const redirectUrl = new URL("/", req.url);
+      redirectUrl.searchParams.set("callbackUrl", pathname); // Preserve callbackUrl
+      return NextResponse.redirect(redirectUrl);
     }
 
     return NextResponse.next();
@@ -49,6 +53,7 @@ export default withAuth(
           pathname,
           role: token?.role,
           sessionToken,
+          token: token || "no token",
         }); // Debug
 
         // Allow access to login pages
