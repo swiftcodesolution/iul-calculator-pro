@@ -32,6 +32,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
   const [error, setError] = useState<string | null>(null);
   const [evenColumnColor, setEvenColumnColor] = useState("#e6f3ff");
   const [oddColumnColor, setOddColumnColor] = useState("#f0f0f0");
+  const [highlightColor, setHighlightColor] = useState("#ffa1ad"); // New state for highlight color
   const [zoomLevel, setZoomLevel] = useState(0.6);
 
   const {
@@ -410,7 +411,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                     const isTFP = header.includes("TFP");
                     const isFixed = header === "Year" || header === "Age";
                     const bgColor = highlightedColumns.has(header)
-                      ? "#ffa1ad"
+                      ? highlightColor // Use highlightColor instead of hardcoded #ffa1ad
                       : isFixed
                       ? "#FFFFFF"
                       : isTFP
@@ -424,7 +425,9 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                         key={header}
                         className={cn(
                           "whitespace-break-spaces border break-words text-wrap align-top text-sm text-center cursor-pointer",
-                          highlightedColumns.has(header) ? "bg-[#ffa1ad]" : ""
+                          highlightedColumns.has(header)
+                            ? `bg-[${highlightColor}]`
+                            : ""
                         )}
                         style={{
                           backgroundColor: bgColor,
@@ -454,7 +457,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                       const isTFP = header.includes("TFP");
                       const isFixed = header === "Year" || header === "Age";
                       const bgColor = highlightedColumns.has(header)
-                        ? "#ffa1ad"
+                        ? highlightColor // Use highlightColor instead of hardcoded #ffa1ad
                         : isFixed
                         ? "#FFFFFF"
                         : isTFP
@@ -468,7 +471,9 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                           key={header}
                           className={cn(
                             "whitespace-break-spaces border break-words text-wrap align-top text-sm text-center cursor-pointer",
-                            highlightedColumns.has(header) ? "bg-[#ffa1ad]" : ""
+                            highlightedColumns.has(header)
+                              ? `bg-[${highlightColor}]`
+                              : ""
                           )}
                           style={{
                             backgroundColor: bgColor,
@@ -490,7 +495,9 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                     <TableRow
                       key={rowIndex}
                       className={cn(
-                        highlightedRows.has(rowIndex) ? "bg-[#ffa1ad]" : ""
+                        highlightedRows.has(rowIndex)
+                          ? `bg-[${highlightColor}]`
+                          : ""
                       )}
                       onClick={() => handleRowClick(rowIndex)}
                     >
@@ -500,7 +507,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                         const bgColor =
                           highlightedRows.has(rowIndex) ||
                           highlightedColumns.has(header)
-                            ? "#ffa1ad"
+                            ? highlightColor // Use highlightColor instead of hardcoded #ffa1ad
                             : isFixed
                             ? "#FFFFFF"
                             : isTFP
@@ -516,7 +523,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                               "border whitespace-nowrap text-sm",
                               highlightedColumns.has(header) ||
                                 highlightedRows.has(rowIndex)
-                                ? "bg-[#ffa1ad]"
+                                ? `bg-[${highlightColor}]`
                                 : ""
                             )}
                             style={{
@@ -570,6 +577,16 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
               type="color"
               value={evenColumnColor}
               onChange={(e) => setEvenColumnColor(e.target.value)}
+              className="w-8 h-8 border rounded"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="highlight-color">Highlight</Label>
+            <input
+              id="highlight-color"
+              type="color"
+              value={highlightColor}
+              onChange={(e) => setHighlightColor(e.target.value)}
               className="w-8 h-8 border rounded"
             />
           </div>
