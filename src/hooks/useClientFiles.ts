@@ -14,6 +14,7 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
   const [newClientName, setNewClientName] = useState("");
   const [selectedFile, setSelectedFile] = useState<ClientFile | null>(null);
   const [dialogAction, setDialogAction] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false); // New state for refresh loading
 
   useEffect(() => {
     async function fetchFiles() {
@@ -178,7 +179,6 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
           setDialogAction(null);
         }
       } else if (action === "delete" && data?.id) {
-        // Only delete if not Pro Sample Files or user is admin
         const file = clientFiles.find((file) => file.id === data.id);
         if (
           file?.category === "Pro Sample Files" &&
@@ -197,14 +197,19 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
           setDialogAction(null);
         }
       } else if (action === "latest") {
-        const latestFile = clientFiles.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )[0];
-        if (latestFile) {
-          setSelectedFile(latestFile);
-          setSelectedFileId(latestFile.id);
-          router.push(`/dashboard/calculator/${latestFile.id}`);
+        setIsRefreshing(true); // Start loading
+        try {
+          const response = await fetch("/api/files");
+          if (response.ok) {
+            const files = await response.json();
+            setClientFiles(files); // Refresh files
+          } else {
+            console.error("Failed to refresh files:", response.statusText);
+          }
+        } catch (error) {
+          console.error("Error refreshing files:", error);
+        } finally {
+          setIsRefreshing(false); // Stop loading
         }
       }
     } catch (error) {
@@ -267,5 +272,6 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
     handleClientAction,
     handleDragStart,
     handleDrop,
+    isRefreshing, // Expose loading state
   };
 }

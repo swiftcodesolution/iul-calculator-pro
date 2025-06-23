@@ -1,10 +1,10 @@
-// src/components/dashboard/ClientFilesSection.tsx
 "use client";
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Loader2 } from "lucide-react"; // Added for loading icon
 import { ClientFile } from "@/lib/types";
 import DialogContentRenderer from "./DialogContentRenderer";
 import { useRouter } from "next/navigation";
@@ -39,6 +39,7 @@ interface ClientFilesSectionProps {
     category: ClientFile["category"]
   ) => void;
   userRole: string;
+  isRefreshing: boolean; // Added for loading state
 }
 
 export default function ClientFilesSection({
@@ -53,9 +54,9 @@ export default function ClientFilesSection({
   handleClientAction,
   handleDragStart,
   handleDrop,
+  isRefreshing, // Added prop
 }: ClientFilesSectionProps) {
   const router = useRouter();
-
   const { selectedFileId: contextFileId, setSelectedFileId } = useFileContext();
 
   const handleOpen = () => {
@@ -88,8 +89,17 @@ export default function ClientFilesSection({
             variant="outline"
             size="sm"
             onClick={() => handleClientAction("latest")}
+            disabled={isRefreshing} // Disable during refresh
+            className="flex items-center gap-2"
           >
-            Get Latest
+            {isRefreshing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Refreshing
+              </>
+            ) : (
+              "Get Latest"
+            )}
           </Button>
         </motion.div>
         <div className="grid grid-cols-4 gap-2 flex-1">
