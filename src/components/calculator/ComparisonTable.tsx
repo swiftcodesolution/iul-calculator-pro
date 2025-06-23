@@ -100,6 +100,10 @@ export function ComparisonTable({
   const [hasInitializedIulBalance, setHasInitializedIulBalance] =
     useState(false);
 
+  const [lastInputYearsRunOut, setLastInputYearsRunOut] = useState<
+    number | string
+  >(yearsRunOutOfMoney);
+
   // Update to use calculatorAge and calculatorTaxRate
   const calculateNetWithdrawal = (amount: number | string): number => {
     const amountNum = typeof amount === "number" ? amount : 0;
@@ -345,22 +349,50 @@ export function ComparisonTable({
   const yearsRunOutOfMoneyNumber = Number(yearsRunOutOfMoney);
 
   useEffect(() => {
+    if (ageOptions.length === 0 && yearsRunOutOfMoneyInput !== "") {
+      setLastInputYearsRunOut(yearsRunOutOfMoneyInput);
+    }
+
     if (ageOptions.length > 0) {
       const currentYearsRunOut = Number(yearsRunOutOfMoney);
 
+      const lastInputNum = Number(lastInputYearsRunOut);
+
       if (
+        !isNaN(lastInputNum) &&
+        lastInputNum > currentAge &&
+        ageOptions.includes(lastInputNum)
+      ) {
+        setYearsRunOutOfMoney(lastInputNum);
+        setYearsRunOutOfMoneyInput(lastInputNum);
+      } else if (
         isYearsRunOutOfMoneyInvalid(currentYearsRunOut) ||
         !ageOptions.includes(currentYearsRunOut)
       ) {
-        const newAge =
-          ageOptions.find((age) => age > currentAge) ||
-          ageOptions[ageOptions.length - 1] ||
-          currentAge + 1;
-        setYearsRunOutOfMoney(newAge);
-        setYearsRunOutOfMoneyInput(newAge);
+        // const newAge =
+        //   ageOptions.find((age) => age > currentAge) ||
+        //   ageOptions[ageOptions.length - 1] ||
+        //   currentAge + 1;
+
+        const closestAge = ageOptions.reduce((prev, curr) =>
+          Math.abs(curr - (lastInputNum || currentAge + 1)) <
+          Math.abs(prev - (lastInputNum || currentAge + 1))
+            ? curr
+            : prev
+        );
+
+        setYearsRunOutOfMoney(closestAge);
+        setYearsRunOutOfMoneyInput(closestAge);
       }
     }
-  }, [ageOptions, yearsRunOutOfMoney, currentAge, setYearsRunOutOfMoney]);
+  }, [
+    ageOptions,
+    yearsRunOutOfMoney,
+    yearsRunOutOfMoneyInput,
+    currentAge,
+    setYearsRunOutOfMoney,
+    lastInputYearsRunOut,
+  ]);
 
   // Utility to parse input with fallback
   const parseInput = (
@@ -543,6 +575,7 @@ export function ComparisonTable({
     if (!isNaN(age)) {
       setYearsRunOutOfMoney(age);
       setYearsRunOutOfMoneyInput(age);
+      setLastInputYearsRunOut(age);
       setActiveInput("yearsRunOutOfMoney");
       refreshResults();
     }
@@ -1170,6 +1203,7 @@ export function ComparisonTable({
     if (!isYearsRunOutOfMoneyInvalid(initialAge)) {
       setYearsRunOutOfMoney(initialAge);
       setYearsRunOutOfMoneyInput(initialAge);
+      setLastInputYearsRunOut(initialAge);
     }
   }, [
     startingBalance,
