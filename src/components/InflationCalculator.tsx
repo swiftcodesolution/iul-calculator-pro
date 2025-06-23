@@ -84,9 +84,10 @@ export default function InflationCalculator() {
 
   return (
     <div className="w-full space-y-5">
-      <h1 className="text-xl font-semibold text-center">
-        Inflation Calculator
+      <h1 className="text-2xl font-bold text-center">
+        Inflation Calculator For Age {currentAge}
       </h1>
+
       <Card className="border p-4">
         <CardContent className="space-y-6">
           <div className="flex flex-col gap-4">
