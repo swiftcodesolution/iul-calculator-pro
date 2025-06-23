@@ -35,11 +35,63 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
 
   const handleClientAction = async (
     action: string,
-    data?: { id?: string; name?: string }
+    data?: { id?: string; name?: string; category?: string }
   ): Promise<{ fileId?: string } | void> => {
     if (status !== "authenticated" || !session?.user?.id) {
       console.error("Unauthenticated user");
       return;
+    }
+
+    const fileToActOn = clientFiles.find((file) => file.id === data?.id);
+    let targetFileId = data?.id;
+    let newFile: ClientFile | undefined;
+
+    // For agents acting on Pro Sample Files (except delete), create a copy first
+    if (
+      session.user.role === "agent" &&
+      fileToActOn?.category === "Pro Sample Files" &&
+      action !== "delete"
+    ) {
+      const copyResponse = await fetch(`/api/files/${fileToActOn.id}`);
+      if (!copyResponse.ok) {
+        console.error("Failed to fetch file data for copy");
+        return;
+      }
+      const originalFile = await copyResponse.json();
+
+      const copyFileName = `${fileToActOn.fileName} (Copy)`;
+      const createResponse = await fetch("/api/files", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName: copyFileName }),
+      });
+      if (!createResponse.ok) {
+        console.error("Failed to create file copy");
+        return;
+      }
+      const createdFile = await createResponse.json();
+
+      const updateResponse = await fetch(`/api/files/${createdFile.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          boxesData: originalFile.boxesData,
+          tablesData: originalFile.tablesData,
+          combinedResults: originalFile.combinedResults,
+          fields: originalFile.fields,
+          category: "Your Sample Files",
+        }),
+      });
+      if (updateResponse.ok) {
+        newFile = await updateResponse.json();
+        setClientFiles((prev) => [...prev, newFile!]);
+        setSelectedFile(newFile!);
+        setSelectedFileId(newFile!.id);
+        targetFileId = newFile!.id;
+      } else {
+        console.error("Failed to update copied file");
+        return;
+      }
     }
 
     try {
@@ -59,12 +111,24 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
           router.push(`/dashboard/calculator/${newFile.id}`);
           return { fileId: newFile.id };
         }
-      } else if (action === "open" && data?.id) {
-        setSelectedFileId(data.id); // Sync to context
-        router.push(`/dashboard/calculator/${data.id}`); // Use path segment
-      } else if (action === "copy" && data?.id && data?.name) {
-        const fileToCopy = clientFiles.find((file) => file.id === data.id);
+      } else if (action === "open" && targetFileId) {
+        setSelectedFileId(targetFileId);
+        router.push(`/dashboard/calculator/${targetFileId}`);
+      } else if (
+        action === "copy" &&
+        targetFileId &&
+        data?.name &&
+        data?.category
+      ) {
+        const fileToCopy = clientFiles.find((file) => file.id === targetFileId);
         if (fileToCopy) {
+          const fileResponse = await fetch(`/api/files/${targetFileId}`);
+          if (!fileResponse.ok) {
+            console.error("Failed to fetch file data");
+            return;
+          }
+          const originalFile = await fileResponse.json();
+
           const response = await fetch("/api/files", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -72,16 +136,30 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
           });
           if (response.ok) {
             const newFile = await response.json();
-            setClientFiles((prev) => [...prev, newFile]);
-            setSelectedFile(newFile);
-            setSelectedFileId(newFile.id);
-            setNewClientName("");
-            setDialogAction(null);
-            return { fileId: newFile.id };
+            const updateResponse = await fetch(`/api/files/${newFile.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                boxesData: originalFile.boxesData,
+                tablesData: originalFile.tablesData,
+                combinedResults: originalFile.combinedResults,
+                fields: originalFile.fields,
+                category: data.category,
+              }),
+            });
+            if (updateResponse.ok) {
+              const updatedFile = await updateResponse.json();
+              setClientFiles((prev) => [...prev, updatedFile]);
+              setSelectedFile(updatedFile);
+              setSelectedFileId(updatedFile.id);
+              setNewClientName("");
+              setDialogAction(null);
+              return { fileId: updatedFile.id };
+            }
           }
         }
-      } else if (action === "rename" && data?.id && data?.name) {
-        const response = await fetch(`/api/files/${data.id}`, {
+      } else if (action === "rename" && targetFileId && data?.name) {
+        const response = await fetch(`/api/files/${targetFileId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ fileName: data.name }),
@@ -89,7 +167,9 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
         if (response.ok) {
           setClientFiles((prev) =>
             prev.map((file) =>
-              file.id === data.id ? { ...file, fileName: data.name! } : file
+              file.id === targetFileId
+                ? { ...file, fileName: data.name! }
+                : file
             )
           );
           setSelectedFile(null);
@@ -98,6 +178,15 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
           setDialogAction(null);
         }
       } else if (action === "delete" && data?.id) {
+        // Only delete if not Pro Sample Files or user is admin
+        const file = clientFiles.find((file) => file.id === data.id);
+        if (
+          file?.category === "Pro Sample Files" &&
+          session.user.role !== "admin"
+        ) {
+          console.error("Cannot delete Pro Sample Files");
+          return;
+        }
         const response = await fetch(`/api/files/${data.id}`, {
           method: "DELETE",
         });
@@ -115,7 +204,7 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
         if (latestFile) {
           setSelectedFile(latestFile);
           setSelectedFileId(latestFile.id);
-          router.push(`/dashboard/calculator/${latestFile.id}`); // Use path segment
+          router.push(`/dashboard/calculator/${latestFile.id}`);
         }
       }
     } catch (error) {
@@ -134,7 +223,20 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
     e.preventDefault();
     const fileId = e.dataTransfer.getData("fileId");
     const file = clientFiles.find((f) => f.id === fileId);
-    if (file && file.category !== targetCategory) {
+
+    if (!file || file.category === targetCategory) return;
+
+    if (
+      session?.user?.role === "agent" &&
+      file.category === "Pro Sample Files"
+    ) {
+      const newFileName = `${file.fileName} (Copy)`;
+      await handleClientAction("copy", {
+        id: file.id,
+        name: newFileName,
+        category: targetCategory,
+      });
+    } else {
       try {
         const response = await fetch(`/api/files/${fileId}`, {
           method: "PATCH",

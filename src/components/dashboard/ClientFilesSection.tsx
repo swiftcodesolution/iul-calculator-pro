@@ -38,6 +38,7 @@ interface ClientFilesSectionProps {
     e: React.DragEvent<HTMLDivElement>,
     category: ClientFile["category"]
   ) => void;
+  userRole: string;
 }
 
 export default function ClientFilesSection({

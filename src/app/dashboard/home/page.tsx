@@ -12,6 +12,7 @@ import { useEffect, useRef } from "react";
 import { ClientFile, CompanyInfo, companyInfoSchema } from "@/lib/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useSession } from "next-auth/react";
 
 const contentVariants = {
   open: {
@@ -68,6 +69,8 @@ export default function DashboardPage() {
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const { data: session } = useSession();
 
   useEffect(() => {
     clearSelectedFileId();
@@ -135,6 +138,7 @@ export default function DashboardPage() {
           handleClientAction={handleClientAction}
           handleDragStart={handleDragStart}
           handleDrop={handleDrop}
+          userRole={session!.user.role}
         />
       </motion.div>
       <CropDialog
