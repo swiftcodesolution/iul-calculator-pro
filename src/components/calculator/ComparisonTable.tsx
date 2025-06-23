@@ -736,13 +736,13 @@ export function ComparisonTable({
               ? "Future age cannot be empty"
               : Number(futureAgeInput) <= currentAge
               ? "Future age must be greater than current age"
-              : "Future age cannot exceed years run out of money"
+              : "Future age cannot exceed year run out of money"
             : "Invalid future age"
           : isYearsRunOutOfMoneyInvalid(yearsRunOutOfMoneyInput)
           ? yearsRunOutOfMoneyInput === ""
-            ? "Years run out of money cannot be empty"
-            : "Years run out of money must be greater than current age"
-          : "Invalid years run out of money"
+            ? "year run out of money cannot be empty"
+            : "year run out of money must be greater than current age"
+          : "Invalid year run out of money"
       );
       setSelectedRowData(null);
     }
@@ -1235,7 +1235,7 @@ export function ComparisonTable({
                 Data displayed based on{" "}
                 {activeInput === "futureAge"
                   ? `Future Age: ${futureAge}`
-                  : `Years Run Out of Money: ${yearsRunOutOfMoney}`}
+                  : `year run out of money: ${yearsRunOutOfMoney}`}
               </p>
             )}
             <div className="flex items-center gap-2">
@@ -1381,7 +1381,7 @@ export function ComparisonTable({
                   Data displayed based on{" "}
                   {activeInput === "futureAge"
                     ? `Future Age: ${futureAge}`
-                    : `Years Run Out of Money: ${yearsRunOutOfMoney}`}
+                    : `year run out of money: ${yearsRunOutOfMoney}`}
                 </p>
               )}
               <Button

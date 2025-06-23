@@ -77,7 +77,6 @@ const TabNavigation = ({
   <div className="flex gap-2 overflow-x-auto">
     {tabs
       .filter((tab) => tab.isVisible)
-      .slice(0, 10)
       .map((tab, index) => (
         <motion.div
           key={tab.id}
