@@ -47,6 +47,7 @@ export default function DashboardPage() {
     handleClientAction,
     handleDragStart,
     handleDrop,
+    isRefreshing, // Destructure isRefreshing
   } = useClientFiles();
   const {
     cropDialogOpen,
@@ -117,7 +118,7 @@ export default function DashboardPage() {
         toggleEdit={toggleEdit}
         isSidebarCollapsed={isSidebarCollapsed}
         toggleSidebar={toggleSidebar}
-        handleFileUpload={handleFileUpload} // Pass useImageCrop functions
+        handleFileUpload={handleFileUpload}
         handleCropExistingImage={handleCropExistingImage}
       />
       <motion.div
@@ -139,6 +140,7 @@ export default function DashboardPage() {
           handleDragStart={handleDragStart}
           handleDrop={handleDrop}
           userRole={session!.user.role}
+          isRefreshing={isRefreshing} // Pass isRefreshing state
         />
       </motion.div>
       <CropDialog
