@@ -30,6 +30,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
     cumulativeIncome: 0,
     deathBenefits: 0,
   });
+  const [isReadOnly, setIsReadOnly] = useState(false); // New state for read-only mode
 
   const {
     boxesData,
@@ -53,7 +54,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
     handleCellClick,
   } = useColumnHighlight();
 
-  // Fetch file data
+  // Fetch file data and determine read-only status
   useEffect(() => {
     if (status !== "authenticated" || !session?.user?.id || !fileId) {
       setError("Unauthorized or invalid file ID");
@@ -77,6 +78,11 @@ export default function CalculatorPage({ params }: { params: Params }) {
 
         console.log("Fetched data:", data); // Debug
 
+        // Set read-only if user is agent and file is Pro Sample Files
+        setIsReadOnly(
+          session.user.role === "agent" && data.category === "Pro Sample Files"
+        );
+
         setBoxesData(data.boxesData || {});
         setTables(data.tablesData?.tables || []);
 
@@ -85,7 +91,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
           data.tablesData?.startingBalance !== undefined &&
             data.tablesData?.startingBalance !== 0
             ? data.tablesData.startingBalance
-            : startingBalance // Preserve existing value if fetched value is invalid
+            : startingBalance
         );
         setAnnualContributions(
           data.tablesData?.annualContributions !== undefined &&
@@ -126,10 +132,18 @@ export default function CalculatorPage({ params }: { params: Params }) {
     setYearsRunOutOfMoney,
   ]);
 
-  // Debounced save
+  // Debounced save (skip if read-only)
   const saveChanges = debounce(
     async () => {
-      if (!fileId || status !== "authenticated" || !session?.user?.id) return;
+      if (
+        !fileId ||
+        status !== "authenticated" ||
+        !session?.user?.id ||
+        isReadOnly
+      ) {
+        console.log("Skipping save due to read-only mode or invalid state");
+        return;
+      }
       try {
         const response = await fetch(`/api/files/${fileId}`, {
           method: "PATCH",
@@ -169,9 +183,11 @@ export default function CalculatorPage({ params }: { params: Params }) {
     { leading: false, trailing: true }
   );
 
-  // Save on state changes
+  // Save on state changes (only if not read-only)
   useEffect(() => {
-    saveChanges();
+    if (!isReadOnly) {
+      saveChanges();
+    }
     return () => saveChanges.cancel();
   }, [
     boxesData,
@@ -181,6 +197,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
     annualEmployerMatch,
     yearsRunOutOfMoney,
     saveChanges,
+    isReadOnly,
   ]);
 
   if (loading) return <div>Loading...</div>;
@@ -189,8 +206,11 @@ export default function CalculatorPage({ params }: { params: Params }) {
   return (
     <div className="h-[90vh] grid grid-cols-2 gap-4">
       <div className="flex flex-col gap-4 relative">
-        <InputParameters data={boxesData} onUpdate={setBoxesData} />
-
+        <InputParameters
+          data={boxesData}
+          onUpdate={setBoxesData}
+          readOnly={isReadOnly}
+        />
         <ComparisonTable
           currentAge={Number(boxesData.currentAge) || 0}
           boxesData={boxesData}
@@ -208,7 +228,6 @@ export default function CalculatorPage({ params }: { params: Params }) {
       </div>
       <div className="flex flex-col gap-4 relative">
         <CompanyInfo />
-
         <TabManager
           activeTab={activeTab}
           setActiveTab={setActiveTab}

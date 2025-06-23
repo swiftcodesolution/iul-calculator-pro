@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input"; // Added for search
+import { Input } from "@/components/ui/input";
 import { ClientFile } from "@/lib/types";
 import DialogContentRenderer from "@/components/dashboard/DialogContentRenderer";
 import { useRouter } from "next/navigation";
@@ -36,8 +36,8 @@ export default function AdminFilesSection() {
   const { setSelectedFileId, clearSelectedFileId } = useFileContext();
   const [adminFiles, setAdminFiles] = useState<ClientFile[]>([]);
   const [userFiles, setUserFiles] = useState<ClientFile[]>([]);
-  const [filteredUserFiles, setFilteredUserFiles] = useState<ClientFile[]>([]); // Added for search
-  const [searchQuery, setSearchQuery] = useState(""); // Added for search
+  const [filteredUserFiles, setFilteredUserFiles] = useState<ClientFile[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [newClientName, setNewClientName] = useState("");
   const [selectedFile, setSelectedFile] = useState<ClientFile | null>(null);
   const [dialogAction, setDialogAction] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export default function AdminFilesSection() {
           setUserFiles(files.filter((file) => file.userId !== session.user.id));
           setFilteredUserFiles(
             files.filter((file) => file.userId !== session.user.id)
-          ); // Initialize filtered
+          );
         } else {
           console.error("Failed to fetch files:", response.statusText);
         }
@@ -97,7 +97,10 @@ export default function AdminFilesSection() {
         const response = await fetch("/api/files", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fileName: data.name }),
+          body: JSON.stringify({
+            fileName: data.name,
+            category: "Pro Sample Files", // Set category for admin-created files
+          }),
         });
         if (response.ok) {
           const newFile = await response.json();
@@ -115,7 +118,10 @@ export default function AdminFilesSection() {
           const response = await fetch("/api/files", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fileName: data.name }),
+            body: JSON.stringify({
+              fileName: data.name,
+              category: "Pro Sample Files", // Ensure copy is also Pro Sample Files
+            }),
           });
           if (response.ok) {
             const newFile = await response.json();

@@ -8,12 +8,18 @@ import { useTableStore } from "@/lib/store";
 interface InputParametersProps {
   data: BoxesData;
   onUpdate: (updatedData: Partial<BoxesData>) => void;
+  readOnly?: boolean; // Add readOnly prop
 }
 
-export function InputParameters({ data, onUpdate }: InputParametersProps) {
+export function InputParameters({
+  data,
+  onUpdate,
+  readOnly = false,
+}: InputParametersProps) {
   const { fields } = useTableStore();
 
   const handleInputChange = (key: keyof BoxesData, rawValue: string) => {
+    if (readOnly) return; // Prevent updates in read-only mode
     const parsed = rawValue === "" ? "" : parseFloat(rawValue);
     onUpdate({ [key]: parsed }); // Pass raw input value (string or empty)
   };
@@ -87,7 +93,7 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
               <motion.div
                 key={label}
                 className="p-0 text-end flex items-center justify-between rounded-sm"
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: readOnly ? 1 : 1.02 }} // Disable hover effect in read-only
               >
                 <Label>{label}</Label>
                 <motion.p
@@ -99,6 +105,8 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                     className={`w-[100px] text-sm border-2 ${
                       isInvalid(key, value)
                         ? "border-red-500"
+                        : readOnly
+                        ? "border-gray-300 bg-gray-100"
                         : "border-gray-500"
                     }`}
                     value={value.toString()} // Convert to string
@@ -106,6 +114,8 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                     type="number"
                     step={decimalFields.includes(key) ? "0.1" : "1"}
                     min="0"
+                    readOnly={readOnly} // Apply readOnly prop
+                    disabled={readOnly} // Also disable for better UX
                   />
                 </motion.p>
               </motion.div>
@@ -144,7 +154,7 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
               <motion.div
                 key={label}
                 className="p-0 text-end flex items-center justify-between rounded-sm"
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: readOnly ? 1 : 1.02 }} // Disable hover effect in read-only
               >
                 <Label>{label}</Label>
                 <motion.p
@@ -157,6 +167,8 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                     className={`w-[100px] text-sm border-2 pr-6 ${
                       isInvalid(key, value)
                         ? "border-red-500"
+                        : readOnly
+                        ? "border-gray-300 bg-gray-100"
                         : "border-gray-500"
                     }`}
                     value={value.toString()} // Convert to string
@@ -164,6 +176,8 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                     type="number"
                     step={decimalFields.includes(key) ? "0.1" : "1"}
                     min="0"
+                    readOnly={readOnly} // Apply readOnly prop
+                    disabled={readOnly} // Also disable for better UX
                   />
                   <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500">
                     %
@@ -205,7 +219,7 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
               <motion.div
                 key={label}
                 className="p-0 text-end flex items-center justify-between rounded-sm"
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: readOnly ? 1 : 1.02 }} // Disable hover effect in read-only
               >
                 <Label>{label}</Label>
                 <motion.p
@@ -218,6 +232,8 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                     className={`w-[100px] text-sm border-2 pr-6 ${
                       isInvalid(key, value)
                         ? "border-red-500"
+                        : readOnly
+                        ? "border-gray-300 bg-gray-100"
                         : "border-gray-500"
                     }`}
                     value={value.toString()} // Convert to string
@@ -228,6 +244,8 @@ export function InputParameters({ data, onUpdate }: InputParametersProps) {
                     type="number"
                     step={decimalFields.includes(key) ? "0.1" : "1"}
                     min="0"
+                    readOnly={readOnly} // Apply readOnly prop
+                    disabled={readOnly} // Also disable for better UX
                   />
                   <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500">
                     %
