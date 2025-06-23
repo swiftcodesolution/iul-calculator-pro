@@ -200,23 +200,14 @@ export default function ImportPage({ params }: { params: Params }) {
 
   const handleCancel = async () => {
     setFile(null);
-    clearStore();
     setError(null);
     setZoomLevel(1);
     setIsTableFullScreen(false);
 
+    // Only clear store and backend data if explicitly intended (e.g., user confirms)
     if (fileId && status === "authenticated" && session?.user?.id) {
       try {
-        const response = await fetch(`/api/files/${fileId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "clearTablesData" }),
-        });
-        if (!response.ok) {
-          setError("Failed to clear tables data");
-          toast("Failed to clear tables data");
-        }
-
+        // Optionally, only clear fields, not tablesData
         const fieldsResponse = await fetch(`/api/files/${fileId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -226,9 +217,22 @@ export default function ImportPage({ params }: { params: Params }) {
           setError("Failed to clear fields data");
           toast("Failed to clear fields data");
         }
+        // Comment out or remove clearing tablesData to preserve inputs
+        /*
+      const response = await fetch(`/api/files/${fileId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "clearTablesData" }),
+      });
+      if (!response.ok) {
+        setError("Failed to clear tables data");
+        toast("Failed to clear tables data");
+      }
+      */
+        clearStore(); // Only clear store if you want to reset frontend state
       } catch {
-        setError("Error clearing tables data");
-        toast("Error clearing tables data");
+        setError("Error clearing data");
+        toast("Error clearing data");
       }
     }
   };

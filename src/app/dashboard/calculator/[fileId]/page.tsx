@@ -80,12 +80,33 @@ export default function CalculatorPage({ params }: { params: Params }) {
         setBoxesData(data.boxesData || {});
         setTables(data.tablesData?.tables || []);
 
-        setStartingBalance(data.tablesData?.startingBalance || 0);
-        setAnnualContributions(data.tablesData?.annualContributions || 0);
-        setAnnualEmployerMatch(data.tablesData?.annualEmployerMatch || 0);
-        setYearsRunOutOfMoney(data.tablesData?.yearsRunOutOfMoney || 0);
+        // Only update if the fetched data is valid (not 0 or undefined)
+        setStartingBalance(
+          data.tablesData?.startingBalance !== undefined &&
+            data.tablesData?.startingBalance !== 0
+            ? data.tablesData.startingBalance
+            : startingBalance // Preserve existing value if fetched value is invalid
+        );
+        setAnnualContributions(
+          data.tablesData?.annualContributions !== undefined &&
+            data.tablesData?.annualContributions !== 0
+            ? data.tablesData.annualContributions
+            : annualContributions
+        );
+        setAnnualEmployerMatch(
+          data.tablesData?.annualEmployerMatch !== undefined &&
+            data.tablesData?.annualEmployerMatch !== 0
+            ? data.tablesData.annualEmployerMatch
+            : annualEmployerMatch
+        );
+        setYearsRunOutOfMoney(
+          data.tablesData?.yearsRunOutOfMoney !== undefined &&
+            data.tablesData?.yearsRunOutOfMoney !== 0
+            ? data.tablesData.yearsRunOutOfMoney
+            : yearsRunOutOfMoney
+        );
       } catch (err) {
-        console.error("Fetch error:", err); // Debug
+        console.error("Fetch error:", err);
         setError("Error fetching file");
       } finally {
         setLoading(false);

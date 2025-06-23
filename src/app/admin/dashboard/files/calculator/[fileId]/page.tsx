@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { InputParameters } from "@/components/calculator/InputParameters";
 import { ComparisonTable } from "@/components/calculator/ComparisonTable";
+import { CompanyInfo } from "@/components/calculator/CompanyInfo";
 import TabManager from "@/components/calculator/TabManager";
 import { useColumnHighlight } from "@/hooks/useColumnHighlight";
 import { TotalAdvantage, ClientFile } from "@/lib/types";
@@ -74,14 +75,37 @@ export default function CalculatorPage({ params }: { params: Params }) {
         }
         const data: ClientFile = await response.json();
         console.log("Fetched data:", data); // Debug
+
         setBoxesData(data.boxesData || {});
         setTables(data.tablesData?.tables || []);
-        setStartingBalance(data.tablesData?.startingBalance || 0);
-        setAnnualContributions(data.tablesData?.annualContributions || 0);
-        setAnnualEmployerMatch(data.tablesData?.annualEmployerMatch || 0);
-        setYearsRunOutOfMoney(data.tablesData?.yearsRunOutOfMoney || 0);
+
+        // Only update if fetched data is valid (not 0 or undefined)
+        setStartingBalance(
+          data.tablesData?.startingBalance !== undefined &&
+            data.tablesData?.startingBalance !== 0
+            ? data.tablesData.startingBalance
+            : startingBalance // Preserve existing value
+        );
+        setAnnualContributions(
+          data.tablesData?.annualContributions !== undefined &&
+            data.tablesData?.annualContributions !== 0
+            ? data.tablesData.annualContributions
+            : annualContributions
+        );
+        setAnnualEmployerMatch(
+          data.tablesData?.annualEmployerMatch !== undefined &&
+            data.tablesData?.annualEmployerMatch !== 0
+            ? data.tablesData.annualEmployerMatch
+            : annualEmployerMatch
+        );
+        setYearsRunOutOfMoney(
+          data.tablesData?.yearsRunOutOfMoney !== undefined &&
+            data.tablesData?.yearsRunOutOfMoney !== 0
+            ? data.tablesData.yearsRunOutOfMoney
+            : yearsRunOutOfMoney
+        );
       } catch (err) {
-        console.error("Fetch error:", err); // Debug
+        console.error("Fetch error:", err);
         setError("Error fetching file");
       } finally {
         setLoading(false);
@@ -99,6 +123,10 @@ export default function CalculatorPage({ params }: { params: Params }) {
     setAnnualContributions,
     setAnnualEmployerMatch,
     setYearsRunOutOfMoney,
+    startingBalance,
+    annualContributions,
+    annualEmployerMatch,
+    yearsRunOutOfMoney,
   ]);
 
   // Debounced save
@@ -161,40 +189,38 @@ export default function CalculatorPage({ params }: { params: Params }) {
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
-  if (status === "authenticated" && session.user.role === "admin") {
-    return (
-      <div className="h-[90vh] grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-4 relative">
-          <InputParameters data={boxesData} onUpdate={setBoxesData} />
+  return (
+    <div className="h-[90vh] grid grid-cols-2 gap-4">
+      <div className="flex flex-col gap-4 relative">
+        <InputParameters data={boxesData} onUpdate={setBoxesData} />
 
-          <ComparisonTable
-            currentAge={Number(boxesData.currentAge) || 0}
-            boxesData={boxesData}
-            columnTextWhite={columnTextWhite}
-            highlightedRows={highlightedRows}
-            isTableCollapsed={isTableCollapsed}
-            isTableCardExpanded={isTableCardExpanded}
-            setIsTableCollapsed={setIsTableCollapsed}
-            setIsTableCardExpanded={setIsTableCardExpanded}
-            handleHeaderClick={handleHeaderClick}
-            handleCellClick={handleCellClick}
-            defaultResults={boxesData as never}
-            onTotalAdvantageChange={setTotalAdvantage}
-          />
-        </div>
-        <div className="flex flex-col gap-4 relative">
-          <TabManager
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            isTabCardExpanded={isTabCardExpanded}
-            setIsTabCardExpanded={setIsTabCardExpanded}
-            totalAdvantage={totalAdvantage}
-            handleCellClick={handleCellClick}
-          />
-        </div>
+        <ComparisonTable
+          currentAge={Number(boxesData.currentAge) || 0}
+          boxesData={boxesData}
+          columnTextWhite={columnTextWhite}
+          highlightedRows={highlightedRows}
+          isTableCollapsed={isTableCollapsed}
+          isTableCardExpanded={isTableCardExpanded}
+          setIsTableCollapsed={setIsTableCollapsed}
+          setIsTableCardExpanded={setIsTableCardExpanded}
+          handleHeaderClick={handleHeaderClick}
+          handleCellClick={handleCellClick}
+          defaultResults={boxesData as never}
+          onTotalAdvantageChange={setTotalAdvantage}
+        />
       </div>
-    );
-  }
+      <div className="flex flex-col gap-4 relative">
+        <CompanyInfo />
 
-  return <div>Unauthorized</div>;
+        <TabManager
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          isTabCardExpanded={isTabCardExpanded}
+          setIsTabCardExpanded={setIsTabCardExpanded}
+          totalAdvantage={totalAdvantage}
+          handleCellClick={handleCellClick}
+        />
+      </div>
+    </div>
+  );
 }

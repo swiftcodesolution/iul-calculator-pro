@@ -15,17 +15,14 @@ interface TableStore {
   startingBalance: number | string;
   annualContributions: number | string;
   annualEmployerMatch: number | string;
-
   withdrawalAmount: number | string;
   iulStartingBalance: number | string;
-  calculatorAge: number | string; // New: Store TabCalculator age
-  calculatorTaxRate: number | string; // New: Store TabCalculator tax rate
-
+  calculatorAge: number | string;
+  calculatorTaxRate: number | string;
   setWithdrawalAmount: (value: number | string) => void;
   setIulStartingBalance: (value: number | string) => void;
-  setCalculatorAge: (value: number | string) => void; // New
-  setCalculatorTaxRate: (value: number | string) => void; // New
-
+  setCalculatorAge: (value: number | string) => void;
+  setCalculatorTaxRate: (value: number | string) => void;
   setStartingBalance: (value: number | string) => void;
   setAnnualContributions: (value: number | string) => void;
   setAnnualEmployerMatch: (value: number | string) => void;
@@ -48,7 +45,8 @@ export const useTableStore = create<TableStore>((set) => ({
   clearTables: () => set({ tables: [] }),
   yearsRunOutOfMoney: "",
   isYearsRunOutOfMoneyUserSelected: false,
-  setYearsRunOutOfMoney: (age) => set({ yearsRunOutOfMoney: age }),
+  setYearsRunOutOfMoney: (age) =>
+    set({ yearsRunOutOfMoney: age, isYearsRunOutOfMoneyUserSelected: true }),
   futureAge: "",
   setFutureAge: (age) => set({ futureAge: age }),
   boxesData: {
@@ -67,22 +65,18 @@ export const useTableStore = create<TableStore>((set) => ({
   startingBalance: "",
   annualContributions: "",
   annualEmployerMatch: "",
-
-  withdrawalAmount: 0,
+  withdrawalAmount: "",
   iulStartingBalance: "",
-  calculatorAge: 45, // Default to match TabCalculator
-  calculatorTaxRate: 22, // Default to match TabCalculator
-
+  calculatorAge: 45,
+  calculatorTaxRate: 22,
   setWithdrawalAmount: (value) => set({ withdrawalAmount: value }),
   setIulStartingBalance: (value) => set({ iulStartingBalance: value }),
-  setCalculatorAge: (value) => set({ calculatorAge: value }), // New
-  setCalculatorTaxRate: (value) => set({ calculatorTaxRate: value }), // New
-
+  setCalculatorAge: (value) => set({ calculatorAge: value }),
+  setCalculatorTaxRate: (value) => set({ calculatorTaxRate: value }),
   setStartingBalance: (value) => set({ startingBalance: value }),
   setAnnualContributions: (value) => set({ annualContributions: value }),
   setAnnualEmployerMatch: (value) => set({ annualEmployerMatch: value }),
   fields: {
-    // Initialize fields
     illustration_date: null,
     insured_name: null,
     initial_death_benefit: null,
@@ -120,52 +114,24 @@ export const useTableStore = create<TableStore>((set) => ({
   clearStore: () =>
     set((state) => ({
       tables: [],
-      yearsRunOutOfMoney: "",
-      boxesData: {
-        currentAge: "",
-        stopSavingAge: "",
-        retirementAge: "",
-        workingTaxRate: "",
-        retirementTaxRate: "",
-        inflationRate: "",
-        currentPlanFees: "",
-        currentPlanROR: "",
-        taxFreePlanROR: "",
+      fields: {
+        illustration_date: null,
+        insured_name: null,
+        initial_death_benefit: null,
+        assumed_ror: null,
+        minimum_initial_pmt: null,
       },
-      startingBalance: state.startingBalance,
-      annualContributions: state.annualContributions,
-      annualEmployerMatch: state.annualEmployerMatch,
-
-      withdrawalAmount: state.withdrawalAmount,
-      iulStartingBalance: state.iulStartingBalance,
-      calculatorAge: state.calculatorAge,
-      calculatorTaxRate: state.calculatorTaxRate,
-
-      tabs: [
-        {
-          id: "total-advantage",
-          name: "Total Advantage",
-          type: "totalAdvantage",
-          isVisible: true,
-        },
-        {
-          id: "calculator",
-          name: "Calculator",
-          type: "calculator",
-          isVisible: true,
-        },
-        {
-          id: "inflationCalculator",
-          name: "Inflation Calculator Redesign",
-          type: "inflationCalculator",
-          isVisible: true,
-        },
-        {
-          id: "cagrChart",
-          name: "S&P Average vs Tax Free Plan",
-          type: "cagrChart",
-          isVisible: true,
-        },
-      ],
+      yearsRunOutOfMoney: state.yearsRunOutOfMoney, // Preserve
+      isYearsRunOutOfMoneyUserSelected: state.isYearsRunOutOfMoneyUserSelected, // Preserve
+      futureAge: state.futureAge, // Preserve
+      boxesData: state.boxesData, // Preserve
+      startingBalance: state.startingBalance, // Preserve
+      annualContributions: state.annualContributions, // Preserve
+      annualEmployerMatch: state.annualEmployerMatch, // Preserve
+      withdrawalAmount: state.withdrawalAmount, // Preserve
+      iulStartingBalance: state.iulStartingBalance, // Preserve
+      calculatorAge: state.calculatorAge, // Preserve
+      calculatorTaxRate: state.calculatorTaxRate, // Preserve
+      tabs: state.tabs, // Preserve static tabs
     })),
 }));

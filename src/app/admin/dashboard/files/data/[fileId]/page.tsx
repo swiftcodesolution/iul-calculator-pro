@@ -19,7 +19,8 @@ import { runGrossRetirementIncomeLoop, runTaxFreePlanLoop } from "@/lib/logics";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { CombinedResult, ClientFile } from "@/lib/types";
-import { debounce } from "@/lib/utils";
+import { debounce, cn } from "@/lib/utils";
+import { useTableHighlight } from "@/hooks/useTableHighlight";
 import { notFound } from "next/navigation";
 
 type Params = Promise<{ fileId: string }>;
@@ -31,13 +32,19 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
   const [error, setError] = useState<string | null>(null);
   const [evenColumnColor, setEvenColumnColor] = useState("#e6f3ff");
   const [oddColumnColor, setOddColumnColor] = useState("#f0f0f0");
+  const [highlightColor, setHighlightColor] = useState("#ffa1ad");
   const [zoomLevel, setZoomLevel] = useState(0.6);
-
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const {
+    highlightedRows,
+    highlightedColumns,
+    handleRowClick,
+    handleColumnClick,
+  } = useTableHighlight();
+
   const router = useRouter();
-
   const isFullScreen = false;
-
   const fontSize = `${zoomLevel}rem`;
   const paddingSize = `${0.75 * zoomLevel}rem`;
 
@@ -81,10 +88,31 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
         console.log("Fetched data:", data); // Debug
         setBoxesData(data.boxesData || {});
         setTables(data.tablesData?.tables || []);
-        setStartingBalance(data.tablesData?.startingBalance || 0);
-        setAnnualContributions(data.tablesData?.annualContributions || 0);
-        setAnnualEmployerMatch(data.tablesData?.annualEmployerMatch || 0);
-        setYearsRunOutOfMoney(data.tablesData?.yearsRunOutOfMoney || 0);
+        // Only update if fetched data is valid (not 0 or undefined)
+        setStartingBalance(
+          data.tablesData?.startingBalance !== undefined &&
+            data.tablesData?.startingBalance !== 0
+            ? data.tablesData.startingBalance
+            : startingBalance
+        );
+        setAnnualContributions(
+          data.tablesData?.annualContributions !== undefined &&
+            data.tablesData?.annualContributions !== 0
+            ? data.tablesData.annualContributions
+            : annualContributions
+        );
+        setAnnualEmployerMatch(
+          data.tablesData?.annualEmployerMatch !== undefined &&
+            data.tablesData?.annualEmployerMatch !== 0
+            ? data.tablesData.annualEmployerMatch
+            : annualEmployerMatch
+        );
+        setYearsRunOutOfMoney(
+          data.tablesData?.yearsRunOutOfMoney !== undefined &&
+            data.tablesData?.yearsRunOutOfMoney !== 0
+            ? data.tablesData.yearsRunOutOfMoney
+            : yearsRunOutOfMoney
+        );
       } catch (err) {
         console.error("Fetch error:", err); // Debug
         setError("Error fetching file");
@@ -104,6 +132,10 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
     setAnnualContributions,
     setAnnualEmployerMatch,
     setYearsRunOutOfMoney,
+    startingBalance,
+    annualContributions,
+    annualEmployerMatch,
+    yearsRunOutOfMoney,
   ]);
 
   // Debounced save
@@ -401,7 +433,9 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                   {headers.map((header) => {
                     const isTFP = header.includes("TFP");
                     const isFixed = header === "Year" || header === "Age";
-                    const bgColor = isFixed
+                    const bgColor = highlightedColumns.has(header)
+                      ? highlightColor
+                      : isFixed
                       ? "#FFFFFF"
                       : isTFP
                       ? evenColumnColor
@@ -412,7 +446,12 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                     return (
                       <TableHead
                         key={header}
-                        className="whitespace-break-spaces border break-words text-wrap align-top text-sm text-center"
+                        className={cn(
+                          "whitespace-break-spaces border break-words text-wrap align-top text-sm text-center cursor-pointer",
+                          highlightedColumns.has(header)
+                            ? `bg-[${highlightColor}]`
+                            : ""
+                        )}
                         style={{
                           backgroundColor: bgColor,
                           color: textColor,
@@ -420,6 +459,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                           padding: paddingSize,
                           width: "70px",
                         }}
+                        onClick={() => handleColumnClick(header)}
                       >
                         {header}
                       </TableHead>
@@ -439,7 +479,9 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                     {headers.map((header) => {
                       const isTFP = header.includes("TFP");
                       const isFixed = header === "Year" || header === "Age";
-                      const bgColor = isFixed
+                      const bgColor = highlightedColumns.has(header)
+                        ? highlightColor
+                        : isFixed
                         ? "#FFFFFF"
                         : isTFP
                         ? evenColumnColor
@@ -450,7 +492,12 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                       return (
                         <TableHead
                           key={header}
-                          className="whitespace-break-spaces border break-words text-wrap align-top text-sm text-center"
+                          className={cn(
+                            "whitespace-break-spaces border break-words text-wrap align-top text-sm text-center cursor-pointer",
+                            highlightedColumns.has(header)
+                              ? `bg-[${highlightColor}]`
+                              : ""
+                          )}
                           style={{
                             backgroundColor: bgColor,
                             color: textColor,
@@ -458,6 +505,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                             padding: paddingSize,
                             width: "70px",
                           }}
+                          onClick={() => handleColumnClick(header)}
                         >
                           {header}
                         </TableHead>
@@ -467,22 +515,40 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                 </TableHeader>
                 <TableBody>
                   {combinedResults.map((row, rowIndex) => (
-                    <TableRow key={rowIndex}>
+                    <TableRow
+                      key={rowIndex}
+                      className={cn(
+                        highlightedRows.has(rowIndex)
+                          ? `bg-[${highlightColor}]`
+                          : ""
+                      )}
+                      onClick={() => handleRowClick(rowIndex)}
+                    >
                       {headers.map((header, colIndex) => {
                         const isTFP = header.includes("TFP");
                         const isFixed = header === "Year" || header === "Age";
-                        const bgColor = isFixed
-                          ? "#FFFFFF"
-                          : isTFP
-                          ? evenColumnColor
-                          : oddColumnColor;
+                        const bgColor =
+                          highlightedRows.has(rowIndex) ||
+                          highlightedColumns.has(header)
+                            ? highlightColor
+                            : isFixed
+                            ? "#FFFFFF"
+                            : isTFP
+                            ? evenColumnColor
+                            : oddColumnColor;
                         const textColor = isFixed
                           ? "#000000"
                           : getContrastingTextColor(bgColor);
                         return (
                           <TableCell
                             key={`${rowIndex}-${colIndex}`}
-                            className="border whitespace-nowrap text-sm"
+                            className={cn(
+                              "border whitespace-nowrap text-sm",
+                              highlightedColumns.has(header) ||
+                                highlightedRows.has(rowIndex)
+                                ? `bg-[${highlightColor}]`
+                                : ""
+                            )}
                             style={{
                               backgroundColor: bgColor,
                               color: textColor,
@@ -534,6 +600,16 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
               type="color"
               value={evenColumnColor}
               onChange={(e) => setEvenColumnColor(e.target.value)}
+              className="w-8 h-8 border rounded"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="highlight-color">Highlight</Label>
+            <input
+              id="highlight-color"
+              type="color"
+              value={highlightColor}
+              onChange={(e) => setHighlightColor(e.target.value)}
               className="w-8 h-8 border rounded"
             />
           </div>
