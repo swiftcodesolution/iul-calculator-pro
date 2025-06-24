@@ -1,5 +1,5 @@
 // src/components/TabManager.tsx
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -74,7 +74,7 @@ const TabNavigation = ({
   activeTab: string | null;
   setActiveTab: (id: string | null) => void;
 }) => (
-  <div className="flex gap-2 overflow-x-auto">
+  <div className="flex gap-2 flex-wrap w-3/4">
     {tabs
       .filter((tab) => tab.isVisible)
       .map((tab, index) => (
