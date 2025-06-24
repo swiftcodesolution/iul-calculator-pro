@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -10,7 +10,7 @@ import DialogContentRenderer from "./DialogContentRenderer";
 import { useRouter } from "next/navigation";
 import { useFileContext } from "@/context/FileContext";
 
-const newClientVariant = {
+const newClientVariant: Variants = {
   hidden: { opacity: 0, scale: 0.8, y: 10 },
   visible: {
     opacity: 1,
