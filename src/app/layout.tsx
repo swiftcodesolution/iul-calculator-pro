@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { AnimatePresence } from "motion/react";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import "./globals.css";
@@ -37,9 +36,7 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              <AnimatePresence mode="wait" initial={false}>
-                <main className="min-h-dvh">{children}</main>
-              </AnimatePresence>
+              <main className="min-h-dvh">{children}</main>
             </ThemeProvider>
           </FileProvider>
           <Toaster />
