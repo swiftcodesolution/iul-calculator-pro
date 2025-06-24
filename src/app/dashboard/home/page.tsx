@@ -2,7 +2,7 @@
 
 import Sidebar from "@/components/dashboard/Sidebar";
 import ClientFilesSection from "@/components/dashboard/ClientFilesSection";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 import { useClientFiles } from "@/hooks/useClientFiles";
 import { useImageCrop } from "@/hooks/useImageCrop";
@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSession } from "next-auth/react";
 
-const contentVariants = {
+const contentVariants: Variants = {
   open: {
     marginLeft: "0px",
     transition: { duration: 0.5, type: "spring", stiffness: 100, damping: 15 },
