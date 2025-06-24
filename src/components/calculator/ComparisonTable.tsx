@@ -99,12 +99,23 @@ export function ComparisonTable({
 
   const [hasInitializedIulBalance, setHasInitializedIulBalance] =
     useState(false);
-
   const [lastInputYearsRunOut, setLastInputYearsRunOut] = useState<
     number | string
   >(yearsRunOutOfMoney);
+  const [yearsRunOutOfMoneyInput, setYearsRunOutOfMoneyInput] = useState<
+    number | string
+  >(yearsRunOutOfMoney);
+  const [selectedRowData, setSelectedRowData] =
+    useState<SelectedRowData | null>(null);
+  // const [futureAge, setFutureAge] = useState<number>(currentAge);
+  // const [futureAgeInput, setFutureAgeInput] = useState<number | string>(
+  //   futureAge
+  // );
+  // const [futureAgeError, setFutureAgeError] = useState<string | null>(null);
+  // const [activeInput, setActiveInput] = useState<
+  //   "futureAge" | "yearsRunOutOfMoney" | null
+  // >(null);
 
-  // Update to use calculatorAge and calculatorTaxRate
   const calculateNetWithdrawal = (amount: number | string): number => {
     const amountNum = typeof amount === "number" ? amount : 0;
     const age = parseFloat(String(calculatorAge)) || 45;
@@ -114,7 +125,6 @@ export function ComparisonTable({
     return amountNum - penalty - taxes;
   };
 
-  // Initialize IUL starting balance on first load
   useEffect(() => {
     if (!hasInitializedIulBalance && withdrawalAmount) {
       const netWithdrawal = calculateNetWithdrawal(withdrawalAmount);
@@ -129,140 +139,118 @@ export function ComparisonTable({
     hasInitializedIulBalance,
   ]);
 
-  const [yearsRunOutOfMoneyInput, setYearsRunOutOfMoneyInput] = useState<
-    number | string
-  >(yearsRunOutOfMoney);
+  // const isFutureAgeInvalid = (value: string | number): boolean => {
+  //   if (value === "") return true;
+  //   const numValue = Number(value);
+  //   if (isNaN(numValue)) return true;
+  //   if (numValue <= currentAge - 1) return true;
+  //   return false;
+  // };
 
-  const [futureAge, setFutureAge] = useState<number>(currentAge);
-  const [futureAgeInput, setFutureAgeInput] = useState<number | string>(
-    futureAge
-  );
-  const [selectedRowData, setSelectedRowData] =
-    useState<SelectedRowData | null>(null);
-
-  const [activeInput, setActiveInput] = useState<
-    "futureAge" | "yearsRunOutOfMoney" | null
-  >(null);
-
-  const [futureAgeError, setFutureAgeError] = useState<string | null>(null);
-
-  const isFutureAgeInvalid = (value: string | number): boolean => {
-    if (value === "") return true;
-    const numValue = Number(value);
-    if (isNaN(numValue)) return true;
-    if (numValue <= currentAge - 1) return true;
-    return false;
-  };
-
-  const onFutureAgeChange = (age: number) => {
-    if (!isNaN(age) || age > currentAge || tables[0]?.data?.length > 0) {
-      setFutureAge(age);
-      setFutureAgeInput(age);
-      setFutureAgeError(null);
-      const currentPlanTable = runGrossRetirementIncomeLoop(
-        parseInput(boxesData.currentAge, 0),
-        parseInput(yearsRunOutOfMoneyInput, 0),
-        parseInput(annualContributions, 0),
-        parseInput(boxesData.currentPlanROR, 0),
-        parseInput(boxesData.retirementTaxRate, 0),
-        parseInput(boxesData.currentPlanFees, 0),
-        parseInput(boxesData.workingTaxRate, 0),
-        parseInput(startingBalance, 0),
-        parseInput(annualEmployerMatch, 0),
-        parseInput(boxesData.retirementAge, 0),
-        parseInput(boxesData.stopSavingAge, 0)
-      );
-      const taxFreeTable = runTaxFreePlanLoop(tables, currentAge, age);
-      const currentRow = currentPlanTable.find((r) => r.age === age);
-      const taxFreeRow = taxFreeTable.find((r) => r.yearsRunOutOfMoney === age);
-
-      const taxesDueSum = currentPlanTable
-        .filter((row) => {
-          const inRange =
-            row.age >= age && row.age <= parseInput(yearsRunOutOfMoneyInput, 0);
-          console.log(
-            "Filter: Age",
-            row.age,
-            "InRange",
-            inRange,
-            "RetirementTaxes",
-            row.retirementTaxes
-          );
-          return inRange;
-        })
-        .reduce((sum, row) => sum + row.retirementTaxes, 0);
-      console.log(
-        "TaxesDueSum:",
-        taxesDueSum,
-        "FutureAge:",
-        age,
-        "YearsRunOut:",
-        yearsRunOutOfMoneyInput
-      );
-
-      if (currentRow && taxFreeRow) {
-        setSelectedRowData({
-          current: {
-            startingBalance: formatValue(startingBalance),
-            annualContributions: formatValue(annualContributions),
-            annualEmployerMatch: formatValue(annualEmployerMatch),
-            annualFees: formatValue(currentPlanResults.annualFees, true),
-            grossRetirementIncome: formatValue(
-              currentRow.grossRetirementIncome
-            ),
-            incomeTax: formatValue(currentRow.retirementTaxes),
-            netRetirementIncome: formatValue(currentRow.retirementIncome),
-            cumulativeTaxesDeferred: formatValue(
-              currentRow.cumulativeTaxesDeferred
-            ),
-            cumulativeTaxesPaid: formatValue(
-              currentRow.retirementTaxes *
-                (age - parseInput(boxesData.retirementAge, 0) + 1)
-            ),
-            cumulativeFeesPaid: formatValue(currentRow.cumulativeFees),
-            cumulativeNetIncome: formatValue(currentRow.cumulativeIncome),
-            cumulativeAccountBalance: formatValue(currentRow.endOfYearBalance),
-
-            // taxesDue: formatValue(currentPlanResults.taxesDue, true),
-            taxesDue: formatValue(taxesDueSum),
-
-            deathBenefits: formatValue(currentRow.deathBenefit),
-            yearsRunOutOfMoney: formatValue(age),
-          },
-          taxFree: {
-            startingBalance: formatValue(iulStartingBalance),
-            annualContributions: formatValue(taxFreeRow.annualContributions),
-            annualEmployerMatch: formatValue(taxFreeRow.annualEmployerMatch),
-            annualFees: formatValue(taxFreeRow.annualFees),
-            grossRetirementIncome: formatValue(
-              taxFreeRow.grossRetirementIncome
-            ),
-            incomeTax: formatValue(taxFreeRow.incomeTax),
-            netRetirementIncome: formatValue(taxFreeRow.netRetirementIncome),
-            cumulativeTaxesDeferred: formatValue(
-              taxFreeRow.cumulativeTaxesDeferred
-            ),
-            cumulativeTaxesPaid: formatValue(taxFreeRow.cumulativeTaxesPaid),
-            cumulativeFeesPaid: formatValue(taxFreeRow.cumulativeFeesPaid),
-            cumulativeNetIncome: formatValue(taxFreeRow.cumulativeNetIncome),
-            cumulativeAccountBalance: formatValue(
-              taxFreeRow.cumulativeAccountBalance
-            ),
-            taxesDue: formatValue(taxFreeRow.taxesDue),
-            deathBenefits: formatValue(taxFreeRow.deathBenefits),
-            yearsRunOutOfMoney: age.toString(),
-          },
-        });
-      } else {
-        setSelectedRowData(null);
-      }
-    } else {
-      setSelectedRowData(null);
-
-      setFutureAgeInput(currentAge);
-    }
-  };
-  // 26 monday
+  // const onFutureAgeChange = (age: number) => {
+  //   if (!isNaN(age) || age > currentAge || tables[0]?.data?.length > 0) {
+  //     setFutureAge(age);
+  //     setFutureAgeInput(age);
+  //     setFutureAgeError(null);
+  //     const currentPlanTable = runGrossRetirementIncomeLoop(
+  //       parseInput(boxesData.currentAge, 0),
+  //       parseInput(yearsRunOutOfMoneyInput, 0),
+  //       parseInput(annualContributions, 0),
+  //       parseInput(boxesData.currentPlanROR, 0),
+  //       parseInput(boxesData.retirementTaxRate, 0),
+  //       parseInput(boxesData.currentPlanFees, 0),
+  //       parseInput(boxesData.workingTaxRate, 0),
+  //       parseInput(startingBalance, 0),
+  //       parseInput(annualEmployerMatch, 0),
+  //       parseInput(boxesData.retirementAge, 0),
+  //       parseInput(boxesData.stopSavingAge, 0)
+  //     );
+  //     const taxFreeTable = runTaxFreePlanLoop(tables, currentAge, age);
+  //     const currentRow = currentPlanTable.find((r) => r.age === age);
+  //     const taxFreeRow = taxFreeTable.find((r) => r.yearsRunOutOfMoney === age);
+  //
+  //     const taxesDueSum = currentPlanTable
+  //       .filter((row) => {
+  //         const inRange =
+  //           row.age >= age && row.age <= parseInput(yearsRunOutOfMoneyInput, 0);
+  //         console.log(
+  //           "Filter: Age",
+  //           row.age,
+  //           "InRange",
+  //           inRange,
+  //           "RetirementTaxes",
+  //           row.retirementTaxes
+  //         );
+  //         return inRange;
+  //       })
+  //       .reduce((sum, row) => sum + row.retirementTaxes, 0);
+  //     console.log(
+  //       "TaxesDueSum:",
+  //       taxesDueSum,
+  //       "FutureAge:",
+  //       age,
+  //       "YearsRunOut:",
+  //       yearsRunOutOfMoneyInput
+  //     );
+  //
+  //     if (currentRow && taxFreeRow) {
+  //       setSelectedRowData({
+  //         current: {
+  //           startingBalance: formatValue(startingBalance),
+  //           annualContributions: formatValue(annualContributions),
+  //           annualEmployerMatch: formatValue(annualEmployerMatch),
+  //           annualFees: formatValue(currentPlanResults.annualFees, true),
+  //           grossRetirementIncome: formatValue(
+  //             currentRow.grossRetirementIncome
+  //           ),
+  //           incomeTax: formatValue(currentRow.retirementTaxes),
+  //           netRetirementIncome: formatValue(currentRow.retirementIncome),
+  //           cumulativeTaxesDeferred: formatValue(
+  //             currentRow.cumulativeTaxesDeferred
+  //           ),
+  //           cumulativeTaxesPaid: formatValue(
+  //             currentRow.retirementTaxes *
+  //               (age - parseInput(boxesData.retirementAge, 0) + 1)
+  //           ),
+  //           cumulativeFeesPaid: formatValue(currentRow.cumulativeFees),
+  //           cumulativeNetIncome: formatValue(currentRow.cumulativeIncome),
+  //           cumulativeAccountBalance: formatValue(currentRow.endOfYearBalance),
+  //           taxesDue: formatValue(taxesDueSum),
+  //           deathBenefits: formatValue(currentRow.deathBenefit),
+  //           yearsRunOutOfMoney: formatValue(age),
+  //         },
+  //         taxFree: {
+  //           startingBalance: formatValue(iulStartingBalance),
+  //           annualContributions: formatValue(taxFreeRow.annualContributions),
+  //           annualEmployerMatch: formatValue(taxFreeRow.annualEmployerMatch),
+  //           annualFees: formatValue(taxFreeRow.annualFees),
+  //           grossRetirementIncome: formatValue(
+  //             taxFreeRow.grossRetirementIncome
+  //           ),
+  //           incomeTax: formatValue(taxFreeRow.incomeTax),
+  //           netRetirementIncome: formatValue(taxFreeRow.netRetirementIncome),
+  //           cumulativeTaxesDeferred: formatValue(
+  //             taxFreeRow.cumulativeTaxesDeferred
+  //           ),
+  //           cumulativeTaxesPaid: formatValue(taxFreeRow.cumulativeTaxesPaid),
+  //           cumulativeFeesPaid: formatValue(taxFreeRow.cumulativeFeesPaid),
+  //           cumulativeNetIncome: formatValue(taxFreeRow.cumulativeNetIncome),
+  //           cumulativeAccountBalance: formatValue(
+  //             taxFreeRow.cumulativeAccountBalance
+  //           ),
+  //           taxesDue: formatValue(taxFreeRow.taxesDue),
+  //           deathBenefits: formatValue(taxFreeRow.deathBenefits),
+  //           yearsRunOutOfMoney: age.toString(),
+  //         },
+  //       });
+  //     } else {
+  //       setSelectedRowData(null);
+  //     }
+  //   } else {
+  //     setSelectedRowData(null);
+  //     setFutureAgeInput(currentAge);
+  //   }
+  // };
 
   const ageOptions = useMemo(() => {
     const mainTable = tables[0]?.data || [];
@@ -273,78 +261,48 @@ export function ComparisonTable({
     return [...new Set(ages)];
   }, [tables]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const futureAgeOptions = useMemo(() => {
-    const start = Number(boxesData.currentAge) || currentAge;
-    const end = Number(yearsRunOutOfMoney || yearsRunOutOfMoneyInput) || 0;
+  // const futureAgeOptions = useMemo(() => {
+  //   const start = Number(boxesData.currentAge) || currentAge;
+  //   const end = Number(yearsRunOutOfMoney || yearsRunOutOfMoneyInput) || 0;
+  //   return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  // }, [
+  //   boxesData.currentAge,
+  //   yearsRunOutOfMoneyInput,
+  //   yearsRunOutOfMoney,
+  //   currentAge,
+  // ]);
 
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  }, [
-    boxesData.currentAge,
-    yearsRunOutOfMoneyInput,
-    yearsRunOutOfMoney,
-    currentAge,
-  ]);
-
-  // const isFutureAgeInvalid = (
-  //   value: string | number | undefined | null
-  // ): boolean => {
-  //   if (value == null || value === "") return false;
-  //   const numValue = parseFloat(String(value));
-  //   if (isNaN(numValue)) return true;
-  //   if (numValue <= currentAge) return true;
-  //   return false;
+  // const handleFutureAgeChange = (value: string) => {
+  //   const age = Number(value);
+  //   if (!isNaN(age) && age >= 0) {
+  //     setFutureAge(age);
+  //     setFutureAgeInput(age);
+  //     onFutureAgeChange(age);
+  //     setActiveInput("futureAge");
+  //   }
   // };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleFutureAgeChange = (value: string) => {
-    const age = Number(value);
-
-    if (!isNaN(age) && age >= 0) {
-      setFutureAge(age);
-      setFutureAgeInput(age);
-      onFutureAgeChange(age);
-      setActiveInput("futureAge");
-    }
-  };
 
   // const handleFutureAgeInputChange = (
   //   e: React.ChangeEvent<HTMLInputElement>
   // ) => {
   //   const value = e.target.value;
   //   setFutureAgeInput(value);
-  //   const numValue = Number(value);
-  //   if (!isNaN(numValue) && numValue > currentAge) {
-  //     onFutureAgeChange(numValue);
-  //   } else {
+  //   setActiveInput("futureAge");
+  //   if (value === "") {
+  //     setFutureAgeError("Future age cannot be empty");
   //     setSelectedRowData(null);
-  //     setFutureAge(currentAge + 1);
+  //     return;
+  //   }
+  //   const numValue = Number(value);
+  //   if (isFutureAgeInvalid(numValue)) {
+  //     setFutureAgeError("Future age must be greater than current age");
+  //     setSelectedRowData(null);
+  //   } else {
+  //     setFutureAgeError(null);
+  //     setFutureAge(numValue);
+  //     onFutureAgeChange(numValue);
   //   }
   // };
-
-  const handleFutureAgeInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value;
-    setFutureAgeInput(value);
-    setActiveInput("futureAge");
-
-    if (value === "") {
-      setFutureAgeError("Future age cannot be empty");
-      setSelectedRowData(null);
-      return;
-    }
-
-    const numValue = Number(value);
-    if (isFutureAgeInvalid(numValue)) {
-      setFutureAgeError("Future age must be greater than current age");
-      setSelectedRowData(null);
-    } else {
-      setFutureAgeError(null);
-      setFutureAge(numValue);
-      onFutureAgeChange(numValue);
-    }
-  };
 
   const yearsRunOutOfMoneyNumber = Number(yearsRunOutOfMoney);
 
@@ -352,12 +310,9 @@ export function ComparisonTable({
     if (ageOptions.length === 0 && yearsRunOutOfMoneyInput !== "") {
       setLastInputYearsRunOut(yearsRunOutOfMoneyInput);
     }
-
     if (ageOptions.length > 0) {
       const currentYearsRunOut = Number(yearsRunOutOfMoney);
-
       const lastInputNum = Number(lastInputYearsRunOut);
-
       if (
         !isNaN(lastInputNum) &&
         lastInputNum > currentAge &&
@@ -369,18 +324,12 @@ export function ComparisonTable({
         isYearsRunOutOfMoneyInvalid(currentYearsRunOut) ||
         !ageOptions.includes(currentYearsRunOut)
       ) {
-        // const newAge =
-        //   ageOptions.find((age) => age > currentAge) ||
-        //   ageOptions[ageOptions.length - 1] ||
-        //   currentAge + 1;
-
         const closestAge = ageOptions.reduce((prev, curr) =>
           Math.abs(curr - (lastInputNum || currentAge + 1)) <
           Math.abs(prev - (lastInputNum || currentAge + 1))
             ? curr
             : prev
         );
-
         setYearsRunOutOfMoney(closestAge);
         setYearsRunOutOfMoneyInput(closestAge);
       }
@@ -394,7 +343,6 @@ export function ComparisonTable({
     lastInputYearsRunOut,
   ]);
 
-  // Utility to parse input with fallback
   const parseInput = (
     value: string | number | undefined | null,
     fallback: number
@@ -405,7 +353,6 @@ export function ComparisonTable({
     return isNaN(parsed) || parsed < 0 ? fallback : parsed;
   };
 
-  // Validation function for yearsRunOutOfMoneyInput
   const isYearsRunOutOfMoneyInvalid = (
     value: string | number | undefined | null
   ): boolean => {
@@ -416,7 +363,6 @@ export function ComparisonTable({
     return false;
   };
 
-  // Compute 401(k) results for Current Plan (red column) with fallback values
   const currentPlanResults = useMemo(() => {
     const inputs = {
       currentAge: parseInput(boxesData.currentAge, 0),
@@ -475,11 +421,8 @@ export function ComparisonTable({
       loopResults[loopResults.length - 1] ||
       getEmptyResults();
 
-    const futureAgeNum = Number(futureAge);
     const taxesDueSum = loopResults
-      .filter(
-        (row) => row.age >= futureAgeNum && row.age <= inputs.yearsRunOutOfMoney
-      )
+      .filter((row) => row.age === inputs.yearsRunOutOfMoney)
       .reduce((sum, row) => sum + row.retirementTaxes, 0);
 
     return {
@@ -498,23 +441,14 @@ export function ComparisonTable({
       cumulativeFeesPaid: targetResult.cumulativeFees,
       cumulativeNetIncome: targetResult.cumulativeIncome,
       cumulativeAccountBalance: targetResult.endOfYearBalance,
-
-      // taxesDue:
-      //   (targetResult.retirementTaxes / targetResult.grossRetirementIncome) *
-      //   100,
-
       taxesDue: taxesDueSum,
-
       taxesDuePercentage:
         (targetResult.retirementTaxes / targetResult.grossRetirementIncome) *
         100,
-
       deathBenefits: targetResult.deathBenefit,
       yearsRunOutOfMoney: inputs.yearsRunOutOfMoney,
       currentAge: inputs.currentAge,
     };
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     boxesData.currentAge,
     boxesData.currentPlanROR,
@@ -528,10 +462,9 @@ export function ComparisonTable({
     annualContributions,
     annualEmployerMatch,
     startingBalance,
-    futureAgeInput,
+    // futureAgeInput,
   ]);
 
-  // Handle missing tables data during SSG
   const taxFreeResults = useMemo(() => {
     if (!tables || !tables[0]?.data || tables[0].data.length === 0) {
       return {
@@ -561,7 +494,6 @@ export function ComparisonTable({
       ...results,
       startingBalance: parseInput(iulStartingBalance, results.startingBalance),
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     tables,
     currentAge,
@@ -576,7 +508,7 @@ export function ComparisonTable({
       setYearsRunOutOfMoney(age);
       setYearsRunOutOfMoneyInput(age);
       setLastInputYearsRunOut(age);
-      setActiveInput("yearsRunOutOfMoney");
+      // setActiveInput("yearsRunOutOfMoney");
       refreshResults();
     }
   };
@@ -628,23 +560,15 @@ export function ComparisonTable({
       setYearsRunOutOfMoney(numValue);
       // onFutureAgeChange(futureAge);
       // setActiveInput("yearsRunOutOfMoney");
-      // refreshResults();
+      refreshResults();
     }
   };
 
-  // 29 MAY
   const refreshResults = () => {
-    const ageToUse = Number(futureAgeInput);
-
-    // const maxAge = Number(yearsRunOutOfMoneyInput); // Convert to number explicitly
+    const ageToUse = Number(yearsRunOutOfMoneyInput);
 
     if (!isNaN(ageToUse) && ageToUse > currentAge) {
-      setFutureAgeError(null);
-      // setFutureAge(ageToUse);
-      // setYearsRunOutOfMoney(ageToUse);
-      // setYearsRunOutOfMoneyInput(ageToUse);
-
-      // Run calculation for Current Plan
+      // setFutureAgeError(null);
       const currentPlanTable = runGrossRetirementIncomeLoop(
         parseInput(boxesData.currentAge, 0),
         ageToUse,
@@ -658,12 +582,8 @@ export function ComparisonTable({
         parseInput(boxesData.retirementAge, 0),
         parseInput(boxesData.stopSavingAge, 0)
       );
-
-      // Find row for Current Plan
-      const currentRow = currentPlanTable.find((r) => r.age === ageToUse);
-
-      // Get Tax Free Plan data
       const taxFreeTable = runTaxFreePlanLoop(tables, currentAge, ageToUse);
+      const currentRow = currentPlanTable.find((r) => r.age === ageToUse);
       const taxFreeRow = taxFreeTable.find(
         (r) => r.yearsRunOutOfMoney === ageToUse
       );
@@ -694,10 +614,7 @@ export function ComparisonTable({
             cumulativeFeesPaid: formatValue(currentRow.cumulativeFees),
             cumulativeNetIncome: formatValue(currentRow.cumulativeIncome),
             cumulativeAccountBalance: formatValue(currentRow.endOfYearBalance),
-
-            // taxesDue: formatValue(currentPlanResults.taxesDue, true),
             taxesDue: formatValue(taxesDueSum),
-
             deathBenefits: formatValue(currentRow.deathBenefit),
             yearsRunOutOfMoney: formatValue(ageToUse),
           },
@@ -729,25 +646,24 @@ export function ComparisonTable({
         setSelectedRowData(null);
       }
     } else {
-      setFutureAgeError(
-        activeInput === "futureAge"
-          ? isFutureAgeInvalid(futureAgeInput)
-            ? futureAgeInput === ""
-              ? "Future age cannot be empty"
-              : Number(futureAgeInput) <= currentAge
-              ? "Future age must be greater than current age"
-              : "Future age cannot exceed year run out of money"
-            : "Invalid future age"
-          : isYearsRunOutOfMoneyInvalid(yearsRunOutOfMoneyInput)
-          ? yearsRunOutOfMoneyInput === ""
-            ? "year run out of money cannot be empty"
-            : "year run out of money must be greater than current age"
-          : "Invalid year run out of money"
-      );
+      // setFutureAgeError(
+      //   activeInput === "futureAge"
+      //     ? isFutureAgeInvalid(futureAgeInput)
+      //       ? futureAgeInput === ""
+      //         ? "Future age cannot be empty"
+      //         : Number(futureAgeInput) <= currentAge
+      //         ? "Future age must be greater than current age"
+      //         : "Future age cannot exceed year run out of money"
+      //       : "Invalid future age"
+      //     : isYearsRunOutOfMoneyInvalid(yearsRunOutOfMoneyInput)
+      //     ? yearsRunOutOfMoneyInput === ""
+      //       ? "year run out of money cannot be empty"
+      //       : "year run out of money must be greater than current age"
+      //     : "Invalid year run out of money"
+      // );
       setSelectedRowData(null);
     }
   };
-  // 29 MAY
 
   const formatValue = (
     value: number | string | undefined,
@@ -761,9 +677,7 @@ export function ComparisonTable({
       if (isNaN(parsed)) return value;
       value = parsed;
     }
-
     const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
-
     return isPercentage
       ? `${rounded.toFixed(2)}%`
       : `$${rounded.toLocaleString(undefined, {
@@ -790,9 +704,7 @@ export function ComparisonTable({
             aria-label="Starting Balance for Current Plan"
           />
         ),
-
         taxes: "0.00%",
-
         taxFree: selectedRowData
           ? selectedRowData.taxFree.startingBalance
           : formatValue(taxFreeResults.startingBalance),
@@ -813,9 +725,7 @@ export function ComparisonTable({
             aria-label="Annual Contributions for Current Plan"
           />
         ),
-
         taxes: formatValue(parseInput(boxesData.workingTaxRate, 0), true),
-
         taxFree: selectedRowData
           ? selectedRowData.taxFree.annualContributions
           : formatValue(taxFreeResults.annualContributions),
@@ -836,9 +746,7 @@ export function ComparisonTable({
             aria-label="Annual Employer Match for Current Plan"
           />
         ),
-
         taxes: "",
-
         taxFree: selectedRowData
           ? selectedRowData.taxFree.annualEmployerMatch
           : formatValue(taxFreeResults.annualEmployerMatch),
@@ -848,9 +756,7 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.annualFees
           : formatValue(currentPlanResults.annualFees, true),
-
         taxes: "",
-
         taxFree: selectedRowData
           ? selectedRowData.taxFree.annualFees
           : formatValue(taxFreeResults.annualFees),
@@ -860,9 +766,7 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.grossRetirementIncome
           : formatValue(currentPlanResults.grossRetirementIncome),
-
         taxes: "",
-
         taxFree: selectedRowData
           ? selectedRowData.taxFree.grossRetirementIncome
           : formatValue(taxFreeResults.grossRetirementIncome),
@@ -872,9 +776,7 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.incomeTax
           : formatValue(currentPlanResults.incomeTax),
-
         taxes: formatValue(parseInput(boxesData.retirementTaxRate, 0), true),
-
         taxFree: selectedRowData
           ? selectedRowData.taxFree.incomeTax
           : formatValue(taxFreeResults.incomeTax),
@@ -884,9 +786,7 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.netRetirementIncome
           : formatValue(currentPlanResults.netRetirementIncome),
-
         taxes: "",
-
         taxFree: selectedRowData
           ? selectedRowData.taxFree.netRetirementIncome
           : formatValue(taxFreeResults.netRetirementIncome),
@@ -896,9 +796,7 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.cumulativeTaxesDeferred
           : formatValue(currentPlanResults.cumulativeTaxesDeferred),
-
         taxes: "",
-
         taxFree: selectedRowData
           ? selectedRowData.taxFree.cumulativeTaxesDeferred
           : formatValue(taxFreeResults.cumulativeTaxesDeferred),
@@ -908,9 +806,7 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.cumulativeTaxesPaid
           : formatValue(currentPlanResults.cumulativeTaxesPaid),
-
         taxes: "",
-
         taxFree: selectedRowData
           ? selectedRowData.taxFree.cumulativeTaxesPaid
           : formatValue(taxFreeResults.cumulativeTaxesPaid),
@@ -920,9 +816,7 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.cumulativeFeesPaid
           : formatValue(currentPlanResults.cumulativeFeesPaid),
-
         taxes: "",
-
         taxFree: selectedRowData
           ? selectedRowData.taxFree.cumulativeFeesPaid
           : formatValue(taxFreeResults.cumulativeFeesPaid),
@@ -932,9 +826,7 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.cumulativeNetIncome
           : formatValue(currentPlanResults.cumulativeNetIncome),
-
         taxes: "",
-
         taxFree: selectedRowData
           ? selectedRowData.taxFree.cumulativeNetIncome
           : formatValue(taxFreeResults.cumulativeNetIncome),
@@ -944,9 +836,7 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.cumulativeAccountBalance
           : formatValue(currentPlanResults.cumulativeAccountBalance),
-
         taxes: "",
-
         taxFree: selectedRowData
           ? selectedRowData.taxFree.cumulativeAccountBalance
           : formatValue(taxFreeResults.cumulativeAccountBalance),
@@ -956,11 +846,9 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.taxesDue
           : formatValue(currentPlanResults.taxesDue),
-
         taxes: selectedRowData
           ? selectedRowData.current.taxesDuePercentage
           : formatValue(currentPlanResults.taxesDuePercentage, true),
-
         taxFree: selectedRowData
           ? selectedRowData.taxFree.taxesDue
           : formatValue(taxFreeResults.taxesDue),
@@ -970,9 +858,7 @@ export function ComparisonTable({
         current: selectedRowData
           ? selectedRowData.current.deathBenefits
           : formatValue(currentPlanResults.deathBenefits),
-
         taxes: "",
-
         taxFree: selectedRowData
           ? selectedRowData.taxFree.deathBenefits
           : formatValue(taxFreeResults.deathBenefits),
@@ -1032,57 +918,34 @@ export function ComparisonTable({
               </Button>
             </div>
           ),
-
-        taxes: (
-          // <div className="flex items-center justify-center gap-4 text-black">
-          //   <p>Future Age</p>
-          //   <Select
-          //     value={String(futureAge)}
-          //     onValueChange={handleFutureAgeChange}
-          //     aria-label="Select future age for Taxes"
-          //     // disabled={futureAgeOptions.length === 0}
-          //   >
-          //     <SelectTrigger className="">
-          //       <SelectValue placeholder="Select Age" />
-          //     </SelectTrigger>
-          //     <SelectContent>
-          //       {futureAgeOptions.map((age) => (
-          //         <SelectItem key={age} value={String(age)}>
-          //           {age}
-          //         </SelectItem>
-          //       ))}
-          //     </SelectContent>
-          //   </Select>
-          // </div>
-
-          <div className="flex flex-col items-center justify-center gap-0">
-            <p>Future Age</p>
-            <div className="w-full max-w-[80px] relative">
-              <Input
-                type="text"
-                value={futureAgeInput}
-                onChange={handleFutureAgeInputChange}
-                className={`p-1 h-fit text-center ${
-                  futureAgeError ? "border-red-500" : ""
-                }`}
-                aria-label="Future Age for Taxes"
-                placeholder="Enter age"
-              />
-              {futureAgeError && (
-                <p className="text-red-500 text-sm mt-1 text-wrap">
-                  {futureAgeError}
-                </p>
-              )}
-            </div>
-          </div>
-        ),
-
+        taxes: "", // Commented out Future Age input
+        // taxes: (
+        //   <div className="flex flex-col items-center justify-center gap-0">
+        //     <p>Future Age</p>
+        //     <div className="w-full max-w-[80px] relative">
+        //       <Input
+        //         type="text"
+        //         value={futureAgeInput}
+        //         onChange={handleFutureAgeInputChange}
+        //         className={`p-1 h-fit text-center ${
+        //           futureAgeError ? "border-red-500" : ""
+        //         }`}
+        //         aria-label="Future Age for Taxes"
+        //         placeholder="Enter age"
+        //       />
+        //       {futureAgeError && (
+        //         <p className="text-red-500 text-sm mt-1 text-wrap">
+        //           {futureAgeError}
+        //         </p>
+        //       )}
+        //     </div>
+        //   </div>
+        // ),
         taxFree: selectedRowData
           ? selectedRowData.taxFree.yearsRunOutOfMoney
           : taxFreeResults.yearsRunOutOfMoney,
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       currentPlanResults,
       boxesData,
@@ -1094,60 +957,53 @@ export function ComparisonTable({
       annualContributions,
       annualEmployerMatch,
       selectedRowData,
-      futureAge,
-      futureAgeInput,
+      // futureAge,
+      // futureAgeInput,
       currentAge,
     ]
   );
 
-  // 31 MAY
   useEffect(() => {
-    if (
-      activeInput === "yearsRunOutOfMoney" &&
-      yearsRunOutOfMoneyInput !== ""
-    ) {
+    // if (
+    //   activeInput === "yearsRunOutOfMoney" &&
+    //   yearsRunOutOfMoneyInput !== ""
+    // ) {
+    if (yearsRunOutOfMoneyInput !== "") {
       const currentTaxesPaid = selectedRowData?.current.cumulativeTaxesPaid
         ? parseFloat(
             selectedRowData.current.cumulativeTaxesPaid.replace(/[^0-9.]/g, "")
           )
         : currentPlanResults.cumulativeTaxesPaid;
-
       const taxFreeTaxesPaid = selectedRowData?.taxFree.cumulativeTaxesPaid
         ? parseFloat(
             selectedRowData.taxFree.cumulativeTaxesPaid.replace(/[^0-9.]/g, "")
           )
         : taxFreeResults.cumulativeTaxesPaid;
-
       const currentFees = selectedRowData?.current.cumulativeFeesPaid
         ? parseFloat(
             selectedRowData.current.cumulativeFeesPaid.replace(/[^0-9.]/g, "")
           )
         : currentPlanResults.cumulativeFeesPaid;
-
       const taxFreeFees = selectedRowData?.taxFree.cumulativeFeesPaid
         ? parseFloat(
             selectedRowData.taxFree.cumulativeFeesPaid.replace(/[^0-9.]/g, "")
           )
         : taxFreeResults.cumulativeFeesPaid;
-
       const currentIncome = selectedRowData?.current.cumulativeNetIncome
         ? parseFloat(
             selectedRowData.current.cumulativeNetIncome.replace(/[^0-9.]/g, "")
           )
         : currentPlanResults.cumulativeNetIncome;
-
       const taxFreeIncome = selectedRowData?.taxFree.cumulativeNetIncome
         ? parseFloat(
             selectedRowData.taxFree.cumulativeNetIncome.replace(/[^0-9.]/g, "")
           )
         : taxFreeResults.cumulativeNetIncome;
-
       const currentDeathBenefits = selectedRowData?.current.deathBenefits
         ? parseFloat(
             selectedRowData.current.deathBenefits.replace(/[^0-9.]/g, "")
           )
         : currentPlanResults.deathBenefits;
-
       const taxFreeDeathBenefits = selectedRowData?.taxFree.deathBenefits
         ? parseFloat(
             selectedRowData.taxFree.deathBenefits.replace(/[^0-9.]/g, "")
@@ -1171,7 +1027,6 @@ export function ComparisonTable({
 
       onTotalAdvantageChange?.(totalAdvantage);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     yearsRunOutOfMoneyInput,
     selectedRowData,
@@ -1179,7 +1034,6 @@ export function ComparisonTable({
     taxFreeResults,
     onTotalAdvantageChange,
   ]);
-  // 31 MAY
 
   useEffect(() => {
     const validStartingBalance = parseInput(startingBalance, 0);
@@ -1223,7 +1077,7 @@ export function ComparisonTable({
             aria-label="Toggle table visibility"
           >
             <h3 className="text-lg font-semibold">Comparison Table</h3>
-            {activeInput && (
+            {/* {activeInput && (
               <p
                 className={cn(
                   "text-sm",
@@ -1237,7 +1091,7 @@ export function ComparisonTable({
                   ? `Future Age: ${futureAge}`
                   : `year run out of money: ${yearsRunOutOfMoney}`}
               </p>
-            )}
+            )} */}
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -1304,7 +1158,7 @@ export function ComparisonTable({
                   >
                     <TableCell
                       className={cn(
-                        " border cursor-pointer whitespace-nowrap",
+                        "border cursor-pointer whitespace-nowrap",
                         highlightedRows.has(index) ? "bg-[#ffa1ad]" : ""
                       )}
                       onClick={() => handleCellClick(index)}
@@ -1314,7 +1168,7 @@ export function ComparisonTable({
                     </TableCell>
                     <TableCell
                       className={cn(
-                        " border cursor-pointer whitespace-nowrap",
+                        "border cursor-pointer whitespace-nowrap",
                         highlightedRows.has(index) ? "bg-[#ffa1ad]" : "",
                         columnTextWhite.currentPlan
                           ? "text-white opacity-0"
@@ -1328,7 +1182,7 @@ export function ComparisonTable({
                     </TableCell>
                     <TableCell
                       className={cn(
-                        " border cursor-pointer whitespace-nowrap text-center",
+                        "border cursor-pointer whitespace-nowrap text-center",
                         highlightedRows.has(index) ? "bg-[#ffa1ad]" : "",
                         columnTextWhite.taxes
                           ? "text-white opacity-0"
@@ -1342,7 +1196,7 @@ export function ComparisonTable({
                     </TableCell>
                     <TableCell
                       className={cn(
-                        " border cursor-pointer whitespace-nowrap",
+                        "border cursor-pointer whitespace-nowrap",
                         highlightedRows.has(index) ? "bg-[#ffa1ad]" : "",
                         columnTextWhite.taxFreePlan
                           ? "text-white opacity-0"
@@ -1371,7 +1225,7 @@ export function ComparisonTable({
           <Card className="flex-1">
             <CardHeader className="flex flex-row items-center justify-between">
               <h3 className="text-lg font-semibold">Comparison Table</h3>
-              {activeInput && (
+              {/* {activeInput && (
                 <p
                   className={cn(
                     "text-sm",
@@ -1383,7 +1237,7 @@ export function ComparisonTable({
                     ? `Future Age: ${futureAge}`
                     : `year run out of money: ${yearsRunOutOfMoney}`}
                 </p>
-              )}
+              )} */}
               <Button
                 variant="outline"
                 size="sm"
