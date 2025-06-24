@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import CompanyInfoSection from "./CompanyInfoSection";
@@ -10,7 +10,7 @@ import { CompanyInfo } from "@/lib/types";
 import { useState } from "react";
 import Image from "next/image";
 
-const sidebarVariants = {
+const sidebarVariants: Variants = {
   open: {
     x: 0,
     opacity: 1,
@@ -23,7 +23,7 @@ const sidebarVariants = {
   },
 };
 
-const contentVisibility = {
+const contentVisibility: Variants = {
   open: {
     opacity: 1,
     display: "block",
