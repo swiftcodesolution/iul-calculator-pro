@@ -19,8 +19,9 @@ import { useRouter } from "next/navigation";
 import { useFileContext } from "@/context/FileContext";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import type { Variants } from "framer-motion";
 
-const fileItemVariant = {
+const fileItemVariant: Variants = {
   hidden: { opacity: 0, scale: 0.95, y: 10 },
   visible: {
     opacity: 1,
