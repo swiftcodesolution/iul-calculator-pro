@@ -270,7 +270,7 @@ export default function ImportPage({ params }: { params: Params }) {
         onScroll={handleScroll}
       >
         {isScrolled && tables.length > 0 && (
-          <div className="sticky top-0 z-10 bg-white shadow-md w-full">
+          <div className="sticky top-0 z-10 bg-white shadow-md w-full flex">
             {tables.map((table, index) => {
               const columns = Object.keys(table.data[0] || {}).filter(
                 (key) => key !== "Source_Text" && key !== "Page_Number"
