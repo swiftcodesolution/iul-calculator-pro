@@ -123,10 +123,6 @@ export default function CalculatorPage({ params }: { params: Params }) {
     setAnnualContributions,
     setAnnualEmployerMatch,
     setYearsRunOutOfMoney,
-    // startingBalance,
-    // annualContributions,
-    // annualEmployerMatch,
-    // yearsRunOutOfMoney,
   ]);
 
   // Debounced save

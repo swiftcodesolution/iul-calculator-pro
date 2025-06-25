@@ -521,7 +521,7 @@ export default function ImportPage({ params }: { params: Params }) {
                 value={fields.insured_name || ""}
               />
             </div>
-            <div className="space-y-2 flex gap-2">
+            {/* <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="initial-death-benefit">
                 Initial Death Benefit
               </Label>
@@ -531,7 +531,7 @@ export default function ImportPage({ params }: { params: Params }) {
                 disabled
                 value={fields.initial_death_benefit || ""}
               />
-            </div>
+            </div> */}
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="assumed-ror">
                 Assumed ROR
