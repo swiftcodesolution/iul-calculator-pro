@@ -85,7 +85,12 @@ export default function CalculatorPage({ params }: { params: Params }) {
               data.category === "Pro Sample Files")
         );
 
-        setBoxesData(data.boxesData || {});
+        // setBoxesData(data.boxesData || {});
+        setBoxesData(
+          data.boxesData && Object.keys(data.boxesData).length > 0
+            ? data.boxesData
+            : {}
+        );
         setTables(data.tablesData?.tables || []);
 
         // Only update if the fetched data is valid (not 0 or undefined)

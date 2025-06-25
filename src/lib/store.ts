@@ -121,17 +121,17 @@ export const useTableStore = create<TableStore>((set) => ({
         assumed_ror: null,
         minimum_initial_pmt: null,
       },
-      yearsRunOutOfMoney: state.yearsRunOutOfMoney, // Preserve
-      isYearsRunOutOfMoneyUserSelected: state.isYearsRunOutOfMoneyUserSelected, // Preserve
-      futureAge: state.futureAge, // Preserve
-      boxesData: state.boxesData, // Preserve
-      startingBalance: state.startingBalance, // Preserve
-      annualContributions: state.annualContributions, // Preserve
-      annualEmployerMatch: state.annualEmployerMatch, // Preserve
-      withdrawalAmount: state.withdrawalAmount, // Preserve
-      iulStartingBalance: state.iulStartingBalance, // Preserve
-      calculatorAge: state.calculatorAge, // Preserve
-      calculatorTaxRate: state.calculatorTaxRate, // Preserve
-      tabs: state.tabs, // Preserve static tabs
+      yearsRunOutOfMoney: state.yearsRunOutOfMoney,
+      isYearsRunOutOfMoneyUserSelected: state.isYearsRunOutOfMoneyUserSelected,
+      futureAge: state.futureAge,
+      boxesData: state.boxesData,
+      startingBalance: state.startingBalance,
+      annualContributions: state.annualContributions,
+      annualEmployerMatch: state.annualEmployerMatch,
+      withdrawalAmount: state.withdrawalAmount,
+      iulStartingBalance: state.iulStartingBalance,
+      calculatorAge: state.calculatorAge,
+      calculatorTaxRate: state.calculatorTaxRate,
+      tabs: state.tabs,
     })),
 }));

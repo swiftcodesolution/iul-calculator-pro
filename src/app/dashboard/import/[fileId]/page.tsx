@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react"; // Changed import
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -142,7 +142,6 @@ export default function ImportPage({ params }: { params: Params }) {
     if (selectedFile && selectedFile.type === "application/pdf") {
       setFile(selectedFile);
       setError(null);
-      clearStore();
       setZoomLevel(1);
       setIsTableFullScreen(false);
     } else {
@@ -204,10 +203,8 @@ export default function ImportPage({ params }: { params: Params }) {
     setZoomLevel(1);
     setIsTableFullScreen(false);
 
-    // Only clear store and backend data if explicitly intended (e.g., user confirms)
     if (fileId && status === "authenticated" && session?.user?.id) {
       try {
-        // Optionally, only clear fields, not tablesData
         const fieldsResponse = await fetch(`/api/files/${fileId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -217,19 +214,7 @@ export default function ImportPage({ params }: { params: Params }) {
           setError("Failed to clear fields data");
           toast("Failed to clear fields data");
         }
-        // Comment out or remove clearing tablesData to preserve inputs
-        /*
-      const response = await fetch(`/api/files/${fileId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "clearTablesData" }),
-      });
-      if (!response.ok) {
-        setError("Failed to clear tables data");
-        toast("Failed to clear tables data");
-      }
-      */
-        clearStore(); // Only clear store if you want to reset frontend state
+        clearStore(); // Clear store, matching admin behavior
       } catch {
         setError("Error clearing data");
         toast("Error clearing data");
@@ -270,7 +255,7 @@ export default function ImportPage({ params }: { params: Params }) {
         onScroll={handleScroll}
       >
         {isScrolled && tables.length > 0 && (
-          <div className="sticky top-0 z-10 bg-white shadow-md w-full flex">
+          <div className="sticky top-0 z-10 bg-white shadow-md w-full">
             {tables.map((table, index) => {
               const columns = Object.keys(table.data[0] || {}).filter(
                 (key) => key !== "Source_Text" && key !== "Page_Number"
@@ -504,6 +489,16 @@ export default function ImportPage({ params }: { params: Params }) {
           className="lg:w-[30%] w-full flex flex-col gap-4 lg:mt-auto"
         >
           <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="highlight-color">Highlight Color</Label>
+              <input
+                id="highlight-color"
+                type="color"
+                value={highlightColor}
+                onChange={(e) => setHighlightColor(e.target.value)}
+                className="w-8 h-8 border rounded"
+              />
+            </div>
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="illustration-date">
                 Illustration Date
@@ -642,16 +637,6 @@ export default function ImportPage({ params }: { params: Params }) {
             </motion.div>
           )}
           <div className="flex gap-2">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="highlight-color">Highlight Color</Label>
-              <input
-                id="highlight-color"
-                type="color"
-                value={highlightColor}
-                onChange={(e) => setHighlightColor(e.target.value)}
-                className="w-8 h-8 border rounded"
-              />
-            </div>
             <Button
               variant="default"
               onClick={handleZoomIn}

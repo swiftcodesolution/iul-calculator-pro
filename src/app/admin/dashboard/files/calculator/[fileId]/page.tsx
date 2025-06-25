@@ -76,7 +76,12 @@ export default function CalculatorPage({ params }: { params: Params }) {
         const data: ClientFile = await response.json();
         console.log("Fetched data:", data); // Debug
 
-        setBoxesData(data.boxesData || {});
+        // setBoxesData(data.boxesData || {});
+        setBoxesData(
+          data.boxesData && Object.keys(data.boxesData).length > 0
+            ? data.boxesData
+            : {}
+        );
         setTables(data.tablesData?.tables || []);
 
         // Only update if fetched data is valid (not 0 or undefined)

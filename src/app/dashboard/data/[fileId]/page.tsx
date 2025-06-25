@@ -32,8 +32,9 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
   const [error, setError] = useState<string | null>(null);
   const [evenColumnColor, setEvenColumnColor] = useState("#e6f3ff");
   const [oddColumnColor, setOddColumnColor] = useState("#f0f0f0");
-  const [highlightColor, setHighlightColor] = useState("#ffa1ad"); // New state for highlight color
+  const [highlightColor, setHighlightColor] = useState("#ffa1ad");
   const [zoomLevel, setZoomLevel] = useState(0.6);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const {
     highlightedRows,
@@ -42,11 +43,8 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
     handleColumnClick,
   } = useTableHighlight();
 
-  const [isScrolled, setIsScrolled] = useState(false);
   const router = useRouter();
-
   const isFullScreen = false;
-
   const fontSize = `${zoomLevel}rem`;
   const paddingSize = `${0.75 * zoomLevel}rem`;
 
@@ -90,10 +88,31 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
         console.log("Fetched data:", data); // Debug
         setBoxesData(data.boxesData || {});
         setTables(data.tablesData?.tables || []);
-        setStartingBalance(data.tablesData?.startingBalance || 0);
-        setAnnualContributions(data.tablesData?.annualContributions || 0);
-        setAnnualEmployerMatch(data.tablesData?.annualEmployerMatch || 0);
-        setYearsRunOutOfMoney(data.tablesData?.yearsRunOutOfMoney || 0);
+        // Only update if fetched data is valid (not 0 or undefined)
+        setStartingBalance(
+          data.tablesData?.startingBalance !== undefined &&
+            data.tablesData?.startingBalance !== 0
+            ? data.tablesData.startingBalance
+            : startingBalance
+        );
+        setAnnualContributions(
+          data.tablesData?.annualContributions !== undefined &&
+            data.tablesData?.annualContributions !== 0
+            ? data.tablesData.annualContributions
+            : annualContributions
+        );
+        setAnnualEmployerMatch(
+          data.tablesData?.annualEmployerMatch !== undefined &&
+            data.tablesData?.annualEmployerMatch !== 0
+            ? data.tablesData.annualEmployerMatch
+            : annualEmployerMatch
+        );
+        setYearsRunOutOfMoney(
+          data.tablesData?.yearsRunOutOfMoney !== undefined &&
+            data.tablesData?.yearsRunOutOfMoney !== 0
+            ? data.tablesData.yearsRunOutOfMoney
+            : yearsRunOutOfMoney
+        );
       } catch (err) {
         console.error("Fetch error:", err); // Debug
         setError("Error fetching file");
@@ -113,6 +132,10 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
     setAnnualContributions,
     setAnnualEmployerMatch,
     setYearsRunOutOfMoney,
+    startingBalance,
+    annualContributions,
+    annualEmployerMatch,
+    yearsRunOutOfMoney,
   ]);
 
   // Debounced save
@@ -411,7 +434,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                     const isTFP = header.includes("TFP");
                     const isFixed = header === "Year" || header === "Age";
                     const bgColor = highlightedColumns.has(header)
-                      ? highlightColor // Use highlightColor instead of hardcoded #ffa1ad
+                      ? highlightColor
                       : isFixed
                       ? "#FFFFFF"
                       : isTFP
@@ -457,7 +480,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                       const isTFP = header.includes("TFP");
                       const isFixed = header === "Year" || header === "Age";
                       const bgColor = highlightedColumns.has(header)
-                        ? highlightColor // Use highlightColor instead of hardcoded #ffa1ad
+                        ? highlightColor
                         : isFixed
                         ? "#FFFFFF"
                         : isTFP
@@ -507,7 +530,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                         const bgColor =
                           highlightedRows.has(rowIndex) ||
                           highlightedColumns.has(header)
-                            ? highlightColor // Use highlightColor instead of hardcoded #ffa1ad
+                            ? highlightColor
                             : isFixed
                             ? "#FFFFFF"
                             : isTFP
