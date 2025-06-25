@@ -4,11 +4,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { BoxesData, BoxesInputField } from "@/lib/types";
 import { useTableStore } from "@/lib/store";
+import { useSession } from "next-auth/react";
 
 interface InputParametersProps {
   data: BoxesData;
   onUpdate: (updatedData: Partial<BoxesData>) => void;
-  readOnly?: boolean; // Add readOnly prop
+  readOnly?: boolean;
 }
 
 export function InputParameters({
@@ -17,14 +18,26 @@ export function InputParameters({
   readOnly = false,
 }: InputParametersProps) {
   const { fields } = useTableStore();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
 
   const handleInputChange = (key: keyof BoxesData, rawValue: string) => {
-    if (readOnly) return; // Prevent updates in read-only mode
+    const editableFieldsForUser: (keyof BoxesData)[] = [
+      "workingTaxRate",
+      "retirementTaxRate",
+      "currentPlanFees",
+      "currentPlanROR",
+    ];
+
+    if (
+      readOnly &&
+      !(userRole === "agent" && editableFieldsForUser.includes(key))
+    )
+      return;
     const parsed = rawValue === "" ? "" : parseFloat(rawValue);
-    onUpdate({ [key]: parsed }); // Pass raw input value (string or empty)
+    onUpdate({ [key]: parsed });
   };
 
-  // Define which fields should allow decimals
   const decimalFields: (keyof BoxesData)[] = [
     "workingTaxRate",
     "retirementTaxRate",
@@ -34,13 +47,12 @@ export function InputParameters({
     "taxFreePlanROR",
   ];
 
-  // Validation function to determine if an input is invalid
   const isInvalid = (key: keyof BoxesData, value: string | number): boolean => {
-    const stringValue = value.toString(); // Convert to string for consistency
-    if (stringValue === "") return false; // Empty inputs are allowed
+    const stringValue = value.toString();
+    if (stringValue === "") return false;
     const numValue = parseFloat(stringValue);
-    if (isNaN(numValue)) return true; // Invalid number
-    if (numValue < 0) return true; // Negative values not allowed
+    if (isNaN(numValue)) return true;
+    if (numValue < 0) return true;
     if (key === "stopSavingAge" || key === "retirementAge") {
       const currentAgeNum = parseFloat(data.currentAge.toString());
       return !isNaN(currentAgeNum) && numValue <= currentAgeNum;
@@ -51,6 +63,19 @@ export function InputParameters({
   const parsedAssumedRor = fields.assumed_ror
     ? parseFloat(fields.assumed_ror.replace("%", ""))
     : "";
+
+  const isFieldEditable = (key: keyof BoxesData) => {
+    if (!readOnly) return true;
+    return (
+      userRole === "agent" &&
+      [
+        "workingTaxRate",
+        "retirementTaxRate",
+        "currentPlanFees",
+        "currentPlanROR",
+      ].includes(key)
+    );
+  };
 
   return (
     <motion.div
@@ -93,7 +118,7 @@ export function InputParameters({
               <motion.div
                 key={label}
                 className="p-0 text-end flex items-center justify-between rounded-sm"
-                whileHover={{ scale: readOnly ? 1 : 1.02 }} // Disable hover effect in read-only
+                whileHover={{ scale: isFieldEditable(key) ? 1.02 : 1 }}
               >
                 <Label>{label}</Label>
                 <motion.p
@@ -105,17 +130,17 @@ export function InputParameters({
                     className={`w-[100px] text-sm border-2 ${
                       isInvalid(key, value)
                         ? "border-red-500"
-                        : readOnly
-                        ? "border-gray-300 bg-gray-100"
-                        : "border-gray-500"
+                        : isFieldEditable(key)
+                        ? "border-gray-500"
+                        : "border-gray-300 bg-gray-100 cursor-not-allowed"
                     }`}
-                    value={value.toString()} // Convert to string
+                    value={value.toString()}
                     onChange={(e) => handleInputChange(key, e.target.value)}
                     type="number"
                     step={decimalFields.includes(key) ? "0.1" : "1"}
                     min="0"
-                    readOnly={readOnly} // Apply readOnly prop
-                    disabled={readOnly} // Also disable for better UX
+                    readOnly={!isFieldEditable(key)}
+                    disabled={!isFieldEditable(key)}
                   />
                 </motion.p>
               </motion.div>
@@ -154,7 +179,7 @@ export function InputParameters({
               <motion.div
                 key={label}
                 className="p-0 text-end flex items-center justify-between rounded-sm"
-                whileHover={{ scale: readOnly ? 1 : 1.02 }} // Disable hover effect in read-only
+                whileHover={{ scale: isFieldEditable(key) ? 1.02 : 1 }}
               >
                 <Label>{label}</Label>
                 <motion.p
@@ -167,17 +192,17 @@ export function InputParameters({
                     className={`w-[100px] text-sm border-2 pr-6 ${
                       isInvalid(key, value)
                         ? "border-red-500"
-                        : readOnly
-                        ? "border-gray-300 bg-gray-100"
-                        : "border-gray-500"
+                        : isFieldEditable(key)
+                        ? "border-gray-500"
+                        : "border-gray-300 bg-gray-100 cursor-not-allowed"
                     }`}
-                    value={value.toString()} // Convert to string
+                    value={value.toString()}
                     onChange={(e) => handleInputChange(key, e.target.value)}
                     type="number"
                     step={decimalFields.includes(key) ? "0.1" : "1"}
                     min="0"
-                    readOnly={readOnly} // Apply readOnly prop
-                    disabled={readOnly} // Also disable for better UX
+                    readOnly={!isFieldEditable(key)}
+                    disabled={!isFieldEditable(key)}
                   />
                   <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500">
                     %
@@ -219,7 +244,7 @@ export function InputParameters({
               <motion.div
                 key={label}
                 className="p-0 text-end flex items-center justify-between rounded-sm"
-                whileHover={{ scale: readOnly ? 1 : 1.02 }} // Disable hover effect in read-only
+                whileHover={{ scale: isFieldEditable(key) ? 1.02 : 1 }}
               >
                 <Label>{label}</Label>
                 <motion.p
@@ -232,11 +257,11 @@ export function InputParameters({
                     className={`w-[100px] text-sm border-2 pr-6 ${
                       isInvalid(key, value)
                         ? "border-red-500"
-                        : readOnly
-                        ? "border-gray-300 bg-gray-100"
-                        : "border-gray-500"
+                        : isFieldEditable(key)
+                        ? "border-gray-500"
+                        : "border-gray-300 bg-gray-100 cursor-not-allowed"
                     }`}
-                    value={value.toString()} // Convert to string
+                    value={value.toString()}
                     onChange={(e) =>
                       key !== "taxFreePlanROR" &&
                       handleInputChange(key, e.target.value)
@@ -244,8 +269,8 @@ export function InputParameters({
                     type="number"
                     step={decimalFields.includes(key) ? "0.1" : "1"}
                     min="0"
-                    readOnly={readOnly} // Apply readOnly prop
-                    disabled={readOnly} // Also disable for better UX
+                    readOnly={!isFieldEditable(key)}
+                    disabled={!isFieldEditable(key)}
                   />
                   <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500">
                     %
