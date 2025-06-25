@@ -80,7 +80,7 @@ export default function Sidebar({
     >
       {/* Added cover div on top of sidebar with separate toggle button */}
       <div
-        className={`p-6 flex items-center content-center absolute top-0 left-0 h-[95vh] inset-0 bg-gray-800 bg-opacity-75 z-30 ${
+        className={`p-6 flex items-center content-center absolute top-0 left-0 h-[95vh] inset-0 bg-black bg-opacity-100 z-30 ${
           isCoverCollapsed ? "hidden" : "block"
         }`}
         onClick={() => setIsCoverCollapsed(true)}

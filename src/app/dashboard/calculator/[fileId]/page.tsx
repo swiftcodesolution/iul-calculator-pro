@@ -80,7 +80,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
 
         // Set read-only if user is agent and file is Pro Sample Files
         setIsReadOnly(
-          session.user.role === "agent" && data.category === "Pro Sample Files"
+          data.createdByRole === "admin" ||
+            (session.user.role === "agent" &&
+              data.category === "Pro Sample Files")
         );
 
         setBoxesData(data.boxesData || {});

@@ -1,7 +1,26 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import prisma from "@/lib/connect";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ fileId: string }> }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { fileId } = await params;
+  const file = await prisma.clientFile.findUnique({ where: { id: fileId } });
+  if (!file) {
+    return NextResponse.json({ error: "File not found" }, { status: 404 });
+  }
+
+  return NextResponse.json(file);
+}
 
 export async function PATCH(
   request: Request,
@@ -17,21 +36,8 @@ export async function PATCH(
     await request.json();
 
   const file = await prisma.clientFile.findUnique({ where: { id: fileId } });
-  if (
-    !file ||
-    (file.userId !== session.user.id && session.user.role !== "admin")
-  ) {
-    return NextResponse.json(
-      { error: "File not found or unauthorized" },
-      { status: 400 }
-    );
-  }
-
-  if (file.createdByRole === "admin" && session.user.role !== "admin") {
-    return NextResponse.json({
-      message: "Changes not saved for Pro Sample Files",
-      file,
-    });
+  if (!file) {
+    return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
 
   const validCategories = [
@@ -77,42 +83,12 @@ export async function DELETE(
 
   const { fileId } = await params;
   const file = await prisma.clientFile.findUnique({ where: { id: fileId } });
-  if (
-    !file ||
-    (file.userId !== session.user.id && session.user.role !== "admin")
-  ) {
-    return NextResponse.json(
-      { error: "File not found or unauthorized" },
-      { status: 400 }
-    );
+  if (!file) {
+    return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
 
   await prisma.clientFile.delete({ where: { id: fileId } });
   return NextResponse.json({ message: "File deleted" });
-}
-
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ fileId: string }> }
-) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { fileId } = await params;
-  const file = await prisma.clientFile.findUnique({ where: { id: fileId } });
-  if (
-    !file ||
-    (file.userId !== session.user.id && session.user.role !== "admin")
-  ) {
-    return NextResponse.json(
-      { error: "File not found or unauthorized" },
-      { status: 400 }
-    );
-  }
-
-  return NextResponse.json(file);
 }
 
 export async function POST(
@@ -128,21 +104,8 @@ export async function POST(
   const { action } = await request.json();
 
   const file = await prisma.clientFile.findUnique({ where: { id: fileId } });
-  if (
-    !file ||
-    (file.userId !== session.user.id && session.user.role !== "admin")
-  ) {
-    return NextResponse.json(
-      { error: "File not found or unauthorized" },
-      { status: 400 }
-    );
-  }
-
-  if (file.createdByRole === "admin" && session.user.role !== "admin") {
-    return NextResponse.json({
-      message: "Cannot modify Pro Sample Files",
-      file,
-    });
+  if (!file) {
+    return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
 
   if (action === "clearTablesData") {
@@ -152,7 +115,6 @@ export async function POST(
         select: { tablesData: true },
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updatedTablesData = (currentFile?.tablesData as any) || {};
       if (Array.isArray(updatedTablesData.tables)) {
         updatedTablesData.tables = [];
@@ -186,7 +148,6 @@ export async function POST(
         select: { fields: true },
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updatedFieldsData = (currentFile?.fields as any) || {};
       if (Array.isArray(updatedFieldsData.fields)) {
         updatedFieldsData.fields = [];
