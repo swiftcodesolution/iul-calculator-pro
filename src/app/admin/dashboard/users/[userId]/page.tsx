@@ -65,6 +65,7 @@ export default function UserDetailsPage({
   const { userId } = use(params);
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     async function fetchUser() {
@@ -86,15 +87,16 @@ export default function UserDetailsPage({
     fetchUser();
   }, [userId]);
 
-  const handleRemoveDevice = async () => {
+  const handleDeleteUser = async () => {
     if (
       !confirm(
-        "Are you sure you want to remove this device? This will clear the device fingerprint for the user."
+        "Are you sure you want to delete this user? This will remove the user and their associated data."
       )
     ) {
       return;
     }
 
+    setIsDeleting(true);
     try {
       const response = await fetch(`/api/users/${userId}`, {
         method: "DELETE",
@@ -103,19 +105,16 @@ export default function UserDetailsPage({
 
       if (!response.ok) {
         const result = await response.json();
-        throw new Error(result.error || "Failed to remove device");
+        throw new Error(result.error || "Failed to delete user");
       }
 
-      toast.success("Device removed successfully");
-      // Optionally refetch user data to update the UI
-      const updatedResponse = await fetch(`/api/users/${userId}`);
-      if (updatedResponse.ok) {
-        const updatedData = await updatedResponse.json();
-        setUser(updatedData);
-      }
+      toast.success("User deleted successfully");
+      window.location.href = "/admin/dashboard/users";
     } catch (err) {
-      toast.error("Failed to remove device");
-      console.error("Remove device error:", err);
+      toast.error("Failed to delete user");
+      console.error("Delete user error:", err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -161,10 +160,11 @@ export default function UserDetailsPage({
                 </p>
                 <Button
                   variant="destructive"
-                  onClick={handleRemoveDevice}
+                  onClick={handleDeleteUser}
                   className="ml-4"
+                  disabled={isDeleting}
                 >
-                  Remove Device
+                  {isDeleting ? "Deleting..." : "Delete User"}
                 </Button>
               </div>
             </div>

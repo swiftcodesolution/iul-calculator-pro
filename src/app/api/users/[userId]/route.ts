@@ -78,6 +78,7 @@ export async function GET(
   }
 }
 
+/*
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
@@ -114,6 +115,48 @@ export async function DELETE(
     console.error("Error clearing device fingerprint:", error);
     return NextResponse.json(
       { error: "Failed to clear device fingerprint" },
+      { status: 500 }
+    );
+  }
+}
+*/
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ userId: string }> }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id || session.user.role !== "admin") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { userId } = await params;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Delete related companyInfo
+    await prisma.companyInfo.deleteMany({
+      where: { email: user.email },
+    });
+
+    // Delete user and related data (cascades to sessionHistory, files, etc.)
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return NextResponse.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return NextResponse.json(
+      { error: "Failed to delete user" },
       { status: 500 }
     );
   }
