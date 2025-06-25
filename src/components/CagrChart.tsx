@@ -170,7 +170,7 @@ export default function CagrChart() {
                   <tr>
                     <td className="p-2 font-bold">CAGR</td>
                     <td className="p-2">7.02%</td>
-                    <td className="p-2">7.24%</td>
+                    <td className="p-2">7.96%</td>
                   </tr>
                 </tbody>
               </table>
