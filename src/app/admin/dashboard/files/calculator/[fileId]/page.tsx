@@ -4,7 +4,7 @@ import { use, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { InputParameters } from "@/components/calculator/InputParameters";
 import { ComparisonTable } from "@/components/calculator/ComparisonTable";
-import { CompanyInfo } from "@/components/calculator/CompanyInfo";
+// import { CompanyInfo } from "@/components/calculator/CompanyInfo";
 import TabManager from "@/components/calculator/TabManager";
 import { useColumnHighlight } from "@/hooks/useColumnHighlight";
 import { TotalAdvantage, ClientFile } from "@/lib/types";
@@ -123,10 +123,10 @@ export default function CalculatorPage({ params }: { params: Params }) {
     setAnnualContributions,
     setAnnualEmployerMatch,
     setYearsRunOutOfMoney,
-    startingBalance,
-    annualContributions,
-    annualEmployerMatch,
-    yearsRunOutOfMoney,
+    // startingBalance,
+    // annualContributions,
+    // annualEmployerMatch,
+    // yearsRunOutOfMoney,
   ]);
 
   // Debounced save
@@ -210,7 +210,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
         />
       </div>
       <div className="flex flex-col gap-4 relative">
-        <CompanyInfo />
+        {/* <CompanyInfo /> */}
 
         <TabManager
           activeTab={activeTab}
