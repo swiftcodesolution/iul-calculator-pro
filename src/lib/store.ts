@@ -1,3 +1,4 @@
+// src/lib/store.ts
 import { create } from "zustand";
 import { BoxesData, TableData, TabContent } from "./types";
 
@@ -37,6 +38,8 @@ interface TableStore {
     minimum_initial_pmt: string | null;
   };
   setFields: (fields: TableStore["fields"]) => void;
+  activeButtons: { [key: number]: boolean }; // Add activeButtons
+  setActiveButtons: (buttons: { [key: number]: boolean }) => void; // Add setter
 }
 
 export const useTableStore = create<TableStore>((set) => ({
@@ -133,5 +136,8 @@ export const useTableStore = create<TableStore>((set) => ({
       calculatorAge: state.calculatorAge,
       calculatorTaxRate: state.calculatorTaxRate,
       tabs: state.tabs,
+      activeButtons: {}, // Reset activeButtons
     })),
+  activeButtons: {}, // Initialize activeButtons
+  setActiveButtons: (buttons) => set({ activeButtons: buttons }), // Add setter
 }));

@@ -143,16 +143,14 @@ const TabContentRenderer = ({
   totalAdvantage: TotalAdvantage;
   handleCellClick?: (rowIndex: number) => void;
 }) => {
-  const [activeButtons, setActiveButtons] = useState<{
-    [key: number]: boolean;
-  }>({});
+  const { activeButtons, setActiveButtons } = useTableStore();
 
   const toggleButton = (id: number) => {
-    setActiveButtons((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-    handleCellClick?.(id);
+    setActiveButtons({
+      ...activeButtons,
+      [id]: !activeButtons[id],
+    });
+    handleCellClick?.(id); // Trigger cell click to update highlightedRows
   };
 
   const getEmbedUrl = (link: string | null) => {
