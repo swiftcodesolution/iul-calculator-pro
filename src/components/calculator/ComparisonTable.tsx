@@ -97,8 +97,8 @@ export function ComparisonTable({
     setIulStartingBalance,
   } = useTableStore();
 
-  const [hasInitializedIulBalance, setHasInitializedIulBalance] =
-    useState(false);
+  // const [hasInitializedIulBalance, setHasInitializedIulBalance] =
+  //   useState(false);
   const [lastInputYearsRunOut, setLastInputYearsRunOut] = useState<
     number | string
   >(yearsRunOutOfMoney);
@@ -126,17 +126,16 @@ export function ComparisonTable({
   };
 
   useEffect(() => {
-    if (!hasInitializedIulBalance && withdrawalAmount) {
-      const netWithdrawal = calculateNetWithdrawal(withdrawalAmount);
-      setIulStartingBalance(netWithdrawal);
-      setHasInitializedIulBalance(true);
-    }
+    // if (!hasInitializedIulBalance && withdrawalAmount) {
+    const netWithdrawal = calculateNetWithdrawal(withdrawalAmount);
+    setIulStartingBalance(netWithdrawal);
+    // setHasInitializedIulBalance(true);
+    // }
   }, [
     withdrawalAmount,
     calculatorAge,
     calculatorTaxRate,
     setIulStartingBalance,
-    hasInitializedIulBalance,
   ]);
 
   // const isFutureAgeInvalid = (value: string | number): boolean => {
