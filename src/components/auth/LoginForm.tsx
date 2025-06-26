@@ -11,6 +11,7 @@ import { useAuthForm } from "@/hooks/useAuthForm";
 import { useState } from "react";
 import { loginSchema } from "@/lib/types";
 import { z } from "zod";
+import Link from "next/link";
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,65 +22,73 @@ const LoginForm = () => {
   });
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((data) =>
-          handleSubmit(data, "login", form)
-        )}
-        className="space-y-4"
-      >
-        <AnimatedInput hasError={!!form.formState.errors.loginEmail}>
-          <Label htmlFor="loginEmail">Email</Label>
-          <Input
-            id="loginEmail"
-            type="email"
-            placeholder="john@example.com"
-            {...form.register("loginEmail")}
-          />
-        </AnimatedInput>
-        <AnimatedInput hasError={!!form.formState.errors.loginPassword}>
-          <Label htmlFor="loginPassword">Password</Label>
-          <div className="relative">
-            <Input
-              id="loginPassword"
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              className="pr-10"
-              {...form.register("loginPassword")}
-            />
-            <PasswordToggle
-              showPassword={showPassword}
-              setShowPassword={setShowPassword}
-            />
-          </div>
-        </AnimatedInput>
-        <motion.div
-          whileHover={{
-            scale: 1.05,
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-          }}
-          whileTap={{ scale: 0.98 }}
-          animate={
-            isSubmitting
-              ? {
-                  scale: [1, 1.02, 1],
-                  transition: { duration: 0.5, repeat: Infinity },
-                }
-              : {}
-          }
-          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+    <>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit((data) =>
+            handleSubmit(data, "login", form)
+          )}
+          className="space-y-4"
         >
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isSubmitting}
-            aria-label="Log in to IUL Calculator Pro"
+          <AnimatedInput hasError={!!form.formState.errors.loginEmail}>
+            <Label htmlFor="loginEmail">Email</Label>
+            <Input
+              id="loginEmail"
+              type="email"
+              placeholder="john@example.com"
+              {...form.register("loginEmail")}
+            />
+          </AnimatedInput>
+          <AnimatedInput hasError={!!form.formState.errors.loginPassword}>
+            <Label htmlFor="loginPassword">Password</Label>
+            <div className="relative">
+              <Input
+                id="loginPassword"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                className="pr-10"
+                {...form.register("loginPassword")}
+              />
+              <PasswordToggle
+                showPassword={showPassword}
+                setShowPassword={setShowPassword}
+              />
+            </div>
+          </AnimatedInput>
+          <motion.div
+            whileHover={{
+              scale: 1.05,
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+            }}
+            whileTap={{ scale: 0.98 }}
+            animate={
+              isSubmitting
+                ? {
+                    scale: [1, 1.02, 1],
+                    transition: { duration: 0.5, repeat: Infinity },
+                  }
+                : {}
+            }
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
           >
-            {isSubmitting ? "Submitting..." : "Login"}
-          </Button>
-        </motion.div>
-      </form>
-    </Form>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting}
+              aria-label="Log in to IUL Calculator Pro"
+            >
+              {isSubmitting ? "Submitting..." : "Login"}
+            </Button>
+          </motion.div>
+        </form>
+      </Form>
+      <Link
+        className="mt-4 text-center mx-auto block"
+        href="/reset-password-request"
+      >
+        Forgot Password?
+      </Link>
+    </>
   );
 };
 
