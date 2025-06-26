@@ -285,6 +285,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
     );
   }, [tables, boxesData.currentAge, yearsRunOutOfMoney]);
 
+  /*
   const combinedResults = useMemo<CombinedResult[]>(() => {
     const maxLength = Math.max(
       currentPlanResults.length,
@@ -345,6 +346,70 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
       });
     }
 
+    return results;
+  }, [currentPlanResults, taxFreePlanResults, boxesData.currentAge]);
+  */
+
+  const combinedResults = useMemo<CombinedResult[]>(() => {
+    const maxLength = Math.max(
+      currentPlanResults.length,
+      taxFreePlanResults.length
+    );
+    const results: CombinedResult[] = [];
+
+    for (let i = 0; i < maxLength; i++) {
+      const current = currentPlanResults[i] || {
+        year: i + 1,
+        age: parseInput(boxesData.currentAge, 0) + i,
+        annualContribution: 0,
+        grossRetirementIncome: 0,
+        retirementTaxes: 0,
+        retirementIncome: 0,
+        managementFees: 0,
+        interest: 0,
+        endOfYearBalance: 0,
+        cumulativeIncome: 0,
+        cumulativeFees: 0,
+        cumulativeTaxesDeferred: 0,
+        deathBenefit: 0,
+      };
+      const taxFree = taxFreePlanResults[i] || {
+        annualContributions: 0,
+        grossRetirementIncome: 0,
+        incomeTax: 0,
+        netRetirementIncome: 0,
+        annualFees: "Included",
+        cumulativeNetIncome: 0,
+        cumulativeFeesPaid: 0,
+        cumulativeTaxesDeferred: 0,
+        cumulativeAccountBalance: 0,
+        deathBenefits: 0,
+      };
+
+      results.push({
+        year: current.year,
+        age: current.age,
+        annualContribution: current.annualContribution,
+        tfpAnnualContribution: taxFree.annualContributions,
+        grossRetirementIncome: current.grossRetirementIncome,
+        retirementTaxes: current.retirementTaxes,
+        retirementIncome: current.retirementIncome,
+        tfpRetirementIncome: taxFree.netRetirementIncome,
+        managementFee: current.managementFees,
+        tfpFee: taxFree.annualFees,
+        interest: current.interest,
+        endOfYearBalance: current.endOfYearBalance,
+        tfpCumulativeBalance: taxFree.cumulativeAccountBalance,
+        cumulativeIncome: current.cumulativeIncome,
+        tfpCumulativeIncome: taxFree.cumulativeNetIncome,
+        cumulativeFees: current.cumulativeFees,
+        tfpCumulativeFees: taxFree.cumulativeFeesPaid,
+        cumulativeTaxesDeferred: current.cumulativeTaxesDeferred,
+        deathBenefit: current.deathBenefit,
+        tfpDeathBenefit: taxFree.deathBenefits,
+      });
+    }
+    console.log("Combined Results:", results);
     return results;
   }, [currentPlanResults, taxFreePlanResults, boxesData.currentAge]);
 
