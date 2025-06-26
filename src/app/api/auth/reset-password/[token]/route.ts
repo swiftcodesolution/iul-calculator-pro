@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/connect";
-import { NextRequest } from "next/server"; // Import NextRequest
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { token: string } } // Correctly type params
-) {
+// Define interface for params
+interface Params {
+  params: { token: string };
+}
+
+export async function POST(request: NextRequest, { params }: Params) {
   const { token } = params;
   const { newPassword } = await request.json();
 
