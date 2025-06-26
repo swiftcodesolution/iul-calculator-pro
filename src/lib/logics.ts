@@ -925,9 +925,8 @@ export function extractTaxFreeResults(
   currentAge: number,
   targetAge: number
 ): Results {
-  // Assert that mainTable.data has the expected keys
   const mainTable =
-    (tables.find((t) => t.source === "Basic Ledger, Non-guaranteed scenario")
+    (tables.find((t) => t.source === "Your policy's illustrated values")
       ?.data as Array<
       Record<string, string | number> & {
         Age: number | string;
@@ -939,7 +938,8 @@ export function extractTaxFreeResults(
       }
     >) || [];
   const chargesTable =
-    (tables.find((t) => t.source === "Policy Charges Ledger")?.data as Array<
+    (tables.find((t) => t.source === "Your policy's current charges summary")
+      ?.data as Array<
       Record<string, string | number> & { Charges: string | number }
     >) || [];
 
@@ -963,12 +963,12 @@ export function extractTaxFreeResults(
     Age: Number(row["Age"]),
   }));
 
-  // Determine xValue (when Net Income starts, typically age 66)
+  // Determine xValue (when Net Income becomes negative, typically age 66)
   const xValue =
     parsedMainTable.find(
       (row, i) =>
         i < parsedMainTable.length - 1 &&
-        parseCurrency(parsedMainTable[i + 1]["Net Income"] || 0) > 0
+        parseCurrency(parsedMainTable[i + 1]["Net Income"] || 0) < 0
     )?.Age ?? 66;
 
   // Get annualContributions (Premium Outlay) up to age 65
@@ -1054,8 +1054,18 @@ export function runTaxFreePlanLoop(
   let cumulativeFeesPaid = 0;
   let cumulativeNetIncome = 0;
 
-  for (let age = currentAge; age <= yearsRunOutOfMoney; age++) {
-    const planResults = extractTaxFreeResults(tables, currentAge, age);
+  const mainTable =
+    tables.find((t) => t.source === "Your policy's illustrated values")?.data ||
+    [];
+  const minTableAge =
+    mainTable.length > 0
+      ? Math.min(...mainTable.map((row) => Number(row.Age)))
+      : currentAge;
+
+  const startAge = Math.min(currentAge, minTableAge);
+
+  for (let age = startAge; age <= yearsRunOutOfMoney; age++) {
+    const planResults = extractTaxFreeResults(tables, startAge, age);
     cumulativeFeesPaid = planResults.cumulativeFeesPaid;
     cumulativeNetIncome = planResults.cumulativeNetIncome;
     results.push({

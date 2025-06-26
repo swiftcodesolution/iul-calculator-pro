@@ -1,6 +1,5 @@
-// src/lib/store.ts
 import { create } from "zustand";
-import { BoxesData, TableData, TabContent } from "./types";
+import { BoxesData, TableData, TabContent, CombinedResult } from "./types";
 
 interface TableStore {
   tables: TableData[];
@@ -29,7 +28,6 @@ interface TableStore {
   setAnnualEmployerMatch: (value: number | string) => void;
   tabs: TabContent[];
   setTabs: (tabs: TabContent[]) => void;
-  clearStore: () => void;
   fields: {
     illustration_date: string | null;
     insured_name: string | null;
@@ -38,14 +36,19 @@ interface TableStore {
     minimum_initial_pmt: string | null;
   };
   setFields: (fields: TableStore["fields"]) => void;
-  activeButtons: { [key: number]: boolean }; // Add activeButtons
-  setActiveButtons: (buttons: { [key: number]: boolean }) => void; // Add setter
+  combinedResults: CombinedResult[];
+  setCombinedResults: (results: CombinedResult[]) => void;
+  clearStore: () => void;
+  activeButtons: { [key: number]: boolean };
+  setActiveButtons: (buttons: { [key: number]: boolean }) => void;
+  isDataPersisted: boolean;
+  setIsDataPersisted: (value: boolean) => void;
 }
 
 export const useTableStore = create<TableStore>((set) => ({
   tables: [],
-  setTables: (tables) => set({ tables }),
-  clearTables: () => set({ tables: [] }),
+  setTables: (tables) => set({ tables, isDataPersisted: false }),
+  clearTables: () => set({ tables: [], isDataPersisted: false }),
   yearsRunOutOfMoney: "",
   isYearsRunOutOfMoneyUserSelected: false,
   setYearsRunOutOfMoney: (age) =>
@@ -86,7 +89,7 @@ export const useTableStore = create<TableStore>((set) => ({
     assumed_ror: null,
     minimum_initial_pmt: null,
   },
-  setFields: (fields) => set({ fields }),
+  setFields: (fields) => set({ fields, isDataPersisted: false }),
   tabs: [
     {
       id: "total-advantage",
@@ -114,6 +117,8 @@ export const useTableStore = create<TableStore>((set) => ({
     },
   ],
   setTabs: (tabs) => set({ tabs }),
+  combinedResults: [],
+  setCombinedResults: (results) => set({ combinedResults: results }),
   clearStore: () =>
     set((state) => ({
       tables: [],
@@ -136,8 +141,12 @@ export const useTableStore = create<TableStore>((set) => ({
       calculatorAge: state.calculatorAge,
       calculatorTaxRate: state.calculatorTaxRate,
       tabs: state.tabs,
-      activeButtons: {}, // Reset activeButtons
+      combinedResults: [],
+      activeButtons: {},
+      isDataPersisted: false,
     })),
-  activeButtons: {}, // Initialize activeButtons
-  setActiveButtons: (buttons) => set({ activeButtons: buttons }), // Add setter
+  activeButtons: {},
+  setActiveButtons: (buttons) => set({ activeButtons: buttons }),
+  isDataPersisted: false,
+  setIsDataPersisted: (value) => set({ isDataPersisted: value }),
 }));

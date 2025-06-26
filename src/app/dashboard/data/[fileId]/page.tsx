@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { ZoomIn, ZoomOut } from "lucide-react";
+import { ZoomIn, ZoomOut, Fullscreen, Minimize2 } from "lucide-react";
 import { useTableStore } from "@/lib/store";
 import { runGrossRetirementIncomeLoop, runTaxFreePlanLoop } from "@/lib/logics";
 import { useRouter } from "next/navigation";
@@ -35,6 +35,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
   const [highlightColor, setHighlightColor] = useState("#ffa1ad");
   const [zoomLevel, setZoomLevel] = useState(0.6);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   const {
     highlightedRows,
@@ -44,7 +45,6 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
   } = useTableHighlight();
 
   const router = useRouter();
-  const isFullScreen = false;
   const fontSize = `${zoomLevel}rem`;
   const paddingSize = `${0.75 * zoomLevel}rem`;
 
@@ -61,6 +61,8 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
     setAnnualEmployerMatch,
     yearsRunOutOfMoney,
     setYearsRunOutOfMoney,
+    combinedResults,
+    setCombinedResults,
     clearStore,
   } = useTableStore();
 
@@ -88,6 +90,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
         console.log("Fetched data:", data); // Debug
         setBoxesData(data.boxesData || {});
         setTables(data.tablesData?.tables || []);
+        setCombinedResults(data.combinedResults || []);
         // Only update if fetched data is valid (not 0 or undefined)
         setStartingBalance(
           data.tablesData?.startingBalance !== undefined &&
@@ -128,6 +131,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
     status,
     setBoxesData,
     setTables,
+    setCombinedResults,
     setStartingBalance,
     setAnnualContributions,
     setAnnualEmployerMatch,
@@ -155,6 +159,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
               annualEmployerMatch,
               yearsRunOutOfMoney,
             },
+            combinedResults,
           }),
         });
         if (!response.ok) {
@@ -170,6 +175,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
               annualEmployerMatch,
               yearsRunOutOfMoney,
             },
+            combinedResults,
           }); // Debug
         }
       } catch (err) {
@@ -192,11 +198,13 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
     annualContributions,
     annualEmployerMatch,
     yearsRunOutOfMoney,
+    combinedResults,
     saveChanges,
   ]);
 
   const handleZoomIn = () => setZoomLevel((prev) => prev + 0.2);
   const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 0.2, 0.4));
+  const handleFullScreenToggle = () => setIsFullScreen((prev) => !prev);
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) =>
     setIsScrolled(e.currentTarget.scrollTop > 50);
 
@@ -285,72 +293,8 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
     );
   }, [tables, boxesData.currentAge, yearsRunOutOfMoney]);
 
-  /*
-  const combinedResults = useMemo<CombinedResult[]>(() => {
-    const maxLength = Math.max(
-      currentPlanResults.length,
-      taxFreePlanResults.length
-    );
-    const results: CombinedResult[] = [];
-
-    for (let i = 0; i < maxLength; i++) {
-      const current = currentPlanResults[i] || {
-        year: i + 1,
-        age: parseInput(boxesData.currentAge, 0) + i,
-        annualContribution: 0,
-        grossRetirementIncome: 0,
-        retirementTaxes: 0,
-        retirementIncome: 0,
-        managementFees: 0,
-        interest: 0,
-        endOfYearBalance: 0,
-        cumulativeIncome: 0,
-        cumulativeFees: 0,
-        cumulativeTaxesDeferred: 0,
-        deathBenefit: 0,
-      };
-      const taxFree = taxFreePlanResults[i] || {
-        annualContributions: 0,
-        grossRetirementIncome: 0,
-        incomeTax: 0,
-        netRetirementIncome: 0,
-        annualFees: "0",
-        cumulativeNetIncome: 0,
-        cumulativeFeesPaid: 0,
-        cumulativeTaxesDeferred: 0,
-        cumulativeAccountBalance: 0,
-        deathBenefits: 0,
-      };
-
-      results.push({
-        year: current.year,
-        age: current.age,
-        annualContribution: current.annualContribution,
-        tfpAnnualContribution: taxFree.annualContributions,
-        grossRetirementIncome: current.grossRetirementIncome,
-        retirementTaxes: current.retirementTaxes,
-        retirementIncome: current.retirementIncome,
-        tfpRetirementIncome: taxFree.netRetirementIncome,
-        managementFee: current.managementFees,
-        tfpFee: taxFree.annualFees,
-        interest: current.interest,
-        endOfYearBalance: current.endOfYearBalance,
-        tfpCumulativeBalance: taxFree.cumulativeAccountBalance,
-        cumulativeIncome: current.cumulativeIncome,
-        tfpCumulativeIncome: taxFree.cumulativeNetIncome,
-        cumulativeFees: current.cumulativeFees,
-        tfpCumulativeFees: taxFree.cumulativeFeesPaid,
-        cumulativeTaxesDeferred: current.cumulativeTaxesDeferred,
-        deathBenefit: current.deathBenefit,
-        tfpDeathBenefit: taxFree.deathBenefits,
-      });
-    }
-    console.log("Combined Results:", results);
-    return results;
-  }, [currentPlanResults, taxFreePlanResults, boxesData.currentAge]);
-  */
-
-  const combinedResults = useMemo<CombinedResult[]>(() => {
+  // Update combinedResults in store when dependencies change
+  useEffect(() => {
     const maxLength = Math.max(
       currentPlanResults.length,
       taxFreePlanResults.length
@@ -410,8 +354,13 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
       });
     }
     console.log("Combined Results:", results);
-    return results;
-  }, [currentPlanResults, taxFreePlanResults, boxesData.currentAge]);
+    setCombinedResults(results);
+  }, [
+    currentPlanResults,
+    taxFreePlanResults,
+    boxesData.currentAge,
+    setCombinedResults,
+  ]);
 
   const formatValue = (
     value: number | string | undefined,
@@ -704,7 +653,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
           >
             <ZoomOut className="h-4 w-4" />
           </Button>
-          {/* <Button
+          <Button
             variant="outline"
             onClick={handleFullScreenToggle}
             className="cursor-pointer"
@@ -714,7 +663,7 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
             ) : (
               <Fullscreen className="h-4 w-4" />
             )}
-          </Button> */}
+          </Button>
         </div>
       </div>
 
@@ -740,9 +689,9 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
           >
             <Card className="gap-0 p-0 flex-1 flex flex-col">
               <CardHeader className="flex flex-row items-center justify-end">
-                {/* <Button variant="outline" onClick={handleFullScreenToggle}>
+                <Button variant="outline" onClick={handleFullScreenToggle}>
                   <Minimize2 className="h-4 w-4" />
-                </Button> */}
+                </Button>
               </CardHeader>
               <CardContent className="overflow-auto flex-1">
                 {renderTable()}
