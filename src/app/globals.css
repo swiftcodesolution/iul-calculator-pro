@@ -131,8 +131,12 @@
   --muted: oklch(0.8 0 0);
   --muted-foreground: oklch(0.2 0 0);
 
-  --accent: oklch(0 0 0);
-  --accent-foreground: oklch(1 0 0);
+  --accent: oklch(1 0 0); /* white */
+  --accent-foreground: oklch(0 0 0); /* black */
+
+  /* Forcing outline style defaults (custom) */
+  --outline-bg: var(--accent); /* white background */
+  --outline-fg: var(--accent-foreground); /* black text */
 
   --destructive: oklch(0.6 0.25 27.325);
   --border: oklch(0.5 0 0);
