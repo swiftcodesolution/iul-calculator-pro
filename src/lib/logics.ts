@@ -781,6 +781,7 @@ export function runRetirementPlanLoop(
 }
 
 // Utility to calculate tax-free plan results (IRS 7702, green column)
+/*
 export function extractTaxFreeResults(
   tables: TableData[],
   currentAge: number,
@@ -917,8 +918,117 @@ export function extractTaxFreeResults(
     currentAge,
   };
 }
+*/
+
+export function extractTaxFreeResults(
+  tables: TableData[],
+  currentAge: number,
+  targetAge: number
+): Results {
+  // Assert that mainTable.data has the expected keys
+  const mainTable =
+    (tables.find((t) => t.source === "Basic Ledger, Non-guaranteed scenario")
+      ?.data as Array<
+      Record<string, string | number> & {
+        Age: number | string;
+        "Premium Outlay": string | number;
+        "Net Income": string | number;
+        "Cash Value": string | number;
+        "Death Benefit": string | number;
+        "Net Outlay"?: string | number;
+      }
+    >) || [];
+  const chargesTable =
+    (tables.find((t) => t.source === "Policy Charges Ledger")?.data as Array<
+      Record<string, string | number> & { Charges: string | number }
+    >) || [];
+
+  if (
+    currentAge < 0 ||
+    targetAge < currentAge ||
+    !mainTable.length ||
+    !mainTable.every((row) => "Age" in row)
+  ) {
+    console.warn("Invalid inputs or empty mainTable for Tax-Free Plan");
+    return getEmptyResults();
+  }
+
+  const parseCurrency = (value: string | number): number => {
+    if (typeof value === "number") return value;
+    return Number(value.replace(/[^0-9.-]+/g, "")) || 0;
+  };
+
+  const parsedMainTable = mainTable.map((row) => ({
+    ...row,
+    Age: Number(row["Age"]),
+  }));
+
+  // Determine xValue (when Net Income starts, typically age 66)
+  const xValue =
+    parsedMainTable.find(
+      (row, i) =>
+        i < parsedMainTable.length - 1 &&
+        parseCurrency(parsedMainTable[i + 1]["Net Income"] || 0) > 0
+    )?.Age ?? 66;
+
+  // Get annualContributions (Premium Outlay) up to age 65
+  const contributionRow = parsedMainTable.find((row) => row.Age === targetAge);
+  const annualContributions =
+    contributionRow && targetAge <= 65
+      ? parseCurrency(contributionRow["Premium Outlay"] || 0)
+      : 0;
+
+  // Get retirement income for target age (from age 66 onward)
+  const grossRetirementIncome =
+    contributionRow && targetAge >= 66
+      ? parseCurrency(contributionRow["Net Income"] || 0)
+      : 0;
+  const netRetirementIncome = grossRetirementIncome; // Tax-free
+
+  // Sum Net Income from xValue to targetAge for cumulativeNetIncome
+  const cumulativeNetIncome = parsedMainTable
+    .filter((row) => row.Age >= xValue && row.Age <= targetAge)
+    .reduce((sum, row) => sum + parseCurrency(row["Net Income"] || 0), 0);
+
+  // Sum fees up to targetAge
+  const endIndex = parsedMainTable.findIndex((row) => row.Age === targetAge);
+  const cumulativeFeesPaid =
+    endIndex !== -1 && chargesTable && endIndex < chargesTable.length
+      ? chargesTable
+          .slice(0, endIndex + 1)
+          .reduce((sum, row) => sum + parseCurrency(row["Charges"] || 0), 0)
+      : 0;
+
+  const cumulativeAccountBalance = contributionRow
+    ? parseCurrency(contributionRow["Cash Value"] || 0)
+    : 0;
+  const deathBenefits = contributionRow
+    ? parseCurrency(contributionRow["Death Benefit"] || 0)
+    : 0;
+
+  return {
+    xValue,
+    startingBalance: 0,
+    annualContributions,
+    annualEmployerMatch: "N/A",
+    annualFees: "Included",
+    grossRetirementIncome,
+    incomeTax: 0,
+    netRetirementIncome,
+    cumulativeTaxesDeferred: 0,
+    cumulativeTaxesPaid: 0,
+    cumulativeFeesPaid,
+    cumulativeNetIncome,
+    cumulativeAccountBalance,
+    taxesDue: 0,
+    deathBenefits,
+    yearsRunOutOfMoney: targetAge,
+    currentAge,
+  };
+}
 
 // tax free plan loop function to generate full table
+/*
 export function runTaxFreePlanLoop(
   tables: TableData[],
   currentAge: number,
@@ -929,6 +1039,30 @@ export function runTaxFreePlanLoop(
   for (let age = currentAge; age <= yearsRunOutOfMoney; age++) {
     const planResults = extractTaxFreeResults(tables, currentAge, age);
     results.push(planResults);
+  }
+
+  return results;
+}
+*/
+
+export function runTaxFreePlanLoop(
+  tables: TableData[],
+  currentAge: number,
+  yearsRunOutOfMoney: number
+): Results[] {
+  const results: Results[] = [];
+  let cumulativeFeesPaid = 0;
+  let cumulativeNetIncome = 0;
+
+  for (let age = currentAge; age <= yearsRunOutOfMoney; age++) {
+    const planResults = extractTaxFreeResults(tables, currentAge, age);
+    cumulativeFeesPaid = planResults.cumulativeFeesPaid;
+    cumulativeNetIncome = planResults.cumulativeNetIncome;
+    results.push({
+      ...planResults,
+      cumulativeFeesPaid,
+      cumulativeNetIncome,
+    });
   }
 
   return results;
