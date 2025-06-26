@@ -78,6 +78,9 @@ const NavBar = () => {
     try {
       await signOut({ redirect: true });
 
+      document.cookie =
+        "user-role=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+
       toast.success("Signed out successfully");
 
       router.push("/");

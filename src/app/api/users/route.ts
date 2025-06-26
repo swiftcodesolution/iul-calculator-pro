@@ -33,3 +33,25 @@ export async function GET(request: Request) {
     );
   }
 }
+
+export async function POST() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id || session.user.role !== "admin") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const result = await prisma.user.updateMany({
+      data: { status: "active" },
+    });
+    return NextResponse.json({
+      message: `Updated ${result.count} users to active status`,
+    });
+  } catch (error) {
+    console.error("Error setting all users to active:", error);
+    return NextResponse.json(
+      { error: "Failed to update user statuses" },
+      { status: 500 }
+    );
+  }
+}

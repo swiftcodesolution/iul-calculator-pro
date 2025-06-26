@@ -5,6 +5,7 @@ import type { NextAuthOptions } from "next-auth";
 // import bcrypt from "bcrypt";
 import prisma from "./connect";
 import { UAParser } from "ua-parser-js";
+import { NextApiResponse } from "next";
 
 // Sanitize IP address
 const sanitizeIpAddress = (ip: string): string => {
@@ -210,6 +211,21 @@ export const authOptions: NextAuthOptions = {
         return `${baseUrl}/admin/dashboard/home`;
       }
       return url.startsWith(baseUrl) ? url : `${baseUrl}/dashboard/home`;
+    },
+
+    async signIn({
+      user,
+      response,
+    }: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      user: any;
+      response?: NextApiResponse;
+    }) {
+      response?.setHeader(
+        "Set-Cookie",
+        `user-role=${user.role}; Path=/; HttpOnly`
+      );
+      return true;
     },
   },
 

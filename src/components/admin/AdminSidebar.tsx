@@ -23,6 +23,9 @@ export default function AdminSidebar() {
     try {
       await signOut({ redirect: true });
 
+      document.cookie =
+        "user-role=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT;"; // Clear cookie
+
       toast.success("Signed out successfully");
 
       router.push("/admin");

@@ -10,13 +10,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Users, Building2 } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import { use } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 interface SessionHistory {
   id: string;
@@ -53,6 +53,7 @@ interface User {
   cellPhone: string | null;
   officePhone: string | null;
   role: string;
+  status: string;
   sessionHistory: SessionHistory[];
   companyInfo: CompanyInfo | null;
 }
@@ -66,15 +67,15 @@ export default function UserDetailsPage({
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchUser() {
       try {
         const response = await fetch(`/api/users/${userId}`);
         if (!response.ok) {
-          if (response.status === 404) {
-            notFound();
-          }
+          if (response.status === 404) notFound();
           throw new Error("Failed to fetch user");
         }
         const data = await response.json();
@@ -109,7 +110,7 @@ export default function UserDetailsPage({
       }
 
       toast.success("User deleted successfully");
-      window.location.href = "/admin/dashboard/users";
+      router.push("/admin/dashboard/users");
     } catch (err) {
       toast.error("Failed to delete user");
       console.error("Delete user error:", err);
@@ -118,13 +119,34 @@ export default function UserDetailsPage({
     }
   };
 
-  if (!user && !error) {
-    return <div>Loading...</div>;
-  }
+  const handleUpdateStatus = async () => {
+    setUpdatingStatus(true);
+    try {
+      const newStatus = user?.status === "active" ? "suspended" : "active";
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
 
-  if (error) {
-    return <div className="text-red-500">{error}</div>;
-  }
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "Failed to update user status");
+      }
+
+      const updatedUser = await response.json();
+      setUser(updatedUser);
+      toast.success(`User ${newStatus} successfully`);
+    } catch (err) {
+      toast.error("Failed to update user status");
+      console.error("Update user status error:", err);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  if (!user && !error) return <div>Loading...</div>;
+  if (error) return <div className="text-red-500">{error}</div>;
 
   return (
     <div className="max-h-screen overflow-y-scroll">
@@ -132,7 +154,6 @@ export default function UserDetailsPage({
         <h1 className="text-3xl font-bold mb-6 flex items-center">
           <Users className="mr-2" /> User Details
         </h1>
-        {/* User Details Card */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>
@@ -154,23 +175,28 @@ export default function UserDetailsPage({
               <p>
                 <strong>Office Phone:</strong> {user?.officePhone || "N/A"}
               </p>
-              <div className="flex space-x-4">
-                <p className="text-blue-500 hover:underline">
-                  <Link href="/admin/dashboard/users">Back to Users</Link>
-                </p>
+              <p>
+                <strong>Status:</strong> {user?.status || "N/A"}
+              </p>
+              <div className="flex space-x-4 items-center">
                 <Button
                   variant="destructive"
                   onClick={handleDeleteUser}
-                  className="ml-4"
                   disabled={isDeleting}
                 >
                   {isDeleting ? "Deleting..." : "Delete User"}
+                </Button>
+                <Button onClick={handleUpdateStatus} disabled={updatingStatus}>
+                  {updatingStatus
+                    ? "Updating..."
+                    : user?.status === "active"
+                    ? "Suspend"
+                    : "Activate"}
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
-        {/* Company Info Card */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -223,7 +249,6 @@ export default function UserDetailsPage({
             )}
           </CardContent>
         </Card>
-        {/* Session History Card */}
         <Card>
           <CardHeader>
             <CardTitle>Session History</CardTitle>

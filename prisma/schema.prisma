@@ -17,6 +17,7 @@ model User {
   cellPhone                 String?
   officePhone               String?
   role                      String   @default("agent")
+  status                    String   @default("active")
   // deviceFingerprint         String?
   files                     ClientFile[]
   sessions                  Session[]
