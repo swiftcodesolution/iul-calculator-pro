@@ -112,6 +112,49 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+.high-contrast {
+  --background: oklch(0 0 0); /* Black screen background */
+  --foreground: oklch(1 0 0); /* White text on black */
+
+  --card: oklch(1 0 0); /* White card background */
+  --card-foreground: oklch(0 0 0); /* Black text on white card */
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0 0 0);
+
+  --primary: oklch(0 0 0); /* Black button background */
+  --primary-foreground: oklch(1 0 0); /* White text */
+
+  --secondary: oklch(1 0 0); /* White background */
+  --secondary-foreground: oklch(0 0 0); /* Black text */
+
+  --muted: oklch(0.8 0 0);
+  --muted-foreground: oklch(0.2 0 0);
+
+  --accent: oklch(0 0 0);
+  --accent-foreground: oklch(1 0 0);
+
+  --destructive: oklch(0.6 0.25 27.325);
+  --border: oklch(0.5 0 0);
+  --input: oklch(1 0 0);
+  --ring: oklch(1 0 0);
+
+  --chart-1: oklch(0.6 0.3 50);
+  --chart-2: oklch(0.6 0.3 150);
+  --chart-3: oklch(0.6 0.3 250);
+  --chart-4: oklch(0.6 0.3 350);
+  --chart-5: oklch(0.6 0.3 100);
+
+  --sidebar: oklch(0 0 0);
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(1 0 0);
+  --sidebar-primary-foreground: oklch(0 0 0);
+  --sidebar-accent: oklch(0 0 0);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(1 0 0 / 15%);
+  --sidebar-ring: oklch(1 0 0);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
