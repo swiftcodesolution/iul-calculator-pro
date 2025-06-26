@@ -781,7 +781,6 @@ export function runRetirementPlanLoop(
 }
 
 // Utility to calculate tax-free plan results (IRS 7702, green column)
-/*
 export function extractTaxFreeResults(
   tables: TableData[],
   currentAge: number,
@@ -846,7 +845,7 @@ export function extractTaxFreeResults(
   for (let i = 0; i < parsedMainTable.length - 1; i++) {
     const row = parsedMainTable[i];
     const nextRow = parsedMainTable[i + 1];
-    if (row["Net Outlay"] !== nextRow["Net Outlay"]) {
+    if (row["Net Income"] !== nextRow["Net Income"]) {
       xValue = nextRow.Age as number;
       break;
     }
@@ -866,7 +865,7 @@ export function extractTaxFreeResults(
       parsedMainTable.find((row) => row.Age === yearsRunOutOfMoney) ||
       parsedMainTable[parsedMainTable.length - 1];
 
-    grossRetirementIncome = parseCurrency(targetRow["Net Outlay"] || 0);
+    grossRetirementIncome = parseCurrency(targetRow["Net Income"] || 0);
     netRetirementIncome = grossRetirementIncome; // Tax-free, so no income tax
     cumulativeNetIncome = parsedMainTable
       .filter(
@@ -874,7 +873,7 @@ export function extractTaxFreeResults(
           (row.Age as number) >= xValue &&
           (row.Age as number) <= yearsRunOutOfMoney
       )
-      .reduce((sum, row) => sum + parseCurrency(row["Net Outlay"] || 0), 0);
+      .reduce((sum, row) => sum + parseCurrency(row["Net Income"] || 0), 0);
   }
 
   let cumulativeFeesPaid = 0;
@@ -918,8 +917,8 @@ export function extractTaxFreeResults(
     currentAge,
   };
 }
-*/
 
+/*
 export function extractTaxFreeResults(
   tables: TableData[],
   currentAge: number,
@@ -1026,9 +1025,9 @@ export function extractTaxFreeResults(
     currentAge,
   };
 }
+*/
 
 // tax free plan loop function to generate full table
-/*
 export function runTaxFreePlanLoop(
   tables: TableData[],
   currentAge: number,
@@ -1043,8 +1042,8 @@ export function runTaxFreePlanLoop(
 
   return results;
 }
-*/
 
+/*
 export function runTaxFreePlanLoop(
   tables: TableData[],
   currentAge: number,
@@ -1077,3 +1076,4 @@ export function runTaxFreePlanLoop(
 
   return results;
 }
+*/
