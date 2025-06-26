@@ -1,13 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/connect";
 
-// Define interface for params
-interface Params {
-  params: { token: string };
-}
+export async function POST(request: NextRequest) {
+  const url = new URL(request.url);
+  const token = url.pathname.split("/").pop(); // or use regex if route structure changes
 
-export async function POST(request: NextRequest, { params }: Params) {
-  const { token } = params;
   const { newPassword } = await request.json();
 
   if (!token || !newPassword) {
