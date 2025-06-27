@@ -1,0 +1,18 @@
+Ted, I am not sure when you will need this information.
+
+Stripe is for the initial billing.
+Then it is transferred to my accounting software.
+And it connects to my Zoho CRM.
+I went into Stripe and set up 3 options for billing. See below. Please verify that they are working.
+I will need you to verify in the developer tab that the client data is transferred into Zoho, into the CLIENTS folder, and also goes to Zar Money accounting software
+
+Pro Only $1.00 per year
+https://buy.stripe.com/3cI14n3et3xp73ZdAJdEs02
+
+Monthly link
+https://buy.stripe.com/00w7sL6qF8RJcoj9ktdEs01
+
+Annual
+https://buy.stripe.com/eVq28r2apec3agb68hdEs00
+
+The attachment contains the information on my billing company, my accounting company and my CRM.
