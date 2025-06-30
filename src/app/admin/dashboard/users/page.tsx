@@ -18,6 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { motion } from "framer-motion";
 
 interface User {
   id: string;
@@ -37,6 +40,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"most" | "least" | "none">("none");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     async function fetchUsers() {
@@ -55,8 +59,18 @@ export default function UsersPage() {
     fetchUsers();
   }, []);
 
-  // Sort users based on session count
-  const sortedUsers = [...users].sort((a, b) => {
+  const filteredUsers = users.filter((user) => {
+    const fullName = `${user.firstName || ""} ${user.lastName || ""}`
+      .trim()
+      .toLowerCase();
+    return (
+      fullName.includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.role.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
     if (sortOrder === "most") {
       return b._count.sessionHistory - a._count.sessionHistory;
     } else if (sortOrder === "least") {
@@ -66,72 +80,88 @@ export default function UsersPage() {
   });
 
   return (
-    <div className="max-h-screen overflow-y-scroll">
-      <main className="p-6">
-        <h1 className="text-3xl font-bold mb-6 flex items-center">
-          <Users className="mr-2" /> Manage Users
-        </h1>
-        <div className="mb-4">
-          <Select
-            onValueChange={(value: "most" | "least" | "none") =>
-              setSortOrder(value)
-            }
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Sort by activity" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">No Sorting</SelectItem>
-              <SelectItem value="most">Most Active</SelectItem>
-              <SelectItem value="least">Least Active</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="p-4 rounded shadow">
-          {error ? (
-            <p className="text-red-500">{error}</p>
-          ) : users.length === 0 ? (
-            <p>No users found.</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Cell Phone</TableHead>
-                  <TableHead>Office Phone</TableHead>
-                  <TableHead>Total Files</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      {`${user.firstName || ""} ${
-                        user.lastName || ""
-                      }`.trim() || "N/A"}
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.role}</TableCell>
-                    <TableCell>{user.cellPhone || "N/A"}</TableCell>
-                    <TableCell>{user.officePhone || "N/A"}</TableCell>
-                    <TableCell>{user._count.files || 0}</TableCell>
-                    <TableCell>
-                      <Link
-                        href={`/admin/dashboard/users/${user.id}`}
-                        className="text-blue-500 hover:underline"
-                      >
-                        View Details
-                      </Link>
-                    </TableCell>
+    <div className="min-h-screen overflow-y-scroll">
+      <main className="p-6 mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="text-3xl font-bold mb-6 flex items-center">
+            <Users className="mr-2 text-blue-500" /> Manage Users
+          </h1>
+        </motion.div>
+        <Card className="shadow-lg">
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Input
+                placeholder="Search by name, email, or role"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="max-w-md"
+              />
+              <Select
+                onValueChange={(value: "most" | "least" | "none") =>
+                  setSortOrder(value)
+                }
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by activity" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Sorting</SelectItem>
+                  <SelectItem value="most">Most Active</SelectItem>
+                  <SelectItem value="least">Least Active</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {error ? (
+              <p className="text-red-500">{error}</p>
+            ) : sortedUsers.length === 0 ? (
+              <p className="">No users found.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Cell Phone</TableHead>
+                    <TableHead>Office Phone</TableHead>
+                    <TableHead>Total Files</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
+                </TableHeader>
+                <TableBody>
+                  {sortedUsers.map((user) => (
+                    <TableRow key={user.id} className="hover:bg-gray-50">
+                      <TableCell>
+                        {`${user.firstName || ""} ${
+                          user.lastName || ""
+                        }`.trim() || "N/A"}
+                      </TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.role}</TableCell>
+                      <TableCell>{user.cellPhone || "N/A"}</TableCell>
+                      <TableCell>{user.officePhone || "N/A"}</TableCell>
+                      <TableCell>{user._count.files || 0}</TableCell>
+                      <TableCell>
+                        <Link
+                          href={`/admin/dashboard/users/${user.id}`}
+                          className="text-blue-500 hover:underline"
+                        >
+                          View Details
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

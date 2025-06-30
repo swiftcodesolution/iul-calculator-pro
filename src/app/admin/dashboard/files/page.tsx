@@ -20,6 +20,12 @@ import { useFileContext } from "@/context/FileContext";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import type { Variants } from "framer-motion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const fileItemVariant: Variants = {
   hidden: { opacity: 0, scale: 0.95, y: 10 },
@@ -42,6 +48,15 @@ export default function AdminFilesSection() {
   const [newClientName, setNewClientName] = useState("");
   const [selectedFile, setSelectedFile] = useState<ClientFile | null>(null);
   const [dialogAction, setDialogAction] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+
+  const categories = [
+    "All",
+    "Pro Sample Files",
+    "Your Sample Files",
+    "Your Prospect Files",
+    "Your Closed Sales",
+  ];
 
   useEffect(() => {
     async function fetchFiles() {
@@ -76,13 +91,15 @@ export default function AdminFilesSection() {
           file.user?.firstName && file.user?.lastName
             ? `${file.user.firstName} ${file.user.lastName}`.toLowerCase()
             : "";
-        return (
+        const matchesSearch =
           file.fileName.toLowerCase().includes(lowerQuery) ||
-          fullName.includes(lowerQuery)
-        );
+          fullName.includes(lowerQuery);
+        const matchesCategory =
+          selectedCategory === "All" || file.category === selectedCategory;
+        return matchesSearch && matchesCategory;
       })
     );
-  }, [searchQuery, userFiles]);
+  }, [searchQuery, userFiles, selectedCategory]);
 
   const handleClientAction = async (
     action: string,
@@ -289,17 +306,37 @@ export default function AdminFilesSection() {
             <CardTitle>User Files</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Input
-              placeholder="Search by file name or created by"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-md"
-            />
+            <div className="flex gap-4">
+              <Input
+                placeholder="Search by file name or created by"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="max-w-md"
+              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    Category: {selectedCategory}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {categories.map((category) => (
+                    <DropdownMenuItem
+                      key={category}
+                      onSelect={() => setSelectedCategory(category)}
+                    >
+                      {category}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>File Name</TableHead>
                   <TableHead>Created By</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead>Date</TableHead>
                 </TableRow>
               </TableHeader>
@@ -313,6 +350,7 @@ export default function AdminFilesSection() {
                           ? `${file.user.firstName} ${file.user.lastName}`
                           : "Unknown"}
                       </TableCell>
+                      <TableCell>{file.category || "Uncategorized"}</TableCell>
                       <TableCell>
                         {new Date(file.createdAt).toLocaleDateString()}
                       </TableCell>
@@ -320,8 +358,8 @@ export default function AdminFilesSection() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center">
-                      {searchQuery
+                    <TableCell colSpan={4} className="text-center">
+                      {searchQuery || selectedCategory !== "All"
                         ? "No matching user files found"
                         : "No user files available"}
                     </TableCell>

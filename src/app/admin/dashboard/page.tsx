@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/app/admin/dashboard/page.tsx
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +16,26 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface Resource {
   id: string;
@@ -120,41 +139,79 @@ export default function AdminDashboard() {
     refreshAll();
   }, []);
 
+  const chartData = {
+    labels: stats.map((stat) => stat.metric),
+    datasets: [
+      {
+        label: "Overview Metrics",
+        data: stats.map((stat) => stat.value),
+        backgroundColor: "rgba(59, 130, 246, 0.5)",
+        borderColor: "rgba(59, 130, 246, 1)",
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      title: { display: false },
+    },
+    scales: {
+      y: { beginAtZero: true },
+    },
+  };
+
   return (
-    <div className="flex-1">
-      <main className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+    <div className="max-h-screen overflow-y-scroll">
+      <main className="p-6 mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex justify-between items-center mb-6"
+        >
+          <h1 className="text-3xl font-bold ">Admin Dashboard</h1>
           <Button
             variant="outline"
             size="sm"
             onClick={refreshAll}
             disabled={loading}
+            className="hover:bg-blue-50"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             {loading ? "Refreshing..." : "Refresh"}
           </Button>
-        </div>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
+        </motion.div>
+        {error && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-red-500 mb-4"
+          >
+            {error}
+          </motion.p>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Overview Stats Card */}
-          <Card className="col-span-1 md:col-span-2 lg:col-span-3">
+          {/* Overview Stats Card with Bar Chart */}
+          <Card className="col-span-1 md:col-span-2 lg:col-span-3 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex items-center">
-              <BarChart className="mr-2" />
-              <CardTitle>Overview</CardTitle>
+              <BarChart className="mr-2 text-blue-500" />
+              <CardTitle className="text-xl ">Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((stat, index) => (
-                  <div key={index} className="text-center">
-                    <p className="text-lg font-semibold">{stat.value}</p>
-                    <p className="text-sm text-gray-500">{stat.metric}</p>
-                  </div>
-                ))}
-              </div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="h-64 mb-4"
+              >
+                <Bar data={chartData} options={chartOptions} />
+              </motion.div>
               <Link
                 href="/admin/dashboard/stats"
-                className="text-blue-500 hover:underline mt-4 block"
+                className="text-blue-500 hover:underline mt-4 block font-medium"
               >
                 View Detailed Stats
               </Link>
@@ -162,25 +219,25 @@ export default function AdminDashboard() {
           </Card>
 
           {/* Download Resources Card */}
-          <Card>
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex items-center">
-              <Download className="mr-2" />
-              <CardTitle>Download Resources</CardTitle>
+              <Download className="mr-2 text-blue-500" />
+              <CardTitle className="text-lg ">Download Resources</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableBody>
                   {downloadResources.length > 0 ? (
                     downloadResources.slice(0, 3).map((resource) => (
-                      <TableRow key={resource.id}>
-                        <TableCell className="text-sm">
+                      <TableRow key={resource.id} className="hover:bg-gray-50">
+                        <TableCell className="text-sm ">
                           {resource.fileName} ({resource.fileFormat})
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-sm ">
                         No resources available
                       </TableCell>
                     </TableRow>
@@ -189,7 +246,7 @@ export default function AdminDashboard() {
               </Table>
               <Link
                 href="/admin/dashboard/download-resources"
-                className="text-blue-500 hover:underline mt-4 block"
+                className="text-blue-500 hover:underline mt-4 block font-medium"
               >
                 Manage Resources
               </Link>
@@ -197,25 +254,25 @@ export default function AdminDashboard() {
           </Card>
 
           {/* Training Documents Card */}
-          <Card>
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex items-center">
-              <BookOpen className="mr-2" />
-              <CardTitle>Training Documents</CardTitle>
+              <BookOpen className="mr-2 text-blue-500" />
+              <CardTitle className="text-lg ">Training Documents</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableBody>
                   {trainingDocuments.length > 0 ? (
                     trainingDocuments.slice(0, 3).map((doc) => (
-                      <TableRow key={doc.id}>
-                        <TableCell className="text-sm">
+                      <TableRow key={doc.id} className="hover:bg-gray-50">
+                        <TableCell className="text-sm ">
                           {doc.fileName} ({doc.fileFormat})
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-sm ">
                         No documents available
                       </TableCell>
                     </TableRow>
@@ -224,7 +281,7 @@ export default function AdminDashboard() {
               </Table>
               <Link
                 href="/admin/dashboard/training-documents"
-                className="text-blue-500 hover:underline mt-2 block"
+                className="text-blue-500 hover:underline mt-2 block font-medium"
               >
                 Manage Documents
               </Link>
@@ -232,25 +289,25 @@ export default function AdminDashboard() {
           </Card>
 
           {/* Training Videos Card */}
-          <Card>
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex items-center">
-              <Video className="mr-2" />
-              <CardTitle>Training Videos</CardTitle>
+              <Video className="mr-2 text-blue-500" />
+              <CardTitle className="text-lg ">Training Videos</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableBody>
                   {trainingVideos.length > 0 ? (
                     trainingVideos.slice(0, 3).map((video) => (
-                      <TableRow key={video.id}>
-                        <TableCell className="text-sm">
+                      <TableRow key={video.id} className="hover:bg-gray-50">
+                        <TableCell className="text-sm ">
                           {video.fileName} ({video.fileFormat})
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-sm ">
                         No videos available
                       </TableCell>
                     </TableRow>
@@ -259,7 +316,7 @@ export default function AdminDashboard() {
               </Table>
               <Link
                 href="/admin/dashboard/training-videos"
-                className="text-blue-500 hover:underline mt-2 block"
+                className="text-blue-500 hover:underline mt-2 block font-medium"
               >
                 Manage Videos
               </Link>
@@ -267,21 +324,21 @@ export default function AdminDashboard() {
           </Card>
 
           {/* Insurance Companies Card */}
-          <Card>
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex items-center">
-              <Building className="mr-2" />
-              <CardTitle>Insurance Companies</CardTitle>
+              <Building className="mr-2 text-blue-500" />
+              <CardTitle className="text-lg ">Insurance Companies</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableBody>
                   {insuranceCompanies.length > 0 ? (
                     insuranceCompanies.slice(0, 2).map((company) => (
-                      <TableRow key={company.id}>
-                        <TableCell className="text-sm">
+                      <TableRow key={company.id} className="hover:bg-gray-50">
+                        <TableCell className="text-sm ">
                           {company.name}
                           {company.website && (
-                            <span className="text-gray-500">
+                            <span className="">
                               <br />
                               <a
                                 href={company.website}
@@ -298,7 +355,7 @@ export default function AdminDashboard() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-sm ">
                         No companies available
                       </TableCell>
                     </TableRow>
@@ -307,7 +364,7 @@ export default function AdminDashboard() {
               </Table>
               <Link
                 href="/admin/dashboard/insurance-companies"
-                className="text-blue-500 hover:underline mt-2 block"
+                className="text-blue-500 hover:underline mt-2 block font-medium"
               >
                 Manage Companies
               </Link>
@@ -315,21 +372,21 @@ export default function AdminDashboard() {
           </Card>
 
           {/* Recent Users Card */}
-          <Card>
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex items-center">
-              <Users className="mr-2" />
-              <CardTitle>Recent Users</CardTitle>
+              <Users className="mr-2 text-blue-500" />
+              <CardTitle className="text-lg ">Recent Users</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableBody>
                   {users.length > 0 ? (
                     users.slice(0, 2).map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="text-sm">
+                      <TableRow key={user.id} className="hover:bg-gray-50">
+                        <TableCell className="text-sm ">
                           {user.firstName} {user.lastName} ({user.role})
                           <br />
-                          <span className="text-gray-500">
+                          <span className="">
                             {user.lastLogin
                               ? new Date(user.lastLogin).toLocaleDateString()
                               : "No login"}
@@ -339,7 +396,7 @@ export default function AdminDashboard() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-sm ">
                         No users available
                       </TableCell>
                     </TableRow>
@@ -348,7 +405,7 @@ export default function AdminDashboard() {
               </Table>
               <Link
                 href="/admin/dashboard/users"
-                className="text-blue-500 hover:underline mt-2 block"
+                className="text-blue-500 hover:underline mt-2 block font-medium"
               >
                 Manage Users
               </Link>
@@ -356,25 +413,25 @@ export default function AdminDashboard() {
           </Card>
 
           {/* Pro Sample Files Card */}
-          <Card>
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex items-center">
-              <FileText className="mr-2" />
-              <CardTitle>Pro Sample Files</CardTitle>
+              <FileText className="mr-2 text-blue-500" />
+              <CardTitle className="text-lg ">Pro Sample Files</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableBody>
                   {downloadResources.length > 0 ? (
                     downloadResources.slice(0, 2).map((file) => (
-                      <TableRow key={file.id}>
-                        <TableCell className="text-sm">
+                      <TableRow key={file.id} className="hover:bg-gray-50">
+                        <TableCell className="text-sm ">
                           {file.fileName} ({file.fileFormat})
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-sm ">
                         No files available
                       </TableCell>
                     </TableRow>
@@ -383,7 +440,7 @@ export default function AdminDashboard() {
               </Table>
               <Link
                 href="/admin/dashboard/files"
-                className="text-blue-500 hover:underline mt-2 block"
+                className="text-blue-500 hover:underline mt-2 block font-medium"
               >
                 Manage Files
               </Link>

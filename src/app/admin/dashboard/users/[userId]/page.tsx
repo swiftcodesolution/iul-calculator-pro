@@ -10,13 +10,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Users, Building2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { notFound } from "next/navigation";
-import { use } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Pie } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface SessionHistory {
   id: string;
@@ -155,22 +159,65 @@ export default function UserDetailsPage({
     }
   };
 
-  if (!user && !error) return <div>Loading...</div>;
-  if (error) return <div className="text-red-500">{error}</div>;
+  const pieData = {
+    labels: user?.filesByCategory.map((entry) => entry.category) || [],
+    datasets: [
+      {
+        data: user?.filesByCategory.map((entry) => entry.count) || [],
+        backgroundColor: [
+          "rgba(59, 130, 246, 0.5)",
+          "rgba(239, 68, 68, 0.5)",
+          "rgba(34, 197, 94, 0.5)",
+          "rgba(249, 115, 22, 0.5)",
+        ],
+        borderColor: [
+          "rgba(59, 130, 246, 1)",
+          "rgba(239, 68, 68, 1)",
+          "rgba(34, 197, 94, 1)",
+          "rgba(249, 115, 22, 1)",
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const pieOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: "top" as const },
+      title: { display: false },
+    },
+  };
+
+  if (!user && !error) return <div className="text-center ">Loading...</div>;
+  if (error) return <div className="text-red-500 text-center">{error}</div>;
 
   return (
-    <div className="max-h-screen overflow-y-scroll">
-      <main className="p-6">
-        <h1 className="text-3xl font-bold mb-6 flex items-center">
-          <Users className="mr-2" /> User Details
-        </h1>
-        <div className="flex w-full gap-4 mb-6">
-          <Card className="grow">
+    <div className="min-h-screen overflow-y-scroll">
+      <main className="p-6 mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="text-3xl font-bold mb-6 flex items-center ">
+            <Users className="mr-2 text-blue-500" /> User Details
+          </h1>
+        </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
-              <CardTitle>Info entered during signup</CardTitle>
+              <CardTitle className="text-lg ">
+                Info entered during signup
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="space-y-4"
+              >
                 <p>
                   <strong>Name:</strong>{" "}
                   {`${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
@@ -196,12 +243,14 @@ export default function UserDetailsPage({
                     variant="destructive"
                     onClick={handleDeleteUser}
                     disabled={isDeleting}
+                    className="hover:bg-red-600"
                   >
                     {isDeleting ? "Deleting..." : "Delete User"}
                   </Button>
                   <Button
                     onClick={handleUpdateStatus}
                     disabled={updatingStatus}
+                    className="hover:bg-blue-600"
                   >
                     {updatingStatus
                       ? "Updating..."
@@ -210,18 +259,23 @@ export default function UserDetailsPage({
                       : "Activate"}
                   </Button>
                 </div>
-              </div>
+              </motion.div>
             </CardContent>
           </Card>
-          <Card className="grow">
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Building2 className="mr-2" /> Company Information
+              <CardTitle className="flex items-center text-lg ">
+                <Building2 className="mr-2 text-blue-500" /> Company Information
               </CardTitle>
             </CardHeader>
             <CardContent>
               {user?.companyInfo ? (
-                <div className="space-y-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-4"
+                >
                   <p>
                     <strong>Business Name:</strong>{" "}
                     {user.companyInfo.businessName}
@@ -260,42 +314,31 @@ export default function UserDetailsPage({
                       />
                     </div>
                   )}
-                </div>
+                </motion.div>
               ) : (
-                <p>No company information available.</p>
+                <p className="">No company information available.</p>
               )}
             </CardContent>
           </Card>
         </div>
-        <Card className="mb-6">
+        <Card className="mb-6 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader>
-            <CardTitle>File Information</CardTitle>
+            <CardTitle className="text-lg ">File Information</CardTitle>
           </CardHeader>
           <CardContent>
             {user ? (
               user.filesByCategory.length > 0 ? (
-                <div className="space-y-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-4"
+                >
                   <div>
                     <strong>Total Files:</strong> {user._count.files || 0}
                   </div>
-                  <div>
-                    <strong>Files by Category:</strong>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Category</TableHead>
-                          <TableHead>Count</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {user.filesByCategory.map((entry) => (
-                          <TableRow key={entry.category}>
-                            <TableCell>{entry.category}</TableCell>
-                            <TableCell>{entry.count}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                  <div className="h-64">
+                    <Pie data={pieData} options={pieOptions} />
                   </div>
                   <div>
                     <strong>Recent Files:</strong>
@@ -310,7 +353,10 @@ export default function UserDetailsPage({
                         </TableHeader>
                         <TableBody>
                           {user.recentFiles.map((file) => (
-                            <TableRow key={file.id}>
+                            <TableRow
+                              key={file.id}
+                              className="hover:bg-gray-50"
+                            >
                               <TableCell>{file.fileName}</TableCell>
                               <TableCell>{file.category}</TableCell>
                               <TableCell>
@@ -321,21 +367,21 @@ export default function UserDetailsPage({
                         </TableBody>
                       </Table>
                     ) : (
-                      <p>No recent files available.</p>
+                      <p className="">No recent files available.</p>
                     )}
                   </div>
-                </div>
+                </motion.div>
               ) : (
-                <p>No file information available.</p>
+                <p className="">No file information available.</p>
               )
             ) : (
-              <p>User not loaded.</p>
+              <p className="">User not loaded.</p>
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader>
-            <CardTitle>Session History</CardTitle>
+            <CardTitle className="text-lg ">Session History</CardTitle>
           </CardHeader>
           <CardContent>
             {user?.sessionHistory && user.sessionHistory.length > 0 ? (
@@ -343,7 +389,6 @@ export default function UserDetailsPage({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Login Time</TableHead>
-
                     <TableHead>Browser</TableHead>
                     <TableHead>OS</TableHead>
                     <TableHead>IP Address</TableHead>
@@ -351,11 +396,10 @@ export default function UserDetailsPage({
                 </TableHeader>
                 <TableBody>
                   {user.sessionHistory.map((session) => (
-                    <TableRow key={session.id}>
+                    <TableRow key={session.id} className="hover:bg-gray-50">
                       <TableCell>
                         {new Date(session.loginAt).toLocaleString()}
                       </TableCell>
-
                       <TableCell>
                         {session.browserName && session.browserVersion
                           ? `${session.browserName} ${session.browserVersion}`
@@ -372,7 +416,7 @@ export default function UserDetailsPage({
                 </TableBody>
               </Table>
             ) : (
-              <p>No session history available.</p>
+              <p className="">No session history available.</p>
             )}
           </CardContent>
         </Card>
