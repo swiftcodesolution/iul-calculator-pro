@@ -179,6 +179,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         // token.deviceFingerprint = user.deviceFingerprint;
         token.role = user.role;
+        token.status = user.status;
         token.jti = crypto.randomUUID();
       }
       return token;
