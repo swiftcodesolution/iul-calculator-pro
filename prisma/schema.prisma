@@ -33,6 +33,8 @@ model User {
   PasswordResetToken        PasswordResetToken[]
 
   Subscription              Subscription[]
+  TrialToken                TrialToken?
+  AdminContact              AdminContact[]
 }
 
 model CompanyInfo {
@@ -180,4 +182,21 @@ model Subscription {
   renewalDate       DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+}
+
+model TrialToken {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String    @unique @db.ObjectId
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String    @unique
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime
+}
+
+model AdminContact {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String    @db.ObjectId
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message      String
+  createdAt    DateTime  @default(now())
 }

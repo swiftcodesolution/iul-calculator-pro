@@ -3,13 +3,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Stripe from "stripe";
 import prisma from "@/lib/connect";
+import { randomUUID } from "crypto";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   const { plan } = (await request.json()) as {
@@ -25,8 +26,8 @@ export async function POST(request: Request) {
   }
 
   const planIds: Record<"monthly" | "annual", string> = {
-    monthly: "price_1N4P5BDjQSIXuLORTS2bD4Tq", // Replace with test mode monthly price ID
-    annual: "price_1NRErKDjQSIXuLORuz78dbiO", // Replace with test mode annual price ID
+    monthly: "price_1Nxxxxx", // Replace with test mode monthly price ID
+    annual: "price_1Nyyyyy", // Replace with test mode annual price ID
   };
 
   if (plan === "trial") {
@@ -50,6 +51,14 @@ export async function POST(request: Request) {
           planType: "trial",
           status: "trialing",
           renewalDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days
+        },
+      });
+
+      await prisma.trialToken.create({
+        data: {
+          userId: session.user.id,
+          token: randomUUID(),
+          expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days
         },
       });
 
@@ -105,7 +114,7 @@ export async function POST(request: Request) {
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   try {

@@ -1,20 +1,31 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import { DollarSign, CheckCircle, Loader2, Info } from "lucide-react";
+import { DollarSign, CheckCircle, Loader2, Info, Mail } from "lucide-react";
 
 export default function SubscriptionPage() {
   const router = useRouter();
-  const { status } = useSession();
+  const { status, data: session } = useSession();
   const [isLoading, setIsLoading] = useState<string | null>(null);
-  const isPageLoading = !!isLoading;
+  const [trialStatus, setTrialStatus] = useState<"active" | "expired" | "none">(
+    "none"
+  );
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetch("/api/trial-status")
+        .then((res) => res.json())
+        .then((data) => setTrialStatus(data.status))
+        .catch((err) => console.error("Error fetching trial status:", err));
+    }
+  }, [status]);
 
   const plans = [
     {
@@ -23,20 +34,30 @@ export default function SubscriptionPage() {
       price: "Free",
       description:
         "No charge with 1 IUL sale every 2 months. Auto-cancels otherwise.",
+      show: trialStatus === "none",
     },
     {
       type: "monthly",
       name: "Monthly",
       price: "$89/month",
       description: "Flexible billing with 60-day trial",
+      show: true,
     },
     {
       type: "annual",
       name: "Annual",
       price: "$1,000/year",
       description: "Best value with 60-day trial",
+      show: true,
     },
-  ];
+    {
+      type: "contact-admin",
+      name: "Connect with Admin",
+      price: "Free",
+      description: "Confirm IUL sale to extend trial or activate account.",
+      show: trialStatus === "expired" || session?.user.status === "suspended",
+    },
+  ].filter((plan) => plan.show);
 
   const handleSubscribe = async (plan: string) => {
     if (status !== "authenticated") {
@@ -47,31 +68,45 @@ export default function SubscriptionPage() {
 
     setIsLoading(plan);
     try {
-      const response = await fetch("/api/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
-      });
+      if (plan === "contact-admin") {
+        const message = prompt("Enter your message to confirm IUL sale:");
+        if (!message) throw new Error("Message required");
 
-      const data = await response.json();
+        const response = await fetch("/api/contact-admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message }),
+        });
 
-      if (!response.ok) {
-        throw new Error(data.error || "Subscription failed");
-      }
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.error || "Failed to send message");
 
-      if (plan === "trial") {
-        toast.success("Trial activated! Complete 1 IUL sale every 2 months.");
+        toast.success("Message sent to admin!");
         router.push("/dashboard/home");
-      } else if (data.url) {
-        router.push(data.url);
       } else {
-        throw new Error("No checkout URL");
+        const response = await fetch("/api/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Subscription failed");
+
+        if (plan === "trial") {
+          toast.success("Trial activated! Complete 1 IUL sale every 2 months.");
+          router.push("/dashboard/home");
+        } else if (data.url) {
+          router.push(data.url);
+        } else {
+          throw new Error("No checkout URL");
+        }
       }
     } catch (error) {
       console.error("Subscription error:", error);
-      // Type guard to safely access error.message
       const message =
-        error instanceof Error ? error.message : "Subscription failed";
+        error instanceof Error ? error.message : "Operation failed";
       toast.error(message);
     } finally {
       setIsLoading(null);
@@ -114,7 +149,11 @@ export default function SubscriptionPage() {
                   )}
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <DollarSign className="h-5 w-5 text-primary" />
+                    {plan.type === "contact-admin" ? (
+                      <Mail className="h-5 w-5 text-primary" />
+                    ) : (
+                      <DollarSign className="h-5 w-5 text-primary" />
+                    )}
                     <h3 className="text-lg font-semibold">{plan.name}</h3>
                   </div>
                   <p className="text-2xl font-bold mb-2">{plan.price}</p>
@@ -129,14 +168,18 @@ export default function SubscriptionPage() {
                     variant={plan.type === "annual" ? "default" : "outline"}
                     className="mt-auto w-full"
                     onClick={() => handleSubscribe(plan.type)}
-                    disabled={isPageLoading}
+                    disabled={!!isLoading}
                   >
                     {isLoading === plan.type ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <>
                         <CheckCircle className="h-4 w-4 mr-2" />
-                        {plan.type === "trial" ? "Start Trial" : "Select Plan"}
+                        {plan.type === "trial"
+                          ? "Start Trial"
+                          : plan.type === "contact-admin"
+                          ? "Contact Admin"
+                          : "Select Plan"}
                       </>
                     )}
                   </Button>

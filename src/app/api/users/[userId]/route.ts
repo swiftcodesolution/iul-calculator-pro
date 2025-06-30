@@ -9,7 +9,7 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || session.user.role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   const { userId } = await params;
@@ -43,6 +43,20 @@ export async function GET(
             logoutAt: true,
           },
         },
+        TrialToken: {
+          select: {
+            token: true,
+            createdAt: true,
+            expiresAt: true,
+          },
+        },
+        AdminContact: {
+          select: {
+            id: true,
+            message: true,
+            createdAt: true,
+          },
+        },
         _count: {
           select: { files: true },
         },
@@ -54,7 +68,7 @@ export async function GET(
     }
 
     const companyInfo = await prisma.companyInfo.findFirst({
-      where: { userId }, // Changed from email to userId
+      where: { userId },
       select: {
         id: true,
         businessName: true,
@@ -92,9 +106,9 @@ export async function GET(
             businessName: companyInfo.businessName,
             agentName: companyInfo.agentName,
             email: companyInfo.email,
-            phoneNumber: companyInfo.phone, // Map phone to phoneNumber for consistency
-            companyLogo: companyInfo.logoSrc, // Map logoSrc to companyLogo
-            agentProfilePic: companyInfo.profilePicSrc, // Map profilePicSrc to agentProfilePic
+            phoneNumber: companyInfo.phone,
+            companyLogo: companyInfo.logoSrc,
+            agentProfilePic: companyInfo.profilePicSrc,
           }
         : null,
       filesByCategory: filesByCategory.map((entry) => ({
@@ -123,7 +137,7 @@ export async function DELETE(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || session.user.role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   const { userId } = await params;
@@ -139,7 +153,9 @@ export async function DELETE(
     }
 
     await prisma.clientFile.deleteMany({ where: { userId } });
-    await prisma.companyInfo.deleteMany({ where: { userId } }); // Changed from email to userId
+    await prisma.companyInfo.deleteMany({ where: { userId } });
+    await prisma.trialToken.deleteMany({ where: { userId } });
+    await prisma.adminContact.deleteMany({ where: { userId } });
     await prisma.user.delete({ where: { id: userId } });
 
     return NextResponse.json({ message: "User deleted successfully" });
@@ -158,7 +174,7 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || session.user.role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   const { userId } = await params;
@@ -198,6 +214,20 @@ export async function PATCH(
             logoutAt: true,
           },
         },
+        TrialToken: {
+          select: {
+            token: true,
+            createdAt: true,
+            expiresAt: true,
+          },
+        },
+        AdminContact: {
+          select: {
+            id: true,
+            message: true,
+            createdAt: true,
+          },
+        },
         _count: {
           select: { files: true },
         },
@@ -205,7 +235,7 @@ export async function PATCH(
     });
 
     const companyInfo = await prisma.companyInfo.findFirst({
-      where: { userId }, // Changed from email to userId
+      where: { userId },
       select: {
         id: true,
         businessName: true,
@@ -225,9 +255,9 @@ export async function PATCH(
             businessName: companyInfo.businessName,
             agentName: companyInfo.agentName,
             email: companyInfo.email,
-            phoneNumber: companyInfo.phone, // Map phone to phoneNumber
-            companyLogo: companyInfo.logoSrc, // Map logoSrc to companyLogo
-            agentProfilePic: companyInfo.profilePicSrc, // Map profilePicSrc to agentProfilePic
+            phoneNumber: companyInfo.phone,
+            companyLogo: companyInfo.logoSrc,
+            agentProfilePic: companyInfo.profilePicSrc,
           }
         : null,
     });
