@@ -205,16 +205,34 @@ export default function ImportPage({ params }: { params: Params }) {
 
     if (fileId && status === "authenticated" && session?.user?.id) {
       try {
+        // Clear fields data
         const fieldsResponse = await fetch(`/api/files/${fileId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "clearFieldsData" }),
         });
+
         if (!fieldsResponse.ok) {
           setError("Failed to clear fields data");
           toast("Failed to clear fields data");
+          return;
         }
-        clearStore(); // Clear store, matching admin behavior
+
+        // Clear tables data
+        const tablesResponse = await fetch(`/api/files/${fileId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "clearTablesData" }),
+        });
+
+        if (!tablesResponse.ok) {
+          setError("Failed to clear tables data");
+          toast("Failed to clear tables data");
+          return;
+        }
+
+        clearStore(); // Clear local store after successful API calls
+        toast("Data cleared successfully");
       } catch {
         setError("Error clearing data");
         toast("Error clearing data");

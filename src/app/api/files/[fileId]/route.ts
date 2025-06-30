@@ -115,10 +115,11 @@ export async function POST(
         select: { tablesData: true },
       });
 
-      const updatedTablesData = (currentFile?.tablesData as any) || {};
-      if (Array.isArray(updatedTablesData.tables)) {
-        updatedTablesData.tables = [];
-      }
+      // Ensure tablesData is an object before spreading
+      const updatedTablesData =
+        currentFile?.tablesData && typeof currentFile.tablesData === "object"
+          ? { ...currentFile.tablesData, tables: [] }
+          : { tables: [] };
 
       const updatedFile = await prisma.clientFile.update({
         where: { id: fileId },

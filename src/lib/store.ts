@@ -125,6 +125,8 @@ export const useTableStore = create<TableStore>((set) => ({
   setTabs: (tabs) => set({ tabs }),
   combinedResults: [],
   setCombinedResults: (results) => set({ combinedResults: results }),
+
+  /*
   clearStore: () =>
     set((state) => ({
       tables: [],
@@ -151,6 +153,21 @@ export const useTableStore = create<TableStore>((set) => ({
       activeButtons: {},
       isDataPersisted: false,
     })),
+  */
+
+  clearStore: () =>
+    set((state) => ({
+      ...state,
+      tables: [],
+      fields: {
+        illustration_date: null,
+        insured_name: null,
+        initial_death_benefit: null,
+        assumed_ror: null,
+        minimum_initial_pmt: null,
+      },
+    })),
+
   activeButtons: {},
   setActiveButtons: (buttons) => set({ activeButtons: buttons }),
   isDataPersisted: false,
