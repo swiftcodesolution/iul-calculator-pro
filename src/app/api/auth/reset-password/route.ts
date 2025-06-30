@@ -2,7 +2,19 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/connect";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { hash } from "bcrypt"; // Assuming bcrypt is used for password hashing
+import { hash } from "bcrypt";
+import nodemailer from "nodemailer";
+
+// Configure Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -25,17 +37,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verify user and reset token
-    const user = await prisma.user.findFirst({
+    // Verify user and reset token by joining with PasswordResetToken
+    const passwordReset = await prisma.passwordResetToken.findFirst({
       where: {
-        email,
-        resetPasswordToken: token,
-        resetPasswordExpires: { gt: new Date() },
+        token,
+        expiresAt: { gt: new Date() },
+        user: { email }, // Join with User model to check email
       },
-      select: { id: true },
+      include: {
+        user: { select: { id: true } }, // Select user ID
+      },
     });
 
-    if (!user) {
+    if (!passwordReset) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
         { status: 400 }
@@ -47,12 +61,15 @@ export async function POST(request: Request) {
 
     // Update user password and clear reset token
     await prisma.user.update({
-      where: { id: user.id },
+      where: { id: passwordReset.user.id },
       data: {
         password: hashedPassword,
-        resetPasswordToken: null,
-        resetPasswordExpires: null,
       },
+    });
+
+    // Delete the used reset token
+    await prisma.passwordResetToken.delete({
+      where: { id: passwordReset.id },
     });
 
     return NextResponse.json({ message: "Password reset successfully" });
@@ -77,7 +94,7 @@ export async function GET(request: Request) {
   try {
     const user = await prisma.user.findFirst({
       where: { email },
-      select: { id: true },
+      select: { id: true, email: true },
     });
 
     if (!user) {
@@ -88,18 +105,39 @@ export async function GET(request: Request) {
     const resetToken = crypto.randomUUID();
     const expiry = new Date(Date.now() + 3600 * 1000);
 
-    await prisma.user.update({
-      where: { id: user.id },
+    // Create a new PasswordResetToken entry
+    await prisma.passwordResetToken.create({
       data: {
-        resetPasswordToken: resetToken,
-        resetPasswordExpires: expiry,
+        userId: user.id,
+        token: resetToken,
+        expiresAt: expiry,
       },
     });
 
-    // TODO: Implement email sending logic (e.g., using nodemailer or an email service)
-    console.log(
-      `Password reset link: /reset-password?token=${resetToken}&email=${email}`
-    );
+    // Generate reset link (adjust the base URL as needed)
+    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}&email=${email}`;
+
+    // Send email to user
+    await transporter.sendMail({
+      from: `"Insurance App" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "Password Reset Request",
+      text: `
+        You have requested to reset your password for Insurance App.
+
+        Please click the following link to reset your password:
+        ${resetLink}
+
+        This link will expire in 1 hour. If you did not request a password reset, please ignore this email.
+      `,
+      html: `
+        <h2>Password Reset Request</h2>
+        <p>You have requested to reset your password for Insurance App.</p>
+        <p>Please click the following link to reset your password:</p>
+        <p><a href="${resetLink}" target="_blank">Reset Password</a></p>
+        <p>This link will expire in 1 hour. If you did not request a password reset, please ignore this email.</p>
+      `,
+    });
 
     return NextResponse.json({ message: "Password reset link sent" });
   } catch (error) {

@@ -30,8 +30,7 @@ model User {
   TabContent                TabContent[]
   InsuranceCompany          InsuranceCompany[]
   InsuranceCompanyRequest   InsuranceCompanyRequest[]
-
-  PasswordResetToken PasswordResetToken[]
+  PasswordResetToken        PasswordResetToken[]
 }
 
 model CompanyInfo {
