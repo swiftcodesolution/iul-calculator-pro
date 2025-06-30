@@ -75,10 +75,8 @@ export default function DashboardPage() {
   const { data: session } = useSession();
 
   useEffect(() => {
-    clearSelectedFileId();
-    setSelectedFile(null);
     form.reset(companyInfo);
-  }, [companyInfo, clearSelectedFileId, setSelectedFile, form]);
+  }, [companyInfo, form]);
 
   useEffect(() => {
     console.log("CropDialog state:", { cropDialogOpen, imageToCrop, cropType });
