@@ -1,3 +1,4 @@
+// src/app/stats/page.tsx
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,11 +11,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BarChart } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 interface Stats {
   activeUsers: number;
   totalFiles: number;
+  filesByCategory: { category: string; count: number }[];
+  filesPerUser: {
+    userId: string;
+    userEmail: string;
+    userName: string;
+    fileCount: number;
+  }[];
   recentSessions: {
     id: string;
     userEmail: string;
@@ -82,7 +91,7 @@ export default function StatsPage() {
           {/* Total Files Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Total Files created</CardTitle>
+              <CardTitle>Total Files Created</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">{stats?.totalFiles}</p>
@@ -90,6 +99,69 @@ export default function StatsPage() {
             </CardContent>
           </Card>
         </div>
+        {/* Files by Category Table */}
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle>Files by Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats?.filesByCategory && stats.filesByCategory.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Category</TableHead>
+                    <TableHead>File Count</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stats.filesByCategory.map((category) => (
+                    <TableRow key={category.category}>
+                      <TableCell>{category.category}</TableCell>
+                      <TableCell>{category.count}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p>No files available.</p>
+            )}
+          </CardContent>
+        </Card>
+        {/* Files by User Table */}
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle>Files by User</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats?.filesPerUser && stats.filesPerUser.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User Name</TableHead>
+                    <TableHead>User Email</TableHead>
+                    <TableHead>File Count</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stats.filesPerUser.map((user) => (
+                    <TableRow key={user.userId}>
+                      <TableCell>{user.userName || "N/A"}</TableCell>
+                      <TableCell>{user.userEmail}</TableCell>
+                      <TableCell>{user.fileCount}</TableCell>
+                      <TableCell>
+                        <Link href={`/admin/dashboard/users/${user.userId}`}>
+                          view
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p>No files available.</p>
+            )}
+          </CardContent>
+        </Card>
         {/* Recent Sessions Table */}
         <Card className="mb-4">
           <CardHeader>
@@ -137,7 +209,7 @@ export default function StatsPage() {
                     <TableHead>File Name</TableHead>
                     <TableHead>User Email</TableHead>
                     <TableHead>Category</TableHead>
-                    <TableHead>created At</TableHead>
+                    <TableHead>Created At</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

@@ -30,7 +30,6 @@ export async function GET(
           select: {
             id: true,
             sessionToken: true,
-            // deviceFingerprint: true,
             ipAddress: true,
             userAgent: true,
             browserName: true,
@@ -45,9 +44,7 @@ export async function GET(
           },
         },
         _count: {
-          select: {
-            files: true,
-          },
+          select: { files: true },
         },
       },
     });
@@ -57,7 +54,7 @@ export async function GET(
     }
 
     const companyInfo = await prisma.companyInfo.findFirst({
-      where: { email: user.email },
+      where: { userId }, // Changed from email to userId
       select: {
         id: true,
         businessName: true,
@@ -69,7 +66,48 @@ export async function GET(
       },
     });
 
-    return NextResponse.json({ ...user, companyInfo });
+    const filesByCategory = await prisma.clientFile.groupBy({
+      where: { userId },
+      by: ["category"],
+      _count: { id: true },
+    });
+
+    const recentFiles = await prisma.clientFile.findMany({
+      where: { userId },
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        fileName: true,
+        category: true,
+        createdAt: true,
+      },
+    });
+
+    return NextResponse.json({
+      ...user,
+      companyInfo: companyInfo
+        ? {
+            id: companyInfo.id,
+            businessName: companyInfo.businessName,
+            agentName: companyInfo.agentName,
+            email: companyInfo.email,
+            phoneNumber: companyInfo.phone, // Map phone to phoneNumber for consistency
+            companyLogo: companyInfo.logoSrc, // Map logoSrc to companyLogo
+            agentProfilePic: companyInfo.profilePicSrc, // Map profilePicSrc to agentProfilePic
+          }
+        : null,
+      filesByCategory: filesByCategory.map((entry) => ({
+        category: entry.category,
+        count: entry._count.id,
+      })),
+      recentFiles: recentFiles.map((file) => ({
+        id: file.id,
+        fileName: file.fileName,
+        category: file.category,
+        createdAt: file.createdAt.toISOString(),
+      })),
+    });
   } catch (error) {
     console.error("Error fetching user:", error);
     return NextResponse.json(
@@ -93,32 +131,15 @@ export async function DELETE(
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true },
+      select: { id: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Delete related records with onDelete: Restrict
-    // await prisma.downloadResources.deleteMany({
-    //   where: { uploadedBy: userId },
-    // });
-    // await prisma.trainingVideos.deleteMany({ where: { uploadedBy: userId } });
-    // await prisma.trainingDocuments.deleteMany({
-    //   where: { uploadedBy: userId },
-    // });
-    // await prisma.insuranceCompany.deleteMany({ where: { createdBy: userId } });
-    // await prisma.insuranceCompanyRequest.deleteMany({
-    //   where: { submittedBy: userId },
-    // });
-
-    await prisma.clientFile.deleteMany({ where: { userId: userId } });
-
-    // Delete related companyInfo (has onDelete: Cascade, but explicit for clarity)
-    await prisma.companyInfo.deleteMany({ where: { email: user.email } });
-
-    // Delete user (cascades to Session, SessionHistory, TabContent)
+    await prisma.clientFile.deleteMany({ where: { userId } });
+    await prisma.companyInfo.deleteMany({ where: { userId } }); // Changed from email to userId
     await prisma.user.delete({ where: { id: userId } });
 
     return NextResponse.json({ message: "User deleted successfully" });
@@ -184,7 +205,7 @@ export async function PATCH(
     });
 
     const companyInfo = await prisma.companyInfo.findFirst({
-      where: { email: user.email },
+      where: { userId }, // Changed from email to userId
       select: {
         id: true,
         businessName: true,
@@ -196,7 +217,20 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json({ ...user, companyInfo });
+    return NextResponse.json({
+      ...user,
+      companyInfo: companyInfo
+        ? {
+            id: companyInfo.id,
+            businessName: companyInfo.businessName,
+            agentName: companyInfo.agentName,
+            email: companyInfo.email,
+            phoneNumber: companyInfo.phone, // Map phone to phoneNumber
+            companyLogo: companyInfo.logoSrc, // Map logoSrc to companyLogo
+            agentProfilePic: companyInfo.profilePicSrc, // Map profilePicSrc to agentProfilePic
+          }
+        : null,
+    });
   } catch (error) {
     console.error("Error updating user status:", error);
     return NextResponse.json(

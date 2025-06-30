@@ -1,3 +1,4 @@
+// src/app/api/stats/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/connect";
 import { getServerSession } from "next-auth";
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
       where: {
         sessions: {
           some: {
-            expires: { gt: new Date() }, // Active sessions (not expired)
+            expires: { gt: new Date() },
           },
         },
       },
@@ -25,6 +26,53 @@ export async function GET(request: Request) {
 
     // Total files uploaded
     const totalFiles = await prisma.clientFile.count();
+
+    // Files per category
+    const filesByCategory = await prisma.clientFile.groupBy({
+      by: ["category"],
+      _count: {
+        id: true,
+      },
+    });
+
+    // Files per user
+    const filesByUser = await prisma.clientFile.groupBy({
+      by: ["userId"],
+      _count: {
+        id: true,
+      },
+      orderBy: {
+        _count: {
+          id: "desc",
+        },
+      },
+    });
+
+    // Map user IDs to user info (email, firstName, lastName)
+    const userIds = filesByUser.map((entry) => entry.userId);
+    const users = await prisma.user.findMany({
+      where: {
+        id: { in: userIds },
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+      },
+    });
+
+    const filesPerUser = filesByUser.map((entry) => {
+      const user = users.find((u) => u.id === entry.userId);
+      return {
+        userId: entry.userId,
+        userEmail: user?.email || "Unknown",
+        userName: user
+          ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
+          : "Unknown",
+        fileCount: entry._count.id,
+      };
+    });
 
     // Recent sessions (last 3, ordered by loginAt)
     const recentSessions = await prisma.sessionHistory.findMany({
@@ -55,6 +103,11 @@ export async function GET(request: Request) {
     return NextResponse.json({
       activeUsers,
       totalFiles,
+      filesByCategory: filesByCategory.map((entry) => ({
+        category: entry.category,
+        count: entry._count.id,
+      })),
+      filesPerUser,
       recentSessions: recentSessions.map((session) => ({
         id: session.id,
         userEmail: session.user.email,

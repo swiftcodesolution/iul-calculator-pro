@@ -56,6 +56,16 @@ interface User {
   status: string;
   sessionHistory: SessionHistory[];
   companyInfo: CompanyInfo | null;
+  _count: {
+    files: number;
+  };
+  filesByCategory: { category: string; count: number }[];
+  recentFiles: {
+    id: string;
+    fileName: string;
+    category: string;
+    createdAt: string;
+  }[];
 }
 
 export default function UserDetailsPage({
@@ -154,98 +164,172 @@ export default function UserDetailsPage({
         <h1 className="text-3xl font-bold mb-6 flex items-center">
           <Users className="mr-2" /> User Details
         </h1>
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>
-              {`${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
-                "N/A"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p>
-                <strong>Email:</strong> {user?.email}
-              </p>
-              <p>
-                <strong>Role:</strong> {user?.role}
-              </p>
-              <p>
-                <strong>Cell Phone:</strong> {user?.cellPhone || "N/A"}
-              </p>
-              <p>
-                <strong>Office Phone:</strong> {user?.officePhone || "N/A"}
-              </p>
-              <p>
-                <strong>Status:</strong> {user?.status || "N/A"}
-              </p>
-              <div className="flex space-x-4 items-center">
-                <Button
-                  variant="destructive"
-                  onClick={handleDeleteUser}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? "Deleting..." : "Delete User"}
-                </Button>
-                <Button onClick={handleUpdateStatus} disabled={updatingStatus}>
-                  {updatingStatus
-                    ? "Updating..."
-                    : user?.status === "active"
-                    ? "Suspend"
-                    : "Activate"}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Building2 className="mr-2" /> Company Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {user?.companyInfo ? (
+        <div className="flex w-full gap-4 mb-6">
+          <Card className="grow">
+            <CardHeader>
+              <CardTitle>Info entered during signup</CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-4">
                 <p>
-                  <strong>Business Name:</strong>{" "}
-                  {user.companyInfo.businessName}
+                  <strong>Name:</strong>{" "}
+                  {`${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+                    "N/A"}
                 </p>
                 <p>
-                  <strong>Agent Name:</strong> {user.companyInfo.agentName}
+                  <strong>Email:</strong> {user?.email}
                 </p>
                 <p>
-                  <strong>Email:</strong> {user.companyInfo.email}
+                  <strong>Role:</strong> {user?.role}
                 </p>
                 <p>
-                  <strong>Phone Number:</strong> {user.companyInfo.phoneNumber}
+                  <strong>Cell Phone:</strong> {user?.cellPhone || "N/A"}
                 </p>
-                {user.companyInfo.companyLogo && (
-                  <div>
-                    <strong>Company Logo:</strong>
-                    <Image
-                      src={user.companyInfo.companyLogo}
-                      alt="Company Logo"
-                      width={100}
-                      height={100}
-                      className="mt-2 rounded"
-                    />
-                  </div>
-                )}
-                {user.companyInfo.agentProfilePic && (
-                  <div>
-                    <strong>Agent Profile Picture:</strong>
-                    <Image
-                      src={user.companyInfo.agentProfilePic}
-                      alt="Agent Profile Picture"
-                      width={100}
-                      height={100}
-                      className="mt-2 rounded"
-                    />
-                  </div>
-                )}
+                <p>
+                  <strong>Office Phone:</strong> {user?.officePhone || "N/A"}
+                </p>
+                <p>
+                  <strong>Status:</strong> {user?.status || "N/A"}
+                </p>
+                <div className="flex space-x-4 items-center">
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteUser}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? "Deleting..." : "Delete User"}
+                  </Button>
+                  <Button
+                    onClick={handleUpdateStatus}
+                    disabled={updatingStatus}
+                  >
+                    {updatingStatus
+                      ? "Updating..."
+                      : user?.status === "active"
+                      ? "Suspend"
+                      : "Activate"}
+                  </Button>
+                </div>
               </div>
+            </CardContent>
+          </Card>
+          <Card className="grow">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Building2 className="mr-2" /> Company Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {user?.companyInfo ? (
+                <div className="space-y-4">
+                  <p>
+                    <strong>Business Name:</strong>{" "}
+                    {user.companyInfo.businessName}
+                  </p>
+                  <p>
+                    <strong>Agent Name:</strong> {user.companyInfo.agentName}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {user.companyInfo.email}
+                  </p>
+                  <p>
+                    <strong>Phone Number:</strong>{" "}
+                    {user.companyInfo.phoneNumber}
+                  </p>
+                  {user.companyInfo.companyLogo && (
+                    <div>
+                      <strong>Company Logo:</strong>
+                      <Image
+                        src={user.companyInfo.companyLogo}
+                        alt="Company Logo"
+                        width={100}
+                        height={100}
+                        className="mt-2 rounded"
+                      />
+                    </div>
+                  )}
+                  {user.companyInfo.agentProfilePic && (
+                    <div>
+                      <strong>Agent Profile Picture:</strong>
+                      <Image
+                        src={user.companyInfo.agentProfilePic}
+                        alt="Agent Profile Picture"
+                        width={100}
+                        height={100}
+                        className="mt-2 rounded"
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p>No company information available.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>File Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {user ? (
+              user.filesByCategory.length > 0 ? (
+                <div className="space-y-4">
+                  <div>
+                    <strong>Total Files:</strong> {user._count.files || 0}
+                  </div>
+                  <div>
+                    <strong>Files by Category:</strong>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Count</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {user.filesByCategory.map((entry) => (
+                          <TableRow key={entry.category}>
+                            <TableCell>{entry.category}</TableCell>
+                            <TableCell>{entry.count}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <div>
+                    <strong>Recent Files:</strong>
+                    {user.recentFiles?.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>File Name</TableHead>
+                            <TableHead>Category</TableHead>
+                            <TableHead>Created At</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {user.recentFiles.map((file) => (
+                            <TableRow key={file.id}>
+                              <TableCell>{file.fileName}</TableCell>
+                              <TableCell>{file.category}</TableCell>
+                              <TableCell>
+                                {new Date(file.createdAt).toLocaleString()}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <p>No recent files available.</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p>No file information available.</p>
+              )
             ) : (
-              <p>No company information available.</p>
+              <p>User not loaded.</p>
             )}
           </CardContent>
         </Card>

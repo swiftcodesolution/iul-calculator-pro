@@ -11,6 +11,13 @@ import {
 import { Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface User {
   id: string;
@@ -20,11 +27,16 @@ interface User {
   cellPhone: string | null;
   officePhone: string | null;
   role: string;
+  _count: {
+    files: number;
+    sessionHistory: number;
+  };
 }
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<"most" | "least" | "none">("none");
 
   useEffect(() => {
     async function fetchUsers() {
@@ -43,12 +55,38 @@ export default function UsersPage() {
     fetchUsers();
   }, []);
 
+  // Sort users based on session count
+  const sortedUsers = [...users].sort((a, b) => {
+    if (sortOrder === "most") {
+      return b._count.sessionHistory - a._count.sessionHistory;
+    } else if (sortOrder === "least") {
+      return a._count.sessionHistory - b._count.sessionHistory;
+    }
+    return 0;
+  });
+
   return (
     <div className="max-h-screen overflow-y-scroll">
       <main className="p-6">
         <h1 className="text-3xl font-bold mb-6 flex items-center">
           <Users className="mr-2" /> Manage Users
         </h1>
+        <div className="mb-4">
+          <Select
+            onValueChange={(value: "most" | "least" | "none") =>
+              setSortOrder(value)
+            }
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sort by activity" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No Sorting</SelectItem>
+              <SelectItem value="most">Most Active</SelectItem>
+              <SelectItem value="least">Least Active</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="p-4 rounded shadow">
           {error ? (
             <p className="text-red-500">{error}</p>
@@ -63,11 +101,12 @@ export default function UsersPage() {
                   <TableHead>Role</TableHead>
                   <TableHead>Cell Phone</TableHead>
                   <TableHead>Office Phone</TableHead>
+                  <TableHead>Total Files</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {sortedUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       {`${user.firstName || ""} ${
@@ -78,6 +117,7 @@ export default function UsersPage() {
                     <TableCell>{user.role}</TableCell>
                     <TableCell>{user.cellPhone || "N/A"}</TableCell>
                     <TableCell>{user.officePhone || "N/A"}</TableCell>
+                    <TableCell>{user._count.files || 0}</TableCell>
                     <TableCell>
                       <Link
                         href={`/admin/dashboard/users/${user.id}`}

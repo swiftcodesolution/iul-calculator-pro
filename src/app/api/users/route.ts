@@ -21,6 +21,12 @@ export async function GET(request: Request) {
         cellPhone: true,
         officePhone: true,
         role: true,
+        _count: {
+          select: {
+            files: true,
+            sessionHistory: true,
+          },
+        },
       },
     });
 
