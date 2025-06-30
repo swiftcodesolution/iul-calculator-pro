@@ -3,12 +3,19 @@
 import { motion, Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react"; // Added for loading icon
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Loader2 } from "lucide-react";
 import { ClientFile } from "@/lib/types";
 import DialogContentRenderer from "./DialogContentRenderer";
 import { useRouter } from "next/navigation";
 import { useFileContext } from "@/context/FileContext";
+import { useState } from "react";
 
 const newClientVariant: Variants = {
   hidden: { opacity: 0, scale: 0.8, y: 10 },
@@ -31,7 +38,7 @@ interface ClientFilesSectionProps {
   setDialogAction: (action: string | null) => void;
   handleClientAction: (
     action: string,
-    data?: { id?: string; name?: string }
+    data?: { id?: string; name?: string; category?: string }
   ) => Promise<{ fileId?: string } | void>;
   handleDragStart: (e: React.DragEvent<HTMLDivElement>, id: string) => void;
   handleDrop: (
@@ -39,7 +46,7 @@ interface ClientFilesSectionProps {
     category: ClientFile["category"]
   ) => void;
   userRole: string;
-  isRefreshing: boolean; // Added for loading state
+  isRefreshing: boolean;
 }
 
 export default function ClientFilesSection({
@@ -54,10 +61,11 @@ export default function ClientFilesSection({
   handleClientAction,
   handleDragStart,
   handleDrop,
-  isRefreshing, // Added prop
+  isRefreshing,
 }: ClientFilesSectionProps) {
   const router = useRouter();
   const { selectedFileId: contextFileId, setSelectedFileId } = useFileContext();
+  const [dropWarningOpen, setDropWarningOpen] = useState(false);
 
   const handleOpen = () => {
     if (selectedFileId) {
@@ -89,7 +97,7 @@ export default function ClientFilesSection({
             variant="outline"
             size="sm"
             onClick={() => handleClientAction("latest")}
-            disabled={isRefreshing} // Disable during refresh
+            disabled={isRefreshing}
             className="flex items-center gap-2"
           >
             {isRefreshing ? (
@@ -116,12 +124,16 @@ export default function ClientFilesSection({
               transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
               whileHover={{ scale: 1 }}
               className="border p-1 overflow-hidden"
-              onDragOver={(e: React.DragEvent<HTMLDivElement>) =>
-                e.preventDefault()
-              }
-              onDrop={(e: React.DragEvent<HTMLDivElement>) =>
-                handleDrop(e, category as ClientFile["category"])
-              }
+              onDragOver={(e: React.DragEvent<HTMLDivElement>) => {
+                e.preventDefault(); // Allow drag-over for all categories
+              }}
+              onDrop={(e: React.DragEvent<HTMLDivElement>) => {
+                if (category === "Pro Sample Files") {
+                  setDropWarningOpen(true); // Show warning dialog on drop
+                } else {
+                  handleDrop(e, category as ClientFile["category"]);
+                }
+              }}
               style={{ maxHeight: "100%" }}
             >
               <motion.h3
@@ -165,6 +177,17 @@ export default function ClientFilesSection({
             </motion.div>
           ))}
         </div>
+        {/* Warning Dialog for Dropping on Pro Sample Files */}
+        <Dialog open={dropWarningOpen} onOpenChange={setDropWarningOpen}>
+          <DialogContent>
+            <DialogTitle>Action Not Allowed</DialogTitle>
+            <DialogDescription>
+              Dropping files into the &quot;Pro Sample Files&quot; category is
+              not allowed.
+            </DialogDescription>
+            <Button onClick={() => setDropWarningOpen(false)}>OK</Button>
+          </DialogContent>
+        </Dialog>
         <motion.div
           className="flex gap-2 justify-end"
           initial="hidden"
@@ -188,6 +211,7 @@ export default function ClientFilesSection({
                 size="sm"
                 onClick={() => setDialogAction("new")}
                 aria-label="Create new client file"
+                disabled={selectedFile?.category === "Pro Sample Files"}
               >
                 Create New
               </Button>
@@ -246,7 +270,11 @@ export default function ClientFilesSection({
               <Button
                 size="sm"
                 onClick={() => setDialogAction(action)}
-                disabled={!selectedFileId}
+                disabled={
+                  !selectedFileId ||
+                  (action !== "copy" &&
+                    selectedFile?.category === "Pro Sample Files")
+                }
                 aria-label={`${
                   action.charAt(0).toUpperCase() + action.slice(1)
                 } client file`}

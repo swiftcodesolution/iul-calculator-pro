@@ -14,7 +14,7 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
   const [newClientName, setNewClientName] = useState("");
   const [selectedFile, setSelectedFile] = useState<ClientFile | null>(null);
   const [dialogAction, setDialogAction] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false); // New state for refresh loading
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     async function fetchFiles() {
@@ -43,57 +43,8 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
       return;
     }
 
-    const fileToActOn = clientFiles.find((file) => file.id === data?.id);
-    let targetFileId = data?.id;
-    let newFile: ClientFile | undefined;
-
-    // For agents acting on Pro Sample Files (except delete), create a copy first
-    if (
-      session.user.role === "agent" &&
-      fileToActOn?.category === "Pro Sample Files" &&
-      action !== "delete"
-    ) {
-      const copyResponse = await fetch(`/api/files/${fileToActOn.id}`);
-      if (!copyResponse.ok) {
-        console.error("Failed to fetch file data for copy");
-        return;
-      }
-      const originalFile = await copyResponse.json();
-
-      const copyFileName = `${fileToActOn.fileName} (Copy)`;
-      const createResponse = await fetch("/api/files", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileName: copyFileName }),
-      });
-      if (!createResponse.ok) {
-        console.error("Failed to create file copy");
-        return;
-      }
-      const createdFile = await createResponse.json();
-
-      const updateResponse = await fetch(`/api/files/${createdFile.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          boxesData: originalFile.boxesData,
-          tablesData: originalFile.tablesData,
-          combinedResults: originalFile.combinedResults,
-          fields: originalFile.fields,
-          category: "Your Sample Files",
-        }),
-      });
-      if (updateResponse.ok) {
-        newFile = await updateResponse.json();
-        setClientFiles((prev) => [...prev, newFile!]);
-        setSelectedFile(newFile!);
-        setSelectedFileId(newFile!.id);
-        targetFileId = newFile!.id;
-      } else {
-        console.error("Failed to update copied file");
-        return;
-      }
-    }
+    const targetFileId = data?.id;
+    // let newFile: ClientFile | undefined;
 
     try {
       if (action === "new" && data?.name) {
@@ -133,7 +84,7 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
           const response = await fetch("/api/files", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fileName: data.name }),
+            body: JSON.stringify({ fileName: data.name }), // Use user-entered name
           });
           if (response.ok) {
             const newFile = await response.json();
@@ -154,7 +105,7 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
               setSelectedFile(updatedFile);
               setSelectedFileId(updatedFile.id);
               setNewClientName("");
-              setDialogAction(null);
+              setDialogAction(null); // Close dialog
               return { fileId: updatedFile.id };
             }
           }
@@ -197,19 +148,19 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
           setDialogAction(null);
         }
       } else if (action === "latest") {
-        setIsRefreshing(true); // Start loading
+        setIsRefreshing(true);
         try {
           const response = await fetch("/api/files");
           if (response.ok) {
             const files = await response.json();
-            setClientFiles(files); // Refresh files
+            setClientFiles(files);
           } else {
             console.error("Failed to refresh files:", response.statusText);
           }
         } catch (error) {
           console.error("Error refreshing files:", error);
         } finally {
-          setIsRefreshing(false); // Stop loading
+          setIsRefreshing(false);
         }
       }
     } catch (error) {
@@ -235,7 +186,7 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
       session?.user?.role === "agent" &&
       file.category === "Pro Sample Files"
     ) {
-      const newFileName = `${file.fileName} (Copy)`;
+      const newFileName = `${file.fileName} (Copy)`; // Append (Copy) for drag-and-drop
       await handleClientAction("copy", {
         id: file.id,
         name: newFileName,
@@ -272,6 +223,6 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
     handleClientAction,
     handleDragStart,
     handleDrop,
-    isRefreshing, // Expose loading state
+    isRefreshing,
   };
 }

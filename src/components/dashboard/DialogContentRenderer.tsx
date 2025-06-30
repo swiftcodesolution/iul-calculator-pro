@@ -1,4 +1,3 @@
-// src/components/dashboard/DialogContentRenderer.tsx
 "use client";
 
 import { motion } from "framer-motion";
@@ -15,7 +14,7 @@ interface DialogContentRendererProps {
   selectedFile: ClientFile | null;
   handleClientAction: (
     action: string,
-    data?: { id?: string; name?: string }
+    data?: { id?: string; name?: string; category?: string }
   ) => Promise<{ fileId?: string } | void>;
 }
 
@@ -44,12 +43,27 @@ export default function DialogContentRenderer({
   };
 
   const handleSubmit = async () => {
-    const result = await handleClientAction(dialogAction, {
-      id: selectedFile?.id,
-      name: newClientName,
-    });
-    if ((dialogAction === "new" || dialogAction === "copy") && result?.fileId) {
-      setSelectedFileId(result.fileId);
+    if (dialogAction === "delete") {
+      if (selectedFile) {
+        await handleClientAction("delete", { id: selectedFile.id });
+      }
+    } else if (newClientName.trim()) {
+      const data: { id?: string; name?: string; category?: string } = {
+        name: newClientName,
+      };
+      if (dialogAction === "copy" || dialogAction === "rename") {
+        data.id = selectedFile?.id;
+      }
+      if (dialogAction === "copy") {
+        data.category = "Your Sample Files"; // Default category for copy
+      }
+      const result = await handleClientAction(dialogAction, data);
+      if (
+        (dialogAction === "new" || dialogAction === "copy") &&
+        result?.fileId
+      ) {
+        setSelectedFileId(result.fileId);
+      }
     }
   };
 
@@ -79,24 +93,40 @@ export default function DialogContentRenderer({
         {dialogAction === "delete" && (
           <p>Are you sure you want to delete {selectedFile?.fileName}?</p>
         )}
-        <motion.div
-          whileHover={{ scale: 1.05, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
-          whileTap={{ scale: 0.95 }}
-          className="w-min"
-        >
-          <Button
-            size="sm"
-            onClick={handleSubmit}
-            disabled={
-              (dialogAction === "new" ||
-                dialogAction === "copy" ||
-                dialogAction === "rename") &&
-              !newClientName
-            }
+        <div className="flex gap-2 justify-end">
+          <motion.div
+            whileHover={{ scale: 1.05, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+            whileTap={{ scale: 0.95 }}
           >
-            {dialogAction === "delete" ? "Confirm" : "Submit"}
-          </Button>
-        </motion.div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setNewClientName("");
+                handleClientAction("cancel", {});
+              }}
+            >
+              Cancel
+            </Button>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button
+              size="sm"
+              onClick={handleSubmit}
+              disabled={
+                (dialogAction === "new" ||
+                  dialogAction === "copy" ||
+                  dialogAction === "rename") &&
+                !newClientName.trim()
+              }
+            >
+              {dialogAction === "delete" ? "Confirm" : "Submit"}
+            </Button>
+          </motion.div>
+        </div>
       </div>
     </motion.div>
   );
