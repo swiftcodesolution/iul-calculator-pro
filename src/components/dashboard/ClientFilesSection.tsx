@@ -158,7 +158,7 @@ export default function ClientFilesSection({
                       animate="visible"
                       whileHover={{ backgroundColor: "#e5e7eb", color: "#000" }}
                       whileDrag={{ scale: 1.1, opacity: 0.8 }}
-                      className={`file-item p-1 border-b cursor-pointer text-sm rounded-md transition-colors ${
+                      className={`ignore-click-outside file-item p-1 border-b cursor-pointer text-sm rounded-md transition-colors ${
                         selectedFile?.id === file.id
                           ? "bg-blue-600 border-blue-500 border"
                           : "bg-transparent"

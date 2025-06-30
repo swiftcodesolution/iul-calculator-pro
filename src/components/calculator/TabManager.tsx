@@ -26,6 +26,7 @@ import {
 import InflationCalculator from "../InflationCalculator";
 import CagrChart from "../CagrChart";
 import { useSession } from "next-auth/react";
+import AnnualContributionCalculatorForIUL from "../AnnualContributionCalculatorForIUL";
 
 interface TabManagerProps {
   activeTab: string | null;
@@ -48,6 +49,12 @@ const staticTabs: TabContent[] = [
     id: "calculator",
     name: "Calculator",
     type: "calculator",
+    isVisible: true,
+  },
+  {
+    id: "annualContributionCalculatorForIUL",
+    name: "Annual Contribution for IUL",
+    type: "annualContributionCalculatorForIUL",
     isVisible: true,
   },
   {
@@ -245,6 +252,11 @@ const TabContentRenderer = ({
       {tab.type === "calculator" && (
         <div className="h-full w-full flex items-center justify-center gap-4 text-center">
           <TabCalculator />
+        </div>
+      )}
+      {tab.type === "annualContributionCalculatorForIUL" && (
+        <div className="h-full w-full flex items-center justify-center gap-4 text-center">
+          <AnnualContributionCalculatorForIUL />
         </div>
       )}
       {tab.type === "inflationCalculator" && (

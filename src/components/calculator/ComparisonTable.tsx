@@ -465,10 +465,15 @@ export function ComparisonTable({
   ]);
 
   const taxFreeResults = useMemo(() => {
+    const contributionNum = parseInput(annualContributions, 0);
+    const taxRateNum = parseInput(calculatorTaxRate, 0);
+    const taxes = contributionNum * (taxRateNum / 100);
+    const netContribution = contributionNum - taxes;
+
     if (!tables || !tables[0]?.data || tables[0].data.length === 0) {
       return {
         startingBalance: parseInput(iulStartingBalance, 0),
-        annualContributions: 0,
+        annualContributions: netContribution,
         annualEmployerMatch: 0,
         annualFees: 0,
         grossRetirementIncome: 0,

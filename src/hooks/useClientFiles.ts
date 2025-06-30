@@ -9,7 +9,8 @@ import { useFileContext } from "@/context/FileContext";
 export function useClientFiles(initialFiles: ClientFile[] = []) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { setSelectedFileId, clearSelectedFileId } = useFileContext();
+  const { selectedFileId, setSelectedFileId, clearSelectedFileId } =
+    useFileContext();
   const [clientFiles, setClientFiles] = useState<ClientFile[]>(initialFiles);
   const [newClientName, setNewClientName] = useState("");
   const [selectedFile, setSelectedFile] = useState<ClientFile | null>(null);
@@ -33,6 +34,13 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
     }
     fetchFiles();
   }, [session, status]);
+
+  useEffect(() => {
+    if (selectedFileId && !selectedFile) {
+      const file = clientFiles.find((f) => f.id === selectedFileId);
+      if (file) setSelectedFile(file);
+    }
+  }, [selectedFileId, selectedFile, clientFiles]);
 
   const handleClientAction = async (
     action: string,
@@ -124,8 +132,12 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
                 : file
             )
           );
-          setSelectedFile(null);
-          clearSelectedFileId();
+          if (selectedFile?.id === targetFileId) {
+            setSelectedFile({
+              ...selectedFile,
+              fileName: data.name!,
+            });
+          }
           setNewClientName("");
           setDialogAction(null);
         }
@@ -143,8 +155,10 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
         });
         if (response.ok) {
           setClientFiles((prev) => prev.filter((file) => file.id !== data.id));
-          setSelectedFile(null);
-          clearSelectedFileId();
+          if (selectedFile?.id === data.id) {
+            setSelectedFile(null);
+            clearSelectedFileId();
+          }
           setDialogAction(null);
         }
       } else if (action === "latest") {

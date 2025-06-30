@@ -104,8 +104,14 @@ export const useTableStore = create<TableStore>((set) => ({
       isVisible: true,
     },
     {
+      id: "annualContributionCalculatorForIUL",
+      name: "Annual Contribution for IUL",
+      type: "annualContributionCalculatorForIUL",
+      isVisible: true,
+    },
+    {
       id: "inflationCalculator",
-      name: "Inflation Calculator Redesign",
+      name: "Inflation Calculator",
       type: "inflationCalculator",
       isVisible: true,
     },

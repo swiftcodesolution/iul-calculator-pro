@@ -86,23 +86,27 @@ export default function DashboardPage() {
 
   const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
+    console.log(
+      "Click outside triggered, target:",
+      target.className,
+      target.tagName
+    );
     if (
       containerRef.current &&
       !target.closest(".file-item") &&
       !target.closest("button") &&
       !target.closest(".dialog-content")
     ) {
+      console.log("Clearing selection due to click outside");
       setSelectedFile(null);
       clearSelectedFileId();
-      console.log("Selected file cleared:", selectedFile);
     }
-    console.log("Click outside");
   };
 
   const handleFileSelection = (file: ClientFile) => {
+    console.log("handleFileSelection called:", file);
     setSelectedFile(file);
     setSelectedFileId(file.id);
-    console.log("File selected:", file);
   };
 
   return (
@@ -123,7 +127,7 @@ export default function DashboardPage() {
         error={error}
         handleFileUpload={handleFileUpload}
         handleCropExistingImage={handleCropExistingImage}
-        form={form} // Pass form to Sidebar
+        form={form}
       />
       <motion.div
         variants={contentVariants}

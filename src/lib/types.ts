@@ -218,6 +218,7 @@ export interface TabContent {
   type:
     | "totalAdvantage"
     | "calculator"
+    | "annualContributionCalculatorForIUL"
     | "inflationCalculator"
     | "cagrChart"
     | "image"
