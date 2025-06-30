@@ -145,6 +145,7 @@ export const authOptions: NextAuthOptions = {
             firstName: user.firstName ?? undefined,
             lastName: user.lastName ?? undefined,
             role: user.role,
+            status: user.status,
 
             // deviceFingerprint: credentials.deviceFingerprint,
           };
