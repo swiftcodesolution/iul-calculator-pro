@@ -181,10 +181,10 @@ export default function ClientFilesSection({
         <Dialog open={dropWarningOpen} onOpenChange={setDropWarningOpen}>
           <DialogContent>
             <DialogTitle>Action Not Allowed</DialogTitle>
-            <DialogDescription>
+            <p className="text-sm">
               Dropping files into the &quot;Pro Sample Files&quot; category is
               not allowed.
-            </DialogDescription>
+            </p>
             <Button onClick={() => setDropWarningOpen(false)}>OK</Button>
           </DialogContent>
         </Dialog>
