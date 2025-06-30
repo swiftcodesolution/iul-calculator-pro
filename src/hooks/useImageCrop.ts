@@ -1,20 +1,21 @@
 import { useState, useCallback } from "react";
-import { CompanyInfo, CropState } from "@/lib/types";
+import { CropState } from "@/lib/types";
+import { getCroppedImg } from "@/lib/utils";
 
 export function useImageCrop() {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [cropType, setCropType] = useState<"logo" | "profilePic" | null>(null);
-  const [originalImages, setOriginalImages] = useState<{
-    logo?: string;
-    profilePic?: string;
-  }>({});
   const [cropState, setCropState] = useState<CropState>({
     crop: { x: 0, y: 0 },
     zoom: 1,
     aspect: 1,
     croppedAreaPixels: null,
   });
+  const [originalImages, setOriginalImages] = useState<{
+    logo?: string;
+    profilePic?: string;
+  }>({});
 
   const handleFileUpload = useCallback(
     (
@@ -22,32 +23,29 @@ export function useImageCrop() {
       type: "logo" | "profilePic",
       setValue: (field: string, value: File | string) => void
     ) => {
-      if (file) {
-        console.log("handleFileUpload called for:", type, "file:", file);
-        const reader = new FileReader();
-        reader.onload = () => {
-          const imageSrc = reader.result as string;
-          console.log("File loaded, imageSrc:", imageSrc);
-          setImageToCrop(imageSrc);
-          setCropType(type);
-          setCropDialogOpen(true);
-          console.log("Opening crop dialog, state:", {
-            imageSrc,
-            type,
-            cropDialogOpen: true,
-          });
-          setOriginalImages((prev) => ({ ...prev, [type]: imageSrc }));
-          setCropState({
-            crop: { x: 0, y: 0 },
-            zoom: 1,
-            aspect: type === "logo" ? 3 / 1 : 1,
-            croppedAreaPixels: null,
-          });
-          setValue(type === "logo" ? "logoSrc" : "profilePicSrc", file);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        console.log("No file provided for upload:", type);
+      console.log("handleFileUpload called:", { file, type });
+      if (!file) {
+        console.log(`No file selected for ${type}, setting to empty string`);
+        setValue(`${type}Src`, "");
+        setOriginalImages((prev) => ({ ...prev, [type]: undefined }));
+        return;
+      }
+      try {
+        const imageUrl = URL.createObjectURL(file);
+        console.log(`File selected for ${type}, imageUrl:`, imageUrl);
+        setOriginalImages((prev) => ({ ...prev, [type]: imageUrl }));
+        setImageToCrop(imageUrl);
+        setCropType(type);
+        setCropDialogOpen(true);
+        setCropState({
+          crop: { x: 0, y: 0 },
+          zoom: 1,
+          aspect: type === "logo" ? 3 : 1,
+          croppedAreaPixels: null,
+        });
+        setValue(`${type}Src`, file);
+      } catch (err) {
+        console.error("Error processing file upload:", err);
       }
     },
     []
@@ -55,25 +53,14 @@ export function useImageCrop() {
 
   const handleCropExistingImage = useCallback(
     (type: "logo" | "profilePic", imageSrc: string) => {
-      console.log(
-        "handleCropExistingImage called for:",
-        type,
-        "imageSrc:",
-        imageSrc
-      );
+      console.log("handleCropExistingImage called:", { type, imageSrc });
       setImageToCrop(imageSrc);
       setCropType(type);
       setCropDialogOpen(true);
-      console.log("Opening crop dialog for existing image, state:", {
-        imageSrc,
-        type,
-        cropDialogOpen: true,
-      });
-      setOriginalImages((prev) => ({ ...prev, [type]: imageSrc }));
       setCropState({
         crop: { x: 0, y: 0 },
         zoom: 1,
-        aspect: type === "logo" ? 3 / 1 : 1,
+        aspect: type === "logo" ? 3 : 1,
         croppedAreaPixels: null,
       });
     },
@@ -81,98 +68,39 @@ export function useImageCrop() {
   );
 
   const handleCropImage = useCallback(
-    async (
-      updateCompanyInfo: (
-        info: Partial<CompanyInfo>,
-        logoFile?: File | null,
-        profilePicFile?: File | null
-      ) => Promise<void>,
-      setValue: (field: string, value: File | string) => void
-    ) => {
-      if (imageToCrop && cropState.croppedAreaPixels && cropType) {
-        try {
-          console.log("Cropping image with state:", {
-            imageToCrop,
-            cropState,
-            cropType,
-          });
-          const croppedImage = await getCroppedImg(
-            imageToCrop,
-            cropState.croppedAreaPixels
-          );
-          setValue(
-            cropType === "logo" ? "logoSrc" : "profilePicSrc",
-            croppedImage
-          );
-          await updateCompanyInfo(
-            {},
-            cropType === "logo" ? croppedImage : null,
-            cropType === "profilePic" ? croppedImage : null
-          );
-          setCropDialogOpen(false);
-          setImageToCrop(null);
-          setCropType(null);
-          console.log("Image cropped and saved successfully");
-        } catch (error) {
-          console.error("Error cropping image:", error);
-        }
-      } else {
-        console.error("Missing required cropping data:", {
+    async (setValue: (field: string, value: File | string) => void) => {
+      console.log("handleCropImage called, cropState:", cropState);
+      if (!imageToCrop || !cropType || !cropState.croppedAreaPixels) {
+        console.error("Missing crop data:", {
           imageToCrop,
-          croppedAreaPixels: cropState.croppedAreaPixels,
           cropType,
+          cropState,
         });
+        return;
+      }
+      try {
+        const croppedImage = await getCroppedImg(
+          imageToCrop,
+          cropState.croppedAreaPixels,
+          cropType
+        );
+        console.log(`Cropped image for ${cropType}:`, croppedImage);
+        setValue(`${cropType}Src`, croppedImage);
+        setCropDialogOpen(false);
+        setImageToCrop(null);
+        setCropType(null);
+        setCropState({
+          crop: { x: 0, y: 0 },
+          zoom: 1,
+          aspect: 1,
+          croppedAreaPixels: null,
+        });
+      } catch (err) {
+        console.error("Error cropping image:", err);
       }
     },
-    [imageToCrop, cropState, cropType]
+    [imageToCrop, cropType, cropState]
   );
-
-  async function getCroppedImg(
-    imageSrc: string,
-    croppedAreaPixels: { x: number; y: number; width: number; height: number }
-  ): Promise<File> {
-    const image = new window.Image();
-    image.src = imageSrc;
-    await new Promise((resolve) => (image.onload = resolve));
-
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Canvas context not available");
-
-    canvas.width = croppedAreaPixels.width;
-    canvas.height = croppedAreaPixels.height;
-
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.drawImage(
-      image,
-      croppedAreaPixels.x,
-      croppedAreaPixels.y,
-      croppedAreaPixels.width,
-      croppedAreaPixels.height,
-      0,
-      0,
-      croppedAreaPixels.width,
-      croppedAreaPixels.height
-    );
-
-    return new Promise((resolve) => {
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            resolve(
-              new File([blob], `cropped-${Date.now()}.jpeg`, {
-                type: "image/jpeg",
-              })
-            );
-          }
-        },
-        "image/jpeg",
-        0.9
-      );
-    });
-  }
 
   return {
     cropDialogOpen,
@@ -184,8 +112,8 @@ export function useImageCrop() {
     cropState,
     setCropState,
     handleFileUpload,
-    handleCropExistingImage,
     handleCropImage,
+    handleCropExistingImage,
     originalImages,
   };
 }

@@ -1,4 +1,3 @@
-// src/app/api/company-info/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/connect";
 import { getServerSession } from "next-auth";
@@ -12,7 +11,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Check if user already has CompanyInfo
   const existingCompanyInfo = await prisma.companyInfo.findUnique({
     where: { userId: session.user.id },
   });
@@ -28,8 +26,8 @@ export async function POST(request: Request) {
   const agentName = formData.get("agentName") as string;
   const email = formData.get("email") as string;
   const phone = formData.get("phone") as string;
-  const logoFile = formData.get("logoSrc") as File | null;
-  const profilePicFile = formData.get("profilePicSrc") as File | null;
+  const logoFile = formData.get("logoFile") as File | null;
+  const profilePicFile = formData.get("profilePicFile") as File | null;
 
   if (!businessName || !agentName || !email || !phone) {
     return NextResponse.json(
@@ -42,28 +40,22 @@ export async function POST(request: Request) {
   let profilePicSrc: string | null = null;
 
   try {
-    // Upload logo if provided
     if (logoFile) {
       const blob = await put(
         `company-info/${session.user.id}/logo-${Date.now()}-${logoFile.name}`,
         logoFile,
-        {
-          access: "public",
-        }
+        { access: "public" }
       );
       logoSrc = blob.url;
     }
 
-    // Upload profile picture if provided
     if (profilePicFile) {
       const blob = await put(
         `company-info/${session.user.id}/profile-${Date.now()}-${
           profilePicFile.name
         }`,
         profilePicFile,
-        {
-          access: "public",
-        }
+        { access: "public" }
       );
       profilePicSrc = blob.url;
     }
@@ -80,7 +72,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // Update User with companyInfoId
     await prisma.user.update({
       where: { id: session.user.id },
       data: { companyInfoId: companyInfo.id },
@@ -129,8 +120,10 @@ export async function PATCH(request: Request) {
   const agentName = formData.get("agentName") as string;
   const email = formData.get("email") as string;
   const phone = formData.get("phone") as string;
-  const logoFile = formData.get("logoSrc") as File | null;
-  const profilePicFile = formData.get("profilePicSrc") as File | null;
+  const logoFile = formData.get("logoFile") as File | null;
+  const profilePicFile = formData.get("profilePicFile") as File | null;
+  const logoSrcForm = formData.get("logoSrc") as string;
+  const profilePicSrcForm = formData.get("profilePicSrc") as string;
 
   const companyInfo = await prisma.companyInfo.findUnique({
     where: { userId: session.user.id },
@@ -146,30 +139,28 @@ export async function PATCH(request: Request) {
   let profilePicSrc = companyInfo.profilePicSrc;
 
   try {
-    // Upload new logo if provided
     if (logoFile) {
       const blob = await put(
         `company-info/${session.user.id}/logo-${Date.now()}-${logoFile.name}`,
         logoFile,
-        {
-          access: "public",
-        }
+        { access: "public" }
       );
       logoSrc = blob.url;
+    } else if (logoSrcForm === "") {
+      logoSrc = null;
     }
 
-    // Upload new profile picture if provided
     if (profilePicFile) {
       const blob = await put(
         `company-info/${session.user.id}/profile-${Date.now()}-${
           profilePicFile.name
         }`,
         profilePicFile,
-        {
-          access: "public",
-        }
+        { access: "public" }
       );
       profilePicSrc = blob.url;
+    } else if (profilePicSrcForm === "") {
+      profilePicSrc = null;
     }
 
     const updatedCompanyInfo = await prisma.companyInfo.update({

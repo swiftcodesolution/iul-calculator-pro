@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { ClientFile } from "./types";
+import { Area } from "react-easy-crop";
 
 // Utility to merge class names for Tailwind CSS
 export function cn(...inputs: ClassValue[]) {
@@ -8,6 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Utility to generate a cropped image from a source image and crop area
+/*
 export async function getCroppedImg(
   imageSrc: string,
   croppedAreaPixels: { x: number; y: number; width: number; height: number }
@@ -41,6 +43,52 @@ export async function getCroppedImg(
     console.error("Error generating cropped image:", error);
     throw error;
   }
+}
+*/
+export async function getCroppedImg(
+  imageSrc: string,
+  croppedAreaPixels: Area | null,
+  cropType: "logo" | "profilePic" | null
+): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous"; // Add CORS attribute
+    image.src = imageSrc;
+
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx || !croppedAreaPixels) {
+        reject(new Error("Canvas context or cropped area pixels missing"));
+        return;
+      }
+
+      const { x, y, width, height } = croppedAreaPixels;
+      canvas.width = width;
+      canvas.height = height;
+
+      ctx.drawImage(image, x, y, width, height, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error("Failed to create blob"));
+            return;
+          }
+          const fileName = `${cropType}-${Date.now()}.jpg`;
+          const file = new File([blob], fileName, { type: "image/jpeg" });
+          resolve(file);
+        },
+        "image/jpeg",
+        0.8
+      );
+    };
+
+    image.onerror = () => {
+      reject(new Error("Failed to load image"));
+    };
+  });
 }
 
 // Utility to generate a unique ID for client files

@@ -9,6 +9,7 @@ import TrainingResourcesSection from "./TrainingResourcesSection";
 import { CompanyInfo } from "@/lib/types";
 import { useState } from "react";
 import Image from "next/image";
+import { UseFormReturn } from "react-hook-form";
 
 const sidebarVariants: Variants = {
   open: {
@@ -42,12 +43,14 @@ interface SidebarProps {
     info: Partial<CompanyInfo>,
     logoFile?: File | null,
     profilePicFile?: File | null
-  ) => Promise<void>;
+  ) => Promise<CompanyInfo>;
   deleteCompanyInfo: () => Promise<void>;
   isEditing: boolean;
   toggleEdit: () => void;
   isSidebarCollapsed: boolean;
   toggleSidebar: () => void;
+  isLoading: boolean;
+  error: string | null;
   handleFileUpload: (
     file: File | null,
     type: "logo" | "profilePic",
@@ -57,6 +60,7 @@ interface SidebarProps {
     type: "logo" | "profilePic",
     imageSrc: string
   ) => void;
+  form: UseFormReturn<CompanyInfo>; // Add form prop
 }
 
 export default function Sidebar({
@@ -67,8 +71,11 @@ export default function Sidebar({
   toggleEdit,
   isSidebarCollapsed,
   toggleSidebar,
+  isLoading,
+  error,
   handleFileUpload,
   handleCropExistingImage,
+  form, // Receive form prop
 }: SidebarProps) {
   const [isCoverCollapsed, setIsCoverCollapsed] = useState(true);
 
@@ -78,7 +85,6 @@ export default function Sidebar({
         !isSidebarCollapsed ? "w-[500px] h-[95vh]" : "w-[0px]"
       }`}
     >
-      {/* Added cover div on top of sidebar with separate toggle button */}
       <div
         className={`p-6 flex items-center content-center absolute top-0 left-0 h-[95vh] inset-0 bg-black bg-opacity-100 z-30 ${
           isCoverCollapsed ? "hidden" : "block"
@@ -103,15 +109,15 @@ export default function Sidebar({
               alt="Logo"
               className="w-full h-[200px] object-contain mb-6"
             />
-            <h3 className="text-md font-bold text-white mb-61">
+            <h3 className="text-md font-bold text-white mb-6">
               Would you rather get guidance on where to save for retirement, or
               become educated and make your own informed decision?
             </h3>
             <p className="text-sm text-white">
               Heads up: This tool is here to help you explore different
-              financial scenarios using math and logic-its not financial advice.
-              We&apos;re not telling you what to do with your money, just giving
-              you some number-powered insights to compare options.
+              financial scenarios using math and logic—it&apos;s not financial
+              advice. We&apos;re not telling you what to do with your money,
+              just giving you some number-powered insights to compare options.
             </p>
           </div>
         </div>
@@ -151,10 +157,11 @@ export default function Sidebar({
               deleteCompanyInfo={deleteCompanyInfo}
               isEditing={isEditing}
               toggleEdit={toggleEdit}
-              isLoading={false}
-              error={null}
+              isLoading={isLoading}
+              error={error}
               handleFileUpload={handleFileUpload}
               handleCropExistingImage={handleCropExistingImage}
+              form={form} // Pass form to CompanyInfoSection
             />
             <InsuranceCompaniesSection />
             <TrainingResourcesSection />
@@ -166,7 +173,7 @@ export default function Sidebar({
               setIsCoverCollapsed(!isCoverCollapsed);
             }}
           >
-            {isCoverCollapsed ? "Hide Info" : "Show info"}
+            {isCoverCollapsed ? "Show Info" : "Hide Info"}
           </Button>
         </motion.aside>
       </AnimatePresence>

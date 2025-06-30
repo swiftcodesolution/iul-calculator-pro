@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/lib/hooks/useCompanyInfo.ts
 import { useState, useEffect } from "react";
 import { CompanyInfo } from "@/lib/types";
 
@@ -27,11 +26,14 @@ export function useCompanyInfo() {
         const response = await fetch("/api/company-info");
         const data = await response.json();
         if (response.ok && data && Object.keys(data).length > 0) {
+          console.log("Fetched company info:", data);
           setCompanyInfo(data);
+        } else {
+          console.log("No company info found or empty response");
         }
       } catch (err) {
         setError("Failed to fetch company info");
-        console.error(err);
+        console.error("Fetch error:", err);
       } finally {
         setIsLoading(false);
       }
@@ -43,18 +45,25 @@ export function useCompanyInfo() {
     info: Partial<CompanyInfo>,
     logoFile?: File | null,
     profilePicFile?: File | null
-  ) => {
+  ): Promise<CompanyInfo> => {
     setError(null);
+    console.log("updateCompanyInfo called with:", {
+      info,
+      logoFile,
+      profilePicFile,
+    });
     const formData = new FormData();
     formData.append(
       "businessName",
-      info.businessName || companyInfo.businessName
+      info.businessName || companyInfo.businessName || ""
     );
-    formData.append("agentName", info.agentName || companyInfo.agentName);
-    formData.append("email", info.email || companyInfo.email);
-    formData.append("phone", info.phone || companyInfo.phone);
-    if (logoFile) formData.append("logoSrc", logoFile);
-    if (profilePicFile) formData.append("profilePicSrc", profilePicFile);
+    formData.append("agentName", info.agentName || companyInfo.agentName || "");
+    formData.append("email", info.email || companyInfo.email || "");
+    formData.append("phone", info.phone || companyInfo.phone || "");
+    formData.append("logoSrc", info.logoSrc ?? "");
+    formData.append("profilePicSrc", info.profilePicSrc ?? "");
+    if (logoFile) formData.append("logoFile", logoFile);
+    if (profilePicFile) formData.append("profilePicFile", profilePicFile);
 
     try {
       const response = await fetch("/api/company-info", {
@@ -68,10 +77,18 @@ export function useCompanyInfo() {
       }
 
       const updatedInfo = await response.json();
+      console.log(
+        "Updated company info:",
+        updatedInfo,
+        "Setting isEditing to false"
+      );
       setCompanyInfo(updatedInfo);
       setIsEditing(false);
+      return updatedInfo;
     } catch (err: any) {
       setError(err.message);
+      console.error("Update error:", err);
+      setIsEditing(false);
       throw err;
     }
   };
@@ -88,16 +105,23 @@ export function useCompanyInfo() {
         throw new Error(errorData.error || "Failed to delete company info");
       }
 
+      console.log("Deleted company info, resetting to initial state");
       setCompanyInfo(initialCompanyInfo);
       setIsEditing(false);
     } catch (err: any) {
       setError(err.message);
+      console.error("Delete error:", err);
       throw err;
     }
   };
 
   const toggleEdit = () => {
-    setIsEditing((prev) => !prev);
+    console.log("Toggling edit, current isEditing:", isEditing);
+    setIsEditing((prev) => {
+      const newState = !prev;
+      console.log("New isEditing state:", newState);
+      return newState;
+    });
     setError(null);
   };
 

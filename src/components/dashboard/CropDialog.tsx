@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -30,11 +29,6 @@ interface CropDialogProps {
   cropState: CropState;
   setCropState: (state: CropState) => void;
   handleCropImage: (
-    updateCompanyInfo: (
-      info: Partial<CompanyInfo>,
-      logoFile?: File | null,
-      profilePicFile?: File | null
-    ) => Promise<void>,
     setValue: (field: string, value: File | string) => void
   ) => Promise<void>;
   setImageToCrop: (src: string | null) => void;
@@ -43,7 +37,7 @@ interface CropDialogProps {
     info: Partial<CompanyInfo>,
     logoFile?: File | null,
     profilePicFile?: File | null
-  ) => Promise<void>;
+  ) => Promise<CompanyInfo>;
   setValue: (field: string, value: File | string) => void;
   originalImages: { logo?: string; profilePic?: string };
 }
@@ -59,7 +53,6 @@ const CropDialog = memo(
     handleCropImage,
     setImageToCrop,
     setCropType,
-    updateCompanyInfo,
     setValue,
   }: CropDialogProps) => {
     const isInitialMount = useRef(true);
@@ -69,13 +62,20 @@ const CropDialog = memo(
     );
 
     useEffect(() => {
-      console.log("CropDialog open state:", open, "imageToCrop:", imageToCrop);
+      console.log(
+        "CropDialog open state:",
+        open,
+        "imageToCrop:",
+        imageToCrop,
+        "cropType:",
+        cropType
+      );
       isInitialMount.current = false;
       return () => {
         isInitialMount.current = true;
         isClosing.current = false;
       };
-    }, [open, imageToCrop]);
+    }, [open, imageToCrop, cropType]);
 
     const handleCropChange = useCallback(
       throttle((crop: { x: number; y: number }) => {
@@ -206,7 +206,7 @@ const CropDialog = memo(
               <Button
                 onClick={() => {
                   console.log("Crop & Save clicked, cropState:", cropState);
-                  handleCropImage(updateCompanyInfo, setValue);
+                  handleCropImage(setValue);
                 }}
               >
                 Crop & Save

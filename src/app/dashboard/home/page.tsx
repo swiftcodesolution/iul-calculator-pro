@@ -35,6 +35,8 @@ export default function DashboardPage() {
     toggleEdit,
     isSidebarCollapsed,
     toggleSidebar,
+    isLoading,
+    error,
   } = useCompanyInfo();
   const {
     clientFiles,
@@ -47,7 +49,7 @@ export default function DashboardPage() {
     handleClientAction,
     handleDragStart,
     handleDrop,
-    isRefreshing, // Destructure isRefreshing
+    isRefreshing,
   } = useClientFiles();
   const {
     cropDialogOpen,
@@ -70,14 +72,13 @@ export default function DashboardPage() {
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
-
   const { data: session } = useSession();
 
   useEffect(() => {
     clearSelectedFileId();
     setSelectedFile(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    form.reset(companyInfo);
+  }, [companyInfo, clearSelectedFileId, setSelectedFile, form]);
 
   useEffect(() => {
     console.log("CropDialog state:", { cropDialogOpen, imageToCrop, cropType });
@@ -93,15 +94,15 @@ export default function DashboardPage() {
     ) {
       setSelectedFile(null);
       clearSelectedFileId();
-      console.log(selectedFile);
+      console.log("Selected file cleared:", selectedFile);
     }
-    console.log("click outside");
+    console.log("Click outside");
   };
 
   const handleFileSelection = (file: ClientFile) => {
     setSelectedFile(file);
     setSelectedFileId(file.id);
-    console.log(file);
+    console.log("File selected:", file);
   };
 
   return (
@@ -118,8 +119,11 @@ export default function DashboardPage() {
         toggleEdit={toggleEdit}
         isSidebarCollapsed={isSidebarCollapsed}
         toggleSidebar={toggleSidebar}
+        isLoading={isLoading}
+        error={error}
         handleFileUpload={handleFileUpload}
         handleCropExistingImage={handleCropExistingImage}
+        form={form} // Pass form to Sidebar
       />
       <motion.div
         variants={contentVariants}
@@ -140,7 +144,7 @@ export default function DashboardPage() {
           handleDragStart={handleDragStart}
           handleDrop={handleDrop}
           userRole={session!.user.role}
-          isRefreshing={isRefreshing} // Pass isRefreshing state
+          isRefreshing={isRefreshing}
         />
       </motion.div>
       <CropDialog
