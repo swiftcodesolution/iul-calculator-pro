@@ -28,6 +28,9 @@ export function ThemeToggle() {
         <DropdownMenuItem onClick={() => setTheme("high-contrast")}>
           High Contrast
         </DropdownMenuItem>
+        {/* <DropdownMenuItem onClick={() => setTheme("retro-cyberpunk")}>
+          Retro
+        </DropdownMenuItem> */}
         <DropdownMenuItem onClick={() => setTheme("light")}>
           Light
         </DropdownMenuItem>

@@ -10,7 +10,7 @@ export function ThemeProvider({
   return (
     <NextThemesProvider
       attribute="class"
-      themes={["light", "dark", "high-contrast", "system"]}
+      themes={["light", "dark", "high-contrast", "retro-cyberpunk", "system"]}
       defaultTheme="system"
       {...props}
     >

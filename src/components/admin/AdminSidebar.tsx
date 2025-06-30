@@ -43,67 +43,64 @@ export default function AdminSidebar() {
   if (hiddenSidebar) return null;
 
   return (
-    <aside className="w-64 bg-gray-800 text-white h-screen p-4">
+    <aside className="w-64 h-screen p-4">
       <div className="text-2xl font-bold mb-6">Admin Panel</div>
       <nav className="space-y-2">
-        <Link
-          href="/admin/dashboard"
-          className="flex items-center p-2 hover:bg-gray-700 rounded"
-        >
+        <Link href="/admin/dashboard" className="flex items-center p-2 rounded">
           <LayoutDashboard className="mr-2" /> Dashboard
         </Link>
         <Link
           href="/admin/dashboard/files"
-          className="flex items-center p-2 hover:bg-gray-700 rounded"
+          className="flex items-center p-2 rounded"
         >
           <FileText className="mr-2" /> Pro Sample Files
         </Link>
         <Link
           href="/admin/dashboard/users"
-          className="flex items-center p-2 hover:bg-gray-700 rounded"
+          className="flex items-center p-2 rounded"
         >
           <Users className="mr-2" /> Users
         </Link>
         <Link
           href="/admin/dashboard/download-resources"
-          className="flex items-center p-2 hover:bg-gray-700 rounded"
+          className="flex items-center p-2 rounded"
         >
           <FileText className="mr-2" /> Download Resources
         </Link>
         <Link
           href="/admin/dashboard/training-videos"
-          className="flex items-center p-2 hover:bg-gray-700 rounded"
+          className="flex items-center p-2 rounded"
         >
           <Video className="mr-2" /> Training Videos
         </Link>
         <Link
           href="/admin/dashboard/training-documents"
-          className="flex items-center p-2 hover:bg-gray-700 rounded"
+          className="flex items-center p-2 rounded"
         >
           <File className="mr-2" /> Training Documents
         </Link>
         <Link
           href="/admin/dashboard/tab-content"
-          className="flex items-center p-2 hover:bg-gray-700 rounded"
+          className="flex items-center p-2 rounded"
         >
           <SquareMousePointer className="mr-2" /> Tab Content
         </Link>
         <Link
           href="/admin/dashboard/insurance-companies"
-          className="flex items-center p-2 hover:bg-gray-700 rounded"
+          className="flex items-center p-2 rounded"
         >
           <Handshake className="mr-2" /> Insurance Companies
         </Link>
         <Link
           href="/admin/dashboard/stats"
-          className="flex items-center p-2 hover:bg-gray-700 rounded"
+          className="flex items-center p-2 rounded"
         >
           <BarChart className="mr-2" /> Stats
         </Link>
         <Link
           href="#"
           onClick={handleSignOut}
-          className="flex items-center p-2 hover:bg-gray-700 rounded"
+          className="flex items-center p-2 rounded"
         >
           <LogOut className="mr-2" /> Log Out
         </Link>
