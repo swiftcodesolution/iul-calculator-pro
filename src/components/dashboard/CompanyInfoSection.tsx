@@ -9,7 +9,7 @@ import { Trash2, Upload, Crop } from "lucide-react";
 import { CompanyInfo, companyInfoSchema } from "@/lib/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react"; // Added useState for error handling
 import {
   Form,
   FormControl,
@@ -58,10 +58,11 @@ export default function CompanyInfoSection({
   isEditing,
   toggleEdit,
   isLoading,
-  error,
+  error: propError,
   handleFileUpload,
   handleCropExistingImage,
 }: CompanyInfoSectionProps) {
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const form = useForm<CompanyInfo>({
     resolver: zodResolver(companyInfoSchema),
     defaultValues: companyInfo,
@@ -71,31 +72,44 @@ export default function CompanyInfoSection({
     form.reset(companyInfo);
   }, [companyInfo, form]);
 
-  const handleDeleteUpload = (type: "logo" | "profilePic") => {
-    form.setValue(type === "logo" ? "logoSrc" : "profilePicSrc", "");
-    updateCompanyInfo({ [type === "logo" ? "logoSrc" : "profilePicSrc"]: "" });
+  const handleDeleteUpload = async (type: "logo" | "profilePic") => {
+    const field = type === "logo" ? "logoSrc" : "profilePicSrc";
+    form.setValue(field, "");
+    try {
+      await updateCompanyInfo(
+        { [field]: "" },
+        type === "logo" ? null : undefined,
+        type === "profilePic" ? null : undefined
+      );
+    } catch (err) {
+      setSubmissionError("Failed to delete image");
+      console.error("Error deleting image:", err);
+    }
   };
 
   const onSubmit = async (data: CompanyInfo) => {
     try {
-      // const logoFile =
-      //   form.getValues("logoSrc") instanceof File
-      //     ? form.getValues("logoSrc")
-      //     : null;
-      // const profilePicFile =
-      //   form.getValues("profilePicSrc") instanceof File
-      //     ? form.getValues("profilePicSrc")
-      //     : null;
-
-      const rawLogo = form.getValues("logoSrc");
-      const logoFile = rawLogo instanceof File ? rawLogo : null;
-
-      const rawProfilePic = form.getValues("profilePicSrc");
+      setSubmissionError(null);
+      const logoFile = data.logoSrc instanceof File ? data.logoSrc : null;
       const profilePicFile =
-        rawProfilePic instanceof File ? rawProfilePic : null;
-
-      await updateCompanyInfo(data, logoFile, profilePicFile);
+        data.profilePicSrc instanceof File ? data.profilePicSrc : null;
+      await updateCompanyInfo(
+        {
+          businessName: data.businessName,
+          agentName: data.agentName,
+          email: data.email,
+          phone: data.phone,
+          logoSrc: typeof data.logoSrc === "string" ? data.logoSrc : "",
+          profilePicSrc:
+            typeof data.profilePicSrc === "string" ? data.profilePicSrc : "",
+        },
+        logoFile,
+        profilePicFile
+      );
+      form.reset(data); // Reset form to current values
+      toggleEdit(); // Exit edit mode
     } catch (err) {
+      setSubmissionError("Failed to update company info");
       console.error("Error submitting form:", err);
     }
   };
@@ -121,7 +135,11 @@ export default function CompanyInfoSection({
   return (
     <Card className="flex-1 p-2 gap-0 mb-2">
       <CardContent className="p-0 space-y-2">
-        {error && <div className="text-red-500 text-sm">{error}</div>}
+        {(propError || submissionError) && (
+          <div className="text-red-500 text-sm">
+            {propError || submissionError}
+          </div>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
             <div className="flex gap-2">
@@ -179,10 +197,6 @@ export default function CompanyInfoSection({
                                 accept="image/*"
                                 className="hidden"
                                 onChange={(e) => {
-                                  console.log(
-                                    "Logo upload triggered:",
-                                    e.target.files?.[0]
-                                  );
                                   const file = e.target.files?.[0] || null;
                                   handleFileUpload(
                                     file,
@@ -212,10 +226,6 @@ export default function CompanyInfoSection({
                             type="button"
                             onClick={() => {
                               const logoSrc = form.watch("logoSrc");
-                              console.log(
-                                "Crop logo clicked, logoSrc:",
-                                logoSrc
-                              );
                               if (typeof logoSrc === "string") {
                                 handleCropExistingImage("logo", logoSrc);
                               }
@@ -237,10 +247,6 @@ export default function CompanyInfoSection({
                       accept="image/*"
                       className="hidden"
                       onChange={(e) => {
-                        console.log(
-                          "Initial logo upload triggered:",
-                          e.target.files?.[0]
-                        );
                         const file = e.target.files?.[0] || null;
                         handleFileUpload(file, "logo", (field, value) => {
                           form.setValue(field as keyof CompanyInfo, value);
@@ -314,10 +320,6 @@ export default function CompanyInfoSection({
                                 accept="image/*"
                                 className="hidden"
                                 onChange={(e) => {
-                                  console.log(
-                                    "Profile pic upload triggered:",
-                                    e.target.files?.[0]
-                                  );
                                   const file = e.target.files?.[0] || null;
                                   handleFileUpload(
                                     file,
@@ -347,10 +349,6 @@ export default function CompanyInfoSection({
                             type="button"
                             onClick={() => {
                               const profilePicSrc = form.watch("profilePicSrc");
-                              console.log(
-                                "Crop profile pic clicked, profilePicSrc:",
-                                profilePicSrc
-                              );
                               if (typeof profilePicSrc === "string") {
                                 handleCropExistingImage(
                                   "profilePic",
@@ -375,10 +373,6 @@ export default function CompanyInfoSection({
                       accept="image/*"
                       className="hidden"
                       onChange={(e) => {
-                        console.log(
-                          "Initial profile pic upload triggered:",
-                          e.target.files?.[0]
-                        );
                         const file = e.target.files?.[0] || null;
                         handleFileUpload(file, "profilePic", (field, value) => {
                           form.setValue(field as keyof CompanyInfo, value);
@@ -542,7 +536,11 @@ export default function CompanyInfoSection({
                           onClick={async () => {
                             try {
                               await deleteCompanyInfo();
+                              form.reset(); // Reset form after deletion
                             } catch (err) {
+                              setSubmissionError(
+                                "Failed to delete company info"
+                              );
                               console.error(
                                 "Error deleting company info:",
                                 err
