@@ -164,22 +164,26 @@ const NavBar = () => {
         ))}
       </motion.nav>
 
-      <motion.div className="fixed bottom-4 right-0 -translate-x-1/2 flex items-center gap-4">
-        <ThemeToggle />
-        <Button
-          onClick={handleSignOut}
-          variant="outline"
-          size="icon"
-          className="rounded-none transition-colors duration-200"
-        >
-          <motion.div
-            whileHover={{ rotate: 0 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
+      {session?.user.role !== "admin" ? (
+        <motion.div className="fixed bottom-4 right-0 -translate-x-1/2 flex items-center gap-4">
+          <ThemeToggle />
+          <Button
+            onClick={handleSignOut}
+            variant="outline"
+            size="icon"
+            className="rounded-none transition-colors duration-200"
           >
-            <LogOut />
-          </motion.div>
-        </Button>
-      </motion.div>
+            <motion.div
+              whileHover={{ rotate: 0 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+            >
+              <LogOut />
+            </motion.div>
+          </Button>
+        </motion.div>
+      ) : (
+        <p></p>
+      )}
     </>
   );
 };

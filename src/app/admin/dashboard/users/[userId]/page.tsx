@@ -343,8 +343,7 @@ export default function UserDetailsPage({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Login Time</TableHead>
-                    <TableHead>Logout Time</TableHead>
-                    <TableHead>Device Type</TableHead>
+
                     <TableHead>Browser</TableHead>
                     <TableHead>OS</TableHead>
                     <TableHead>IP Address</TableHead>
@@ -356,12 +355,7 @@ export default function UserDetailsPage({
                       <TableCell>
                         {new Date(session.loginAt).toLocaleString()}
                       </TableCell>
-                      <TableCell>
-                        {session.logoutAt
-                          ? new Date(session.logoutAt).toLocaleString()
-                          : "N/A"}
-                      </TableCell>
-                      <TableCell>{session.deviceType || "N/A"}</TableCell>
+
                       <TableCell>
                         {session.browserName && session.browserVersion
                           ? `${session.browserName} ${session.browserVersion}`
