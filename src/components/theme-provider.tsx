@@ -7,5 +7,14 @@ export function ThemeProvider({
   children,
   ...props
 }: React.ComponentProps<typeof NextThemesProvider>) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+  return (
+    <NextThemesProvider
+      attribute="class"
+      themes={["light", "dark", "high-contrast", "system"]}
+      defaultTheme="system"
+      {...props}
+    >
+      {children}
+    </NextThemesProvider>
+  );
 }

@@ -265,7 +265,7 @@ export default function ImportPage({ params }: { params: Params }) {
 
   const renderTable = () => (
     <Card className="flex-1 flex flex-col h-[90vh]">
-      <CardHeader className="sticky top-0 z-10 bg-white">
+      <CardHeader className="sticky top-0 z-10">
         <h3 className="text-lg font-semibold">Imported Data Preview</h3>
       </CardHeader>
       <CardContent
@@ -457,7 +457,7 @@ export default function ImportPage({ params }: { params: Params }) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
-              className="fixed inset-0 z-50 bg-white p-4 flex flex-col"
+              className="fixed inset-0 z-50 p-4 flex flex-col bg-black"
             >
               <div className="flex-1 flex flex-col">
                 <div className="flex justify-between items-center mb-4">

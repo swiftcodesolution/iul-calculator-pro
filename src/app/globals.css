@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant high-contrast (&:is(.high-contrast *));
 
 @theme inline {
   --color-background: var(--background);
@@ -78,7 +79,8 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 
-.dark {
+/* dark theme */
+/* .dark {
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
   --card: oklch(0.208 0.042 265.755);
@@ -110,54 +112,129 @@
   --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
+} */
+
+.dark {
+  --background: oklch(0 0 0); /* True black */
+  --foreground: oklch(1 0 0); /* White text */
+
+  --card: oklch(0.1 0 0); /* Near black for cards */
+  --card-foreground: oklch(1 0 0);
+
+  --popover: oklch(0.1 0 0);
+  --popover-foreground: oklch(1 0 0);
+
+  /* ✅ Buttons: white bg, black text/icons */
+  --primary: oklch(1 0 0); /* White button background */
+  --primary-foreground: oklch(0 0 0); /* Black text/icons */
+
+  --secondary: oklch(1 0 0); /* White secondary button */
+  --secondary-foreground: oklch(0 0 0); /* Black text/icons */
+
+  --muted: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.8 0 0);
+
+  --accent: oklch(1 0 0); /* White accent for outlines if used */
+  --accent-foreground: oklch(0 0 0); /* Black text/icons */
+
+  --outline-bg: var(--accent);
+  --outline-fg: var(--accent-foreground);
+
+  --destructive: oklch(0.6 0.25 27.325); /* Red destructive button */
+  --destructive-foreground: oklch(1 0 0); /* White text */
+
+  --border: oklch(0.3 0 0); /* Subtle borders */
+  --input: oklch(1 0 0); /* White inputs */
+  --ring: oklch(1 0 0);
+
+  --chart-1: oklch(0.7 0.25 70);
+  --chart-2: oklch(0.7 0.25 150);
+  --chart-3: oklch(0.7 0.25 250);
+  --chart-4: oklch(0.7 0.25 350);
+  --chart-5: oklch(0.7 0.25 30);
+
+  --sidebar: oklch(0.05 0 0);
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(1 0 0);
+  --sidebar-primary-foreground: oklch(0 0 0);
+  --sidebar-accent: oklch(1 0 0);
+  --sidebar-accent-foreground: oklch(0 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(1 0 0);
 }
 
-.high-contrast {
-  --background: oklch(0 0 0); /* Black screen background */
-  --foreground: oklch(1 0 0); /* White text on black */
+/* dark theme */
 
-  --card: oklch(1 0 0); /* White card background */
-  --card-foreground: oklch(0 0 0); /* Black text on white card */
+/* high contrast theme */
+.high-contrast {
+  --background: oklch(0 0 0);
+  --foreground: oklch(1 0 0);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0 0 0);
 
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0 0 0);
 
-  --primary: oklch(0 0 0); /* Black button background */
+  --primary: oklch(0 0 0); /* Black background */
   --primary-foreground: oklch(1 0 0); /* White text */
 
-  --secondary: oklch(1 0 0); /* White background */
-  --secondary-foreground: oklch(0 0 0); /* Black text */
+  --secondary: oklch(0 0 0); /* Also black for consistency */
+  --secondary-foreground: oklch(1 0 0); /* White text */
 
   --muted: oklch(0.8 0 0);
   --muted-foreground: oklch(0.2 0 0);
 
-  --accent: oklch(1 0 0); /* white */
-  --accent-foreground: oklch(0 0 0); /* black */
+  --accent: oklch(1 0 0);
+  --accent-foreground: oklch(0 0 0);
 
-  /* Forcing outline style defaults (custom) */
-  --outline-bg: var(--accent); /* white background */
-  --outline-fg: var(--accent-foreground); /* black text */
+  --link: oklch(0.8 0.25 230);
 
-  --destructive: oklch(0.6 0.25 27.325);
+  --outline-bg: var(--accent);
+  --outline-fg: var(--accent-foreground);
+
+  --destructive: oklch(0.6 0.25 27.325); /* danger button background */
+  --destructive-foreground: oklch(1 0 0); /* ensure text is white */
+
   --border: oklch(0.5 0 0);
   --input: oklch(1 0 0);
-  --ring: oklch(1 0 0);
+  --ring: oklch(0.9 0.2 100);
 
-  --chart-1: oklch(0.6 0.3 50);
+  --chart-1: oklch(0.7 0.3 50);
   --chart-2: oklch(0.6 0.3 150);
-  --chart-3: oklch(0.6 0.3 250);
-  --chart-4: oklch(0.6 0.3 350);
+  --chart-3: oklch(0.5 0.3 250);
+  --chart-4: oklch(0.7 0.3 350);
   --chart-5: oklch(0.6 0.3 100);
 
   --sidebar: oklch(0 0 0);
   --sidebar-foreground: oklch(1 0 0);
   --sidebar-primary: oklch(1 0 0);
   --sidebar-primary-foreground: oklch(0 0 0);
-  --sidebar-accent: oklch(0 0 0);
-  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.8 0.25 230);
+  --sidebar-accent-foreground: oklch(0 0 0);
   --sidebar-border: oklch(1 0 0 / 15%);
   --sidebar-ring: oklch(1 0 0);
 }
+
+/* Remove border radius from all elements */
+.high-contrast * {
+  border-radius: 0 !important;
+}
+
+/* Force all buttons to black bg with white text except destructive/danger ones */
+.high-contrast button {
+  background-color: oklch(0 0 0) !important;
+  color: oklch(1 0 0) !important;
+  border-radius: 0 !important;
+}
+
+/* Danger/destructive button retains its color */
+.high-contrast button.danger,
+.high-contrast button[data-variant="destructive"] {
+  background-color: oklch(0.6 0.25 27.325) !important;
+  color: oklch(1 0 0) !important;
+}
+/* high contrast theme */
 
 @layer base {
   * {
