@@ -31,6 +31,8 @@ model User {
   InsuranceCompany          InsuranceCompany[]
   InsuranceCompanyRequest   InsuranceCompanyRequest[]
   PasswordResetToken        PasswordResetToken[]
+
+  Subscription              Subscription[]
 }
 
 model CompanyInfo {
@@ -165,4 +167,17 @@ model PasswordResetToken {
   token      String   @unique
   expiresAt  DateTime
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String    @db.ObjectId
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId  String
+  stripeSubscriptionId String    @unique
+  planType          String
+  status            String
+  renewalDate       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }

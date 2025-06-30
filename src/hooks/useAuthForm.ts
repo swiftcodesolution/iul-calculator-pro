@@ -180,12 +180,17 @@ export function useAuthForm() {
             );
           }
 
-          const redirectPath =
-            userRole === "admin" ? "/admin/dashboard" : "/dashboard/home";
+          // const redirectPath =
+          //   userRole === "admin" ? "/admin/dashboard" : "/dashboard/home";
 
           toast.success("Login successful");
 
-          router.push(redirectPath);
+          // router.push(redirectPath);
+          if (userRole !== "admin") {
+            router.push("/dashboard/subscribe");
+          } else {
+            router.push("/admin/dashboard");
+          }
         } else {
           throw new Error(loginResult?.error || "Auto-login failed");
         }
