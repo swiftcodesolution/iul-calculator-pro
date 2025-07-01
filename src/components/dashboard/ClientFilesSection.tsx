@@ -8,7 +8,6 @@ import {
   DialogContent,
   DialogTrigger,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { ClientFile } from "@/lib/types";
