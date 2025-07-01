@@ -93,7 +93,8 @@ const NavBar = () => {
   if (
     pathname === "/dashboard/home" ||
     pathname === "/dashboard/downloads-content" ||
-    pathname === "/dashboard/training-content"
+    pathname === "/dashboard/training-content" ||
+    pathname === "/dashboard/subscribe"
   ) {
     return (
       <motion.div className="flex gap-4 fixed bottom-4 right-0 -translate-x-1/2">
