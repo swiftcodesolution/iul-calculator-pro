@@ -1207,7 +1207,9 @@ export function ComparisonTable({
                     <TableCell
                       className={cn(
                         "border cursor-pointer whitespace-nowrap",
-                        highlightedRows.has(index) ? "bg-red-300" : "",
+                        highlightedRows.has(index)
+                          ? "bg-red-300 text-black"
+                          : "",
                         columnTextWhite.taxFreePlan
                           ? "text-white opacity-0"
                           : "",

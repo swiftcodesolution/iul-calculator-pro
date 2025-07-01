@@ -93,7 +93,7 @@ export function YearlyPlanTable({
                 <TableCell
                   className={cn(
                     "border cursor-pointer whitespace-nowrap",
-                    highlightedRow === index ? "bg-[#ffa1ad]" : ""
+                    highlightedRow === index ? "bg-red-300" : ""
                   )}
                   onClick={() => handleCellClick(index)}
                   aria-selected={highlightedRow === index}
@@ -105,7 +105,7 @@ export function YearlyPlanTable({
                     key={`${key}-${result.xValue}`}
                     className={cn(
                       "border cursor-pointer whitespace-nowrap",
-                      highlightedRow === index ? "bg-[#ffa1ad]" : "bg-white",
+                      highlightedRow === index ? "bg-red-300" : "bg-white",
                       "text-black",
                       "transition-colors duration-300"
                     )}

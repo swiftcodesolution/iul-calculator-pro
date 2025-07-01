@@ -100,7 +100,7 @@ export default function Sidebar({
           {isCoverCollapsed ? "Expand" : "Collapse"}
         </Button> */}
 
-        <div className="flex items-center justify-evenly h-[90%] w-full">
+        <div className="flex items-center justify-around h-[90%] w-full">
           <div className="flex flex-col items-center h-full justify-around">
             <Image
               src={"/white-logo.png"}
@@ -109,11 +109,11 @@ export default function Sidebar({
               alt="Logo"
               className="w-full h-[200px] object-contain mb-6"
             />
+            <h3 className="text-md font-bold text-white mb-6">
+              Would you rather get guidance on where to save for retirement, or
+              become educated and make your own informed decision?
+            </h3>
             <div>
-              <h3 className="text-md font-bold text-white mb-6">
-                Would you rather get guidance on where to save for retirement,
-                or become educated and make your own informed decision?
-              </h3>
               <p className="text-sm text-white">
                 Heads up: This tool is here to help you explore different
                 financial scenarios using math and logic—it&apos;s not financial
