@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
   const planIds: Record<"monthly" | "annual", string> = {
     monthly: "price_1N4P5BDjQSIXuLORTS2bD4Tq", // Replace with test mode monthly price ID
-    annual: "price_1NRErKDjQSIXuLORuz78dbiO", // Replace with test mode annual price ID
+    annual: "price_1Rg7qMDjQSIXuLOR5ztX8mdi", // Replace with test mode annual price ID
   };
 
   if (plan === "trial") {
@@ -95,8 +95,12 @@ export async function POST(request: Request) {
       customer: customer.id,
       payment_method_types: ["card"],
       mode: "subscription",
-      success_url: `${request.headers.get("origin")}/dashboard?success=true`,
-      cancel_url: `${request.headers.get("origin")}/dashboard?canceled=true`,
+      success_url: `${request.headers.get(
+        "origin"
+      )}/dashboard/home?success=true`,
+      cancel_url: `${request.headers.get(
+        "origin"
+      )}/dashboard/home?canceled=true`,
       line_items: [{ price: planIds[plan], quantity: 1 }],
       metadata: { plan, userId: session.user.id },
     });

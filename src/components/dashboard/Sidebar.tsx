@@ -100,7 +100,7 @@ export default function Sidebar({
           {isCoverCollapsed ? "Expand" : "Collapse"}
         </Button>
 
-        <div className="flex items-center justify-center h-[90%] w-full">
+        <div className="flex items-center justify-around h-[90%] w-full">
           <div className="flex flex-col">
             <Image
               src={"/white-logo.png"}

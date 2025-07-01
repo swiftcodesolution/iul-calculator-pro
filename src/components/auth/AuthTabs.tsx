@@ -37,9 +37,7 @@ const AuthTabs = () => {
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
           >
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Create your account
-            </h2>
+            <h2 className="text-xl font-bold mb-4">Create your account</h2>
             <SignupForm />
           </motion.div>
         </AnimatePresence>
@@ -53,7 +51,7 @@ const AuthTabs = () => {
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
           >
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Login</h2>
+            <h2 className="text-xl font-bold mb-4">Login</h2>
             <LoginForm />
           </motion.div>
         </AnimatePresence>
