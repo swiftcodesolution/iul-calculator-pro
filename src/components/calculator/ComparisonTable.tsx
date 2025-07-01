@@ -1164,7 +1164,7 @@ export function ComparisonTable({
                       className={cn(
                         "border cursor-pointer whitespace-nowrap",
                         highlightedRows.has(index)
-                          ? "bg-[#ffa1ad] text-black dark:bg-red-500 dark:text-white"
+                          ? "bg-red-300 text-black"
                           : ""
                       )}
                       onClick={() => handleCellClick(index)}
@@ -1176,7 +1176,7 @@ export function ComparisonTable({
                       className={cn(
                         "border cursor-pointer whitespace-nowrap",
                         highlightedRows.has(index)
-                          ? "bg-[#ffa1ad] text-black dark:bg-red-500 dark:text-white"
+                          ? "bg-red-300 text-black"
                           : "",
                         columnTextWhite.currentPlan
                           ? "text-white opacity-0"
@@ -1192,7 +1192,7 @@ export function ComparisonTable({
                       className={cn(
                         "border cursor-pointer whitespace-nowrap text-center",
                         highlightedRows.has(index)
-                          ? "bg-[#ffa1ad] text-black dark:bg-red-500 dark:text-white"
+                          ? "bg-red-300 text-black"
                           : "",
                         columnTextWhite.taxes
                           ? "text-white opacity-0"
@@ -1207,7 +1207,7 @@ export function ComparisonTable({
                     <TableCell
                       className={cn(
                         "border cursor-pointer whitespace-nowrap",
-                        highlightedRows.has(index) ? "bg-[#ffa1ad]" : "",
+                        highlightedRows.has(index) ? "bg-red-300" : "",
                         columnTextWhite.taxFreePlan
                           ? "text-white opacity-0"
                           : "",
@@ -1309,7 +1309,7 @@ export function ComparisonTable({
                         <TableCell
                           className={cn(
                             "border cursor-pointer whitespace-nowrap",
-                            highlightedRows.has(index) ? "bg-[#ffa1ad]" : ""
+                            highlightedRows.has(index) ? "bg-red-300" : ""
                           )}
                           onClick={() => handleCellClick(index)}
                           aria-selected={highlightedRows.has(index)}
@@ -1319,7 +1319,7 @@ export function ComparisonTable({
                         <TableCell
                           className={cn(
                             "border cursor-pointer whitespace-nowrap",
-                            highlightedRows.has(index) ? "bg-[#ffa1ad]" : "",
+                            highlightedRows.has(index) ? "bg-red-300" : "",
                             columnTextWhite.currentPlan
                               ? "text-white opacity-0"
                               : "",
@@ -1333,7 +1333,7 @@ export function ComparisonTable({
                         <TableCell
                           className={cn(
                             "border cursor-pointer whitespace-nowrap",
-                            highlightedRows.has(index) ? "bg-[#ffa1ad]" : "",
+                            highlightedRows.has(index) ? "bg-red-300" : "",
                             columnTextWhite.taxes
                               ? "text-white opacity-0"
                               : "text-red-600",
@@ -1347,7 +1347,7 @@ export function ComparisonTable({
                         <TableCell
                           className={cn(
                             "border cursor-pointer whitespace-nowrap",
-                            highlightedRows.has(index) ? "bg-[#ffa1ad]" : "",
+                            highlightedRows.has(index) ? "bg-red-300" : "",
                             columnTextWhite.taxFreePlan
                               ? "text-white opacity-0"
                               : "",
