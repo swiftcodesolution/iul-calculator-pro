@@ -228,6 +228,17 @@
   border-radius: 0 !important;
 }
 
+.high-contrast svg {
+  color: oklch(0 0 0) !important; /* Black icons */
+  /* fill: oklch(0 0 0) !important; 
+  stroke: oklch(0 0 0) !important; */
+}
+.high-contrast button[data-variant="outline"][data-size="icon"] {
+  background-color: oklch(1 0 0) !important; /* white background */
+  color: oklch(0 0 0) !important; /* black icon for contrast */
+  border-color: oklch(0 0 0) !important; /* black border */
+}
+
 /* Danger/destructive button retains its color */
 .high-contrast button.danger,
 .high-contrast button[data-variant="destructive"] {

@@ -189,12 +189,12 @@ const TabContentRenderer = ({
                 className={`cursor-pointer p-6 min-w-1/5 
                   ${
                     activeButtons[8]
-                      ? "bg-red-500 hover:bg-red-500 dark:bg-red-500 dark:hover:bg-red-500"
+                      ? "bg-red-300 hover:bg-red-300 dark:bg-red-500 dark:hover:bg-red-500"
                       : ""
                   } 
                   ${
                     totalAdvantage.cumulativeTaxesPaid < 0
-                      ? "border-red-500 text-red-500 dark:border-red-500 dark:text-red-500"
+                      ? "border-red-500 text-red-500 dark:border-red-500 dark:text-red-500 font-bold"
                       : ""
                   } 
                 `}
@@ -213,7 +213,7 @@ const TabContentRenderer = ({
                 }
                 ${
                   totalAdvantage.fees < 0
-                    ? "border-red-500 text-red-500 dark:border-red-500 dark:text-red-500"
+                    ? "border-red-500 text-red-500 dark:border-red-500 dark:text-red-500 font-bold"
                     : ""
                 } 
                 `}
@@ -231,7 +231,7 @@ const TabContentRenderer = ({
                 }
                 ${
                   totalAdvantage.cumulativeIncome < 0
-                    ? "border-red-500 text-red-500 dark:border-red-500 dark:text-red-500"
+                    ? "border-red-500 text-red-500 dark:border-red-500 dark:text-red-500 font-bold"
                     : ""
                 } 
                 `}
@@ -250,7 +250,7 @@ const TabContentRenderer = ({
                 }
                 ${
                   totalAdvantage.deathBenefits < 0
-                    ? "border-red-500 text-red-500 dark:border-red-500 dark:text-red-500"
+                    ? "border-red-500 text-red-500 dark:border-red-500 dark:text-red-500 font-bold"
                     : ""
                 } 
                 `}

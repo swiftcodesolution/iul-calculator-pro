@@ -238,17 +238,31 @@ export function useAuthForm() {
     } catch (error: any) {
       console.error(`${type} error:`, error);
 
-      const message = error.message.includes("Email already exists")
-        ? "Email already exists"
-        : error.message.includes("Cell phone")
-        ? "Cell phone number already exists"
-        : error.message.includes("Office phone")
-        ? "Office phone number already exists"
-        : error.message.includes("Invalid")
-        ? "Invalid email or password"
-        : error.message.includes("device")
-        ? "Device not authorized"
-        : "Authentication failed";
+      let message = "Authentication failed. Please try again.";
+
+      if (error.message.includes("Email already exists")) {
+        message = "This email is already registered. Please log in instead.";
+      } else if (error.message.includes("Cell phone")) {
+        message =
+          "This cell phone number is already associated with another account.";
+      } else if (error.message.includes("Office phone")) {
+        message =
+          "This office phone number is already associated with another account.";
+      } else if (error.message.includes("Invalid")) {
+        message = "Invalid email or password. Please check and try again.";
+      } else if (error.message.includes("device")) {
+        message = "This device is not authorized to access your account.";
+      } else if (
+        error.message.includes("Only admin accounts can log in here")
+      ) {
+        message = "Only admin accounts can log in on this page.";
+      } else if (
+        error.message.includes(
+          "Admin accounts can only be logged in from admin login page"
+        )
+      ) {
+        message = "Admin accounts must log in from the admin login page.";
+      }
 
       toast.error(message);
     } finally {

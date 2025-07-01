@@ -103,7 +103,7 @@ const NavBar = () => {
           onClick={handleSignOut}
           variant="outline"
           size="icon"
-          className="rounded-none transition-colors duration-200"
+          className="bg-white dark:bg-white dark:text-black text-black hover:bg-black hover:text-white dark:hover:bg-black dark:hover:text-white high-contrast:bg-white high-contrast:text-black high-contrast:hover:bg-white high-contrast:hover:text-white border hover:border-white transition-colors duration-200 cursor-pointer"
         >
           <motion.div
             whileHover={{ rotate: 0 }}
@@ -136,12 +136,12 @@ const NavBar = () => {
             aria-label={`Navigate to ${item.label}`}
           >
             <motion.div
-              whileHover={{ scale: 1.15, rotate: 0 }}
+              whileHover={{ scale: 1.0, rotate: 0 }}
               whileTap={{ scale: 0.95 }}
               animate={
                 pathname === item.href
                   ? {
-                      scale: [1, 1.1, 1],
+                      scale: [1, 1, 1],
                       transition: { duration: 0.8, repeat: Infinity },
                     }
                   : {}
@@ -149,9 +149,9 @@ const NavBar = () => {
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
               <Button
-                variant={pathname === item.href ? "default" : "outline"}
+                // variant={pathname === item.href ? "default" : "outline"}
                 size="icon"
-                className="rounded-none transition-colors duration-200 cursor-pointer"
+                className="bg-white dark:bg-white dark:text-black text-black hover:bg-black hover:text-white dark:hover:bg-black dark:hover:text-white high-contrast:bg-white high-contrast:text-black high-contrast:hover:bg-white high-contrast:hover:text-white border hover:border-white transition-colors duration-200 cursor-pointer"
               >
                 <motion.div
                   whileHover={{ rotate: 0 }}
@@ -172,7 +172,7 @@ const NavBar = () => {
             onClick={handleSignOut}
             variant="outline"
             size="icon"
-            className="rounded-none transition-colors duration-200"
+            className="bg-white dark:bg-white dark:text-black text-black hover:bg-black hover:text-white dark:hover:bg-black dark:hover:text-white high-contrast:bg-white high-contrast:text-black high-contrast:hover:bg-white high-contrast:hover:text-white border hover:border-white transition-colors duration-200 cursor-pointer"
           >
             <motion.div
               whileHover={{ rotate: 0 }}

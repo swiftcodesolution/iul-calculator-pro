@@ -91,17 +91,17 @@ export default function Sidebar({
         }`}
         onClick={() => setIsCoverCollapsed(true)}
       >
-        <Button
+        {/* <Button
           variant="outline"
           size="sm"
           className="absolute top-4 right-4"
           onClick={() => setIsCoverCollapsed(!isCoverCollapsed)}
         >
           {isCoverCollapsed ? "Expand" : "Collapse"}
-        </Button>
+        </Button> */}
 
-        <div className="flex items-center justify-around h-[90%] w-full">
-          <div className="flex flex-col">
+        <div className="flex items-center justify-evenly h-[90%] w-full">
+          <div className="flex flex-col items-center h-full justify-around">
             <Image
               src={"/white-logo.png"}
               width={1000}
@@ -109,16 +109,18 @@ export default function Sidebar({
               alt="Logo"
               className="w-full h-[200px] object-contain mb-6"
             />
-            <h3 className="text-md font-bold text-white mb-6">
-              Would you rather get guidance on where to save for retirement, or
-              become educated and make your own informed decision?
-            </h3>
-            <p className="text-sm text-white">
-              Heads up: This tool is here to help you explore different
-              financial scenarios using math and logic—it&apos;s not financial
-              advice. We&apos;re not telling you what to do with your money,
-              just giving you some number-powered insights to compare options.
-            </p>
+            <div>
+              <h3 className="text-md font-bold text-white mb-6">
+                Would you rather get guidance on where to save for retirement,
+                or become educated and make your own informed decision?
+              </h3>
+              <p className="text-sm text-white">
+                Heads up: This tool is here to help you explore different
+                financial scenarios using math and logic—it&apos;s not financial
+                advice. We&apos;re not telling you what to do with your money,
+                just giving you some number-powered insights to compare options.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -168,7 +170,7 @@ export default function Sidebar({
           </motion.div>
 
           <Button
-            className="mt-auto"
+            className="mt-auto border border-white"
             onClick={() => {
               setIsCoverCollapsed(!isCoverCollapsed);
             }}
