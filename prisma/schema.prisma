@@ -175,13 +175,15 @@ model Subscription {
   id                String    @id @default(auto()) @map("_id") @db.ObjectId
   userId            String    @db.ObjectId
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stripeCustomerId  String
+  stripeCustomerId  String?
   stripeSubscriptionId String    @unique
-  planType          String
-  status            String
+  planType          String // "trial", "monthly", "annual"
+  status            String // "trialing", "active", "expired", "canceled"
+  startDate         DateTime  @default(now())
   renewalDate       DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+  iulSales          IULSale[] // Track IUL sales for trial extension
 }
 
 model TrialToken {
@@ -199,4 +201,15 @@ model AdminContact {
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   message      String
   createdAt    DateTime  @default(now())
+}
+
+model IULSale {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  subscriptionId String  @db.ObjectId
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  saleDate     DateTime  @default(now())
+  verified     Boolean   @default(false)
+  verifiedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }

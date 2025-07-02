@@ -46,10 +46,11 @@ export async function POST(request: Request) {
       const subscription = await prisma.subscription.create({
         data: {
           userId: session.user.id,
-          stripeCustomerId: "",
+          stripeCustomerId: "", // No Stripe customer for trial
           stripeSubscriptionId: `trial-${session.user.id}`,
           planType: "trial",
           status: "trialing",
+          startDate: new Date(),
           renewalDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days
         },
       });
@@ -75,10 +76,7 @@ export async function POST(request: Request) {
     }
   }
 
-  if (!(plan in planIds)) {
-    return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
-  }
-
+  // Handle payment for non-trial plans (e.g., post-trial or direct subscription)
   try {
     const customers = await stripe.customers.list({
       email: session.user.email,
@@ -125,7 +123,21 @@ export async function GET() {
     const subscription = await prisma.subscription.findFirst({
       where: { userId: session.user.id },
     });
-    return NextResponse.json(subscription || {});
+
+    if (!subscription) {
+      return NextResponse.json({ status: "none" });
+    }
+
+    const isExpired =
+      subscription.planType === "trial" &&
+      subscription.renewalDate &&
+      new Date(subscription.renewalDate) < new Date();
+
+    return NextResponse.json({
+      status: isExpired ? "expired" : subscription.status,
+      planType: subscription.planType,
+      endDate: subscription.renewalDate?.toISOString(),
+    });
   } catch (error) {
     console.error("Subscription fetch error:", error);
     return NextResponse.json(

@@ -39,6 +39,8 @@ export async function POST(request: Request) {
           planType: plan,
           stripeCustomerId: session.customer as string,
           userId,
+          startDate: new Date(),
+          renewalDate: null, // Set based on Stripe subscription
         },
         create: {
           userId,
@@ -46,6 +48,7 @@ export async function POST(request: Request) {
           stripeSubscriptionId: subscriptionId,
           planType: plan,
           status: "active",
+          startDate: new Date(),
         },
       });
       console.log(
