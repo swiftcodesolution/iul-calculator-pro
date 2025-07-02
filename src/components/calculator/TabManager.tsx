@@ -103,7 +103,7 @@ const TabNavigation = ({
                     setActiveTab(activeTab === tab.id ? null : tab.id)
                   }
                   aria-selected={activeTab === tab.id}
-                  className="cursor-pointer"
+                  className="cursor-pointer w-10 h-10"
                 >
                   {index + 1}
                 </Button>
@@ -582,7 +582,7 @@ const TabManager = React.memo(function TabManager({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
               >
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-start justify-between mb-2">
                   <TabNavigation
                     tabs={tabs}
                     activeTab={activeTab}

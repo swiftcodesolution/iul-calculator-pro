@@ -5,12 +5,14 @@ import { useSession } from "next-auth/react";
 import { ClientFile } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useFileContext } from "@/context/FileContext";
+import { useTableStore } from "@/lib/store";
 
 export function useClientFiles(initialFiles: ClientFile[] = []) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { selectedFileId, setSelectedFileId, clearSelectedFileId } =
     useFileContext();
+  const { clearEverythingForFreshFile } = useTableStore();
   const [clientFiles, setClientFiles] = useState<ClientFile[]>(initialFiles);
   const [newClientName, setNewClientName] = useState("");
   const [selectedFile, setSelectedFile] = useState<ClientFile | null>(null);
@@ -56,6 +58,7 @@ export function useClientFiles(initialFiles: ClientFile[] = []) {
 
     try {
       if (action === "new" && data?.name) {
+        clearEverythingForFreshFile();
         const response = await fetch("/api/files", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

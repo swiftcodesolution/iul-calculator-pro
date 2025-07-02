@@ -39,6 +39,9 @@ interface TableStore {
   combinedResults: CombinedResult[];
   setCombinedResults: (results: CombinedResult[]) => void;
   clearStore: () => void;
+
+  clearEverythingForFreshFile: () => void;
+
   activeButtons: { [key: number]: boolean };
   setActiveButtons: (buttons: { [key: number]: boolean }) => void;
   isDataPersisted: boolean;
@@ -126,35 +129,6 @@ export const useTableStore = create<TableStore>((set) => ({
   combinedResults: [],
   setCombinedResults: (results) => set({ combinedResults: results }),
 
-  /*
-  clearStore: () =>
-    set((state) => ({
-      tables: [],
-      fields: {
-        illustration_date: null,
-        insured_name: null,
-        initial_death_benefit: null,
-        assumed_ror: null,
-        minimum_initial_pmt: null,
-      },
-      yearsRunOutOfMoney: state.yearsRunOutOfMoney,
-      isYearsRunOutOfMoneyUserSelected: state.isYearsRunOutOfMoneyUserSelected,
-      futureAge: state.futureAge,
-      boxesData: state.boxesData,
-      startingBalance: state.startingBalance,
-      annualContributions: state.annualContributions,
-      annualEmployerMatch: state.annualEmployerMatch,
-      withdrawalAmount: state.withdrawalAmount,
-      iulStartingBalance: state.iulStartingBalance,
-      calculatorAge: state.calculatorAge,
-      calculatorTaxRate: state.calculatorTaxRate,
-      tabs: state.tabs,
-      combinedResults: [],
-      activeButtons: {},
-      isDataPersisted: false,
-    })),
-  */
-
   clearStore: () =>
     set((state) => ({
       ...state,
@@ -167,6 +141,74 @@ export const useTableStore = create<TableStore>((set) => ({
         minimum_initial_pmt: null,
       },
     })),
+
+  clearEverythingForFreshFile: () =>
+    set({
+      tables: [],
+      fields: {
+        illustration_date: null,
+        insured_name: null,
+        initial_death_benefit: null,
+        assumed_ror: null,
+        minimum_initial_pmt: null,
+      },
+      yearsRunOutOfMoney: "",
+      isYearsRunOutOfMoneyUserSelected: false,
+      futureAge: "",
+      boxesData: {
+        currentAge: "",
+        stopSavingAge: "",
+        retirementAge: "",
+        workingTaxRate: "",
+        retirementTaxRate: "",
+        inflationRate: "",
+        currentPlanFees: "",
+        currentPlanROR: "",
+        taxFreePlanROR: "",
+      },
+      startingBalance: "",
+      annualContributions: "",
+      annualEmployerMatch: "",
+      withdrawalAmount: "",
+      iulStartingBalance: "",
+      calculatorAge: "",
+      calculatorTaxRate: "",
+      tabs: [
+        {
+          id: "total-advantage",
+          name: "Total Advantage",
+          type: "totalAdvantage",
+          isVisible: true,
+        },
+        {
+          id: "calculator",
+          name: "Calculator",
+          type: "calculator",
+          isVisible: true,
+        },
+        {
+          id: "annualContributionCalculatorForIUL",
+          name: "Annual Contribution for IUL",
+          type: "annualContributionCalculatorForIUL",
+          isVisible: true,
+        },
+        {
+          id: "inflationCalculator",
+          name: "Inflation Calculator",
+          type: "inflationCalculator",
+          isVisible: true,
+        },
+        {
+          id: "cagrChart",
+          name: "S&P Average vs Tax Free Plan",
+          type: "cagrChart",
+          isVisible: true,
+        },
+      ],
+      combinedResults: [],
+      activeButtons: {},
+      isDataPersisted: false,
+    }),
 
   activeButtons: {},
   setActiveButtons: (buttons) => set({ activeButtons: buttons }),

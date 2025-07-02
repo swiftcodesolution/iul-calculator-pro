@@ -44,6 +44,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
     setAnnualEmployerMatch,
     yearsRunOutOfMoney,
     setYearsRunOutOfMoney,
+    clearEverythingForFreshFile,
   } = useTableStore();
 
   const {
@@ -66,6 +67,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
         const response = await fetch(`/api/files/${fileId}`);
         if (!response.ok) {
           if (response.status === 400 || response.status === 404) {
+            clearEverythingForFreshFile();
             setError("File not found");
             notFound();
           } else {
