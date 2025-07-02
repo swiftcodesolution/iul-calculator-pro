@@ -237,7 +237,7 @@ export function InputParameters({
                 {
                   label: "Tax Free Plan ROR",
                   key: "taxFreePlanROR",
-                  value: parsedAssumedRor || "",
+                  value: parsedAssumedRor || data.taxFreePlanROR,
                 },
               ] as BoxesInputField[]
             ).map(({ label, key, value }) => (
