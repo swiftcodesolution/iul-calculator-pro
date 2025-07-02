@@ -263,7 +263,7 @@ export function InputParameters({
                     }`}
                     value={value.toString()}
                     onChange={(e) =>
-                      key !== "taxFreePlanROR" &&
+                      // key !== "taxFreePlanROR" &&
                       handleInputChange(key, e.target.value)
                     }
                     type="number"
