@@ -93,7 +93,7 @@ export default function TrainingContentPage() {
       <div className="flex gap-4 h-full">
         <Card className="flex-1 flex flex-col">
           <CardHeader>
-            <CardTitle>Available Training Videos</CardTitle>
+            <CardTitle>Videos - For Training & Clients</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 overflow-hidden">
             {error ? (
