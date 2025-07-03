@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { LogOut, Home, Calculator, Upload, Database } from "lucide-react";
+import { LogOut, Home, Calculator, Upload, Database, User } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useFileContext } from "@/context/FileContext";
@@ -51,6 +51,15 @@ const NavBar = () => {
           : `/dashboard/data/${selectedFileId}`,
       icon: Database,
     },
+    ...(session?.user.role === "admin"
+      ? [
+          {
+            label: "Admin",
+            href: "#",
+            icon: User,
+          },
+        ]
+      : []),
   ];
 
   useEffect(() => {

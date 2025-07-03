@@ -108,9 +108,14 @@ const options: ChartOptions<"line"> = {
 
 export default function CagrChart() {
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
+  const [selectedColumn, setSelectedColumn] = useState<number | null>(null);
 
   const handleRowClick = (year: string) => {
     setSelectedYear(selectedYear === year ? null : year);
+  };
+
+  const handleColClick = (col: number) => {
+    setSelectedColumn(selectedColumn === col ? null : col);
   };
 
   /*
@@ -142,6 +147,14 @@ export default function CagrChart() {
     ["2024", "23.95%", "495,649", "8.06%", "608,337"],
   ];
   */
+
+  const tableHeaders = [
+    "Year",
+    "S&P Return",
+    "S&P Value",
+    "TFP Return",
+    "TFP Value",
+  ];
 
   const tableData = [
     ["2000", "-15.09%", "84,910", "0.00%", "100,000"],
@@ -211,11 +224,19 @@ export default function CagrChart() {
               <table className="w-full text-sm">
                 <thead>
                   <tr>
-                    <th>Year</th>
-                    <th>S&P Return</th>
-                    <th>S&P Value</th>
-                    <th>TFP Return</th>
-                    <th>TFP Value</th>
+                    {tableHeaders.map((header, i) => (
+                      <th
+                        key={i}
+                        onClick={() => handleColClick(i)}
+                        className={`p-2 cursor-pointer ${
+                          selectedColumn === i
+                            ? "border-2 border-amber-400"
+                            : ""
+                        }`}
+                      >
+                        {header}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -233,14 +254,15 @@ export default function CagrChart() {
                         <td
                           key={j}
                           className={`p-2 ${j > 1 ? "text-right" : ""} ${
-                            j === 1 && cell.includes("-") ? "text-red-600" : ""
-                          }
-                          ${
-                            j === 0 && row[1].includes("-")
+                            (j === 1 && cell.includes("-")) ||
+                            (j === 0 && row[1].includes("-"))
                               ? "text-red-600"
                               : ""
-                          }
-                          `}
+                          } ${
+                            selectedColumn === j
+                              ? "border-2 border-amber-400"
+                              : ""
+                          }`}
                         >
                           {cell}
                         </td>
