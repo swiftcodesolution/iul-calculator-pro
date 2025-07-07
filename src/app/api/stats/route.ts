@@ -4,8 +4,7 @@ import prisma from "@/lib/connect";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function GET(request: Request) {
+export async function GET() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id || session.user.role !== "admin") {
@@ -26,6 +25,24 @@ export async function GET(request: Request) {
 
     // Total files uploaded
     const totalFiles = await prisma.clientFile.count();
+
+    // Active subscriptions (non-expired trials or active paid subscriptions)
+    const activeSubscriptions = await prisma.subscription.count({
+      where: {
+        OR: [
+          { status: "active" },
+          {
+            planType: "trial",
+            renewalDate: { gte: new Date() },
+          },
+        ],
+      },
+    });
+
+    // Trial users
+    const trialUsers = await prisma.subscription.count({
+      where: { planType: "trial" },
+    });
 
     // Files per category
     const filesByCategory = await prisma.clientFile.groupBy({
@@ -103,6 +120,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       activeUsers,
       totalFiles,
+      activeSubscriptions,
+      trialUsers,
       filesByCategory: filesByCategory.map((entry) => ({
         category: entry.category,
         count: entry._count.id,

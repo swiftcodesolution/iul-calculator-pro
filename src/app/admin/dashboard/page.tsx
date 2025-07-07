@@ -13,6 +13,7 @@ import {
   BookOpen,
   RefreshCw,
   Building,
+  DollarSign,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -53,6 +54,13 @@ interface User {
   lastLogin?: string;
 }
 
+interface Subscription {
+  userId: string;
+  status: string;
+  planType: string;
+  endDate?: string;
+}
+
 interface Stat {
   metric: string;
   value: number;
@@ -70,6 +78,7 @@ export default function AdminDashboard() {
   const [trainingDocuments, setTrainingDocuments] = useState<Resource[]>([]);
   const [trainingVideos, setTrainingVideos] = useState<Resource[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [stats, setStats] = useState<Stat[]>([]);
   const [insuranceCompanies, setInsuranceCompanies] = useState<
     InsuranceCompany[]
@@ -104,6 +113,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchSubscriptions = async () => {
+    try {
+      const response = await fetch("/api/subscriptions"); // Assumes new endpoint for all subscriptions
+      if (!response.ok) throw new Error("Failed to fetch subscriptions");
+      const data = await response.json();
+      setSubscriptions(data);
+    } catch (err) {
+      setError("Error loading subscriptions");
+      console.error(err);
+    }
+  };
+
   const fetchStats = async () => {
     try {
       const response = await fetch("/api/stats");
@@ -114,6 +135,11 @@ export default function AdminDashboard() {
         { metric: "Total Files", value: data.totalFiles },
         { metric: "Recent Downloads", value: data.downloads || 0 },
         { metric: "New Users (30d)", value: data.newUsers || 0 },
+        {
+          metric: "Active Subscriptions",
+          value: data.activeSubscriptions || 0,
+        },
+        { metric: "Trial Users", value: data.trialUsers || 0 },
       ]);
     } catch (err) {
       setError("Error loading stats");
@@ -130,6 +156,7 @@ export default function AdminDashboard() {
       fetchResources("training-videos", setTrainingVideos),
       fetchResources("insurance-companies", setInsuranceCompanies),
       fetchUsers(),
+      fetchSubscriptions(),
       fetchStats(),
     ]);
     setLoading(false);
@@ -214,6 +241,47 @@ export default function AdminDashboard() {
                 className="text-blue-500 hover:underline mt-4 block font-medium"
               >
                 View Detailed Stats
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Subscriptions Card */}
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="flex items-center">
+              <DollarSign className="mr-2 text-blue-500" />
+              <CardTitle className="text-lg ">Subscriptions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableBody>
+                  {subscriptions.length > 0 ? (
+                    subscriptions.slice(0, 2).map((sub) => (
+                      <TableRow key={sub.userId} className="hover:bg-gray-50">
+                        <TableCell className="text-sm ">
+                          {sub.planType} ({sub.status})
+                          <br />
+                          <span className="">
+                            {sub.endDate
+                              ? new Date(sub.endDate).toLocaleDateString()
+                              : "No end date"}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell className="text-sm ">
+                        No subscriptions available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              <Link
+                href="/admin/dashboard/subscriptions"
+                className="text-blue-500 hover:underline mt-2 block font-medium"
+              >
+                Manage Subscriptions
               </Link>
             </CardContent>
           </Card>
@@ -422,13 +490,19 @@ export default function AdminDashboard() {
               <Table>
                 <TableBody>
                   {downloadResources.length > 0 ? (
-                    downloadResources.slice(0, 2).map((file) => (
-                      <TableRow key={file.id} className="hover:bg-gray-50">
-                        <TableCell className="text-sm ">
-                          {file.fileName} ({file.fileFormat})
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    downloadResources
+                      .slice(
+                        0,
+
+                        2
+                      )
+                      .map((file) => (
+                        <TableRow key={file.id} className="hover:bg-gray-50">
+                          <TableCell className="text-sm ">
+                            {file.fileName} ({file.fileFormat})
+                          </TableCell>
+                        </TableRow>
+                      ))
                   ) : (
                     <TableRow>
                       <TableCell className="text-sm ">

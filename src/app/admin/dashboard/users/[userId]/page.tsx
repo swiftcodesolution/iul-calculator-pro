@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Building2 } from "lucide-react";
+import { Users, Building2, DollarSign } from "lucide-react";
 import { use, useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
@@ -49,6 +50,20 @@ interface CompanyInfo {
   agentProfilePic: string | null;
 }
 
+interface Subscription {
+  id: string;
+  planType: string;
+  status: string;
+  startDate: string;
+  endDate: string | null;
+  iulSales: {
+    id: string;
+    saleDate: string;
+    verified: boolean;
+    verifiedAt: string | null;
+  }[];
+}
+
 interface User {
   id: string;
   email: string;
@@ -60,6 +75,7 @@ interface User {
   status: string;
   sessionHistory: SessionHistory[];
   companyInfo: CompanyInfo | null;
+  subscription: Subscription | null;
   _count: {
     files: number;
   };
@@ -189,7 +205,7 @@ export default function UserDetailsPage({
     },
   };
 
-  if (!user && !error) return <div className="text-center ">Loading...</div>;
+  if (!user && !error) return <div className="text-center">Loading...</div>;
   if (error) return <div className="text-red-500 text-center">{error}</div>;
 
   return (
@@ -200,14 +216,14 @@ export default function UserDetailsPage({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-3xl font-bold mb-6 flex items-center ">
+          <h1 className="text-3xl font-bold mb-6 flex items-center">
             <Users className="mr-2 text-blue-500" /> User Details
           </h1>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
-              <CardTitle className="text-lg ">
+              <CardTitle className="text-lg">
                 Info entered during signup
               </CardTitle>
             </CardHeader>
@@ -264,7 +280,7 @@ export default function UserDetailsPage({
           </Card>
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
-              <CardTitle className="flex items-center text-lg ">
+              <CardTitle className="flex items-center text-lg">
                 <Building2 className="mr-2 text-blue-500" /> Company Information
               </CardTitle>
             </CardHeader>
@@ -320,10 +336,84 @@ export default function UserDetailsPage({
               )}
             </CardContent>
           </Card>
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <DollarSign className="mr-2 text-blue-500" /> Subscription
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {user?.subscription ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-4"
+                >
+                  <p>
+                    <strong>Plan Type:</strong> {user.subscription.planType}
+                  </p>
+                  <p>
+                    <strong>Status:</strong> {user.subscription.status}
+                  </p>
+                  <p>
+                    <strong>Start Date:</strong>{" "}
+                    {new Date(user.subscription.startDate).toLocaleDateString()}
+                  </p>
+                  <p>
+                    <strong>End Date:</strong>{" "}
+                    {user.subscription.endDate
+                      ? new Date(user.subscription.endDate).toLocaleDateString()
+                      : "N/A"}
+                  </p>
+                  <div>
+                    <strong>IUL Sales:</strong>
+                    {user.subscription.iulSales.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Sale Date</TableHead>
+                            <TableHead>Verified</TableHead>
+                            <TableHead>Verified At</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {user.subscription.iulSales.map((sale) => (
+                            <TableRow
+                              key={sale.id}
+                              className="hover:bg-gray-50"
+                            >
+                              <TableCell>
+                                {new Date(sale.saleDate).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                {sale.verified ? "Yes" : "No"}
+                              </TableCell>
+                              <TableCell>
+                                {sale.verifiedAt
+                                  ? new Date(
+                                      sale.verifiedAt
+                                    ).toLocaleDateString()
+                                  : "N/A"}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <p className="">No IUL sales recorded.</p>
+                    )}
+                  </div>
+                </motion.div>
+              ) : (
+                <p className="">No subscription information available.</p>
+              )}
+            </CardContent>
+          </Card>
         </div>
         <Card className="mb-6 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg ">File Information</CardTitle>
+            <CardTitle className="text-lg">File Information</CardTitle>
           </CardHeader>
           <CardContent>
             {user ? (
@@ -381,7 +471,7 @@ export default function UserDetailsPage({
         </Card>
         <Card className="shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg ">Session History</CardTitle>
+            <CardTitle className="text-lg">Session History</CardTitle>
           </CardHeader>
           <CardContent>
             {user?.sessionHistory && user.sessionHistory.length > 0 ? (
