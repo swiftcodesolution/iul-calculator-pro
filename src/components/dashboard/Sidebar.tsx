@@ -91,14 +91,14 @@ export default function Sidebar({
         }`}
         onClick={() => setIsCoverCollapsed(true)}
       >
-        {/* <Button
-          variant="outline"
+        <Button
+          variant="default"
           size="sm"
-          className="absolute top-4 right-4"
+          className="absolute bottom-4 right-4"
           onClick={() => setIsCoverCollapsed(!isCoverCollapsed)}
         >
-          {isCoverCollapsed ? "Expand" : "Collapse"}
-        </Button> */}
+          {isCoverCollapsed ? "Expand" : "Close"}
+        </Button>
 
         <div className="flex items-center justify-around h-[90%] w-full">
           <div className="flex flex-col items-center h-full justify-around">

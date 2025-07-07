@@ -57,6 +57,23 @@ export async function GET(
             createdAt: true,
           },
         },
+        Subscription: {
+          select: {
+            id: true,
+            planType: true,
+            status: true,
+            startDate: true,
+            renewalDate: true,
+            iulSales: {
+              select: {
+                id: true,
+                saleDate: true,
+                verified: true,
+                verifiedAt: true,
+              },
+            },
+          },
+        },
         _count: {
           select: { files: true },
         },
@@ -121,6 +138,22 @@ export async function GET(
         category: file.category,
         createdAt: file.createdAt.toISOString(),
       })),
+      subscription:
+        user.Subscription.length > 0
+          ? {
+              id: user.Subscription[0].id,
+              planType: user.Subscription[0].planType,
+              status: user.Subscription[0].status,
+              startDate: user.Subscription[0].startDate.toISOString(),
+              endDate: user.Subscription[0].renewalDate?.toISOString() || null,
+              iulSales: user.Subscription[0].iulSales.map((sale) => ({
+                id: sale.id,
+                saleDate: sale.saleDate.toISOString(),
+                verified: sale.verified,
+                verifiedAt: sale.verifiedAt?.toISOString() || null,
+              })),
+            }
+          : null,
     });
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -156,6 +189,7 @@ export async function DELETE(
     await prisma.companyInfo.deleteMany({ where: { userId } });
     await prisma.trialToken.deleteMany({ where: { userId } });
     await prisma.adminContact.deleteMany({ where: { userId } });
+    await prisma.subscription.deleteMany({ where: { userId } });
     await prisma.user.delete({ where: { id: userId } });
 
     return NextResponse.json({ message: "User deleted successfully" });
@@ -228,6 +262,23 @@ export async function PATCH(
             createdAt: true,
           },
         },
+        Subscription: {
+          select: {
+            id: true,
+            planType: true,
+            status: true,
+            startDate: true,
+            renewalDate: true,
+            iulSales: {
+              select: {
+                id: true,
+                saleDate: true,
+                verified: true,
+                verifiedAt: true,
+              },
+            },
+          },
+        },
         _count: {
           select: { files: true },
         },
@@ -260,6 +311,22 @@ export async function PATCH(
             agentProfilePic: companyInfo.profilePicSrc,
           }
         : null,
+      subscription:
+        user.Subscription.length > 0
+          ? {
+              id: user.Subscription[0].id,
+              planType: user.Subscription[0].planType,
+              status: user.Subscription[0].status,
+              startDate: user.Subscription[0].startDate.toISOString(),
+              endDate: user.Subscription[0].renewalDate?.toISOString() || null,
+              iulSales: user.Subscription[0].iulSales.map((sale) => ({
+                id: sale.id,
+                saleDate: sale.saleDate.toISOString(),
+                verified: sale.verified,
+                verifiedAt: sale.verifiedAt?.toISOString() || null,
+              })),
+            }
+          : null,
     });
   } catch (error) {
     console.error("Error updating user status:", error);
