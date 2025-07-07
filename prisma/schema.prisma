@@ -187,35 +187,35 @@ model Subscription {
 }
 
 model TrialToken {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String    @unique @db.ObjectId
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token        String    @unique
-  createdAt    DateTime  @default(now())
-  expiresAt    DateTime
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String    @unique @db.ObjectId
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token             String    @unique
+  createdAt         DateTime  @default(now())
+  expiresAt         DateTime
 }
 
 model AdminContact {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String    @db.ObjectId
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  message      String
-  createdAt    DateTime  @default(now())
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String    @db.ObjectId
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message           String
+  createdAt         DateTime  @default(now())
 }
 
 model IULSale {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  subscriptionId String  @db.ObjectId
-  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  saleDate     DateTime  @default(now())
-  verified     Boolean   @default(false)
-  verifiedAt   DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  subscriptionId    String  @db.ObjectId
+  subscription      Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  saleDate          DateTime  @default(now())
+  verified          Boolean   @default(false)
+  verifiedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
 
 model WebhookEvent {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  eventId     String   @unique
-  processedAt DateTime @default(now())
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  eventId           String   @unique
+  processedAt       DateTime @default(now())
 }

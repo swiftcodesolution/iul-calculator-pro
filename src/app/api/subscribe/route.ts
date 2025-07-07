@@ -26,8 +26,8 @@ export async function POST(request: Request) {
   }
 
   const planIds: Record<"monthly" | "annual", string> = {
-    monthly: "price_1N4P5BDjQSIXuLORTS2bD4Tq", // Replace with test mode monthly price ID
-    annual: "price_1Rg7qMDjQSIXuLOR5ztX8mdi", // Replace with test mode annual price ID
+    monthly: "price_1N4P5BDjQSIXuLORTS2bD4Tq",
+    annual: "price_1Rg7qMDjQSIXuLOR5ztX8mdi",
   };
 
   if (plan === "trial") {
