@@ -30,28 +30,23 @@ export async function POST(request: Request) {
     annual: "price_1Rg7qMDjQSIXuLOR5ztX8mdi",
   };
 
-  if (plan === "trial") {
+  // Check if user has a trial token
+  const trialToken = await prisma.trialToken.findUnique({
+    where: { userId: session.user.id },
+  });
+
+  // If no trial token exists, create one for new users
+  if (!trialToken) {
     try {
-      const existingTrial = await prisma.subscription.findFirst({
-        where: { userId: session.user.id, planType: "trial" },
-      });
-
-      if (existingTrial) {
-        return NextResponse.json(
-          { error: "Trial already exists" },
-          { status: 400 }
-        );
-      }
-
-      const subscription = await prisma.subscription.create({
+      await prisma.subscription.create({
         data: {
           userId: session.user.id,
-          stripeCustomerId: "", // No Stripe customer for trial
+          stripeCustomerId: "",
           stripeSubscriptionId: `trial-${session.user.id}`,
-          planType: "trial",
+          planType: plan === "trial" ? "trial" : plan,
           status: "trialing",
           startDate: new Date(),
-          renewalDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days
+          renewalDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
         },
       });
 
@@ -59,12 +54,16 @@ export async function POST(request: Request) {
         data: {
           userId: session.user.id,
           token: randomUUID(),
-          expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days
+          expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
         },
       });
 
       return NextResponse.json(
-        { message: "Trial activated", subscription },
+        {
+          message:
+            plan === "trial" ? "Trial activated" : `Plan selected: ${plan}`,
+          redirect: "/dashboard/home",
+        },
         { status: 201 }
       );
     } catch (error) {
@@ -76,7 +75,46 @@ export async function POST(request: Request) {
     }
   }
 
-  // Handle payment for non-trial plans (e.g., post-trial or direct subscription)
+  // Check trial status
+  const isTrialActive = trialToken.expiresAt > new Date();
+
+  if (isTrialActive) {
+    // Update or create subscription with selected plan
+    const subscription = await prisma.subscription.findFirst({
+      where: { userId: session.user.id },
+    });
+    if (subscription) {
+      await prisma.subscription.update({
+        where: { id: subscription.id },
+        data: { planType: plan },
+      });
+    } else {
+      await prisma.subscription.create({
+        data: {
+          userId: session.user.id,
+          stripeCustomerId: "",
+          stripeSubscriptionId: `trial-${session.user.id}`,
+          planType: plan,
+          status: "trialing",
+          startDate: new Date(),
+          renewalDate: trialToken.expiresAt,
+        },
+      });
+    }
+    return NextResponse.json(
+      { message: `Plan selected: ${plan}`, redirect: "/dashboard/home" },
+      { status: 200 }
+    );
+  }
+
+  // Proceed to Stripe for expired trial and non-trial plans
+  if (plan === "trial") {
+    return NextResponse.json(
+      { error: "Trial period expired, please select a paid plan" },
+      { status: 400 }
+    );
+  }
+
   try {
     const customers = await stripe.customers.list({
       email: session.user.email,
@@ -129,7 +167,7 @@ export async function GET() {
     }
 
     const isExpired =
-      subscription.planType === "trial" &&
+      subscription.status === "trialing" &&
       subscription.renewalDate &&
       new Date(subscription.renewalDate) < new Date();
 

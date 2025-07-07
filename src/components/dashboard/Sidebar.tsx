@@ -10,6 +10,7 @@ import { CompanyInfo } from "@/lib/types";
 import { useState } from "react";
 import Image from "next/image";
 import { UseFormReturn } from "react-hook-form";
+import SubscriptionStatusCard from "./SubscriptionStatusCard";
 
 const sidebarVariants: Variants = {
   open: {
@@ -167,6 +168,7 @@ export default function Sidebar({
             />
             <InsuranceCompaniesSection />
             <TrainingResourcesSection />
+            <SubscriptionStatusCard />
           </motion.div>
 
           <Button

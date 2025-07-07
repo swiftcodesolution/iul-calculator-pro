@@ -59,6 +59,7 @@ export default function SubscriptionPage() {
     },
   ].filter((plan) => plan.show);
 
+  /*
   const handleSubscribe = async (plan: string) => {
     if (status !== "authenticated") {
       toast.error("Please log in to subscribe.");
@@ -101,6 +102,65 @@ export default function SubscriptionPage() {
           router.push(data.url);
         } else {
           throw new Error("No checkout URL");
+        }
+      }
+    } catch (error) {
+      console.error("Subscription error:", error);
+      const message =
+        error instanceof Error ? error.message : "Operation failed";
+      toast.error(message);
+    } finally {
+      setIsLoading(null);
+    }
+  };
+  */
+
+  const handleSubscribe = async (plan: string) => {
+    if (status !== "authenticated") {
+      toast.error("Please log in to subscribe.");
+      router.push("/");
+      return;
+    }
+
+    setIsLoading(plan);
+    try {
+      if (plan === "contact-admin") {
+        const message = prompt("Enter your message to confirm IUL sale:");
+        if (!message) throw new Error("Message required");
+
+        const response = await fetch("/api/contact-admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message }),
+        });
+
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.error || "Failed to send message");
+
+        toast.success("Message sent to admin!");
+        router.push("/dashboard/home");
+      } else {
+        const response = await fetch("/api/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Subscription failed");
+
+        if (data.redirect) {
+          toast.success(
+            plan === "trial"
+              ? "Trial activated! Complete 1 IUL sale every 2 months."
+              : `Plan selected: ${plan}`
+          );
+          router.push(data.redirect);
+        } else if (data.url) {
+          router.push(data.url);
+        } else {
+          throw new Error("No checkout URL or redirect");
         }
       }
     } catch (error) {
