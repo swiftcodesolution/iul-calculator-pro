@@ -590,67 +590,69 @@ const TabManager = React.memo(function TabManager({
                   />
                   <div className="flex gap-2">
                     <div className="flex gap-2">
-                      <Dialog
-                        open={isAddDialogOpen}
-                        onOpenChange={setIsAddDialogOpen}
-                      >
-                        <DialogTrigger asChild>
-                          <motion.div
-                            whileHover={{
-                              scale: 1.1,
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                            }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <Button variant="outline">Add</Button>
-                          </motion.div>
-                        </DialogTrigger>
-                        <DialogContent className="p-6">
-                          <DialogHeader>
-                            <DialogTitle>Add New Tab</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <Input
-                              placeholder="Tab Name"
-                              value={newTabName}
-                              onChange={(e) => setNewTabName(e.target.value)}
-                              className="rounded-md"
-                            />
-                            <Button asChild>
-                              <label className="flex items-center gap-2 cursor-pointer">
-                                Upload File
-                                <Upload className="h-4 w-4" />
-                                <input
-                                  type="file"
-                                  className="hidden"
-                                  accept="image/*,video/*,application/pdf"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) setNewTabFile(file);
-                                  }}
-                                />
-                              </label>
-                            </Button>
-                            <Input
-                              type="url"
-                              placeholder="Or provide a link (e.g., YouTube)"
-                              value={newTabLink}
-                              onChange={(e) => setNewTabLink(e.target.value)}
-                            />
-                            {newTabFile && <p>Selected: {newTabFile.name}</p>}
-                            <Button
-                              onClick={handleAddTab}
-                              disabled={
-                                !newTabName || (!newTabFile && !newTabLink)
-                              }
-                              className="w-full"
+                      {session?.user.role !== "admin" && (
+                        <Dialog
+                          open={isAddDialogOpen}
+                          onOpenChange={setIsAddDialogOpen}
+                        >
+                          <DialogTrigger asChild>
+                            <motion.div
+                              whileHover={{
+                                scale: 1.1,
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                              }}
+                              whileTap={{ scale: 0.95 }}
                             >
-                              Add Tab
-                            </Button>
-                            {error && <p className="text-red-500">{error}</p>}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                              <Button variant="outline">Add</Button>
+                            </motion.div>
+                          </DialogTrigger>
+                          <DialogContent className="p-6">
+                            <DialogHeader>
+                              <DialogTitle>Add New Tab</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <Input
+                                placeholder="Tab Name"
+                                value={newTabName}
+                                onChange={(e) => setNewTabName(e.target.value)}
+                                className="rounded-md"
+                              />
+                              <Button asChild>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  Upload File
+                                  <Upload className="h-4 w-4" />
+                                  <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*,video/*,application/pdf"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) setNewTabFile(file);
+                                    }}
+                                  />
+                                </label>
+                              </Button>
+                              <Input
+                                type="url"
+                                placeholder="Or provide a link (e.g., YouTube)"
+                                value={newTabLink}
+                                onChange={(e) => setNewTabLink(e.target.value)}
+                              />
+                              {newTabFile && <p>Selected: {newTabFile.name}</p>}
+                              <Button
+                                onClick={handleAddTab}
+                                disabled={
+                                  !newTabName || (!newTabFile && !newTabLink)
+                                }
+                                className="w-full"
+                              >
+                                Add Tab
+                              </Button>
+                              {error && <p className="text-red-500">{error}</p>}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
                       <ManageTabsDialog
                         tabs={tabs}
                         setTabs={setTabs}
@@ -706,65 +708,69 @@ const TabManager = React.memo(function TabManager({
               />
               <div className="flex gap-2">
                 <div className="flex gap-2">
-                  <Dialog
-                    open={isAddDialogOpen}
-                    onOpenChange={setIsAddDialogOpen}
-                  >
-                    <DialogTrigger asChild>
-                      <motion.div
-                        whileHover={{
-                          scale: 1.1,
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                        }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Button variant="outline">Add</Button>
-                      </motion.div>
-                    </DialogTrigger>
-                    <DialogContent className="p-6">
-                      <DialogHeader>
-                        <DialogTitle>Add New Tab</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <Input
-                          placeholder="Tab Name"
-                          value={newTabName}
-                          onChange={(e) => setNewTabName(e.target.value)}
-                          className="rounded-md"
-                        />
-                        <Button asChild>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            Upload File
-                            <Upload className="h-4 w-4" />
-                            <input
-                              type="file"
-                              className="hidden"
-                              accept="image/*,video/*,application/pdf"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) setNewTabFile(file);
-                              }}
-                            />
-                          </label>
-                        </Button>
-                        <Input
-                          type="url"
-                          placeholder="Or provide a link (e.g., YouTube)"
-                          value={newTabLink}
-                          onChange={(e) => setNewTabLink(e.target.value)}
-                        />
-                        {newTabFile && <p>Selected: {newTabFile.name}</p>}
-                        <Button
-                          onClick={handleAddTab}
-                          disabled={!newTabName || (!newTabFile && !newTabLink)}
-                          className="w-full"
+                  {session?.user.role !== "admin" && (
+                    <Dialog
+                      open={isAddDialogOpen}
+                      onOpenChange={setIsAddDialogOpen}
+                    >
+                      <DialogTrigger asChild>
+                        <motion.div
+                          whileHover={{
+                            scale: 1.1,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                          }}
+                          whileTap={{ scale: 0.95 }}
                         >
-                          Add Tab
-                        </Button>
-                        {error && <p className="text-red-500">{error}</p>}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                          <Button variant="outline">Add</Button>
+                        </motion.div>
+                      </DialogTrigger>
+                      <DialogContent className="p-6">
+                        <DialogHeader>
+                          <DialogTitle>Add New Tab</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <Input
+                            placeholder="Tab Name"
+                            value={newTabName}
+                            onChange={(e) => setNewTabName(e.target.value)}
+                            className="rounded-md"
+                          />
+                          <Button asChild>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              Upload File
+                              <Upload className="h-4 w-4" />
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*,video/*,application/pdf"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) setNewTabFile(file);
+                                }}
+                              />
+                            </label>
+                          </Button>
+                          <Input
+                            type="url"
+                            placeholder="Or provide a link (e.g., YouTube)"
+                            value={newTabLink}
+                            onChange={(e) => setNewTabLink(e.target.value)}
+                          />
+                          {newTabFile && <p>Selected: {newTabFile.name}</p>}
+                          <Button
+                            onClick={handleAddTab}
+                            disabled={
+                              !newTabName || (!newTabFile && !newTabLink)
+                            }
+                            className="w-full"
+                          >
+                            Add Tab
+                          </Button>
+                          {error && <p className="text-red-500">{error}</p>}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                   <ManageTabsDialog
                     tabs={tabs}
                     setTabs={setTabs}
