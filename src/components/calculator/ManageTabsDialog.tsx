@@ -171,7 +171,13 @@ export function ManageTabsDialog({
                         onClick={() => handleMoveUp(tabs.indexOf(tab))}
                         disabled={
                           tabs.indexOf(tab) === 0 ||
-                          ["total-advantage"].includes(tab.id)
+                          ["total-advantage"].includes(tab.id) ||
+                          ["calculator"].includes(tab.id) ||
+                          ["annualContributionCalculatorForIUL"].includes(
+                            tab.id
+                          ) ||
+                          ["inflationCalculator"].includes(tab.id) ||
+                          ["cagrChart"].includes(tab.id)
                         }
                         aria-label={`Move ${tab.name} up`}
                       >
@@ -184,40 +190,51 @@ export function ManageTabsDialog({
                         onClick={() => handleMoveDown(tabs.indexOf(tab))}
                         disabled={
                           tabs.indexOf(tab) === tabs.length - 1 ||
-                          ["total-advantage"].includes(tab.id)
+                          ["total-advantage"].includes(tab.id) ||
+                          ["calculator"].includes(tab.id) ||
+                          ["annualContributionCalculatorForIUL"].includes(
+                            tab.id
+                          ) ||
+                          ["inflationCalculator"].includes(tab.id) ||
+                          ["cagrChart"].includes(tab.id)
                         }
                         aria-label={`Move ${tab.name} down`}
                       >
                         <ChevronDown className="h-4 w-4" />
                       </Button>
-                      {isAdmin && tab.id !== "total-advantage" && (
-                        <>
-                          <Button
-                            className="high-contrast:bg-white"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setEditTabId(tab.id);
-                              setNewTabName(tab.name);
-                              setNewTabFile(null);
-                              setNewTabLink(tab.link || "");
-                              setIsEditDialogOpen!(true);
-                            }}
-                            aria-label={`Edit ${tab.name}`}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            className="high-contrast:bg-white"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteTab(tab.id)}
-                            aria-label={`Delete ${tab.name}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
+                      {isAdmin &&
+                        tab.id !== "total-advantage" &&
+                        tab.id !== "calculator" &&
+                        tab.id !== "annualContributionCalculatorForIUL" &&
+                        tab.id !== "inflationCalculator" &&
+                        tab.id !== "cagrChart" && (
+                          <>
+                            <Button
+                              className="high-contrast:bg-white"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditTabId(tab.id);
+                                setNewTabName(tab.name);
+                                setNewTabFile(null);
+                                setNewTabLink(tab.link || "");
+                                setIsEditDialogOpen!(true);
+                              }}
+                              aria-label={`Edit ${tab.name}`}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              className="high-contrast:bg-white"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteTab(tab.id)}
+                              aria-label={`Delete ${tab.name}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
                     </div>
                   </motion.div>
                 ))}
