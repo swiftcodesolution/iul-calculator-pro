@@ -195,11 +195,21 @@ export default function AdminMediaPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>File Name</TableHead>
-                    <TableHead>Format</TableHead>
-                    <TableHead>Uploaded By</TableHead>
-                    <TableHead>Uploaded At</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      File Name
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Format
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Uploaded By
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Uploaded At
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

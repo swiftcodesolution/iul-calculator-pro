@@ -208,8 +208,12 @@ export default function StatsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Category</TableHead>
-                        <TableHead>File Count</TableHead>
+                        <TableHead className="high-contrast:text-black">
+                          Category
+                        </TableHead>
+                        <TableHead className="high-contrast:text-black">
+                          File Count
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -248,10 +252,18 @@ export default function StatsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>User Name</TableHead>
-                        <TableHead>User Email</TableHead>
-                        <TableHead>File Count</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead className="high-contrast:text-black">
+                          User Name
+                        </TableHead>
+                        <TableHead className="high-contrast:text-black">
+                          User Email
+                        </TableHead>
+                        <TableHead className="high-contrast:text-black">
+                          File Count
+                        </TableHead>
+                        <TableHead className="high-contrast:text-black">
+                          Actions
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -291,10 +303,18 @@ export default function StatsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>User Email</TableHead>
-                        <TableHead>Login Time</TableHead>
-                        <TableHead>Device Type</TableHead>
-                        <TableHead>Browser</TableHead>
+                        <TableHead className="high-contrast:text-black">
+                          User Email
+                        </TableHead>
+                        <TableHead className="high-contrast:text-black">
+                          Login Time
+                        </TableHead>
+                        <TableHead className="high-contrast:text-black">
+                          Device Type
+                        </TableHead>
+                        <TableHead className="high-contrast:text-black">
+                          Browser
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -324,10 +344,18 @@ export default function StatsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>File Name</TableHead>
-                        <TableHead>User Email</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Created At</TableHead>
+                        <TableHead className="high-contrast:text-black">
+                          File Name
+                        </TableHead>
+                        <TableHead className="high-contrast:text-black">
+                          User Email
+                        </TableHead>
+                        <TableHead className="high-contrast:text-black">
+                          Category
+                        </TableHead>
+                        <TableHead className="high-contrast:text-black">
+                          Created At
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

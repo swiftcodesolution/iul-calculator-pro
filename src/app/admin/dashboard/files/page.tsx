@@ -213,11 +213,11 @@ export default function AdminFilesSection() {
                     variants={fileItemVariant}
                     initial="hidden"
                     animate="visible"
-                    whileHover={{ backgroundColor: "#f3f4f6" }}
+                    // whileHover={{ backgroundColor: "#f3f4f6" }}
                     className={`p-2 border rounded cursor-pointer text-sm transition-colors ${
                       selectedFile?.id === file.id
-                        ? "bg-blue-100 border-blue-500"
-                        : "bg-white"
+                        ? "bg-blue-100 dark:bg-gray-800 border-blue-500"
+                        : ""
                     }`}
                     onClick={() => setSelectedFile(file)}
                   >

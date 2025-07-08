@@ -93,11 +93,21 @@ export default function SubscriptionsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-sm">User</TableHead>
-                    <TableHead className="text-sm">Email</TableHead>
-                    <TableHead className="text-sm">Plan Type</TableHead>
-                    <TableHead className="text-sm">Status</TableHead>
-                    <TableHead className="text-sm">End Date</TableHead>
+                    <TableHead className="text-sm high-contrast:text-black">
+                      User
+                    </TableHead>
+                    <TableHead className="text-sm high-contrast:text-black">
+                      Email
+                    </TableHead>
+                    <TableHead className="text-sm high-contrast:text-black">
+                      Plan Type
+                    </TableHead>
+                    <TableHead className="text-sm high-contrast:text-black">
+                      Status
+                    </TableHead>
+                    <TableHead className="text-sm high-contrast:text-black">
+                      End Date
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

@@ -124,19 +124,36 @@ export default function UsersPage() {
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Cell Phone</TableHead>
-                    <TableHead>Office Phone</TableHead>
-                    <TableHead>Total Files</TableHead>
-                    <TableHead>Actions</TableHead>
+                  <TableRow className="high-contrast:text-black">
+                    <TableHead className="high-contrast:text-black">
+                      Name
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Email
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Role
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Cell Phone
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Office Phone
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Total Files
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {sortedUsers.map((user) => (
-                    <TableRow key={user.id} className="hover:bg-gray-50">
+                    <TableRow
+                      key={user.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800 "
+                    >
                       <TableCell>
                         {`${user.firstName || ""} ${
                           user.lastName || ""

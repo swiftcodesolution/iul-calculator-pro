@@ -256,7 +256,10 @@ export default function AdminDashboard() {
                 <TableBody>
                   {subscriptions.length > 0 ? (
                     subscriptions.slice(0, 2).map((sub) => (
-                      <TableRow key={sub.userId} className="hover:bg-gray-50">
+                      <TableRow
+                        key={sub.userId}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
                         <TableCell className="text-sm ">
                           {sub.planType} ({sub.status})
                           <br />
@@ -297,7 +300,10 @@ export default function AdminDashboard() {
                 <TableBody>
                   {downloadResources.length > 0 ? (
                     downloadResources.slice(0, 3).map((resource) => (
-                      <TableRow key={resource.id} className="hover:bg-gray-50">
+                      <TableRow
+                        key={resource.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
                         <TableCell className="text-sm ">
                           {resource.fileName} ({resource.fileFormat})
                         </TableCell>
@@ -332,7 +338,10 @@ export default function AdminDashboard() {
                 <TableBody>
                   {trainingDocuments.length > 0 ? (
                     trainingDocuments.slice(0, 3).map((doc) => (
-                      <TableRow key={doc.id} className="hover:bg-gray-50">
+                      <TableRow
+                        key={doc.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
                         <TableCell className="text-sm ">
                           {doc.fileName} ({doc.fileFormat})
                         </TableCell>
@@ -367,7 +376,10 @@ export default function AdminDashboard() {
                 <TableBody>
                   {trainingVideos.length > 0 ? (
                     trainingVideos.slice(0, 3).map((video) => (
-                      <TableRow key={video.id} className="hover:bg-gray-50">
+                      <TableRow
+                        key={video.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
                         <TableCell className="text-sm ">
                           {video.fileName} ({video.fileFormat})
                         </TableCell>
@@ -402,7 +414,10 @@ export default function AdminDashboard() {
                 <TableBody>
                   {insuranceCompanies.length > 0 ? (
                     insuranceCompanies.slice(0, 2).map((company) => (
-                      <TableRow key={company.id} className="hover:bg-gray-50">
+                      <TableRow
+                        key={company.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
                         <TableCell className="text-sm ">
                           {company.name}
                           {company.website && (
@@ -450,7 +465,10 @@ export default function AdminDashboard() {
                 <TableBody>
                   {users.length > 0 ? (
                     users.slice(0, 2).map((user) => (
-                      <TableRow key={user.id} className="hover:bg-gray-50">
+                      <TableRow
+                        key={user.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
                         <TableCell className="text-sm ">
                           {user.firstName} {user.lastName} ({user.role})
                           <br />
@@ -497,7 +515,10 @@ export default function AdminDashboard() {
                         2
                       )
                       .map((file) => (
-                        <TableRow key={file.id} className="hover:bg-gray-50">
+                        <TableRow
+                          key={file.id}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
                           <TableCell className="text-sm ">
                             {file.fileName} ({file.fileFormat})
                           </TableCell>

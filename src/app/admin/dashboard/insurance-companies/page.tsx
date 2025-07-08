@@ -262,11 +262,21 @@ export default function AdminInsuranceCompaniesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Website</TableHead>
-                    <TableHead>Submitted By</TableHead>
-                    <TableHead>Submitted At</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Name
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Website
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Submitted By
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Submitted At
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -329,10 +339,18 @@ export default function AdminInsuranceCompaniesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Website</TableHead>
-                    <TableHead>Created At</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Name
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Website
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Created At
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

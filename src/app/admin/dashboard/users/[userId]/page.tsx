@@ -372,16 +372,22 @@ export default function UserDetailsPage({
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Sale Date</TableHead>
-                            <TableHead>Verified</TableHead>
-                            <TableHead>Verified At</TableHead>
+                            <TableHead className="high-contrast:text-black">
+                              Sale Date
+                            </TableHead>
+                            <TableHead className="high-contrast:text-black">
+                              Verified
+                            </TableHead>
+                            <TableHead className="high-contrast:text-black">
+                              Verified At
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {user.subscription.iulSales.map((sale) => (
                             <TableRow
                               key={sale.id}
-                              className="hover:bg-gray-50"
+                              className="hover:bg-gray-50 dark:hover:bg-gray-800"
                             >
                               <TableCell>
                                 {new Date(sale.saleDate).toLocaleDateString()}
@@ -436,16 +442,22 @@ export default function UserDetailsPage({
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>File Name</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Created At</TableHead>
+                            <TableHead className="high-contrast:text-black">
+                              File Name
+                            </TableHead>
+                            <TableHead className="high-contrast:text-black">
+                              Category
+                            </TableHead>
+                            <TableHead className="high-contrast:text-black">
+                              Created At
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {user.recentFiles.map((file) => (
                             <TableRow
                               key={file.id}
-                              className="hover:bg-gray-50"
+                              className="hover:bg-gray-50 dark:hover:bg-gray-800"
                             >
                               <TableCell>{file.fileName}</TableCell>
                               <TableCell>{file.category}</TableCell>
@@ -478,15 +490,26 @@ export default function UserDetailsPage({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Login Time</TableHead>
-                    <TableHead>Browser</TableHead>
-                    <TableHead>OS</TableHead>
-                    <TableHead>IP Address</TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Login Time
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Browser
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      OS
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      IP Address
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {user.sessionHistory.map((session) => (
-                    <TableRow key={session.id} className="hover:bg-gray-50">
+                    <TableRow
+                      key={session.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
                       <TableCell>
                         {new Date(session.loginAt).toLocaleString()}
                       </TableCell>
