@@ -66,7 +66,11 @@ export async function GET() {
     });
 
     // Map user IDs to user info (email, firstName, lastName)
-    const userIds = filesByUser.map((entry) => entry.userId);
+    // const userIds = filesByUser.map((entry) => entry.userId);
+    const userIds = filesByUser
+      .map((entry) => entry.userId)
+      .filter((id): id is string => id !== null);
+
     const users = await prisma.user.findMany({
       where: {
         id: { in: userIds },
@@ -137,7 +141,7 @@ export async function GET() {
       recentFiles: recentFiles.map((file) => ({
         id: file.id,
         fileName: file.fileName,
-        userEmail: file.user.email,
+        userEmail: file.user?.email,
         category: file.category,
         createdAt: file.createdAt.toISOString(),
       })),

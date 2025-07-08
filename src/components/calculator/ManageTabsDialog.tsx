@@ -190,6 +190,34 @@ export function ManageTabsDialog({
                       >
                         <ChevronDown className="h-4 w-4" />
                       </Button>
+                      {isAdmin && tab.id !== "total-advantage" && (
+                        <>
+                          <Button
+                            className="high-contrast:bg-white"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditTabId(tab.id);
+                              setNewTabName(tab.name);
+                              setNewTabFile(null);
+                              setNewTabLink(tab.link || "");
+                              setIsEditDialogOpen!(true);
+                            }}
+                            aria-label={`Edit ${tab.name}`}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            className="high-contrast:bg-white"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteTab(tab.id)}
+                            aria-label={`Delete ${tab.name}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </motion.div>
                 ))}
