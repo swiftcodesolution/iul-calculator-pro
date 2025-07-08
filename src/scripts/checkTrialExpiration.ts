@@ -32,7 +32,7 @@ async function checkTrialExpiration() {
       });
 
       await transporter.sendMail({
-        from: `"Insurance App" <${process.env.SMTP_USER}>`,
+        from: `"IUL Calculator Pro" <${process.env.SMTP_USER}>`,
         to: process.env.ADMIN_EMAIL, // Steve’s email
         subject: "User Account Suspended",
         text: `

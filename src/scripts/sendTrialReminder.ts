@@ -34,7 +34,7 @@ async function sendTrialReminder() {
 
       if (reminderDays.includes(daysUntilExpiration)) {
         await transporter.sendMail({
-          from: `"Insurance App" <${process.env.SMTP_USER}>`,
+          from: `"IUL Calculator Pro" <${process.env.SMTP_USER}>`,
           to: trial.user.email,
           subject: `IUL Trial Reminder: ${daysUntilExpiration} Days Left`,
           text: `

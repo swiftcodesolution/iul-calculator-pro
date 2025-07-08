@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     });
 
     await transporter.sendMail({
-      from: `"Insurance App" <${process.env.SMTP_USER}>`,
+      from: `"IUL Calculator Pro" <${process.env.SMTP_USER}>`,
       to: process.env.ADMIN_EMAIL, // Steve’s email
       subject: "IUL Sale Confirmation Request",
       text: `

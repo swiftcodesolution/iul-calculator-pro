@@ -4,6 +4,18 @@ import { authOptions } from "@/lib/auth";
 import Stripe from "stripe";
 import prisma from "@/lib/connect";
 import { randomUUID } from "crypto";
+import nodemailer from "nodemailer";
+
+// Configure Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -38,7 +50,7 @@ export async function POST(request: Request) {
   // If no trial token exists, create one for new users
   if (!trialToken) {
     try {
-      await prisma.subscription.create({
+      const subscription = await prisma.subscription.create({
         data: {
           userId: session.user.id,
           stripeCustomerId: "",
@@ -56,6 +68,56 @@ export async function POST(request: Request) {
           token: randomUUID(),
           expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
         },
+      });
+
+      // Send email to admin
+      await transporter.sendMail({
+        from: `"IUL Calculator Pro" <${process.env.SMTP_USER}>`,
+        to: process.env.ADMIN_EMAIL,
+        subject: "New Trial Subscription",
+        text: `
+          A user has activated a trial subscription.
+          
+          User ID: ${session.user.id}
+          Email: ${session.user.email}
+          Plan: ${plan}
+          Start Date: ${new Date().toLocaleString()}
+          Renewal Date: ${subscription.renewalDate?.toLocaleString()}
+        `,
+        html: `
+          <h2>New Trial Subscription</h2>
+          <p><strong>User ID:</strong> ${session.user.id}</p>
+          <p><strong>Email:</strong> ${session.user.email}</p>
+          <p><strong>Plan:</strong> ${plan}</p>
+          <p><strong>Start Date:</strong> ${new Date().toLocaleString()}</p>
+          <p><strong>Renewal Date:</strong> ${subscription.renewalDate?.toLocaleString()}</p>
+        `,
+      });
+
+      // Send confirmation email to user
+      await transporter.sendMail({
+        from: `"IUL Calculator Pro" <${process.env.SMTP_USER}>`,
+        to: session.user.email,
+        subject: "Welcome to Your Trial Subscription!",
+        text: `
+          Hi,
+
+          Your trial subscription has been activated!
+          
+          Plan: ${plan}
+          Start Date: ${new Date().toLocaleString()}
+          Renewal Date: ${subscription.renewalDate?.toLocaleString()}
+          
+          Thank you for choosing IUL Calculator Pro!
+        `,
+        html: `
+          <h2>Welcome to Your Trial Subscription!</h2>
+          <p>Your trial subscription has been activated!</p>
+          <p><strong>Plan:</strong> ${plan}</p>
+          <p><strong>Start Date:</strong> ${new Date().toLocaleString()}</p>
+          <p><strong>Renewal Date:</strong> ${subscription.renewalDate?.toLocaleString()}</p>
+          <p>Thank you for choosing IUL Calculator Pro!</p>
+        `,
       });
 
       return NextResponse.json(
@@ -101,6 +163,52 @@ export async function POST(request: Request) {
         },
       });
     }
+
+    // Send email to admin
+    await transporter.sendMail({
+      from: `"IUL Calculator Pro" <${process.env.SMTP_USER}>`,
+      to: process.env.ADMIN_EMAIL,
+      subject: "Trial Plan Updated",
+      text: `
+        A user has updated their trial subscription plan.
+        
+        User ID: ${session.user.id}
+        Email: ${session.user.email}
+        Plan: ${plan}
+        Updated At: ${new Date().toLocaleString()}
+      `,
+      html: `
+        <h2>Trial Plan Updated</h2>
+        <p><strong>User ID:</strong> ${session.user.id}</p>
+        <p><strong>Email:</strong> ${session.user.email}</p>
+        <p><strong>Plan:</strong> ${plan}</p>
+        <p><strong>Updated At:</strong> ${new Date().toLocaleString()}</p>
+      `,
+    });
+
+    // Send confirmation email to user
+    await transporter.sendMail({
+      from: `"IUL Calculator Pro" <${process.env.SMTP_USER}>`,
+      to: session.user.email,
+      subject: "Trial Plan Updated",
+      text: `
+        Hi,
+
+        Your trial subscription plan has been updated to ${plan}.
+        
+        Plan: ${plan}
+        Updated At: ${new Date().toLocaleString()}
+        
+        Thank you for using IUL Calculator Pro!
+      `,
+      html: `
+        <h2>Trial Plan Updated</h2>
+        <p>Your trial subscription plan has been updated to <strong>${plan}</strong>.</p>
+        <p><strong>Updated At:</strong> ${new Date().toLocaleString()}</p>
+        <p>Thank you for using IUL Calculator Pro!</p>
+      `,
+    });
+
     return NextResponse.json(
       { message: `Plan selected: ${plan}`, redirect: "/dashboard/home" },
       { status: 200 }
@@ -140,6 +248,9 @@ export async function POST(request: Request) {
       line_items: [{ price: planIds[plan], quantity: 1 }],
       metadata: { plan, userId: session.user.id },
     });
+
+    // Note: Emails for paid subscriptions are not sent here as the checkout session redirects to Stripe.
+    // Emails should be sent after successful payment (e.g., in a Stripe webhook handler).
 
     return NextResponse.json({ url: checkoutSession.url ?? "" });
   } catch (error) {
