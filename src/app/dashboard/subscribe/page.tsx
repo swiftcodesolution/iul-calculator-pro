@@ -46,7 +46,7 @@ export default function SubscriptionPage() {
     {
       type: "annual",
       name: "Annual",
-      price: "$1,000/year",
+      price: "$800/year",
       description: "Best value with 60-day trial",
       show: true,
     },

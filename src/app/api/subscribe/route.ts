@@ -69,8 +69,8 @@ export async function POST(request: Request) {
   }
 
   const planIds: Record<"monthly" | "annual", string> = {
-    monthly: "price_1N4P5BDjQSIXuLORTS2bD4Tq",
-    annual: "price_1Rg7qMDjQSIXuLOR5ztX8mdi",
+    monthly: "price_1RbOCrDjQSIXuLORKqGFNe0Y",
+    annual: "price_1RbR2ADjQSIXuLORFc9tlyfY",
   };
 
   const user = {
