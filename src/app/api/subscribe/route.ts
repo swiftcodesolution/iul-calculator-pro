@@ -75,9 +75,13 @@ export async function POST(request: Request) {
 
   const user = {
     id: session.user.id,
+    iulCalculatorProLead: "iul calculator pro lead",
     email: session.user.email!,
-    firstName: session.user.firstName ?? "",
-    lastName: session.user.lastName ?? "",
+    firstName: session.user.firstName ?? "first name",
+    lastName: session.user.lastName ?? "last name",
+    subscriptionPlan: "subscription plan",
+    stripeCustomerId: "stripe customer id",
+    stripeSubscriptionId: "stripe subscription id",
   };
   console.log("User data prepared:", user);
 

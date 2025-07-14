@@ -16,18 +16,20 @@ export async function syncToZohoCRM(
     console.log("Access token obtained, calling CRM API");
     const zohoApiBaseUrl =
       process.env.ZOHO_API_BASE_URL || "https://www.zohoapis.com";
-    const moduleName = "IUL_Calculator_Pro_Leads"; // Replace if incorrect
+    const moduleName = "IUL_Calculator_Pro_Leads";
     const response = await axios.post(
       `${zohoApiBaseUrl}/crm/v2/${moduleName}`,
       {
         data: [
           {
+            "IUL Calculator Pro Lead": "zoho test record",
             Email: user.email,
-            First_Name: user.firstName || "",
-            Last_Name: user.lastName || "",
+            First_Name: user.firstName || "firstname",
+            Last_Name: user.lastName || "lastname",
             Subscription_Plan: subscription.planType,
-            Stripe_Customer_ID: subscription.stripeCustomerId || "",
-            Stripe_Subscription_ID: subscription.stripeSubscriptionId || "",
+            Stripe_Customer_ID: subscription.stripeCustomerId || "customerId",
+            Stripe_Subscription_ID:
+              subscription.stripeSubscriptionId || "subscriptionId",
           },
         ],
       },
