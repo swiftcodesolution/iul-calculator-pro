@@ -42,9 +42,9 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const companies = await prisma.insuranceCompany.findMany({
-      include: {
-        createdByUser: { select: { email: true } },
-      },
+      // include: {
+      //   createdByUser: { select: { email: true } },
+      // },
     });
     return NextResponse.json(companies);
   } catch (error) {
