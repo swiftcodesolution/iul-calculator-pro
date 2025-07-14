@@ -9,7 +9,7 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
+// import { Loader2 } from "lucide-react";
 import { ClientFile } from "@/lib/types";
 import DialogContentRenderer from "./DialogContentRenderer";
 import { useRouter } from "next/navigation";
@@ -60,8 +60,8 @@ export default function ClientFilesSection({
   handleClientAction,
   handleDragStart,
   handleDrop,
-  isRefreshing,
-}: ClientFilesSectionProps) {
+}: // isRefreshing,
+ClientFilesSectionProps) {
   const router = useRouter();
   const { selectedFileId: contextFileId, setSelectedFileId } = useFileContext();
   const [dropWarningOpen, setDropWarningOpen] = useState(false);
@@ -87,7 +87,7 @@ export default function ClientFilesSection({
         >
           IUL Client Files
         </motion.h2>
-        <motion.div
+        {/* <motion.div
           whileHover={{ scale: 1.05, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
           whileTap={{ scale: 0.95 }}
           className="w-min"
@@ -108,7 +108,7 @@ export default function ClientFilesSection({
               "Get Latest"
             )}
           </Button>
-        </motion.div>
+        </motion.div> */}
         <div className="grid grid-cols-4 gap-2 flex-1">
           {[
             "Pro Sample Files",
