@@ -131,7 +131,7 @@ export default function CompanyInfoSection({
   };
 
   return (
-    <Card className="flex-1 p-2 gap-0 mb-2">
+    <Card className="flex-1 p-2 pt-18 gap-0 mb-2">
       <CardContent className="p-0 space-y-2">
         {(propError || submissionError) && (
           <div className="text-red-500 text-sm">

@@ -202,7 +202,7 @@ export default function AdminFilesSection() {
         {/* Section 1: Your Sample Files */}
         <Card>
           <CardHeader>
-            <CardTitle>Your Sample Files</CardTitle>
+            <CardTitle>Pro Sample Files</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col space-y-4">
             <div className="flex-1 overflow-y-auto border rounded-md p-2 space-y-1">
