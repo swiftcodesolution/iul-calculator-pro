@@ -92,6 +92,7 @@ model ClientFile {
   fields                    Json?  
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
+  sortOrder                 Int?
 }
 
 model DownloadResources {

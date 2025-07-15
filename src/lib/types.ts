@@ -69,6 +69,7 @@ export type ClientFields = {
 };
 
 export type ClientFile = {
+  sortOrder: number;
   fields: ClientFields;
   id: string;
   userId: string;

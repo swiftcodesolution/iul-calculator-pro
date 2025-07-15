@@ -26,6 +26,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ChevronUp, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 
 const fileItemVariant: Variants = {
   hidden: { opacity: 0, scale: 0.95, y: 10 },
@@ -66,7 +68,9 @@ export default function AdminFilesSection() {
         if (response.ok) {
           const files: ClientFile[] = await response.json();
           setAdminFiles(
-            files.filter((file) => file.userId === session.user.id)
+            files
+              .filter((file) => file.userId === session.user.id)
+              .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)) // Sort by sortOrder
           );
           setUserFiles(files.filter((file) => file.userId !== session.user.id));
           setFilteredUserFiles(
@@ -74,9 +78,11 @@ export default function AdminFilesSection() {
           );
         } else {
           console.error("Failed to fetch files:", response.statusText);
+          toast.error("Failed to fetch files");
         }
       } catch (error) {
         console.error("Error fetching files:", error);
+        toast.error("Failed to fetch files");
       }
     }
     fetchFiles();
@@ -107,6 +113,7 @@ export default function AdminFilesSection() {
   ): Promise<{ fileId?: string } | void> => {
     if (status !== "authenticated" || !session?.user?.id) {
       console.error("Unauthenticated user");
+      toast.error("You must be logged in to perform this action");
       return;
     }
 
@@ -117,18 +124,24 @@ export default function AdminFilesSection() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             fileName: data.name,
-            category: "Pro Sample Files", // Set category for admin-created files
+            category: "Pro Sample Files",
           }),
         });
         if (response.ok) {
           const newFile = await response.json();
-          setAdminFiles((prev) => [...prev, newFile]);
+          setAdminFiles((prev) =>
+            [...prev, newFile].sort(
+              (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)
+            )
+          );
           setSelectedFile(newFile);
           setSelectedFileId(newFile.id);
           setNewClientName("");
           setDialogAction(null);
           router.push(`/admin/dashboard/files/calculator/${newFile.id}`);
           return { fileId: newFile.id };
+        } else {
+          throw new Error("Failed to create file");
         }
       } else if (action === "copy" && data?.id && data?.name) {
         const fileToCopy = adminFiles.find((file) => file.id === data.id);
@@ -138,17 +151,23 @@ export default function AdminFilesSection() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               fileName: data.name,
-              category: "Pro Sample Files", // Ensure copy is also Pro Sample Files
+              category: "Pro Sample Files",
             }),
           });
           if (response.ok) {
             const newFile = await response.json();
-            setAdminFiles((prev) => [...prev, newFile]);
+            setAdminFiles((prev) =>
+              [...prev, newFile].sort(
+                (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)
+              )
+            );
             setSelectedFile(newFile);
             setSelectedFileId(newFile.id);
             setNewClientName("");
             setDialogAction(null);
             return { fileId: newFile.id };
+          } else {
+            throw new Error("Failed to copy file");
           }
         }
       } else if (action === "rename" && data?.id && data?.name) {
@@ -159,28 +178,97 @@ export default function AdminFilesSection() {
         });
         if (response.ok) {
           setAdminFiles((prev) =>
-            prev.map((file) =>
-              file.id === data.id ? { ...file, fileName: data.name! } : file
-            )
+            prev
+              .map((file) =>
+                file.id === data.id ? { ...file, fileName: data.name! } : file
+              )
+              .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
           );
           setSelectedFile(null);
           clearSelectedFileId();
           setNewClientName("");
           setDialogAction(null);
+        } else {
+          throw new Error("Failed to rename file");
         }
       } else if (action === "delete" && data?.id) {
         const response = await fetch(`/api/files/${data.id}`, {
           method: "DELETE",
         });
         if (response.ok) {
-          setAdminFiles((prev) => prev.filter((file) => file.id !== data.id));
+          setAdminFiles((prev) =>
+            prev
+              .filter((file) => file.id !== data.id)
+              .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+          );
           setSelectedFile(null);
           clearSelectedFileId();
           setDialogAction(null);
+        } else {
+          throw new Error("Failed to delete file");
         }
       }
     } catch (error) {
       console.error(`Failed to ${action} file:`, error);
+      toast.error(`Failed to ${action} file`);
+    }
+  };
+
+  const handleMoveUp = async (index: number) => {
+    if (index === 0) return; // Can't move up if already at the top
+    const newAdminFiles = [...adminFiles];
+    [newAdminFiles[index - 1], newAdminFiles[index]] = [
+      newAdminFiles[index],
+      newAdminFiles[index - 1],
+    ];
+    setAdminFiles(newAdminFiles);
+
+    // Update the order on the server
+    try {
+      const response = await fetch("/api/files/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileIds: newAdminFiles.map((file) => file.id),
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to reorder files");
+      }
+    } catch (error) {
+      console.error("Error updating file order:", error);
+      toast.error("Failed to reorder files");
+      // Optionally revert the state if the server update fails
+      setAdminFiles(adminFiles);
+    }
+  };
+
+  const handleMoveDown = async (index: number) => {
+    if (index === adminFiles.length - 1) return; // Can't move down if already at the bottom
+    const newAdminFiles = [...adminFiles];
+    [newAdminFiles[index], newAdminFiles[index + 1]] = [
+      newAdminFiles[index + 1],
+      newAdminFiles[index],
+    ];
+    setAdminFiles(newAdminFiles);
+
+    // Update the order on the server
+    try {
+      const response = await fetch("/api/files/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileIds: newAdminFiles.map((file) => file.id),
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to reorder files");
+      }
+    } catch (error) {
+      console.error("Error updating file order:", error);
+      toast.error("Failed to reorder files");
+      // Revert the state if the server update fails
+      setAdminFiles(adminFiles);
     }
   };
 
@@ -207,21 +295,41 @@ export default function AdminFilesSection() {
           <CardContent className="flex flex-col space-y-4">
             <div className="flex-1 overflow-y-auto border rounded-md p-2 space-y-1">
               {adminFiles.length > 0 ? (
-                adminFiles.map((file) => (
+                adminFiles.map((file, index) => (
                   <motion.div
                     key={file.id}
                     variants={fileItemVariant}
                     initial="hidden"
                     animate="visible"
-                    // whileHover={{ backgroundColor: "#f3f4f6" }}
-                    className={`p-2 border rounded cursor-pointer text-sm transition-colors ${
+                    className={`flex items-center p-2 border rounded cursor-pointer text-sm transition-colors ${
                       selectedFile?.id === file.id
                         ? "bg-blue-100 dark:bg-gray-800 border-blue-500"
                         : ""
                     }`}
                     onClick={() => setSelectedFile(file)}
+                    aria-selected={selectedFile?.id === file.id}
                   >
-                    {file.fileName}
+                    <div className="flex gap-2 mr-6">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleMoveUp(index)}
+                        disabled={index === 0}
+                        aria-label={`Move ${file.fileName} up`}
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleMoveDown(index)}
+                        disabled={index === adminFiles.length - 1}
+                        aria-label={`Move ${file.fileName} down`}
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <span className="flex-1">{file.fileName}</span>
                   </motion.div>
                 ))
               ) : (
