@@ -292,7 +292,7 @@ export default function AdminFilesSection() {
           <CardHeader>
             <CardTitle>Pro Sample Files</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col space-y-4">
+          <CardContent className="flex flex-col space-y-4 h-[500px]">
             <div className="flex-1 overflow-y-auto border rounded-md p-2 space-y-1">
               {adminFiles.length > 0 ? (
                 adminFiles.map((file, index) => (

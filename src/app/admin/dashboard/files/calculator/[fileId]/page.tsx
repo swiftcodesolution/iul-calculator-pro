@@ -4,13 +4,11 @@ import { use, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { InputParameters } from "@/components/calculator/InputParameters";
 import { ComparisonTable } from "@/components/calculator/ComparisonTable";
-// import { CompanyInfo } from "@/components/calculator/CompanyInfo";
 import TabManager from "@/components/calculator/TabManager";
 import { useColumnHighlight } from "@/hooks/useColumnHighlight";
 import { TotalAdvantage, ClientFile } from "@/lib/types";
 import { useTableStore } from "@/lib/store";
 import { debounce } from "@/lib/utils";
-import { notFound } from "next/navigation";
 
 type Params = Promise<{ fileId: string }>;
 
@@ -54,8 +52,18 @@ export default function CalculatorPage({ params }: { params: Params }) {
     handleCellClick,
   } = useColumnHighlight();
 
-  // Fetch file data
   useEffect(() => {
+    // Reset store on mount to prevent stale data
+    clearEverythingForFreshFile();
+    console.log("Store state after mount:", {
+      boxesData,
+      tables,
+      startingBalance,
+      annualContributions,
+      annualEmployerMatch,
+      yearsRunOutOfMoney,
+    });
+
     if (status !== "authenticated" || !session?.user?.id || !fileId) {
       setError("Unauthorized or invalid file ID");
       setLoading(false);
@@ -68,48 +76,71 @@ export default function CalculatorPage({ params }: { params: Params }) {
         if (!response.ok) {
           if (response.status === 400 || response.status === 404) {
             clearEverythingForFreshFile();
-            setError("File not found");
-            notFound();
+            setBoxesData({
+              currentAge: "",
+              stopSavingAge: "",
+              retirementAge: "",
+              workingTaxRate: "",
+              retirementTaxRate: "",
+              inflationRate: "",
+              currentPlanFees: "",
+              currentPlanROR: "",
+              taxFreePlanROR: "",
+            });
+            setTables([]);
+            setStartingBalance("");
+            setAnnualContributions("");
+            setAnnualEmployerMatch("");
+            setYearsRunOutOfMoney("");
+            setError("File not found, starting with empty fields");
+            return;
           } else {
             setError("Failed to fetch file");
+            return;
           }
-          return;
         }
         const data: ClientFile = await response.json();
-        console.log("Fetched data:", data); // Debug
+        console.log("Fetched data:", data);
 
-        // setBoxesData(data.boxesData || {});
         setBoxesData(
           data.boxesData && Object.keys(data.boxesData).length > 0
             ? data.boxesData
-            : {}
+            : {
+                currentAge: "",
+                stopSavingAge: "",
+                retirementAge: "",
+                workingTaxRate: "",
+                retirementTaxRate: "",
+                inflationRate: "",
+                currentPlanFees: "",
+                currentPlanROR: "",
+                taxFreePlanROR: "",
+              }
         );
         setTables(data.tablesData?.tables || []);
-
-        // Only update if fetched data is valid (not 0 or undefined)
         setStartingBalance(
           data.tablesData?.startingBalance !== undefined &&
-            data.tablesData?.startingBalance !== 0
+            data.tablesData?.startingBalance !== ""
             ? data.tablesData.startingBalance
-            : startingBalance // Preserve existing value
+            : ""
         );
         setAnnualContributions(
           data.tablesData?.annualContributions !== undefined &&
-            data.tablesData?.annualContributions !== 0
+            data.tablesData?.annualContributions !== ""
             ? data.tablesData.annualContributions
-            : annualContributions
+            : ""
         );
         setAnnualEmployerMatch(
           data.tablesData?.annualEmployerMatch !== undefined &&
-            data.tablesData?.annualEmployerMatch !== 0
+            data.tablesData?.annualEmployerMatch !== ""
             ? data.tablesData.annualEmployerMatch
-            : annualEmployerMatch
+            : ""
         );
         setYearsRunOutOfMoney(
           data.tablesData?.yearsRunOutOfMoney !== undefined &&
-            data.tablesData?.yearsRunOutOfMoney !== 0
+            data.tablesData?.yearsRunOutOfMoney !== ""
             ? data.tablesData.yearsRunOutOfMoney
-            : yearsRunOutOfMoney
+            : ""
         );
       } catch (err) {
         console.error("Fetch error:", err);
@@ -132,7 +163,6 @@ export default function CalculatorPage({ params }: { params: Params }) {
     setYearsRunOutOfMoney,
   ]);
 
-  // Debounced save
   const saveChanges = debounce(
     async () => {
       if (!fileId || status !== "authenticated" || !session?.user?.id) return;
@@ -152,7 +182,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
           }),
         });
         if (!response.ok) {
-          console.error("Save failed:", response.status); // Debug
+          console.error("Save failed:", response.status);
           setError("Failed to save changes");
         } else {
           console.log("Saved data:", {
@@ -164,10 +194,10 @@ export default function CalculatorPage({ params }: { params: Params }) {
               annualEmployerMatch,
               yearsRunOutOfMoney,
             },
-          }); // Debug
+          });
         }
       } catch (err) {
-        console.error("Save error:", err); // Debug
+        console.error("Save error:", err);
         setError("Error saving changes");
       }
     },
@@ -175,7 +205,6 @@ export default function CalculatorPage({ params }: { params: Params }) {
     { leading: false, trailing: true }
   );
 
-  // Save on state changes
   useEffect(() => {
     saveChanges();
     return () => saveChanges.cancel();
@@ -196,7 +225,6 @@ export default function CalculatorPage({ params }: { params: Params }) {
     <div className="h-[90vh] grid grid-cols-2 gap-4">
       <div className="flex flex-col gap-4 relative">
         <InputParameters data={boxesData} onUpdate={setBoxesData} />
-
         <ComparisonTable
           currentAge={Number(boxesData.currentAge) || 0}
           boxesData={boxesData}
@@ -213,8 +241,6 @@ export default function CalculatorPage({ params }: { params: Params }) {
         />
       </div>
       <div className="flex flex-col gap-4 relative">
-        {/* <CompanyInfo /> */}
-
         <TabManager
           activeTab={activeTab}
           setActiveTab={setActiveTab}
