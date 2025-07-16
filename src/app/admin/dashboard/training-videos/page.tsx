@@ -69,9 +69,9 @@ const ReorderableRow = ({
     <TableRow>
       <TableCell>
         <div className="flex items-center">
-          <div className="flex flex-col mr-2">
+          <div className="flex gap-2 mr-2">
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
               onClick={() => moveRowUp(index)}
               disabled={loading || index === 0}
@@ -79,7 +79,7 @@ const ReorderableRow = ({
               <ChevronUp className="h-4 w-4" />
             </Button>
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
               onClick={() => moveRowDown(index)}
               disabled={loading || index === totalRows - 1}

@@ -15,13 +15,13 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 interface Resource {
-  link: string;
   id: string;
   fileName: string;
   filePath: string;
-  fileFormat: string;
+  link?: string | null;
   createdAt: string;
-  order: number; // Added to store the order from the database
+  order: number;
+  uploadedBy: string;
 }
 
 export default function TrainingContentPage() {
@@ -36,7 +36,6 @@ export default function TrainingContentPage() {
       const response = await fetch("/api/training-videos");
       if (!response.ok) throw new Error("Failed to fetch resources");
       const data = await response.json();
-      // Sort videos by order field
       const sortedData = data.sort(
         (a: Resource, b: Resource) => a.order - b.order
       );
@@ -56,7 +55,6 @@ export default function TrainingContentPage() {
       const response = await fetch("/api/training-documents");
       if (!response.ok) throw new Error("Failed to fetch resources");
       const data = await response.json();
-      // Sort documents by order field
       const sortedData = data.sort(
         (a: Resource, b: Resource) => a.order - b.order
       );
@@ -92,7 +90,10 @@ export default function TrainingContentPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={fetchTrainingVideos}
+          onClick={() => {
+            fetchTrainingVideos();
+            fetchTrainingDocuments();
+          }}
           disabled={loading}
         >
           <RefreshCw className="h-4 w-4 mr-2" />
@@ -113,8 +114,6 @@ export default function TrainingContentPage() {
                   <TableHeader className="sticky top-0 bg-white dark:bg-gray-900 high-contrast:bg-white z-10">
                     <TableRow>
                       <TableHead>File Name</TableHead>
-                      <TableHead>File Link</TableHead>
-                      <TableHead>Format</TableHead>
                       <TableHead>Uploaded At</TableHead>
                       <TableHead>Action</TableHead>
                     </TableRow>
@@ -122,9 +121,15 @@ export default function TrainingContentPage() {
                   <TableBody>
                     {videos.map((resource) => (
                       <TableRow key={resource.id}>
-                        <TableCell>{resource.fileName}</TableCell>
-                        <TableCell>{resource.link}</TableCell>
-                        <TableCell>{resource.fileFormat}</TableCell>
+                        <TableCell>
+                          <a
+                            href={resource.link || resource.filePath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {resource.fileName}
+                          </a>
+                        </TableCell>
                         <TableCell>
                           {new Date(resource.createdAt).toLocaleString()}
                         </TableCell>
@@ -186,7 +191,6 @@ export default function TrainingContentPage() {
                   <TableHeader className="sticky top-0 bg-white dark:bg-gray-900 high-contrast:bg-white z-10">
                     <TableRow>
                       <TableHead>File Name</TableHead>
-                      <TableHead>Format</TableHead>
                       <TableHead>Uploaded At</TableHead>
                       <TableHead>Action</TableHead>
                     </TableRow>
@@ -194,8 +198,15 @@ export default function TrainingContentPage() {
                   <TableBody>
                     {documents.map((resource) => (
                       <TableRow key={resource.id}>
-                        <TableCell>{resource.fileName}</TableCell>
-                        <TableCell>{resource.fileFormat}</TableCell>
+                        <TableCell>
+                          <a
+                            href={resource.filePath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {resource.fileName}
+                          </a>
+                        </TableCell>
                         <TableCell>
                           {new Date(resource.createdAt).toLocaleString()}
                         </TableCell>

@@ -134,7 +134,7 @@ model TrainingDocuments {
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
 
-  sortOrder                 Int?
+  order                     Int      @default(0)
 }
 
 model TabContent {
