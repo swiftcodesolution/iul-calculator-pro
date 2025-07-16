@@ -15,12 +15,18 @@ export async function POST(request: Request) {
   const file = formData.get("file") as File | null;
   const fileName = formData.get("fileName") as string;
   const link = formData.get("link") as string | null;
+  const uploadedBy = formData.get("uploadedBy") as string;
+  const order = parseInt(formData.get("order") as string, 10); // Parse order as number
 
-  if (!file && (!link || link.trim() === "")) {
+  if (!fileName || (!file && (!link || link.trim() === ""))) {
     return NextResponse.json(
-      { error: "Either a file or a link is required" },
+      { error: "Video title and either a file or a link are required" },
       { status: 400 }
     );
+  }
+
+  if (isNaN(order)) {
+    return NextResponse.json({ error: "Invalid order value" }, { status: 400 });
   }
 
   try {
@@ -37,23 +43,14 @@ export async function POST(request: Request) {
       fileFormat = file.name.split(".").pop() || null;
     }
 
-    // Get the highest order value to append new video at the end
-    const maxOrder = await prisma.trainingVideos
-      .findMany({
-        select: { order: true },
-        orderBy: { order: "desc" },
-        take: 1,
-      })
-      .then((videos) => videos[0]?.order || 0);
-
     const resource = await prisma.trainingVideos.create({
       data: {
         fileName,
         filePath,
         fileFormat,
         link,
-        uploadedBy: session.user.id,
-        order: maxOrder + 1,
+        uploadedBy,
+        order,
       },
     });
 
@@ -70,10 +67,7 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const resources = await prisma.trainingVideos.findMany({
-      include: {
-        uploadedByUser: { select: { email: true } },
-      },
-      orderBy: { order: "asc" }, // Order by order field
+      orderBy: { order: "asc" },
     });
     return NextResponse.json(resources);
   } catch (error) {

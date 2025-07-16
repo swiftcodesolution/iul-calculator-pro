@@ -21,6 +21,7 @@ interface Resource {
   filePath: string;
   fileFormat: string;
   createdAt: string;
+  order: number; // Added to store the order from the database
 }
 
 export default function TrainingContentPage() {
@@ -35,7 +36,11 @@ export default function TrainingContentPage() {
       const response = await fetch("/api/training-videos");
       if (!response.ok) throw new Error("Failed to fetch resources");
       const data = await response.json();
-      setVideos(data);
+      // Sort videos by order field
+      const sortedData = data.sort(
+        (a: Resource, b: Resource) => a.order - b.order
+      );
+      setVideos(sortedData);
       setError(null);
     } catch (err) {
       setError("Error loading resources");
@@ -51,7 +56,11 @@ export default function TrainingContentPage() {
       const response = await fetch("/api/training-documents");
       if (!response.ok) throw new Error("Failed to fetch resources");
       const data = await response.json();
-      setDocuments(data);
+      // Sort documents by order field
+      const sortedData = data.sort(
+        (a: Resource, b: Resource) => a.order - b.order
+      );
+      setDocuments(sortedData);
       setError(null);
     } catch (err) {
       setError("Error loading resources");
@@ -101,7 +110,7 @@ export default function TrainingContentPage() {
             ) : videos.length > 0 ? (
               <div className="h-full overflow-y-auto">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-white z-10">
+                  <TableHeader className="sticky top-0 bg-white dark:bg-gray-900 high-contrast:bg-white z-10">
                     <TableRow>
                       <TableHead>File Name</TableHead>
                       <TableHead>File Link</TableHead>
@@ -174,7 +183,7 @@ export default function TrainingContentPage() {
             ) : documents.length > 0 ? (
               <div className="h-full overflow-y-auto">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-white z-10">
+                  <TableHeader className="sticky top-0 bg-white dark:bg-gray-900 high-contrast:bg-white z-10">
                     <TableRow>
                       <TableHead>File Name</TableHead>
                       <TableHead>Format</TableHead>

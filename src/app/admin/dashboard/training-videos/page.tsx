@@ -24,30 +24,28 @@ import {
   Pencil,
   Eye,
   Download,
-  GripVertical,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { DndProvider, useDrag, useDrop } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
-import type { Identifier, XYCoord } from "dnd-core";
 
 interface Resource {
   id: string;
   fileName: string;
-  filePath?: string | null; // Optional to match Prisma schema
-  fileFormat?: string | null; // Optional to match Prisma schema
-  link?: string | null; // Optional to match Prisma schema
+  filePath?: string | null;
+  link?: string | null;
   createdAt: string;
   order: number;
+  uploadedBy: string;
 }
 
-const ItemType = "VIDEO_ROW";
-
-interface DraggableRowProps {
+interface ReorderableRowProps {
   resource: Resource;
   index: number;
-  moveRow: (dragIndex: number, hoverIndex: number) => void;
+  moveRowUp: (index: number) => void;
+  moveRowDown: (index: number) => void;
+  totalRows: number;
   handleView: (url: string) => void;
   handleDownload: (url: string, fileName: string) => void;
   handleEdit: (id: string, fileName: string) => void;
@@ -55,65 +53,40 @@ interface DraggableRowProps {
   loading: boolean;
 }
 
-const DraggableRow = ({
+const ReorderableRow = ({
   resource,
   index,
-  moveRow,
+  moveRowUp,
+  moveRowDown,
+  totalRows,
   handleView,
   handleDownload,
   handleEdit,
   handleDelete,
   loading,
-}: DraggableRowProps) => {
-  const ref = useRef<HTMLTableRowElement>(null);
-
-  const [{ isDragging }, drag] = useDrag<
-    { index: number },
-    void,
-    { isDragging: boolean }
-  >({
-    type: ItemType,
-    item: { index },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-  });
-
-  const [, drop] = useDrop<
-    { index: number },
-    void,
-    { handlerId: Identifier | null }
-  >({
-    accept: ItemType,
-    hover(item: { index: number }, monitor) {
-      if (!ref.current) return;
-
-      const dragIndex = item.index;
-      const hoverIndex = index;
-
-      if (dragIndex === hoverIndex) return;
-
-      const hoverBoundingRect = ref.current.getBoundingClientRect();
-      const hoverMiddleY =
-        (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-      const clientOffset = monitor.getClientOffset();
-      const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
-
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
-
-      moveRow(dragIndex, hoverIndex);
-      item.index = hoverIndex;
-    },
-  });
-
-  drag(drop(ref));
-
+}: ReorderableRowProps) => {
   return (
-    <TableRow ref={ref} className={isDragging ? "opacity-50" : ""}>
+    <TableRow>
       <TableCell>
         <div className="flex items-center">
-          <GripVertical className="h-4 w-4 mr-2 cursor-move" />
+          <div className="flex flex-col mr-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => moveRowUp(index)}
+              disabled={loading || index === 0}
+            >
+              <ChevronUp className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => moveRowDown(index)}
+              disabled={loading || index === totalRows - 1}
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </div>
           {resource.filePath ? (
             <a
               href={resource.filePath}
@@ -131,8 +104,6 @@ const DraggableRow = ({
           )}
         </div>
       </TableCell>
-      <TableCell>{resource.fileFormat || "N/A"}</TableCell>
-      <TableCell>Admin</TableCell>
       <TableCell>{new Date(resource.createdAt).toLocaleString()}</TableCell>
       <TableCell>
         <div className="flex gap-2">
@@ -203,7 +174,10 @@ export default function AdminTrainingVideosPage() {
       const response = await fetch("/api/training-videos");
       if (!response.ok) throw new Error("Failed to fetch resources");
       const data = await response.json();
-      setResources(data);
+      const sortedData = data.sort(
+        (a: Resource, b: Resource) => a.order - b.order
+      );
+      setResources(sortedData);
       setError(null);
     } catch (err) {
       setError("Error loading resources");
@@ -227,6 +201,14 @@ export default function AdminTrainingVideosPage() {
     formData.append("fileName", fileName);
     if (file) formData.append("file", file);
     if (link) formData.append("link", link);
+    formData.append("uploadedBy", session?.user?.firstName || "Unknown");
+    formData.append(
+      "order",
+      (resources.length > 0
+        ? Math.max(...resources.map((r) => r.order)) + 1
+        : 0
+      ).toString()
+    ); // Convert to string
 
     try {
       const response = await fetch("/api/training-videos", {
@@ -235,7 +217,9 @@ export default function AdminTrainingVideosPage() {
       });
       if (!response.ok) throw new Error("Failed to upload resource");
       const newResource = await response.json();
-      setResources([...resources, newResource]);
+      setResources(
+        [...resources, newResource].sort((a, b) => a.order - b.order)
+      );
       setFile(null);
       setFileName("");
       setLink("");
@@ -271,9 +255,11 @@ export default function AdminTrainingVideosPage() {
       if (!response.ok) throw new Error("Failed to rename resource");
       const updatedResource = await response.json();
       setResources(
-        resources.map((resource) =>
-          resource.id === editId ? updatedResource : resource
-        )
+        resources
+          .map((resource) =>
+            resource.id === editId ? updatedResource : resource
+          )
+          .sort((a, b) => a.order - b.order)
       );
       setEditId(null);
       setEditFileName("");
@@ -301,7 +287,11 @@ export default function AdminTrainingVideosPage() {
         body: JSON.stringify({ id }),
       });
       if (!response.ok) throw new Error("Failed to delete resource");
-      setResources(resources.filter((resource) => resource.id !== id));
+      setResources(
+        resources
+          .filter((resource) => resource.id !== id)
+          .sort((a, b) => a.order - b.order)
+      );
       setError(null);
     } catch (err) {
       setError("Error deleting resource");
@@ -311,12 +301,14 @@ export default function AdminTrainingVideosPage() {
     }
   };
 
-  const moveRow = async (dragIndex: number, hoverIndex: number) => {
-    const draggedResource = resources[dragIndex];
+  const moveRowUp = async (index: number) => {
+    if (index === 0) return;
     const newResources = [...resources];
-    newResources.splice(dragIndex, 1);
-    newResources.splice(hoverIndex, 0, draggedResource);
-    setResources(newResources);
+    [newResources[index - 1].order, newResources[index].order] = [
+      newResources[index].order,
+      newResources[index - 1].order,
+    ];
+    setResources(newResources.sort((a, b) => a.order - b.order));
 
     const orderedIds = newResources.map((resource) => resource.id);
     try {
@@ -329,7 +321,31 @@ export default function AdminTrainingVideosPage() {
     } catch (err) {
       setError("Error updating order");
       console.error(err);
-      fetchResources(); // Revert on error
+      fetchResources();
+    }
+  };
+
+  const moveRowDown = async (index: number) => {
+    if (index === resources.length - 1) return;
+    const newResources = [...resources];
+    [newResources[index + 1].order, newResources[index].order] = [
+      newResources[index].order,
+      newResources[index + 1].order,
+    ];
+    setResources(newResources.sort((a, b) => a.order - b.order));
+
+    const orderedIds = newResources.map((resource) => resource.id);
+    try {
+      const response = await fetch("/api/training-videos", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderedIds }),
+      });
+      if (!response.ok) throw new Error("Failed to update order");
+    } catch (err) {
+      setError("Error updating order");
+      console.error(err);
+      fetchResources();
     }
   };
 
@@ -338,130 +354,124 @@ export default function AdminTrainingVideosPage() {
   }
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="max-h-screen overflow-y-scroll">
-        <main className="p-4">
-          <h1 className="text-3xl font-bold mb-4 flex items-center">
-            <Upload className="mr-2" /> Manage Training Videos
-          </h1>
-          <Card className="mb-4">
-            <CardHeader>
-              <CardTitle>Upload New Training Video</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-4">
-                <Input
-                  type="text"
-                  placeholder="Video Title"
-                  value={fileName}
-                  onChange={(e) => setFileName(e.target.value)}
-                />
-                <Input
-                  type="file"
-                  accept="video/*"
-                  onChange={(e) => setFile(e.target.files?.[0] || null)}
-                />
-                <Input
-                  type="url"
-                  placeholder="Or provide a video link (e.g. YouTube)"
-                  value={link}
-                  onChange={(e) => setLink(e.target.value)}
-                />
-                <Button onClick={handleUpload} disabled={loading}>
-                  {loading ? "Uploading..." : "Upload Video"}
-                </Button>
-                {error && <p className="text-red-500">{error}</p>}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Training Videos List</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Dialog open={open && !!editId} onOpenChange={setOpen}>
-                {resources.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="high-contrast:text-black">
-                          File Name
-                        </TableHead>
-                        <TableHead className="high-contrast:text-black">
-                          Format
-                        </TableHead>
-                        <TableHead className="high-contrast:text-black">
-                          Uploaded By
-                        </TableHead>
-                        <TableHead className="high-contrast:text-black">
-                          Uploaded At
-                        </TableHead>
-                        <TableHead className="high-contrast:text-black">
-                          Actions
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {resources.map((resource, index) => (
-                        <DraggableRow
-                          key={resource.id}
-                          resource={resource}
-                          index={index}
-                          moveRow={moveRow}
-                          handleView={(url) => window.open(url, "_blank")}
-                          handleDownload={(url, fileName) => {
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = fileName;
-                            a.click();
-                          }}
-                          handleEdit={(id, fileName) => {
-                            setEditId(id);
-                            setEditFileName(fileName);
-                            setOpen(true);
-                          }}
-                          handleDelete={handleDelete}
-                          loading={loading}
-                        />
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <p>No resources available.</p>
-                )}
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Rename Resource</DialogTitle>
-                  </DialogHeader>
-                  <div className="flex flex-col gap-4">
-                    <Input
-                      value={editFileName}
-                      onChange={(e) => setEditFileName(e.target.value)}
-                      placeholder="New resource name"
-                    />
-                    <div className="flex gap-2">
-                      <Button onClick={handleRename} disabled={loading}>
-                        {loading ? "Saving..." : "Save"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setEditId(null);
-                          setEditFileName("");
-                          setOpen(false);
+    <div className="max-h-screen overflow-y-scroll">
+      <main className="p-4">
+        <h1 className="text-3xl font-bold mb-4 flex items-center">
+          <Upload className="mr-2" /> Manage Training Videos
+        </h1>
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle>Upload New Training Video</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-4">
+              <Input
+                type="text"
+                placeholder="Video Title"
+                value={fileName}
+                onChange={(e) => setFileName(e.target.value)}
+              />
+              <Input
+                type="file"
+                accept="video/*"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+              <Input
+                type="url"
+                placeholder="Or provide a video link (e.g. YouTube)"
+                value={link}
+                onChange={(e) => setLink(e.target.value)}
+              />
+              <Button onClick={handleUpload} disabled={loading}>
+                {loading ? "Uploading..." : "Upload Video"}
+              </Button>
+              {error && <p className="text-red-500">{error}</p>}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Training Videos List</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Dialog open={open && !!editId} onOpenChange={setOpen}>
+              {resources.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="high-contrast:text-black">
+                        File Name
+                      </TableHead>
+                      <TableHead className="high-contrast:text-black">
+                        Uploaded At
+                      </TableHead>
+                      <TableHead className="high-contrast:text-black">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {resources.map((resource, index) => (
+                      <ReorderableRow
+                        key={resource.id}
+                        resource={resource}
+                        index={index}
+                        moveRowUp={moveRowUp}
+                        moveRowDown={moveRowDown}
+                        totalRows={resources.length}
+                        handleView={(url) => window.open(url, "_blank")}
+                        handleDownload={(url, fileName) => {
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = fileName;
+                          a.click();
                         }}
-                        disabled={loading}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
+                        handleEdit={(id, fileName) => {
+                          setEditId(id);
+                          setEditFileName(fileName);
+                          setOpen(true);
+                        }}
+                        handleDelete={handleDelete}
+                        loading={loading}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p>No resources available.</p>
+              )}
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Rename Resource</DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col gap-4">
+                  <Input
+                    value={editFileName}
+                    onChange={(e) => setEditFileName(e.target.value)}
+                    placeholder="New resource name"
+                  />
+                  <div className="flex gap-2">
+                    <Button onClick={handleRename} disabled={loading}>
+                      {loading ? "Saving..." : "Save"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setEditId(null);
+                        setEditFileName("");
+                        setOpen(false);
+                      }}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </Button>
                   </div>
-                </DialogContent>
-              </Dialog>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    </DndProvider>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </Card>
+      </main>
+    </div>
   );
 }
