@@ -149,6 +149,12 @@ ClientFilesSectionProps) {
               >
                 {clientFiles
                   .filter((file) => file.category === category)
+                  .sort((a, b) => {
+                    // Handle cases where sortOrder might be null or undefined
+                    const orderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER; // Default to a high number if null
+                    const orderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
+                    return orderA - orderB; // Ascending order
+                  })
                   .map((file) => (
                     <motion.div
                       key={file.id}
