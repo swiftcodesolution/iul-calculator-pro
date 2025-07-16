@@ -73,6 +73,16 @@ interface InsuranceCompany {
   createdAt: string;
 }
 
+interface ClientFile {
+  id: string;
+  fileName: string;
+  createdAt: string;
+  user: {
+    firstName: string;
+    lastName: string;
+  };
+}
+
 export default function AdminDashboard() {
   const [downloadResources, setDownloadResources] = useState<Resource[]>([]);
   const [trainingDocuments, setTrainingDocuments] = useState<Resource[]>([]);
@@ -83,6 +93,7 @@ export default function AdminDashboard() {
   const [insuranceCompanies, setInsuranceCompanies] = useState<
     InsuranceCompany[]
   >([]);
+  const [clientFiles, setClientFiles] = useState<ClientFile[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -147,6 +158,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchClientFiles = async () => {
+    try {
+      const response = await fetch("/api/files/all");
+      if (!response.ok) throw new Error("Failed to fetch client files");
+      const data = await response.json();
+      setClientFiles(data);
+    } catch (err) {
+      setError("Error loading client files");
+      console.error(err);
+    }
+  };
+
   const refreshAll = async () => {
     setLoading(true);
     setError(null);
@@ -158,6 +181,7 @@ export default function AdminDashboard() {
       fetchUsers(),
       fetchSubscriptions(),
       fetchStats(),
+      fetchClientFiles(),
     ]);
     setLoading(false);
   };
@@ -472,11 +496,6 @@ export default function AdminDashboard() {
                         <TableCell className="text-sm ">
                           {user.firstName} {user.lastName} ({user.role})
                           <br />
-                          <span className="">
-                            {user.lastLogin
-                              ? new Date(user.lastLogin).toLocaleDateString()
-                              : "No login"}
-                          </span>
                         </TableCell>
                       </TableRow>
                     ))
@@ -507,23 +526,22 @@ export default function AdminDashboard() {
             <CardContent>
               <Table>
                 <TableBody>
-                  {downloadResources.length > 0 ? (
-                    downloadResources
-                      .slice(
-                        0,
-
-                        2
-                      )
-                      .map((file) => (
-                        <TableRow
-                          key={file.id}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                        >
-                          <TableCell className="text-sm ">
-                            {file.fileName} ({file.fileFormat})
-                          </TableCell>
-                        </TableRow>
-                      ))
+                  {clientFiles.length > 0 ? (
+                    clientFiles.slice(0, 2).map((file) => (
+                      <TableRow
+                        key={file.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
+                        <TableCell className="text-sm ">
+                          <span className="">
+                            {file.fileName}
+                            <br></br>
+                            Uploaded by: {file.user.firstName}{" "}
+                            {file.user.lastName}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))
                   ) : (
                     <TableRow>
                       <TableCell className="text-sm ">
