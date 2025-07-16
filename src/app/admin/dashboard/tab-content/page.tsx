@@ -300,9 +300,7 @@ export default function AdminTabContentPage() {
                           <p className="text-xs text-gray-500">
                             {new Date(item.createdAt).toLocaleDateString()}
                           </p>
-                          <p className="text-xs text-gray-500">
-                            By: {item.user?.firstName || "Unknown"}
-                          </p>
+
                           <p className="text-xs text-gray-500">
                             Email: {item.user?.email || "N/A"}
                           </p>
