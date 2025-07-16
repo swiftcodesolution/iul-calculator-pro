@@ -201,7 +201,7 @@ export default function AdminTrainingVideosPage() {
     formData.append("fileName", fileName);
     if (file) formData.append("file", file);
     if (link) formData.append("link", link);
-    formData.append("uploadedBy", session?.user?.firstName || "Unknown");
+    formData.append("uploadedBy", session?.user?.id);
     formData.append(
       "order",
       (resources.length > 0
