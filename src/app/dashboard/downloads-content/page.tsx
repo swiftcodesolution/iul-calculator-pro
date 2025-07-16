@@ -20,6 +20,7 @@ interface Resource {
   filePath: string;
   fileFormat: string;
   createdAt: string;
+  sortOrder: number | null;
 }
 
 export default function DownloadContentPage() {
@@ -33,7 +34,19 @@ export default function DownloadContentPage() {
       const response = await fetch("/api/download-resources");
       if (!response.ok) throw new Error("Failed to fetch resources");
       const data = await response.json();
-      setResources(data);
+
+      const sortedResources = data.sort((a: Resource, b: Resource) => {
+        if (a.sortOrder == null && b.sortOrder == null) {
+          return (
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+        }
+        if (a.sortOrder == null) return 1; // Nulls last
+        if (b.sortOrder == null) return -1;
+        return a.sortOrder - b.sortOrder;
+      });
+
+      setResources(sortedResources);
       setError(null);
     } catch (err) {
       setError("Error loading resources");

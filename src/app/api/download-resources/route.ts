@@ -24,6 +24,15 @@ export async function POST(request: Request) {
   }
 
   try {
+    const maxSortOrder = await prisma.downloadResources.findFirst({
+      where: { sortOrder: { not: null } },
+      orderBy: { sortOrder: "desc" },
+      select: { sortOrder: true },
+    });
+
+    const newSortOrder =
+      maxSortOrder?.sortOrder != null ? maxSortOrder.sortOrder + 1 : 0;
+
     const blob = await put(
       `download-resources/${Date.now()}-${file.name}`,
       file,
@@ -38,6 +47,7 @@ export async function POST(request: Request) {
         filePath: blob.url,
         fileFormat: file.name.split(".")[1],
         uploadedBy: session.user.id,
+        sortOrder: newSortOrder,
       },
     });
 
@@ -57,12 +67,101 @@ export async function GET() {
       include: {
         uploadedByUser: { select: { email: true } },
       },
+      orderBy: [
+        { sortOrder: "asc" }, // Sort by sortOrder, nulls last
+        { createdAt: "asc" }, // Secondary sort for null sortOrder
+      ],
     });
     return NextResponse.json(resources);
   } catch (error) {
     console.error("Error fetching resources:", error);
     return NextResponse.json(
       { error: "Failed to fetch resources" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id || session.user.role !== "admin") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
+  const { id, direction } = await request.json();
+
+  if (!id || !["up", "down"].includes(direction)) {
+    return NextResponse.json(
+      { error: "Invalid request parameters" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const resource = await prisma.downloadResources.findUnique({
+      where: { id },
+      select: { sortOrder: true },
+    });
+
+    if (!resource) {
+      return NextResponse.json(
+        { error: "Resource not found" },
+        { status: 404 }
+      );
+    }
+
+    // If resource has no sortOrder, assign one
+    let currentSortOrder = resource.sortOrder;
+    if (currentSortOrder == null) {
+      const maxSortOrder = await prisma.downloadResources.findFirst({
+        where: { sortOrder: { not: null } },
+        orderBy: { sortOrder: "desc" },
+        select: { sortOrder: true },
+      });
+      currentSortOrder =
+        maxSortOrder?.sortOrder != null ? maxSortOrder.sortOrder + 1 : 0;
+      await prisma.downloadResources.update({
+        where: { id },
+        data: { sortOrder: currentSortOrder },
+      });
+    }
+
+    const neighbor = await prisma.downloadResources.findFirst({
+      where: {
+        sortOrder:
+          direction === "up"
+            ? { lt: currentSortOrder, not: null } // Only consider non-null
+            : { gt: currentSortOrder, not: null },
+      },
+      orderBy: { sortOrder: direction === "up" ? "desc" : "asc" },
+      select: { id: true, sortOrder: true },
+    });
+
+    if (!neighbor) {
+      return NextResponse.json(
+        { message: "No change needed" },
+        { status: 200 }
+      );
+    }
+
+    // Swap sortOrder values
+    await prisma.$transaction([
+      prisma.downloadResources.update({
+        where: { id },
+        data: { sortOrder: neighbor.sortOrder },
+      }),
+      prisma.downloadResources.update({
+        where: { id: neighbor.id },
+        data: { sortOrder: currentSortOrder },
+      }),
+    ]);
+
+    return NextResponse.json({ message: "Order updated" }, { status: 200 });
+  } catch (error) {
+    console.error("Error updating order:", error);
+    return NextResponse.json(
+      { error: "Failed to update order" },
       { status: 500 }
     );
   }
@@ -91,6 +190,18 @@ export async function PATCH(request: Request) {
   let fileFormat = resource.fileFormat;
 
   try {
+    // Assign sortOrder if not already set
+    let sortOrder = resource.sortOrder;
+    if (sortOrder == null) {
+      const maxSortOrder = await prisma.downloadResources.findFirst({
+        where: { sortOrder: { not: null } },
+        orderBy: { sortOrder: "desc" },
+        select: { sortOrder: true },
+      });
+      sortOrder =
+        maxSortOrder?.sortOrder != null ? maxSortOrder.sortOrder + 1 : 0;
+    }
+
     if (file) {
       const blob = await put(
         `download-resources/${Date.now()}-${file.name}`,
@@ -109,6 +220,7 @@ export async function PATCH(request: Request) {
         fileName,
         filePath,
         fileFormat,
+        sortOrder,
         updatedAt: new Date(),
       },
     });

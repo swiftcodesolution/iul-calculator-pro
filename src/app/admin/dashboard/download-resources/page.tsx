@@ -18,7 +18,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Upload, Trash2, Pencil, Eye } from "lucide-react";
+import {
+  Upload,
+  Trash2,
+  Pencil,
+  Eye,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
@@ -28,6 +35,7 @@ interface Resource {
   filePath: string;
   fileFormat: string;
   createdAt: string;
+  sortOrder: number | null;
 }
 
 export default function AdminMediaPage() {
@@ -153,6 +161,35 @@ export default function AdminMediaPage() {
     }
   };
 
+  const handleMove = async (id: string, direction: "up" | "down") => {
+    if (session?.user?.role !== "admin") {
+      setError("Unauthorized");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch("/api/download-resources", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, direction }),
+      });
+      if (!response.ok) throw new Error("Failed to reorder resource");
+
+      // Refresh resources to reflect new order
+      const refreshResponse = await fetch("/api/download-resources");
+      if (!refreshResponse.ok) throw new Error("Failed to fetch resources");
+      const updatedResources = await refreshResponse.json();
+      setResources(updatedResources);
+      setError(null);
+    } catch (err) {
+      setError("Error reordering resource");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!session || session.user?.role !== "admin") {
     return <div className="text-red-500">Unauthorized</div>;
   }
@@ -195,6 +232,9 @@ export default function AdminMediaPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="high-contrast:text-black w-20">
+                      Order
+                    </TableHead>
                     <TableHead className="high-contrast:text-black">
                       File Name
                     </TableHead>
@@ -213,8 +253,28 @@ export default function AdminMediaPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {resources.map((resource) => (
+                  {resources.map((resource, index) => (
                     <TableRow key={resource.id}>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleMove(resource.id, "up")}
+                            disabled={loading || index === 0} // Disable up for first item
+                          >
+                            <ChevronUp className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleMove(resource.id, "down")}
+                            disabled={loading || index === resources.length - 1} // Disable down for last item
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <a
                           href={resource.filePath}
