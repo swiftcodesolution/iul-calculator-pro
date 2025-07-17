@@ -35,8 +35,23 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [evenColumnColor, setEvenColumnColor] = useState("#e6f3ff");
-  const [oddColumnColor, setOddColumnColor] = useState("#f0f0f0");
+
+  // const [evenColumnColor, setEvenColumnColor] = useState("#e6f3ff");
+  const [evenColumnColor, setEvenColumnColor] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("evenColumnColor") || "#e6f3ff";
+    }
+    return "#e6f3ff";
+  });
+
+  // const [oddColumnColor, setOddColumnColor] = useState("#f0f0f0");
+  const [oddColumnColor, setOddColumnColor] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("oddColumnColor") || "#f0f0f0";
+    }
+    return "#f0f0f0";
+  });
+
   const [highlightColor, setHighlightColor] = useState("#ffa1ad");
   const [zoomLevel, setZoomLevel] = useState(0.6);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -70,6 +85,14 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
     setCombinedResults,
     clearStore,
   } = useTableStore();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("evenColumnColor", evenColumnColor);
+      localStorage.setItem("oddColumnColor", oddColumnColor);
+      localStorage.setItem("highlightColor", highlightColor);
+    }
+  }, [evenColumnColor, oddColumnColor, highlightColor]);
 
   // Auth and file check
   useEffect(() => {
