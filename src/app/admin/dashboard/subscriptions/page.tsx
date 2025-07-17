@@ -113,7 +113,10 @@ export default function SubscriptionsPage() {
                 <TableBody>
                   {subscriptions.length > 0 ? (
                     subscriptions.map((sub) => (
-                      <TableRow key={sub.userId} className="hover:bg-gray-50">
+                      <TableRow
+                        key={sub.userId}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
                         <TableCell className="text-sm">
                           <Link
                             href={`/admin/dashboard/users/${sub.userId}`}

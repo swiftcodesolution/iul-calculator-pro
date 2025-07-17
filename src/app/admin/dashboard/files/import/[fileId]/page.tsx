@@ -247,7 +247,7 @@ export default function ImportPage({ params }: { params: Params }) {
 
   const renderTable = () => (
     <Card className="flex-1 flex flex-col h-[90vh]">
-      <CardHeader className="sticky top-0 z-10 bg-white">
+      <CardHeader className="sticky top-0 z-10 bg-white dark:bg-black">
         <h3 className="text-lg font-semibold">Imported Data Preview</h3>
       </CardHeader>
       <CardContent

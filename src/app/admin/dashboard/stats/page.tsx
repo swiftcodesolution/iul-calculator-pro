@@ -220,7 +220,7 @@ export default function StatsPage() {
                       {stats.filesByCategory.map((category) => (
                         <TableRow
                           key={category.category}
-                          className="hover:bg-gray-50"
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800"
                         >
                           <TableCell>{category.category}</TableCell>
                           <TableCell>{category.count}</TableCell>
@@ -270,7 +270,7 @@ export default function StatsPage() {
                       {stats.filesPerUser.map((user) => (
                         <TableRow
                           key={user.userId}
-                          className="hover:bg-gray-50"
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800"
                         >
                           <TableCell>{user.userName || "N/A"}</TableCell>
                           <TableCell>{user.userEmail}</TableCell>
@@ -319,7 +319,10 @@ export default function StatsPage() {
                     </TableHeader>
                     <TableBody>
                       {stats.recentSessions.map((session) => (
-                        <TableRow key={session.id} className="hover:bg-gray-50">
+                        <TableRow
+                          key={session.id}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
                           <TableCell>{session.userEmail}</TableCell>
                           <TableCell>
                             {new Date(session.loginAt).toLocaleString()}
@@ -360,7 +363,10 @@ export default function StatsPage() {
                     </TableHeader>
                     <TableBody>
                       {stats.recentFiles.map((file) => (
-                        <TableRow key={file.id} className="hover:bg-gray-50">
+                        <TableRow
+                          key={file.id}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
                           <TableCell>{file.fileName}</TableCell>
                           <TableCell>{file.userEmail}</TableCell>
                           <TableCell>{file.category}</TableCell>
