@@ -24,6 +24,11 @@ import { useSession } from "next-auth/react";
 import { cn, debounce } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import { ClientFile } from "@/lib/types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type TableData = {
   source: string;
@@ -463,35 +468,69 @@ export default function ImportPage({ params }: { params: Params }) {
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold"></h3>
                   <div className="flex gap-2">
-                    <Button
-                      variant="default"
-                      onClick={handleZoomIn}
-                      disabled={
-                        isTableLoading || zoomLevel >= 2 || !tables.length
-                      }
-                      aria-label="Zoom in on table"
-                    >
-                      <ZoomIn className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="default"
-                      onClick={handleZoomOut}
-                      disabled={
-                        isTableLoading || zoomLevel <= 0.5 || !tables.length
-                      }
-                      aria-label="Zoom out on table"
-                    >
-                      <ZoomOut className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleFullScreenToggle}
-                      disabled={isTableLoading}
-                      aria-label="Exit full-screen mode"
-                    >
-                      <Minimize2 className="h-4 w-4" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Button
+                            className="high-contrast:bg-white"
+                            variant="outline"
+                            onClick={handleZoomIn}
+                            disabled={
+                              isTableLoading || zoomLevel >= 2 || !tables.length
+                            }
+                            aria-label="Zoom in on table"
+                          >
+                            <ZoomIn className="h-4 w-4" />
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Zoom in on table</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Button
+                            className="high-contrast:bg-white"
+                            variant="outline"
+                            onClick={handleZoomOut}
+                            disabled={
+                              isTableLoading ||
+                              zoomLevel <= 0.5 ||
+                              !tables.length
+                            }
+                            aria-label="Zoom out on table"
+                          >
+                            <ZoomOut className="h-4 w-4" />
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Zoom out on table</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Button
+                            className="high-contrast:bg-white"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleFullScreenToggle}
+                            disabled={isTableLoading}
+                            aria-label="Exit full-screen mode"
+                          >
+                            <Minimize2 className="h-4 w-4" />
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Exit full-screen mode</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 </div>
                 {tables.length > 0 && !isTableLoading && renderTable()}
@@ -586,7 +625,7 @@ export default function ImportPage({ params }: { params: Params }) {
                 <Button asChild>
                   <label className="flex items-center gap-2 cursor-pointer">
                     Select File
-                    <Upload className="h-4 w-4" />
+                    <Upload className="h-4 w-4 high-contrast:text-white!" />
                     <input
                       type="file"
                       className="hidden"
@@ -639,6 +678,7 @@ export default function ImportPage({ params }: { params: Params }) {
               className="flex justify-center gap-4"
             >
               <Button
+                className=" high-contrast:bg-white high-contrast:text-black"
                 variant="default"
                 onClick={handleImport}
                 disabled={isTableLoading}
@@ -655,38 +695,78 @@ export default function ImportPage({ params }: { params: Params }) {
             </motion.div>
           )}
           <div className="flex gap-2">
-            <Button
-              variant="default"
-              onClick={handleZoomIn}
-              disabled={isTableLoading || zoomLevel >= 2 || !tables.length}
-              aria-label="Zoom in on table"
-            >
-              <ZoomIn className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="default"
-              onClick={handleZoomOut}
-              disabled={isTableLoading || zoomLevel <= 0.5 || !tables.length}
-              aria-label="Zoom out on table"
-            >
-              <ZoomOut className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleFullScreenToggle}
-              disabled={isTableLoading || !tables.length}
-              aria-label={
-                isTableFullScreen
-                  ? "Exit full-screen mode"
-                  : "Enter full-screen mode"
-              }
-            >
-              {isTableFullScreen ? (
-                <Minimize2 className="h-4 w-4" />
-              ) : (
-                <Fullscreen className="h-4 w-4" />
-              )}
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    className="high-contrast:bg-white"
+                    variant="outline"
+                    onClick={handleZoomIn}
+                    disabled={
+                      isTableLoading || zoomLevel >= 2 || !tables.length
+                    }
+                    aria-label="Zoom in on table"
+                  >
+                    <ZoomIn className="h-4 w-4" />
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Zoom in on table</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    className="high-contrast:bg-white"
+                    variant="outline"
+                    onClick={handleZoomOut}
+                    disabled={
+                      isTableLoading || zoomLevel <= 0.5 || !tables.length
+                    }
+                    aria-label="Zoom out on table"
+                  >
+                    <ZoomOut className="h-4 w-4" />
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Zoom out on table</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    className="high-contrast:bg-white"
+                    variant="outline"
+                    onClick={handleFullScreenToggle}
+                    disabled={isTableLoading || !tables.length}
+                    aria-label={
+                      isTableFullScreen
+                        ? "Exit full-screen mode"
+                        : "Enter full-screen mode"
+                    }
+                  >
+                    {isTableFullScreen ? (
+                      <Minimize2 className="h-4 w-4" />
+                    ) : (
+                      <Fullscreen className="h-4 w-4" />
+                    )}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  {isTableFullScreen
+                    ? "Exit full-screen mode"
+                    : "Enter full-screen mode"}
+                </p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </motion.div>
       </motion.div>

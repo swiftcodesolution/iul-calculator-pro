@@ -22,6 +22,11 @@ import { CombinedResult, ClientFile } from "@/lib/types";
 import { debounce, cn } from "@/lib/utils";
 import { useTableHighlight } from "@/hooks/useTableHighlight";
 import { notFound } from "next/navigation";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type Params = Promise<{ fileId: string }>;
 
@@ -629,41 +634,84 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="destructive"
-            className="cursor-pointer"
-            onClick={() => {
-              clearStore();
-              router.push(`/dashboard/import/${fileId}`);
-            }}
-          >
-            Clear
-          </Button>
-          <Button
-            variant="default"
-            onClick={handleZoomIn}
-            className="cursor-pointer"
-          >
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            onClick={handleZoomOut}
-            className="cursor-pointer"
-          >
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleFullScreenToggle}
-            className="cursor-pointer"
-          >
-            {isFullScreen ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Fullscreen className="h-4 w-4" />
-            )}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button
+                  variant="destructive"
+                  className="cursor-pointer"
+                  onClick={() => {
+                    clearStore();
+                    router.push(`/dashboard/import/${fileId}`);
+                  }}
+                >
+                  Clear
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Clear the current data and return to import</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button
+                  variant="outline"
+                  onClick={handleZoomIn}
+                  className="cursor-pointer high-contrast:bg-white"
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Zoom in on the view</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button
+                  variant="outline"
+                  onClick={handleZoomOut}
+                  className="cursor-pointer high-contrast:bg-white"
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Zoom out of the view</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button
+                  variant="outline"
+                  onClick={handleFullScreenToggle}
+                  className="cursor-pointer high-contrast:bg-white"
+                >
+                  {isFullScreen ? (
+                    <Minimize2 className="h-4 w-4" />
+                  ) : (
+                    <Fullscreen className="h-4 w-4" />
+                  )}
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                {isFullScreen
+                  ? "Exit full-screen mode"
+                  : "Enter full-screen mode"}
+              </p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
 

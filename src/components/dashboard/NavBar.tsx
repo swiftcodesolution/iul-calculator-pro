@@ -194,19 +194,28 @@ const NavBar = () => {
         <motion.div className="fixed bottom-4 right-0 -translate-x-1/2 flex items-center gap-4">
           <ThemeToggle />
 
-          <Button
-            onClick={handleSignOut}
-            variant="outline"
-            size="icon"
-            className="bg-white dark:bg-white dark:text-black text-black hover:bg-black hover:text-white dark:hover:bg-black dark:hover:text-white high-contrast:bg-white high-contrast:text-black high-contrast:hover:bg-white high-contrast:hover:text-white border hover:border-white transition-colors duration-200 cursor-pointer"
-          >
-            <motion.div
-              whileHover={{ rotate: 0 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-            >
-              <LogOut />
-            </motion.div>
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button
+                  onClick={handleSignOut}
+                  variant="outline"
+                  size="icon"
+                  className="bg-white dark:bg-white dark:text-black text-black hover:bg-black hover:text-white dark:hover:bg-black dark:hover:text-white high-contrast:bg-white high-contrast:text-black high-contrast:hover:bg-white high-contrast:hover:text-white border hover:border-white transition-colors duration-200 cursor-pointer"
+                >
+                  <motion.div
+                    whileHover={{ rotate: 0 }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                  >
+                    <LogOut />
+                  </motion.div>
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Sign out</p>
+            </TooltipContent>
+          </Tooltip>
         </motion.div>
       ) : (
         <p></p>
