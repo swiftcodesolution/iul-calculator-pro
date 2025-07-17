@@ -250,36 +250,42 @@ export default function CompanyInfoSection({
                     )}
                   </motion.div>
                 ) : (
-                  <motion.div
-                    whileHover={{ scale: 1.05, backgroundColor: "#e5e7eb" }}
-                    className="h-[100px] w-full bg-slate-200 flex items-center justify-center text-center rounded-sm"
-                  >
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      id="logo-upload"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        console.log("Logo input file selected:", file);
-                        handleFileUpload(file, "logo", (field, value) => {
-                          console.log(`Setting form value: ${field}=`, value);
-                          form.setValue(field as keyof CompanyInfo, value);
-                        });
-                      }}
-                      disabled={!isEditing || isSubmitting}
-                    />
-                    <label
-                      htmlFor="logo-upload"
-                      className={`cursor-pointer p-2 rounded text-sm font-bold text-gray-400 text-center ${
-                        !isEditing || isSubmitting
-                          ? "pointer-events-none opacity-50"
-                          : ""
-                      }`}
+                  <div>
+                    <motion.div
+                      whileHover={{ scale: 1.05, backgroundColor: "#e5e7eb" }}
+                      className="h-[100px] w-full bg-slate-200 flex items-center justify-center text-center rounded-sm"
                     >
-                      upload company logo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        id="logo-upload"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          console.log("Logo input file selected:", file);
+                          handleFileUpload(file, "logo", (field, value) => {
+                            console.log(`Setting form value: ${field}=`, value);
+                            form.setValue(field as keyof CompanyInfo, value);
+                          });
+                        }}
+                        disabled={!isEditing || isSubmitting}
+                      />
+                      <label
+                        htmlFor="logo-upload"
+                        className={`cursor-pointer p-2 rounded text-sm font-bold text-gray-400 text-center ${
+                          !isEditing || isSubmitting
+                            ? "pointer-events-none opacity-50"
+                            : ""
+                        }`}
+                      >
+                        upload company logo
+                      </label>
+                    </motion.div>
+                    <label className="flex items-center gap-2 text-sm">
+                      <input type="checkbox" />
+                      Don&apos;t want to upload
                     </label>
-                  </motion.div>
+                  </div>
                 )}
               </div>
               <div className="flex flex-col items-center w-full">
@@ -396,36 +402,49 @@ export default function CompanyInfoSection({
                     )}
                   </motion.div>
                 ) : (
-                  <motion.div
-                    whileHover={{ scale: 1.05, backgroundColor: "#e5e7eb" }}
-                    className="h-[100px] w-full bg-slate-200 flex items-center justify-center text-center rounded-sm"
-                  >
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      id="profile-upload"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        console.log("Profile input file selected:", file);
-                        handleFileUpload(file, "profilePic", (field, value) => {
-                          console.log(`Setting form value: ${field}=`, value);
-                          form.setValue(field as keyof CompanyInfo, value);
-                        });
-                      }}
-                      disabled={!isEditing || isSubmitting}
-                    />
-                    <label
-                      htmlFor="profile-upload"
-                      className={`cursor-pointer p-2 rounded text-sm font-bold text-gray-400 text-center ${
-                        !isEditing || isSubmitting
-                          ? "pointer-events-none opacity-50"
-                          : ""
-                      }`}
+                  <div>
+                    <motion.div
+                      whileHover={{ scale: 1.05, backgroundColor: "#e5e7eb" }}
+                      className="h-[100px] w-full bg-slate-200 flex items-center justify-center text-center rounded-sm"
                     >
-                      upload profile picture
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        id="profile-upload"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          console.log("Profile input file selected:", file);
+                          handleFileUpload(
+                            file,
+                            "profilePic",
+                            (field, value) => {
+                              console.log(
+                                `Setting form value: ${field}=`,
+                                value
+                              );
+                              form.setValue(field as keyof CompanyInfo, value);
+                            }
+                          );
+                        }}
+                        disabled={!isEditing || isSubmitting}
+                      />
+                      <label
+                        htmlFor="profile-upload"
+                        className={`cursor-pointer p-2 rounded text-sm font-bold text-gray-400 text-center ${
+                          !isEditing || isSubmitting
+                            ? "pointer-events-none opacity-50"
+                            : ""
+                        }`}
+                      >
+                        upload profile picture
+                      </label>
+                    </motion.div>
+                    <label className="flex items-center gap-2 text-sm">
+                      <input type="checkbox" />
+                      Don&apos;t want to upload
                     </label>
-                  </motion.div>
+                  </div>
                 )}
               </div>
             </div>

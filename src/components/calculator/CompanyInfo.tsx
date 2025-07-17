@@ -43,6 +43,9 @@ export function CompanyInfo() {
             <p className="text-sm">
               {companyInfo.phone || "enter phone number on page 1"}
             </p>
+            <p className="text-sm">
+              {companyInfo.email || "enter phone number on page 1"}
+            </p>
           </motion.div>
           {logoSrc ? (
             <motion.div
@@ -62,9 +65,10 @@ export function CompanyInfo() {
               />
             </motion.div>
           ) : (
-            <h2 className="h-[80px] grow text-center text-lg font-bold bg-slate-100 px-8 py-3 w-1/3">
-              NO LOGO UPLOADED YET!
-            </h2>
+            // <h2 className="h-[80px] grow text-center text-lg font-bold bg-slate-100 px-8 py-3 w-1/3">
+            //   NO LOGO UPLOADED YET!
+            // </h2>
+            <div></div>
           )}
           {profilePicSrc ? (
             <motion.div
@@ -82,9 +86,10 @@ export function CompanyInfo() {
               />
             </motion.div>
           ) : (
-            <h2 className="h-[80px] grow text-center text-lg font-bold bg-slate-100 px-8 py-3 w-1/3">
-              NO PROFILE PICTURE UPLOADED YET!
-            </h2>
+            // <h2 className="h-[80px] grow text-center text-lg font-bold bg-slate-100 px-8 py-3 w-1/3">
+            //   NO PROFILE PICTURE UPLOADED YET!
+            // </h2>
+            <div></div>
           )}
         </CardContent>
       </Card>
