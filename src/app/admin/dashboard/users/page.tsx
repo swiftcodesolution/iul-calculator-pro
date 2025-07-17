@@ -93,27 +93,34 @@ export default function UsersPage() {
         </motion.div>
         <Card className="shadow-lg">
           <CardHeader>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Input
-                placeholder="Search by name, email, or role"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="max-w-md"
-              />
-              <Select
-                onValueChange={(value: "most" | "least" | "none") =>
-                  setSortOrder(value)
-                }
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Sort by activity" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Sorting</SelectItem>
-                  <SelectItem value="most">Most Active</SelectItem>
-                  <SelectItem value="least">Least Active</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Input
+                  placeholder="Search by name, email, or role"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="max-w-md"
+                />
+                <Select
+                  onValueChange={(value: "most" | "least" | "none") =>
+                    setSortOrder(value)
+                  }
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Sort by activity" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Sorting</SelectItem>
+                    <SelectItem value="most">Most Active</SelectItem>
+                    <SelectItem value="least">Least Active</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <h2 className="font-bold text-2xl">
+                  Total Users: {sortedUsers.length}
+                </h2>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -152,7 +159,7 @@ export default function UsersPage() {
                   {sortedUsers.map((user) => (
                     <TableRow
                       key={user.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-800 "
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800"
                     >
                       <TableCell>
                         {`${user.firstName || ""} ${
