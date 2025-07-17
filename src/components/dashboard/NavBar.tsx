@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useFileContext } from "@/context/FileContext";
 import { useEffect } from "react";
 import { ThemeToggle } from "../ThemeToggle";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 const NavBar = () => {
   const pathname = usePathname();
@@ -108,19 +109,27 @@ const NavBar = () => {
     return (
       <motion.div className="flex gap-4 fixed bottom-4 right-0 -translate-x-1/2">
         <ThemeToggle />
-        <Button
-          onClick={handleSignOut}
-          variant="outline"
-          size="icon"
-          className="bg-white dark:bg-white dark:text-black text-black hover:bg-black hover:text-white dark:hover:bg-black dark:hover:text-white high-contrast:bg-white high-contrast:text-black high-contrast:hover:bg-white high-contrast:hover:text-white border hover:border-white transition-colors duration-200 cursor-pointer"
-        >
-          <motion.div
-            whileHover={{ rotate: 0 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
-          >
-            <LogOut />
-          </motion.div>
-        </Button>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={handleSignOut}
+              variant="outline"
+              size="icon"
+              className="bg-white dark:bg-white dark:text-black text-black hover:bg-black hover:text-white dark:hover:bg-black dark:hover:text-white high-contrast:bg-white high-contrast:text-black high-contrast:hover:bg-white high-contrast:hover:text-white border hover:border-white transition-colors duration-200 cursor-pointer"
+            >
+              <motion.div
+                whileHover={{ rotate: 0 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+              >
+                <LogOut />
+              </motion.div>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Logout</p>
+          </TooltipContent>
+        </Tooltip>
       </motion.div>
     );
   }
@@ -157,18 +166,25 @@ const NavBar = () => {
               }
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
-              <Button
-                // variant={pathname === item.href ? "default" : "outline"}
-                size="icon"
-                className="bg-white dark:bg-white dark:text-black text-black hover:bg-black hover:text-white dark:hover:bg-black dark:hover:text-white high-contrast:bg-white high-contrast:text-black high-contrast:hover:bg-white high-contrast:hover:text-white border hover:border-white transition-colors duration-200 cursor-pointer"
-              >
-                <motion.div
-                  whileHover={{ rotate: 0 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                >
-                  <item.icon className="h-5 w-5" />
-                </motion.div>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    // variant={pathname === item.href ? "default" : "outline"}
+                    size="icon"
+                    className="bg-white dark:bg-white dark:text-black text-black hover:bg-black hover:text-white dark:hover:bg-black dark:hover:text-white high-contrast:bg-white high-contrast:text-black high-contrast:hover:bg-white high-contrast:hover:text-white border hover:border-white transition-colors duration-200 cursor-pointer"
+                  >
+                    <motion.div
+                      whileHover={{ rotate: 0 }}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
+                    >
+                      <item.icon className="h-5 w-5" />
+                    </motion.div>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{item.label}</p>
+                </TooltipContent>
+              </Tooltip>
             </motion.div>
           </Link>
         ))}
@@ -177,6 +193,7 @@ const NavBar = () => {
       {session?.user.role !== "admin" ? (
         <motion.div className="fixed bottom-4 right-0 -translate-x-1/2 flex items-center gap-4">
           <ThemeToggle />
+
           <Button
             onClick={handleSignOut}
             variant="outline"
