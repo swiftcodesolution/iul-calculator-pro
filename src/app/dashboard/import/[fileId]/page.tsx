@@ -57,6 +57,7 @@ export default function ImportPage({ params }: { params: Params }) {
   const { fileId } = use(params);
   const { data: session, status } = useSession();
   const [file, setFile] = useState<File | null>(null);
+  const [fileName, setFileName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasFetched, setHasFetched] = useState(false);
@@ -98,8 +99,10 @@ export default function ImportPage({ params }: { params: Params }) {
           return;
         }
         const data: ClientFile = await response.json();
+        console.log(fileName);
         setTables(data.tablesData?.tables || []);
         setFields(data.fields || {});
+        setFileName(data.fileName || "");
         setHasFetched(true);
       } catch {
         setError("Error fetching file");
@@ -556,6 +559,17 @@ export default function ImportPage({ params }: { params: Params }) {
                 className="w-8 h-8 border rounded"
               />
             </div>
+          </div>
+          <div className="space-y-2 flex gap-2">
+            <Label className="grow" htmlFor="file-name">
+              File Name
+            </Label>
+            <Input
+              className="w-2/4"
+              id="file-name"
+              disabled
+              value={fileName || ""}
+            />
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="illustration-date">
                 Illustration Date

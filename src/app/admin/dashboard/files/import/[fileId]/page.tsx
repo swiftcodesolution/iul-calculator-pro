@@ -57,6 +57,7 @@ export default function ImportPage({ params }: { params: Params }) {
   const { fileId } = use(params);
   const { data: session, status } = useSession();
   const [file, setFile] = useState<File | null>(null);
+  const [fileName, setFileName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasFetched, setHasFetched] = useState(false);
@@ -98,8 +99,10 @@ export default function ImportPage({ params }: { params: Params }) {
           return;
         }
         const data: ClientFile = await response.json();
+        console.log(fileName);
         setTables(data.tablesData?.tables || []);
         setFields(data.fields || {});
+        setFileName(data.fileName || "");
         setHasFetched(true);
       } catch {
         setError("Error fetching file");
@@ -527,14 +530,25 @@ export default function ImportPage({ params }: { params: Params }) {
           className="lg:w-[30%] w-full flex flex-col gap-4 lg:mt-auto"
         >
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="highlight-color">Highlight Color</Label>
+            <div className="flex gap-2 items-center">
+              <Label htmlFor="highlight-color grow">Highlight Color</Label>
               <input
                 id="highlight-color"
                 type="color"
                 value={highlightColor}
                 onChange={(e) => setHighlightColor(e.target.value)}
                 className="w-8 h-8 border rounded"
+              />
+            </div>
+            <div className="space-y-2 flex gap-2">
+              <Label className="grow" htmlFor="file-name">
+                File Name
+              </Label>
+              <Input
+                className="w-2/4"
+                id="file-name"
+                disabled
+                value={file?.name || ""}
               />
             </div>
             <div className="space-y-2 flex gap-2">
@@ -581,7 +595,7 @@ export default function ImportPage({ params }: { params: Params }) {
                 value={fields.assumed_ror || ""}
               />
             </div>
-            <div className="space-y-2 flex gap-2">
+            {/* <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="minimum-initial-pmt">
                 Minimum Initial Pmt
               </Label>
@@ -591,7 +605,7 @@ export default function ImportPage({ params }: { params: Params }) {
                 disabled
                 value={fields.minimum_initial_pmt || ""}
               />
-            </div>
+            </div> */}
           </div>
 
           <Card className="border">
@@ -626,12 +640,18 @@ export default function ImportPage({ params }: { params: Params }) {
                     />
                   </label>
                 </Button>
-                {file && (
-                  <p className="mt-2 text-sm text-gray-600">
-                    Uploaded: {file.name}
-                  </p>
-                )}
               </div>
+
+              {file && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-sm flex gap-1 items-center justify-center"
+                >
+                  <Label>Uploaded File:</Label> {file.name}
+                </motion.div>
+              )}
               <Button
                 onClick={handleUpload}
                 disabled={isTableLoading}
