@@ -32,7 +32,7 @@ export async function PATCH(
   }
 
   const { fileId } = await params;
-  const { boxesData, tablesData, combinedResults, fields, category } =
+  const { boxesData, tablesData, combinedResults, fields, category, fileName } =
     await request.json();
 
   const file = await prisma.clientFile.findUnique({ where: { id: fileId } });
@@ -59,6 +59,7 @@ export async function PATCH(
         ...(combinedResults && { combinedResults }),
         ...(fields && { fields }),
         ...(category && { category }),
+        ...(fileName && { fileName }),
         updatedAt: new Date(),
       },
     });
