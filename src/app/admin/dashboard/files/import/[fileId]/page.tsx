@@ -57,7 +57,6 @@ export default function ImportPage({ params }: { params: Params }) {
   const { fileId } = use(params);
   const { data: session, status } = useSession();
   const [file, setFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasFetched, setHasFetched] = useState(false);
@@ -67,7 +66,15 @@ export default function ImportPage({ params }: { params: Params }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [highlightColor, setHighlightColor] = useState("#ffa1ad");
 
-  const { tables, setTables, fields, setFields, clearStore } = useTableStore();
+  const {
+    fileName,
+    setFileName,
+    tables,
+    setTables,
+    fields,
+    setFields,
+    clearStore,
+  } = useTableStore();
   const router = useRouter();
   const {
     highlightedRows,
@@ -149,11 +156,13 @@ export default function ImportPage({ params }: { params: Params }) {
     }
     if (selectedFile && selectedFile.type === "application/pdf") {
       setFile(selectedFile);
+      setFileName(selectedFile.name);
       setError(null);
       setZoomLevel(1);
       setIsTableFullScreen(false);
     } else {
       setFile(null);
+      setFileName("");
       setError("Please upload a valid PDF file.");
       toast("Please upload a valid PDF file.");
     }
@@ -540,7 +549,7 @@ export default function ImportPage({ params }: { params: Params }) {
                 className="w-8 h-8 border rounded"
               />
             </div>
-            <div className="space-y-2 flex gap-2">
+            {/* <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="file-name">
                 File Name
               </Label>
@@ -550,7 +559,7 @@ export default function ImportPage({ params }: { params: Params }) {
                 disabled
                 value={file?.name || ""}
               />
-            </div>
+            </div> */}
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="illustration-date">
                 Illustration Date

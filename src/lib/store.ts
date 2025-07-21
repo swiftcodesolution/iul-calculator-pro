@@ -36,6 +36,10 @@ interface TableStore {
     minimum_initial_pmt: string | null;
   };
   setFields: (fields: TableStore["fields"]) => void;
+
+  fileName: string;
+  setFileName: (fileName: string) => void;
+
   combinedResults: CombinedResult[];
   setCombinedResults: (results: CombinedResult[]) => void;
   clearStore: () => void;
@@ -93,6 +97,10 @@ export const useTableStore = create<TableStore>((set) => ({
     minimum_initial_pmt: null,
   },
   setFields: (fields) => set({ fields, isDataPersisted: false }),
+
+  fileName: "",
+  setFileName: (fileName) => set({ fileName, isDataPersisted: false }),
+
   tabs: [
     {
       id: "total-advantage",
@@ -140,6 +148,7 @@ export const useTableStore = create<TableStore>((set) => ({
         assumed_ror: null,
         minimum_initial_pmt: null,
       },
+      fileName: "",
     })),
 
   clearEverythingForFreshFile: () =>
@@ -152,6 +161,7 @@ export const useTableStore = create<TableStore>((set) => ({
         assumed_ror: null,
         minimum_initial_pmt: null,
       },
+      fileName: "",
       yearsRunOutOfMoney: "",
       isYearsRunOutOfMoneyUserSelected: false,
       futureAge: "",
