@@ -366,7 +366,24 @@ const TabManager = React.memo(function TabManager({
           createdByRole?: string;
           userId?: string;
         }[] = await response.json();
-        const dynamicTabs: TabContent[] = data.map((item) => ({
+
+        const filteredData = data.filter((item) => {
+          if (session?.user?.role === "admin") {
+            // Admins see only their own content
+            return (
+              item.createdByRole === "admin" &&
+              item.userId === session?.user?.id
+            );
+          } else {
+            // Non-admins see admin-uploaded content and their own content
+            return (
+              item.createdByRole === "admin" ||
+              item.userId === session?.user?.id
+            );
+          }
+        });
+
+        const dynamicTabs: TabContent[] = filteredData.map((item) => ({
           id: item.id,
           name: item.tabName, // Map tabName to name
           type: (item.link
