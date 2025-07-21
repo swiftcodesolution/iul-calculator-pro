@@ -11,6 +11,20 @@ import { TotalAdvantage, ClientFile } from "@/lib/types";
 import { useTableStore } from "@/lib/store";
 import { debounce } from "@/lib/utils";
 import { notFound } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 
 type Params = Promise<{ fileId: string }>;
 
@@ -31,6 +45,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
     deathBenefits: 0,
   });
   const [isReadOnly, setIsReadOnly] = useState(false); // New state for read-only mode
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
 
   const {
     boxesData,
@@ -143,7 +158,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
 
   // Debounced save (skip if read-only)
   const saveChanges = debounce(
-    async () => {
+    async (manualSave: boolean = false) => {
       if (
         !fileId ||
         status !== "authenticated" ||
@@ -182,6 +197,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
               yearsRunOutOfMoney,
             },
           }); // Debug
+          if (manualSave) {
+            setIsSaveDialogOpen(true); // Open dialog on manual save
+          }
         }
       } catch (err) {
         console.error("Save error:", err); // Debug
@@ -214,6 +232,43 @@ export default function CalculatorPage({ params }: { params: Params }) {
 
   return (
     <div className="h-[90vh] grid grid-cols-2 gap-4">
+      <div className="fixed bottom-5 left-10">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  onClick={() => saveChanges(true)} // Trigger manual save
+                  disabled={status !== "authenticated" || !fileId || loading}
+                  className="cursor-pointer high-contrast:bg-white high-contrast:text-black!"
+                  variant="default"
+                >
+                  Save
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Save Successful</DialogTitle>
+                  <DialogDescription className="high-contrast:text-gray-200">
+                    Your changes have been successfully saved!
+                  </DialogDescription>
+                </DialogHeader>
+                <Button
+                  onClick={() => setIsSaveDialogOpen(false)}
+                  variant="outline"
+                  className="mt-4"
+                >
+                  Close
+                </Button>
+              </DialogContent>
+            </Dialog>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Save your changes</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+
       <div className="flex flex-col gap-4 relative">
         <InputParameters
           data={boxesData}
