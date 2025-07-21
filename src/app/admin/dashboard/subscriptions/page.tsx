@@ -87,7 +87,9 @@ export default function SubscriptionsPage() {
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex items-center">
               <DollarSign className="mr-2 text-blue-500" />
-              <CardTitle className="text-xl">All Subscriptions</CardTitle>
+              <CardTitle className="text-xl">
+                All Subscriptions ({subscriptions.length as number} total)
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
