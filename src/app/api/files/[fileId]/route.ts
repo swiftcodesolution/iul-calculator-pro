@@ -158,7 +158,8 @@ export async function POST(
       const updatedFile = await prisma.clientFile.update({
         where: { id: fileId },
         data: {
-          fields: updatedFieldsData,
+          fields: {},
+          tablesData: { tables: [] },
           updatedAt: new Date(),
         },
       });
