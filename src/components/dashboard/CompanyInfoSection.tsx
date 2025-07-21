@@ -17,6 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useTableStore } from "@/lib/store";
 
 const imageUploadVariant: Variants = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -66,10 +67,15 @@ export default function CompanyInfoSection({
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { setDontWantLogo, setDontWantProfilePic } = useTableStore();
+
   const handleDeleteUpload = (type: "logo" | "profilePic") => {
     const field = type === "logo" ? "logoSrc" : "profilePicSrc";
     form.setValue(field, "");
     console.log(`Deleted ${type} from form state`);
+
+    if (type === "logo") setDontWantLogo(false);
+    if (type === "profilePic") setDontWantProfilePic(false);
   };
 
   const onSubmit = async (data: CompanyInfo) => {
@@ -282,7 +288,12 @@ export default function CompanyInfoSection({
                       </label>
                     </motion.div>
                     <label className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" />
+                      <input
+                        type="checkbox"
+                        checked={useTableStore.getState().dontWantLogo}
+                        onChange={(e) => setDontWantLogo(e.target.checked)}
+                        disabled={!isEditing || isSubmitting}
+                      />
                       Don&apos;t want to upload
                     </label>
                   </div>
@@ -441,7 +452,14 @@ export default function CompanyInfoSection({
                       </label>
                     </motion.div>
                     <label className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" />
+                      <input
+                        type="checkbox"
+                        checked={useTableStore.getState().dontWantProfilePic}
+                        onChange={(e) =>
+                          setDontWantProfilePic(e.target.checked)
+                        }
+                        disabled={!isEditing || isSubmitting}
+                      />
                       Don&apos;t want to upload
                     </label>
                   </div>

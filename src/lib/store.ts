@@ -50,6 +50,11 @@ interface TableStore {
   setActiveButtons: (buttons: { [key: number]: boolean }) => void;
   isDataPersisted: boolean;
   setIsDataPersisted: (value: boolean) => void;
+
+  dontWantLogo: boolean;
+  setDontWantLogo: (value: boolean) => void;
+  dontWantProfilePic: boolean;
+  setDontWantProfilePic: (value: boolean) => void;
 }
 
 export const useTableStore = create<TableStore>((set) => ({
@@ -136,6 +141,11 @@ export const useTableStore = create<TableStore>((set) => ({
   setTabs: (tabs) => set({ tabs }),
   combinedResults: [],
   setCombinedResults: (results) => set({ combinedResults: results }),
+
+  dontWantLogo: false,
+  setDontWantLogo: (value) => set({ dontWantLogo: value }),
+  dontWantProfilePic: false,
+  setDontWantProfilePic: (value) => set({ dontWantProfilePic: value }),
 
   clearStore: () =>
     set((state) => ({
