@@ -9,7 +9,6 @@ import TabManager from "@/components/calculator/TabManager";
 import { useColumnHighlight } from "@/hooks/useColumnHighlight";
 import { TotalAdvantage, ClientFile } from "@/lib/types";
 import { useTableStore } from "@/lib/store";
-import { debounce } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import {
   Dialog,
@@ -44,7 +43,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
     cumulativeIncome: 0,
     deathBenefits: 0,
   });
-  const [isReadOnly, setIsReadOnly] = useState(false); // New state for read-only mode
+  const [isReadOnly, setIsReadOnly] = useState(false);
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
 
   const {
@@ -102,7 +101,6 @@ export default function CalculatorPage({ params }: { params: Params }) {
               data.category === "Pro Sample Files")
         );
 
-        // setBoxesData(data.boxesData || {});
         setBoxesData(
           data.boxesData && Object.keys(data.boxesData).length > 0
             ? data.boxesData
@@ -156,76 +154,54 @@ export default function CalculatorPage({ params }: { params: Params }) {
     setYearsRunOutOfMoney,
   ]);
 
-  // Debounced save (skip if read-only)
-  const saveChanges = debounce(
-    async (manualSave: boolean = false) => {
-      if (
-        !fileId ||
-        status !== "authenticated" ||
-        !session?.user?.id ||
-        isReadOnly
-      ) {
-        console.log("Skipping save due to read-only mode or invalid state");
-        return;
-      }
-      try {
-        const response = await fetch(`/api/files/${fileId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            boxesData,
-            tablesData: {
-              tables,
-              startingBalance,
-              annualContributions,
-              annualEmployerMatch,
-              yearsRunOutOfMoney,
-            },
-          }),
-        });
-        if (!response.ok) {
-          console.error("Save failed:", response.status); // Debug
-          setError("Failed to save changes");
-        } else {
-          console.log("Saved data:", {
-            boxesData,
-            tablesData: {
-              tables,
-              startingBalance,
-              annualContributions,
-              annualEmployerMatch,
-              yearsRunOutOfMoney,
-            },
-          }); // Debug
-          if (manualSave) {
-            setIsSaveDialogOpen(true); // Open dialog on manual save
-          }
-        }
-      } catch (err) {
-        console.error("Save error:", err); // Debug
-        setError("Error saving changes");
-      }
-    },
-    1000,
-    { leading: false, trailing: true }
-  );
-
-  // Save on state changes (only if not read-only)
-  useEffect(() => {
-    if (!isReadOnly) {
-      saveChanges();
+  // Manual save function
+  const saveChanges = async () => {
+    if (
+      !fileId ||
+      status !== "authenticated" ||
+      !session?.user?.id ||
+      isReadOnly
+    ) {
+      console.log("Skipping save due to read-only mode or invalid state");
+      setError("Cannot save: Unauthorized, invalid file ID, or read-only mode");
+      return;
     }
-    return () => saveChanges.cancel();
-  }, [
-    boxesData,
-    tables,
-    startingBalance,
-    annualContributions,
-    annualEmployerMatch,
-    yearsRunOutOfMoney,
-    saveChanges,
-    isReadOnly,
-  ]);
+    try {
+      const response = await fetch(`/api/files/${fileId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          boxesData,
+          tablesData: {
+            tables,
+            startingBalance,
+            annualContributions,
+            annualEmployerMatch,
+            yearsRunOutOfMoney,
+          },
+        }),
+      });
+      if (!response.ok) {
+        console.error("Save failed:", response.status);
+        setError("Failed to save changes");
+      } else {
+        console.log("Saved data:", {
+          boxesData,
+          tablesData: {
+            tables,
+            startingBalance,
+            annualContributions,
+            annualEmployerMatch,
+            yearsRunOutOfMoney,
+          },
+        });
+        setIsSaveDialogOpen(true); // Open dialog on successful save
+      }
+    } catch (err) {
+      console.error("Save error:", err);
+      setError("Error saving changes");
+    }
+  };
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -238,8 +214,13 @@ export default function CalculatorPage({ params }: { params: Params }) {
             <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
               <DialogTrigger asChild>
                 <Button
-                  onClick={() => saveChanges(true)} // Trigger manual save
-                  disabled={status !== "authenticated" || !fileId || loading}
+                  onClick={saveChanges}
+                  disabled={
+                    status !== "authenticated" ||
+                    !fileId ||
+                    loading ||
+                    isReadOnly
+                  }
                   className="cursor-pointer high-contrast:bg-white high-contrast:text-black!"
                   variant="default"
                 >

@@ -117,6 +117,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
         const data: ClientFile = await response.json();
         console.log("Fetched data:", data);
 
+        /*
         setBoxesData(
           data.boxesData && Object.keys(data.boxesData).length > 0
             ? data.boxesData
@@ -132,7 +133,24 @@ export default function CalculatorPage({ params }: { params: Params }) {
                 taxFreePlanROR: "",
               }
         );
+        */
+
+        setBoxesData({
+          currentAge: data.boxesData?.currentAge || "",
+          stopSavingAge: data.boxesData?.stopSavingAge || "",
+          retirementAge: data.boxesData?.retirementAge || "",
+          workingTaxRate: data.boxesData?.workingTaxRate || "",
+          retirementTaxRate: data.boxesData?.retirementTaxRate || "",
+          inflationRate: data.boxesData?.inflationRate || "",
+          currentPlanFees: data.boxesData?.currentPlanFees || "",
+          currentPlanROR: data.boxesData?.currentPlanROR || "",
+          taxFreePlanROR: data.fields?.assumed_ror
+            ? parseFloat(data.fields.assumed_ror.replace("%", ""))
+            : data.boxesData?.taxFreePlanROR || "",
+        });
+
         setTables(data.tablesData?.tables || []);
+
         setStartingBalance(
           data.tablesData?.startingBalance !== undefined &&
             data.tablesData?.startingBalance !== ""

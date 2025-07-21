@@ -21,7 +21,7 @@ import { useTableStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { useTableHighlight } from "@/hooks/useTableHighlight";
 import { useSession } from "next-auth/react";
-import { cn, debounce } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import { ClientFile } from "@/lib/types";
 import {
@@ -29,6 +29,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 type TableData = {
   source: string;
@@ -65,6 +73,7 @@ export default function ImportPage({ params }: { params: Params }) {
   const [isTableFullScreen, setIsTableFullScreen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [highlightColor, setHighlightColor] = useState("#ffa1ad");
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
 
   const {
     fileName,
@@ -106,11 +115,11 @@ export default function ImportPage({ params }: { params: Params }) {
           return;
         }
         const data: ClientFile = await response.json();
-        console.log(fileName);
         setTables(data.tablesData?.tables || []);
         setFields(data.fields || {});
         setFileName(data.fileName || "");
         setHasFetched(true);
+        console.log(fileName);
       } catch {
         setError("Error fetching file");
       } finally {
@@ -121,29 +130,29 @@ export default function ImportPage({ params }: { params: Params }) {
     fetchFile();
   }, [fileId, session, status, hasFetched, setTables, setFields]);
 
-  const saveChanges = debounce(
-    async () => {
-      if (!fileId || status !== "authenticated" || !session?.user?.id) return;
-      try {
-        const response = await fetch(`/api/files/${fileId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tablesData: { tables }, fields }),
-        });
-        if (!response.ok) setError("Failed to save changes");
-      } catch {
-        setError("Error saving changes");
+  const saveChanges = async () => {
+    if (!fileId || status !== "authenticated" || !session?.user?.id) {
+      setError("Unauthorized or invalid file ID");
+      return;
+    }
+    try {
+      const response = await fetch(`/api/files/${fileId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tablesData: { tables }, fields }),
+      });
+      if (!response.ok) {
+        setError("Failed to save changes");
+        toast("Failed to save changes");
+      } else {
+        setIsSaveDialogOpen(true); // Open dialog on successful save
+        toast("Changes saved successfully");
       }
-    },
-    1000,
-    { leading: false, trailing: true }
-  );
-
-  useEffect(() => {
-    if (tables.length > 0 || Object.values(fields).some((v) => v !== null))
-      saveChanges();
-    return () => saveChanges.cancel();
-  }, [tables, fields, saveChanges]);
+    } catch {
+      setError("Error saving changes");
+      toast("Error saving changes");
+    }
+  };
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>
@@ -231,7 +240,7 @@ export default function ImportPage({ params }: { params: Params }) {
           setError("Failed to clear fields data");
           toast("Failed to clear fields data");
         }
-        clearStore(); // Clear store but preserve critical values (handled in useTableStore)
+        clearStore();
       } catch {
         setError("Error clearing data");
         toast("Error clearing data");
@@ -423,6 +432,45 @@ export default function ImportPage({ params }: { params: Params }) {
 
   return (
     <div className="grow h-full">
+      <div className="fixed bottom-5 left-10">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  onClick={saveChanges}
+                  disabled={
+                    status !== "authenticated" || !fileId || isTableLoading
+                  }
+                  className="cursor-pointer high-contrast:bg-white high-contrast:text-black!"
+                  variant="default"
+                >
+                  Save
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Save Successful</DialogTitle>
+                  <DialogDescription className="high-contrast:text-gray-200">
+                    Your changes have been successfully saved!
+                  </DialogDescription>
+                </DialogHeader>
+                <Button
+                  onClick={() => setIsSaveDialogOpen(false)}
+                  variant="outline"
+                  className="mt-4"
+                >
+                  Close
+                </Button>
+              </DialogContent>
+            </Dialog>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Save your changes</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -549,17 +597,6 @@ export default function ImportPage({ params }: { params: Params }) {
                 className="w-8 h-8 border rounded"
               />
             </div>
-            {/* <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="file-name">
-                File Name
-              </Label>
-              <Input
-                className="w-2/4"
-                id="file-name"
-                disabled
-                value={file?.name || ""}
-              />
-            </div> */}
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="illustration-date">
                 Illustration Date
@@ -582,17 +619,6 @@ export default function ImportPage({ params }: { params: Params }) {
                 value={fields.insured_name || ""}
               />
             </div>
-            {/* <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="initial-death-benefit">
-                Initial Death Benefit
-              </Label>
-              <Input
-                className="w-2/4"
-                id="initial-death-benefit"
-                disabled
-                value={fields.initial_death_benefit || ""}
-              />
-            </div> */}
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="assumed-ror">
                 Assumed ROR
@@ -604,17 +630,6 @@ export default function ImportPage({ params }: { params: Params }) {
                 value={fields.assumed_ror || ""}
               />
             </div>
-            {/* <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="minimum-initial-pmt">
-                Minimum Initial Pmt
-              </Label>
-              <Input
-                className="w-2/4"
-                id="minimum-initial-pmt"
-                disabled
-                value={fields.minimum_initial_pmt || ""}
-              />
-            </div> */}
           </div>
 
           <Card className="border">
