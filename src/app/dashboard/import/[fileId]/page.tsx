@@ -85,12 +85,12 @@ export default function ImportPage({ params }: { params: Params }) {
   } = useTableHighlight();
 
   useEffect(() => {
-    if (
-      status !== "authenticated" ||
-      !session?.user?.id ||
-      !fileId ||
-      hasFetched
-    ) {
+    // Only proceed if the session is fully loaded
+    if (status === "loading") {
+      return; // Wait for session to load
+    }
+
+    if (status !== "authenticated" || !session?.user?.id || !fileId) {
       setError("Unauthorized or invalid file ID");
       setLoading(false);
       return;
