@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Upload, ZoomIn, ZoomOut, Fullscreen, Minimize2 } from "lucide-react";
 import { toast } from "sonner";
 import { useTableStore } from "@/lib/store";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { useTableHighlight } from "@/hooks/useTableHighlight";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -84,7 +84,9 @@ export default function ImportPage({ params }: { params: Params }) {
     setFields,
     clearStore,
   } = useTableStore();
-  const router = useRouter();
+
+  // const router = useRouter();
+
   const {
     highlightedRows,
     highlightedColumns,
@@ -217,11 +219,11 @@ export default function ImportPage({ params }: { params: Params }) {
     e.stopPropagation();
   };
 
-  const handleImport = () => {
-    if (!tables.length) return;
-    toast("Data imported successfully.");
-    router.push(`/dashboard/calculator/${fileId}`);
-  };
+  // const handleImport = () => {
+  //   if (!tables.length) return;
+  //   toast("Data imported successfully.");
+  //   router.push(`/dashboard/calculator/${fileId}`);
+  // };
 
   const handleCancel = async () => {
     setFile(null);
@@ -696,7 +698,7 @@ export default function ImportPage({ params }: { params: Params }) {
               {error}
             </motion.div>
           )}
-          {isTableLoading && (
+          {/* {isTableLoading && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -705,26 +707,19 @@ export default function ImportPage({ params }: { params: Params }) {
             >
               Processing...
             </motion.div>
-          )}
+          )} */}
           {tables.length > 0 && !isTableLoading && !error && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.3 }}
-              className="flex justify-center gap-4"
+              className="flex gap-4"
             >
-              <Button
-                className=" high-contrast:bg-white high-contrast:text-black"
-                variant="default"
-                onClick={handleImport}
-                disabled={isTableLoading}
-              >
-                Import
-              </Button>
               <Button
                 variant="outline"
                 onClick={handleCancel}
                 disabled={isTableLoading}
+                className="flex-1"
               >
                 Clear
               </Button>
