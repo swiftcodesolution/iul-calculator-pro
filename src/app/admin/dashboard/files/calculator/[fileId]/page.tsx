@@ -100,86 +100,114 @@ export default function CalculatorPage({ params }: { params: Params }) {
           }
         }
         const data: ClientFile = await response.json();
+
         console.log("Fetched data:", data);
         console.log("tablesData:", data.tablesData);
 
         // Check if tablesData contains required fields
-        const hasRequiredFields =
-          data.tablesData &&
-          typeof data.tablesData === "object" &&
-          "startingBalance" in data.tablesData &&
-          "annualContributions" in data.tablesData &&
-          "annualEmployerMatch" in data.tablesData &&
-          "yearsRunOutOfMoney" in data.tablesData &&
-          data.tablesData.startingBalance !== undefined &&
-          data.tablesData.annualContributions !== undefined &&
-          data.tablesData.annualEmployerMatch !== undefined &&
-          data.tablesData.yearsRunOutOfMoney !== undefined;
+        // const hasRequiredFields =
+        //   data.tablesData &&
+        //   typeof data.tablesData === "object" &&
+        //   "startingBalance" in data.tablesData &&
+        //   "annualContributions" in data.tablesData &&
+        //   "annualEmployerMatch" in data.tablesData &&
+        //   "yearsRunOutOfMoney" in data.tablesData &&
+        //   data.tablesData.startingBalance !== undefined &&
+        //   data.tablesData.annualContributions !== undefined &&
+        //   data.tablesData.annualEmployerMatch !== undefined &&
+        //   data.tablesData.yearsRunOutOfMoney !== undefined;
 
-        if (!hasRequiredFields) {
-          clearEverythingForFreshFile();
-          setBoxesData({
-            currentAge: data.boxesData?.currentAge || "",
-            stopSavingAge: data.boxesData?.stopSavingAge || "",
-            retirementAge: data.boxesData?.retirementAge || "",
-            workingTaxRate: data.boxesData?.workingTaxRate || "",
-            retirementTaxRate: data.boxesData?.retirementTaxRate || "",
-            inflationRate: data.boxesData?.inflationRate || "",
-            currentPlanFees: data.boxesData?.currentPlanFees || "",
-            currentPlanROR: data.boxesData?.currentPlanROR || "",
-            taxFreePlanROR: data.fields?.assumed_ror
-              ? parseFloat(data.fields.assumed_ror.replace("%", ""))
-              : data.boxesData?.taxFreePlanROR || "",
-          });
-          setTables(data.tablesData?.tables || []);
-          setStartingBalance("");
-          setAnnualContributions("");
-          setAnnualEmployerMatch("");
-          setYearsRunOutOfMoney("");
-          return;
-        }
+        // if (!hasRequiredFields) {
+        //   clearEverythingForFreshFile();
+        //   setBoxesData({
+        //     currentAge: data.boxesData?.currentAge || "",
+        //     stopSavingAge: data.boxesData?.stopSavingAge || "",
+        //     retirementAge: data.boxesData?.retirementAge || "",
+        //     workingTaxRate: data.boxesData?.workingTaxRate || "",
+        //     retirementTaxRate: data.boxesData?.retirementTaxRate || "",
+        //     inflationRate: data.boxesData?.inflationRate || "",
+        //     currentPlanFees: data.boxesData?.currentPlanFees || "",
+        //     currentPlanROR: data.boxesData?.currentPlanROR || "",
+        //     taxFreePlanROR: data.fields?.assumed_ror
+        //       ? parseFloat(data.fields.assumed_ror.replace("%", ""))
+        //       : data.boxesData?.taxFreePlanROR || "",
+        //   });
+        //   setTables(data.tablesData?.tables || []);
+        //   setStartingBalance("");
+        //   setAnnualContributions("");
+        //   setAnnualEmployerMatch("");
+        //   setYearsRunOutOfMoney("");
+        //   return;
+        // }
 
-        setBoxesData({
-          currentAge: data.boxesData?.currentAge || "",
-          stopSavingAge: data.boxesData?.stopSavingAge || "",
-          retirementAge: data.boxesData?.retirementAge || "",
-          workingTaxRate: data.boxesData?.workingTaxRate || "",
-          retirementTaxRate: data.boxesData?.retirementTaxRate || "",
-          inflationRate: data.boxesData?.inflationRate || "",
-          currentPlanFees: data.boxesData?.currentPlanFees || "",
-          currentPlanROR: data.boxesData?.currentPlanROR || "",
-          taxFreePlanROR: data.fields?.assumed_ror
-            ? parseFloat(data.fields.assumed_ror.replace("%", ""))
-            : data.boxesData?.taxFreePlanROR || "",
-        });
+        // setBoxesData({
+        //   currentAge: data.boxesData?.currentAge || "",
+        //   stopSavingAge: data.boxesData?.stopSavingAge || "",
+        //   retirementAge: data.boxesData?.retirementAge || "",
+        //   workingTaxRate: data.boxesData?.workingTaxRate || "",
+        //   retirementTaxRate: data.boxesData?.retirementTaxRate || "",
+        //   inflationRate: data.boxesData?.inflationRate || "",
+        //   currentPlanFees: data.boxesData?.currentPlanFees || "",
+        //   currentPlanROR: data.boxesData?.currentPlanROR || "",
+        //   taxFreePlanROR: data.fields?.assumed_ror
+        //     ? parseFloat(data.fields.assumed_ror.replace("%", ""))
+        //     : data.boxesData?.taxFreePlanROR || "",
+        // });
+
+        setBoxesData(
+          data.boxesData && Object.keys(data.boxesData).length > 0
+            ? {
+                currentAge: data.boxesData.currentAge || "",
+                stopSavingAge: data.boxesData.stopSavingAge || "",
+                retirementAge: data.boxesData.retirementAge || "",
+                workingTaxRate: data.boxesData.workingTaxRate || "",
+                retirementTaxRate: data.boxesData.retirementTaxRate || "",
+                inflationRate: data.boxesData.inflationRate || "",
+                currentPlanFees: data.boxesData.currentPlanFees || "",
+                currentPlanROR: data.boxesData.currentPlanROR || "",
+                taxFreePlanROR: data.fields?.assumed_ror
+                  ? parseFloat(data.fields.assumed_ror.replace("%", ""))
+                  : data.boxesData?.taxFreePlanROR || "",
+              }
+            : {
+                currentAge: "",
+                stopSavingAge: "",
+                retirementAge: "",
+                workingTaxRate: "",
+                retirementTaxRate: "",
+                inflationRate: "",
+                currentPlanFees: "",
+                currentPlanROR: "",
+                taxFreePlanROR: data.fields?.assumed_ror
+                  ? parseFloat(data.fields.assumed_ror.replace("%", ""))
+                  : "",
+              }
+        );
 
         setTables(data.tablesData?.tables || []);
+
         // Use existing store values as fallbacks if fetched data is invalid
         setStartingBalance(
           data.tablesData?.startingBalance !== undefined &&
-            data.tablesData?.startingBalance !== 0 &&
-            data.tablesData?.startingBalance !== ""
+            data.tablesData?.startingBalance !== 0
             ? data.tablesData.startingBalance
             : startingBalance
         );
         setAnnualContributions(
           data.tablesData?.annualContributions !== undefined &&
-            data.tablesData?.annualContributions !== 0 &&
-            data.tablesData?.annualContributions !== ""
+            data.tablesData?.annualContributions !== 0
             ? data.tablesData.annualContributions
             : annualContributions
         );
         setAnnualEmployerMatch(
           data.tablesData?.annualEmployerMatch !== undefined &&
-            data.tablesData?.annualEmployerMatch !== 0 &&
-            data.tablesData?.annualEmployerMatch !== ""
+            data.tablesData?.annualEmployerMatch !== 0
             ? data.tablesData.annualEmployerMatch
             : annualEmployerMatch
         );
         setYearsRunOutOfMoney(
           data.tablesData?.yearsRunOutOfMoney !== undefined &&
-            data.tablesData?.yearsRunOutOfMoney !== 0 &&
-            data.tablesData?.yearsRunOutOfMoney !== ""
+            data.tablesData?.yearsRunOutOfMoney !== 0
             ? data.tablesData.yearsRunOutOfMoney
             : yearsRunOutOfMoney
         );

@@ -101,11 +101,42 @@ export default function CalculatorPage({ params }: { params: Params }) {
               data.category === "Pro Sample Files")
         );
 
+        // setBoxesData(
+        //   data.boxesData && Object.keys(data.boxesData).length > 0
+        //     ? data.boxesData
+        //     : {}
+        // );
+
         setBoxesData(
           data.boxesData && Object.keys(data.boxesData).length > 0
-            ? data.boxesData
-            : {}
+            ? {
+                currentAge: data.boxesData.currentAge || "",
+                stopSavingAge: data.boxesData.stopSavingAge || "",
+                retirementAge: data.boxesData.retirementAge || "",
+                workingTaxRate: data.boxesData.workingTaxRate || "",
+                retirementTaxRate: data.boxesData.retirementTaxRate || "",
+                inflationRate: data.boxesData.inflationRate || "",
+                currentPlanFees: data.boxesData.currentPlanFees || "",
+                currentPlanROR: data.boxesData.currentPlanROR || "",
+                taxFreePlanROR: data.fields?.assumed_ror
+                  ? parseFloat(data.fields.assumed_ror.replace("%", ""))
+                  : data.boxesData?.taxFreePlanROR || "",
+              }
+            : {
+                currentAge: "",
+                stopSavingAge: "",
+                retirementAge: "",
+                workingTaxRate: "",
+                retirementTaxRate: "",
+                inflationRate: "",
+                currentPlanFees: "",
+                currentPlanROR: "",
+                taxFreePlanROR: data.fields?.assumed_ror
+                  ? parseFloat(data.fields.assumed_ror.replace("%", ""))
+                  : "",
+              }
         );
+
         setTables(data.tablesData?.tables || []);
 
         // Only update if the fetched data is valid (not 0 or undefined)
