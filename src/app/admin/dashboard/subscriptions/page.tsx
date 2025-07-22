@@ -10,7 +10,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { DollarSign, RefreshCw, ArrowUpDown } from "lucide-react";
+import { Input } from "@/components/ui/input"; // Assuming you have an Input component from your UI library
+import { DollarSign, RefreshCw, ArrowUpDown, Search } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -26,9 +27,13 @@ interface Subscription {
 
 export default function SubscriptionsPage() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [filteredSubscriptions, setFilteredSubscriptions] = useState<
+    Subscription[]
+  >([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchSubscriptions = async () => {
     try {
@@ -36,6 +41,7 @@ export default function SubscriptionsPage() {
       if (!response.ok) throw new Error("Failed to fetch subscriptions");
       const data = await response.json();
       setSubscriptions(data);
+      setFilteredSubscriptions(data); // Initialize filtered list
     } catch (err) {
       setError("Error loading subscriptions");
       console.error(err);
@@ -53,7 +59,17 @@ export default function SubscriptionsPage() {
     setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
 
-  const sortedSubscriptions = [...subscriptions].sort((a, b) => {
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    const filtered = subscriptions.filter(
+      (sub) =>
+        sub.userName.toLowerCase().includes(query.toLowerCase()) ||
+        sub.userEmail.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredSubscriptions(filtered);
+  };
+
+  const sortedSubscriptions = [...filteredSubscriptions].sort((a, b) => {
     if (!sortOrder) return 0;
     return sortOrder === "asc"
       ? a.userName.localeCompare(b.userName)
@@ -74,7 +90,16 @@ export default function SubscriptionsPage() {
           className="flex justify-between items-center mb-6"
         >
           <h1 className="text-3xl font-bold">Subscriptions</h1>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pl-8 w-64 focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -115,7 +140,7 @@ export default function SubscriptionsPage() {
             <CardHeader className="flex items-center">
               <DollarSign className="mr-2 text-blue-500" />
               <CardTitle className="text-xl">
-                All Subscriptions ({subscriptions.length} total)
+                All Subscriptions ({filteredSubscriptions.length} total)
               </CardTitle>
             </CardHeader>
             <CardContent>
