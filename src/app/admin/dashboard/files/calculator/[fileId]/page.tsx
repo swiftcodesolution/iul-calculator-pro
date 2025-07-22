@@ -165,9 +165,11 @@ export default function CalculatorPage({ params }: { params: Params }) {
                 inflationRate: data.boxesData.inflationRate || "",
                 currentPlanFees: data.boxesData.currentPlanFees || "",
                 currentPlanROR: data.boxesData.currentPlanROR || "",
-                taxFreePlanROR: data.fields?.assumed_ror
-                  ? parseFloat(data.fields.assumed_ror.replace("%", ""))
-                  : data.boxesData?.taxFreePlanROR || "",
+                taxFreePlanROR: data.boxesData.taxFreePlanROR || "",
+
+                // taxFreePlanROR: data.fields?.assumed_ror
+                //   ? parseFloat(data.fields.assumed_ror.replace("%", ""))
+                //   : data.boxesData?.taxFreePlanROR || "",
               }
             : {
                 currentAge: "",
@@ -178,9 +180,18 @@ export default function CalculatorPage({ params }: { params: Params }) {
                 inflationRate: "",
                 currentPlanFees: "",
                 currentPlanROR: "",
-                taxFreePlanROR: data.fields?.assumed_ror
-                  ? parseFloat(data.fields.assumed_ror.replace("%", ""))
-                  : "",
+
+                // taxFreePlanROR: data.fields?.assumed_ror
+                //   ? parseFloat(data.fields.assumed_ror.replace("%", ""))
+                //   : "",
+
+                taxFreePlanROR:
+                  data.fields?.assumed_ror &&
+                  data.fields.assumed_ror.trim() !== ""
+                    ? parseFloat(
+                        data.fields.assumed_ror.replace("%", "")
+                      ).toString()
+                    : "",
               }
         );
 
