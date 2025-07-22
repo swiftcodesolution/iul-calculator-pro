@@ -8,6 +8,24 @@ import { randomUUID } from "crypto";
 import nodemailer from "nodemailer";
 import { syncToZohoCRM } from "@/lib/zoho";
 
+// Define interface for syncToZohoCRM parameters
+interface ZohoUserData {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  iulCalculatorProLead?: string;
+  subscriptionPlan?: string;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+}
+
+interface ZohoSubscriptionData {
+  planType: string;
+  stripeCustomerId: string;
+  stripeSubscriptionId: string;
+}
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT || "587"),
@@ -73,22 +91,64 @@ export async function POST(request: Request) {
     annual: "price_1RbR2ADjQSIXuLORFc9tlyfY",
   };
 
-  const user = {
-    id: session.user.id,
-    iulCalculatorProLead: "iul calculator pro lead",
-    email: session.user.email!,
-    firstName: session.user.firstName ?? "first name",
-    lastName: session.user.lastName ?? "last name",
-    subscriptionPlan: "subscription plan",
-    stripeCustomerId: "stripe customer id",
-    stripeSubscriptionId: "stripe subscription id",
-  };
-  console.log("User data prepared:", user);
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      cellPhone: true,
+      officePhone: true,
+      createdAt: true,
+      role: true,
+    },
+  });
+  if (!user) {
+    console.error("User not found:", session.user.id);
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+  console.log("User data fetched:", {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  });
 
   const trialToken = await prisma.trialToken.findUnique({
     where: { userId: session.user.id },
   });
   console.log("Trial token check:", trialToken ? "Found" : "Not found");
+
+  const logEmailAttempt = async (
+    emailType: string,
+    recipient: string,
+    subject: string,
+    status: string,
+    errorMessage?: string,
+    subscriptionId?: string
+  ) => {
+    try {
+      await prisma.emailLog.create({
+        data: {
+          userId: user.id,
+          subscriptionId,
+          emailType,
+          recipient,
+          subject,
+          status,
+          errorMessage,
+          sentAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
+      console.log(`Email log created: ${emailType} to ${recipient}`);
+    } catch (logError: any) {
+      console.error(`Failed to log email attempt for ${emailType}:`, {
+        message: logError.message,
+      });
+    }
+  };
 
   if (!trialToken) {
     try {
@@ -103,6 +163,8 @@ export async function POST(request: Request) {
             status: "trialing",
             startDate: new Date(),
             renewalDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+            createdAt: new Date(),
+            updatedAt: new Date(),
           },
         }),
         prisma.trialToken.create({
@@ -110,6 +172,7 @@ export async function POST(request: Request) {
             userId: session.user.id,
             token: randomUUID(),
             expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+            createdAt: new Date(),
           },
         }),
       ]);
@@ -117,11 +180,23 @@ export async function POST(request: Request) {
 
       try {
         console.log("Attempting Zoho CRM sync");
-        await syncToZohoCRM(user, {
-          planType: subscription.planType,
-          stripeCustomerId: subscription.stripeCustomerId ?? "",
-          stripeSubscriptionId: subscription.stripeSubscriptionId,
-        });
+        await syncToZohoCRM(
+          {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName ?? "first name",
+            lastName: user.lastName ?? "last name",
+            iulCalculatorProLead: "iul calculator pro lead",
+            subscriptionPlan: plan,
+            stripeCustomerId: "",
+            stripeSubscriptionId: `trial-${user.id}`,
+          } as ZohoUserData,
+          {
+            planType: subscription.planType,
+            stripeCustomerId: subscription.stripeCustomerId ?? "",
+            stripeSubscriptionId: subscription.stripeSubscriptionId,
+          } as ZohoSubscriptionData
+        );
         console.log("Zoho CRM sync completed successfully");
       } catch (zohoError: any) {
         console.error("Zoho sync failed, continuing with trial activation:", {
@@ -132,71 +207,120 @@ export async function POST(request: Request) {
         // Continue despite Zoho failure
       }
 
+      const adminSubject = "New User Signup and Trial Subscription";
       try {
-        console.log("Sending admin email");
+        console.log("Sending admin signup and trial email");
         await transporter.sendMail({
           from: `"IUL Calculator Pro" <${process.env.SMTP_USER}>`,
           to: process.env.ADMIN_EMAIL,
-          subject: "New Trial Subscription",
+          subject: adminSubject,
           text: `
-            A user has activated a trial subscription.
+            A new user has signed up and activated a trial subscription.
             
-            User ID: ${session.user.id}
-            Email: ${session.user.email}
+            User ID: ${user.id}
+            Name: ${user.firstName} ${user.lastName}
+            Email: ${user.email}
+            Cell Phone: ${user.cellPhone}
+            Office Phone: ${user.officePhone}
+            Signed Up At: ${user.createdAt.toLocaleString()}
             Plan: ${plan}
             Start Date: ${new Date().toLocaleString()}
             Renewal Date: ${subscription.renewalDate?.toLocaleString()}
           `,
           html: `
-            <h2>New Trial Subscription</h2>
-            <p><strong>User ID:</strong> ${session.user.id}</p>
-            <p><strong>Email:</strong> ${session.user.email}</p>
+            <h2>New User Signup and Trial Subscription</h2>
+            <p><strong>User ID:</strong> ${user.id}</p>
+            <p><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
+            <p><strong>Email:</strong> ${user.email}</p>
+            <p><strong>Cell Phone:</strong> ${user.cellPhone}</p>
+            <p><strong>Office Phone:</strong> ${user.officePhone}</p>
+            <p><strong>Signed Up At:</strong> ${user.createdAt.toLocaleString()}</p>
             <p><strong>Plan:</strong> ${plan}</p>
             <p><strong>Start Date:</strong> ${new Date().toLocaleString()}</p>
             <p><strong>Renewal Date:</strong> ${subscription.renewalDate?.toLocaleString()}</p>
           `,
         });
-        console.log("Admin email sent successfully");
+        console.log("Admin signup and trial email sent successfully");
+        await logEmailAttempt(
+          "signup_trial",
+          process.env.ADMIN_EMAIL!,
+          adminSubject,
+          "sent",
+          undefined,
+          subscription.id
+        );
       } catch (emailError: any) {
-        console.error("Admin email failed:", {
+        console.error("Admin signup and trial email failed:", {
           message: emailError.message,
           code: emailError.code,
         });
+        await logEmailAttempt(
+          "signup_trial",
+          process.env.ADMIN_EMAIL!,
+          adminSubject,
+          "failed",
+          emailError.message,
+          subscription.id
+        );
         // Continue despite email failure
       }
 
+      const userSubject = "Welcome to IUL Calculator Pro - Trial Activated!";
       try {
-        console.log("Sending user email");
+        console.log("Sending user welcome and trial email");
         await transporter.sendMail({
           from: `"IUL Calculator Pro" <${process.env.SMTP_USER}>`,
-          to: session.user.email,
-          subject: "Welcome to Your Trial Subscription!",
+          to: user.email,
+          subject: userSubject,
           text: `
-            Hi,
+            Hi ${user.firstName},
             
-            Your trial subscription has been activated!
+            Welcome to IUL Calculator Pro! Your account has been successfully created, and your trial subscription has been activated.
             
+            Name: ${user.firstName} ${user.lastName}
+            Email: ${user.email}
+            Cell Phone: ${user.cellPhone}
             Plan: ${plan}
             Start Date: ${new Date().toLocaleString()}
             Renewal Date: ${subscription.renewalDate?.toLocaleString()}
             
-            Thank you for choosing IUL Calculator Pro!
+            Thank you for joining us!
           `,
           html: `
-            <h2>Welcome to Your Trial Subscription!</h2>
-            <p>Your trial subscription has been activated!</p>
+            <h2>Welcome to IUL Calculator Pro!</h2>
+            <p>Hi ${user.firstName},</p>
+            <p>Your account has been successfully created, and your trial subscription has been activated.</p>
+            <p><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
+            <p><strong>Email:</strong> ${user.email}</p>
+            <p><strong>Cell Phone:</strong> ${user.cellPhone}</p>
             <p><strong>Plan:</strong> ${plan}</p>
             <p><strong>Start Date:</strong> ${new Date().toLocaleString()}</p>
             <p><strong>Renewal Date:</strong> ${subscription.renewalDate?.toLocaleString()}</p>
-            <p>Thank you for choosing IUL Calculator Pro!</p>
+            <p>Thank you for joining us!</p>
           `,
         });
-        console.log("User email sent successfully");
+        console.log("User welcome and trial email sent successfully");
+        await logEmailAttempt(
+          "signup_trial",
+          user.email,
+          userSubject,
+          "sent",
+          undefined,
+          subscription.id
+        );
       } catch (emailError: any) {
-        console.error("User email failed:", {
+        console.error("User welcome and trial email failed:", {
           message: emailError.message,
           code: emailError.code,
         });
+        await logEmailAttempt(
+          "signup_trial",
+          user.email,
+          userSubject,
+          "failed",
+          emailError.message,
+          subscription.id
+        );
         // Continue despite email failure
       }
 
@@ -231,14 +355,15 @@ export async function POST(request: Request) {
       const subscription = await prisma.subscription.findFirst({
         where: { userId: session.user.id },
       });
+      let updatedSubscription;
       if (subscription) {
-        await prisma.subscription.update({
+        updatedSubscription = await prisma.subscription.update({
           where: { id: subscription.id },
-          data: { planType: plan },
+          data: { planType: plan, updatedAt: new Date() },
         });
         console.log("Subscription updated:", subscription.id);
       } else {
-        await prisma.subscription.create({
+        updatedSubscription = await prisma.subscription.create({
           data: {
             userId: session.user.id,
             stripeCustomerId: "",
@@ -247,6 +372,8 @@ export async function POST(request: Request) {
             status: "trialing",
             startDate: new Date(),
             renewalDate: trialToken.expiresAt,
+            createdAt: new Date(),
+            updatedAt: new Date(),
           },
         });
         console.log("New subscription created for trial");
@@ -254,11 +381,23 @@ export async function POST(request: Request) {
 
       try {
         console.log("Attempting Zoho CRM sync for trial update");
-        await syncToZohoCRM(user, {
-          planType: plan,
-          stripeCustomerId: "",
-          stripeSubscriptionId: `trial-${session.user.id}`,
-        });
+        await syncToZohoCRM(
+          {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName ?? "first name",
+            lastName: user.lastName ?? "last name",
+            iulCalculatorProLead: "iul calculator pro lead",
+            subscriptionPlan: plan,
+            stripeCustomerId: "",
+            stripeSubscriptionId: `trial-${user.id}`,
+          } as ZohoUserData,
+          {
+            planType: plan,
+            stripeCustomerId: "",
+            stripeSubscriptionId: `trial-${user.id}`,
+          } as ZohoSubscriptionData
+        );
         console.log("Zoho CRM sync completed successfully for trial update");
       } catch (zohoError: any) {
         console.error("Zoho sync failed for trial update, continuing:", {
@@ -269,45 +408,63 @@ export async function POST(request: Request) {
         // Continue despite Zoho failure
       }
 
+      const adminSubject = "Trial Plan Updated";
       try {
         console.log("Sending admin email for trial update");
         await transporter.sendMail({
           from: `"IUL Calculator Pro" <${process.env.SMTP_USER}>`,
           to: process.env.ADMIN_EMAIL,
-          subject: "Trial Plan Updated",
+          subject: adminSubject,
           text: `
             A user has updated their trial subscription plan.
             
-            User ID: ${session.user.id}
-            Email: ${session.user.email}
+            User ID: ${user.id}
+            Email: ${user.email}
             Plan: ${plan}
             Updated At: ${new Date().toLocaleString()}
           `,
           html: `
             <h2>Trial Plan Updated</h2>
-            <p><strong>User ID:</strong> ${session.user.id}</p>
-            <p><strong>Email:</strong> ${session.user.email}</p>
+            <p><strong>User ID:</strong> ${user.id}</p>
+            <p><strong>Email:</strong> ${user.email}</p>
             <p><strong>Plan:</strong> ${plan}</p>
             <p><strong>Updated At:</strong> ${new Date().toLocaleString()}</p>
           `,
         });
         console.log("Admin email sent successfully for trial update");
+        await logEmailAttempt(
+          "trial_update",
+          process.env.ADMIN_EMAIL!,
+          adminSubject,
+          "sent",
+          undefined,
+          updatedSubscription.id
+        );
       } catch (emailError: any) {
         console.error("Admin email failed for trial update:", {
           message: emailError.message,
           code: emailError.code,
         });
+        await logEmailAttempt(
+          "trial_update",
+          process.env.ADMIN_EMAIL!,
+          adminSubject,
+          "failed",
+          emailError.message,
+          updatedSubscription.id
+        );
         // Continue despite email failure
       }
 
+      const userSubject = "Trial Plan Updated";
       try {
         console.log("Sending user email for trial update");
         await transporter.sendMail({
           from: `"IUL Calculator Pro" <${process.env.SMTP_USER}>`,
-          to: session.user.email,
-          subject: "Trial Plan Updated",
+          to: user.email,
+          subject: userSubject,
           text: `
-            Hi,
+            Hi ${user.firstName},
             
             Your trial subscription plan has been updated to ${plan}.
             
@@ -318,17 +475,34 @@ export async function POST(request: Request) {
           `,
           html: `
             <h2>Trial Plan Updated</h2>
+            <p>Hi ${user.firstName},</p>
             <p>Your trial subscription plan has been updated to <strong>${plan}</strong>.</p>
             <p><strong>Updated At:</strong> ${new Date().toLocaleString()}</p>
             <p>Thank you for using IUL Calculator Pro!</p>
           `,
         });
         console.log("User email sent successfully for trial update");
+        await logEmailAttempt(
+          "trial_update",
+          user.email,
+          userSubject,
+          "sent",
+          undefined,
+          updatedSubscription.id
+        );
       } catch (emailError: any) {
         console.error("User email failed for trial update:", {
           message: emailError.message,
           code: emailError.code,
         });
+        await logEmailAttempt(
+          "trial_update",
+          user.email,
+          userSubject,
+          "failed",
+          emailError.message,
+          updatedSubscription.id
+        );
         // Continue despite email failure
       }
 
@@ -361,14 +535,14 @@ export async function POST(request: Request) {
   try {
     console.log("Creating Stripe checkout session for paid plan");
     const customers = await stripe.customers.list({
-      email: session.user.email,
+      email: user.email,
       limit: 1,
     });
     const customer: Stripe.Customer =
       customers.data[0] ??
       (await stripe.customers.create({
-        email: session.user.email,
-        metadata: { userId: session.user.id },
+        email: user.email,
+        metadata: { userId: user.id },
       }));
     console.log("Stripe customer:", customer.id);
 
@@ -383,7 +557,7 @@ export async function POST(request: Request) {
         "origin"
       )}/dashboard/home?canceled=true`,
       line_items: [{ price: planIds[plan], quantity: 1 }],
-      metadata: { plan, userId: session.user.id },
+      metadata: { plan, userId: user.id },
     });
     console.log("Stripe checkout session created:", checkoutSession.id);
 
@@ -412,6 +586,7 @@ export async function GET() {
   try {
     const subscription = await prisma.subscription.findFirst({
       where: { userId: session.user.id },
+      include: { iulSales: { where: { verified: true } } },
     });
     console.log(
       "Subscription fetched:",
@@ -425,7 +600,8 @@ export async function GET() {
     const isExpired =
       subscription.status === "trialing" &&
       subscription.renewalDate &&
-      new Date(subscription.renewalDate) < new Date();
+      new Date(subscription.renewalDate) < new Date() &&
+      subscription.iulSales.length === 0;
     console.log(
       "Subscription status:",
       isExpired ? "expired" : subscription.status
@@ -435,6 +611,7 @@ export async function GET() {
       status: isExpired ? "expired" : subscription.status,
       planType: subscription.planType,
       endDate: subscription.renewalDate?.toISOString(),
+      iulSalesCount: subscription.iulSales.length,
     });
   } catch (error: any) {
     console.error("Subscription fetch error:", {
