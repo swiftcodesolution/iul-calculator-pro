@@ -8,7 +8,6 @@ import TabManager from "@/components/calculator/TabManager";
 import { useColumnHighlight } from "@/hooks/useColumnHighlight";
 import { TotalAdvantage, ClientFile } from "@/lib/types";
 import { useTableStore } from "@/lib/store";
-import { debounce } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -30,7 +29,6 @@ export default function CalculatorPage({ params }: { params: Params }) {
   const { fileId } = use(params);
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
   const [isTableCardExpanded, setIsTableCardExpanded] = useState(false);
   const [isTabCardExpanded, setIsTabCardExpanded] = useState(false);
@@ -68,19 +66,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
   } = useColumnHighlight();
 
   useEffect(() => {
-    // Reset store on mount to prevent stale data
-    clearEverythingForFreshFile();
-    console.log("Store state after mount:", {
-      boxesData,
-      tables,
-      startingBalance,
-      annualContributions,
-      annualEmployerMatch,
-      yearsRunOutOfMoney,
-    });
-
     if (status !== "authenticated" || !session?.user?.id || !fileId) {
-      setError("Unauthorized or invalid file ID");
       setLoading(false);
       return;
     }
@@ -107,33 +93,51 @@ export default function CalculatorPage({ params }: { params: Params }) {
             setAnnualContributions("");
             setAnnualEmployerMatch("");
             setYearsRunOutOfMoney("");
-            setError("File not found, starting with empty fields");
             return;
           } else {
-            setError("Failed to fetch file");
+            console.error("Fetch failed:", response.status);
             return;
           }
         }
         const data: ClientFile = await response.json();
         console.log("Fetched data:", data);
+        console.log("tablesData:", data.tablesData);
 
-        /*
-        setBoxesData(
-          data.boxesData && Object.keys(data.boxesData).length > 0
-            ? data.boxesData
-            : {
-                currentAge: "",
-                stopSavingAge: "",
-                retirementAge: "",
-                workingTaxRate: "",
-                retirementTaxRate: "",
-                inflationRate: "",
-                currentPlanFees: "",
-                currentPlanROR: "",
-                taxFreePlanROR: "",
-              }
-        );
-        */
+        // Check if tablesData contains required fields
+        const hasRequiredFields =
+          data.tablesData &&
+          typeof data.tablesData === "object" &&
+          "startingBalance" in data.tablesData &&
+          "annualContributions" in data.tablesData &&
+          "annualEmployerMatch" in data.tablesData &&
+          "yearsRunOutOfMoney" in data.tablesData &&
+          data.tablesData.startingBalance !== undefined &&
+          data.tablesData.annualContributions !== undefined &&
+          data.tablesData.annualEmployerMatch !== undefined &&
+          data.tablesData.yearsRunOutOfMoney !== undefined;
+
+        if (!hasRequiredFields) {
+          clearEverythingForFreshFile();
+          setBoxesData({
+            currentAge: data.boxesData?.currentAge || "",
+            stopSavingAge: data.boxesData?.stopSavingAge || "",
+            retirementAge: data.boxesData?.retirementAge || "",
+            workingTaxRate: data.boxesData?.workingTaxRate || "",
+            retirementTaxRate: data.boxesData?.retirementTaxRate || "",
+            inflationRate: data.boxesData?.inflationRate || "",
+            currentPlanFees: data.boxesData?.currentPlanFees || "",
+            currentPlanROR: data.boxesData?.currentPlanROR || "",
+            taxFreePlanROR: data.fields?.assumed_ror
+              ? parseFloat(data.fields.assumed_ror.replace("%", ""))
+              : data.boxesData?.taxFreePlanROR || "",
+          });
+          setTables(data.tablesData?.tables || []);
+          setStartingBalance("");
+          setAnnualContributions("");
+          setAnnualEmployerMatch("");
+          setYearsRunOutOfMoney("");
+          return;
+        }
 
         setBoxesData({
           currentAge: data.boxesData?.currentAge || "",
@@ -150,34 +154,37 @@ export default function CalculatorPage({ params }: { params: Params }) {
         });
 
         setTables(data.tablesData?.tables || []);
-
+        // Use existing store values as fallbacks if fetched data is invalid
         setStartingBalance(
           data.tablesData?.startingBalance !== undefined &&
+            data.tablesData?.startingBalance !== 0 &&
             data.tablesData?.startingBalance !== ""
             ? data.tablesData.startingBalance
-            : ""
+            : startingBalance
         );
         setAnnualContributions(
           data.tablesData?.annualContributions !== undefined &&
+            data.tablesData?.annualContributions !== 0 &&
             data.tablesData?.annualContributions !== ""
             ? data.tablesData.annualContributions
-            : ""
+            : annualContributions
         );
         setAnnualEmployerMatch(
           data.tablesData?.annualEmployerMatch !== undefined &&
+            data.tablesData?.annualEmployerMatch !== 0 &&
             data.tablesData?.annualEmployerMatch !== ""
             ? data.tablesData.annualEmployerMatch
-            : ""
+            : annualEmployerMatch
         );
         setYearsRunOutOfMoney(
           data.tablesData?.yearsRunOutOfMoney !== undefined &&
+            data.tablesData?.yearsRunOutOfMoney !== 0 &&
             data.tablesData?.yearsRunOutOfMoney !== ""
             ? data.tablesData.yearsRunOutOfMoney
-            : ""
+            : yearsRunOutOfMoney
         );
       } catch (err) {
         console.error("Fetch error:", err);
-        setError("Error fetching file");
       } finally {
         setLoading(false);
       }
@@ -194,68 +201,47 @@ export default function CalculatorPage({ params }: { params: Params }) {
     setAnnualContributions,
     setAnnualEmployerMatch,
     setYearsRunOutOfMoney,
+    clearEverythingForFreshFile,
   ]);
 
-  const saveChanges = debounce(
-    async (manualSave: boolean = false) => {
-      if (!fileId || status !== "authenticated" || !session?.user?.id) return;
-      try {
-        const response = await fetch(`/api/files/${fileId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            boxesData,
-            tablesData: {
-              tables,
-              startingBalance,
-              annualContributions,
-              annualEmployerMatch,
-              yearsRunOutOfMoney,
-            },
-          }),
+  const saveChanges = async () => {
+    if (!fileId || status !== "authenticated" || !session?.user?.id) return;
+    try {
+      const response = await fetch(`/api/files/${fileId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          boxesData,
+          tablesData: {
+            tables,
+            startingBalance,
+            annualContributions,
+            annualEmployerMatch,
+            yearsRunOutOfMoney,
+          },
+        }),
+      });
+      if (!response.ok) {
+        console.error("Save failed:", response.status);
+      } else {
+        console.log("Saved data:", {
+          boxesData,
+          tablesData: {
+            tables,
+            startingBalance,
+            annualContributions,
+            annualEmployerMatch,
+            yearsRunOutOfMoney,
+          },
         });
-        if (!response.ok) {
-          console.error("Save failed:", response.status);
-          setError("Failed to save changes");
-        } else {
-          console.log("Saved data:", {
-            boxesData,
-            tablesData: {
-              tables,
-              startingBalance,
-              annualContributions,
-              annualEmployerMatch,
-              yearsRunOutOfMoney,
-            },
-          });
-          if (manualSave) {
-            setIsSaveDialogOpen(true); // Open dialog on manual save
-          }
-        }
-      } catch (err) {
-        console.error("Save error:", err);
-        setError("Error saving changes");
+        setIsSaveDialogOpen(true); // Open dialog on manual save
       }
-    },
-    1000,
-    { leading: false, trailing: true }
-  );
-
-  useEffect(() => {
-    saveChanges();
-    return () => saveChanges.cancel();
-  }, [
-    boxesData,
-    tables,
-    startingBalance,
-    annualContributions,
-    annualEmployerMatch,
-    yearsRunOutOfMoney,
-    saveChanges,
-  ]);
+    } catch (err) {
+      console.error("Save error:", err);
+    }
+  };
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
 
   return (
     <div className="h-[90vh] grid grid-cols-2 gap-4">
@@ -265,7 +251,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
             <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
               <DialogTrigger asChild>
                 <Button
-                  onClick={() => saveChanges(true)} // Trigger manual save
+                  onClick={saveChanges}
                   disabled={status !== "authenticated" || !fileId || loading}
                   className="cursor-pointer high-contrast:bg-white high-contrast:text-black!"
                   variant="default"
