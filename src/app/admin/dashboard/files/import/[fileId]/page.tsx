@@ -434,7 +434,7 @@ export default function ImportPage({ params }: { params: Params }) {
 
   return (
     <div className="grow h-full">
-      <div className="fixed bottom-5 left-10">
+      <div className="fixed bottom-4 left-4">
         <Tooltip>
           <TooltipTrigger asChild>
             <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>

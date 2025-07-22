@@ -107,7 +107,7 @@ const NavBar = () => {
     pathname === "/dashboard/subscribe"
   ) {
     return (
-      <motion.div className="flex gap-4 fixed bottom-4 right-0 -translate-x-1/2">
+      <motion.div className="flex gap-4 fixed bottom-4 right-4 -translate-x-1/2">
         <ThemeToggle />
 
         <Tooltip>
@@ -191,7 +191,7 @@ const NavBar = () => {
       </motion.nav>
 
       {session?.user.role !== "admin" ? (
-        <motion.div className="fixed bottom-4 right-0 -translate-x-1/2 flex items-center gap-4">
+        <motion.div className="fixed bottom-4 right-4 -translate-x-1/2 flex items-center gap-4">
           <ThemeToggle />
 
           <Tooltip>

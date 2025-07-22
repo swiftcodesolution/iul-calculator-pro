@@ -284,7 +284,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
 
   return (
     <div className="h-[90vh] grid grid-cols-2 gap-4">
-      <div className="fixed bottom-5 left-10 z-50">
+      <div className="fixed bottom-4 left-4 z-50">
         <Tooltip>
           <TooltipTrigger asChild>
             <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>

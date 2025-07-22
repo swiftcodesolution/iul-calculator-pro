@@ -35,7 +35,7 @@ export default function AdminDashboardLayout({
       <div className="flex-1">
         {children}
 
-        <div className="fixed right-0 bottom-0 p-8">
+        <div className="fixed right-4 bottom-4 p-0">
           <ThemeToggle />
         </div>
       </div>
