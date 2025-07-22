@@ -39,7 +39,9 @@ interface User {
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<"most" | "least" | "none">("none");
+  const [sortOrder, setSortOrder] = useState<
+    "most" | "least" | "asc" | "desc" | "none"
+  >("none");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -75,6 +77,14 @@ export default function UsersPage() {
       return b._count.sessionHistory - a._count.sessionHistory;
     } else if (sortOrder === "least") {
       return a._count.sessionHistory - b._count.sessionHistory;
+    } else if (sortOrder === "asc") {
+      const nameA = `${a.firstName || ""} ${a.lastName || ""}`.trim() || "N/A";
+      const nameB = `${b.firstName || ""} ${b.lastName || ""}`.trim() || "N/A";
+      return nameA.localeCompare(nameB);
+    } else if (sortOrder === "desc") {
+      const nameA = `${a.firstName || ""} ${a.lastName || ""}`.trim() || "N/A";
+      const nameB = `${b.firstName || ""} ${b.lastName || ""}`.trim() || "N/A";
+      return nameB.localeCompare(nameA);
     }
     return 0;
   });
@@ -102,17 +112,19 @@ export default function UsersPage() {
                   className="max-w-md"
                 />
                 <Select
-                  onValueChange={(value: "most" | "least" | "none") =>
-                    setSortOrder(value)
-                  }
+                  onValueChange={(
+                    value: "most" | "least" | "asc" | "desc" | "none"
+                  ) => setSortOrder(value)}
                 >
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Sort by activity" />
+                    <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">No Sorting</SelectItem>
                     <SelectItem value="most">Most Active</SelectItem>
                     <SelectItem value="least">Least Active</SelectItem>
+                    <SelectItem value="asc">Name (A-Z)</SelectItem>
+                    <SelectItem value="desc">Name (Z-A)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

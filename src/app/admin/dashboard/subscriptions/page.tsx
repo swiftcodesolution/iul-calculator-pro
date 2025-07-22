@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { DollarSign, RefreshCw } from "lucide-react";
+import { DollarSign, RefreshCw, ArrowUpDown } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -28,6 +28,7 @@ export default function SubscriptionsPage() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
 
   const fetchSubscriptions = async () => {
     try {
@@ -48,6 +49,17 @@ export default function SubscriptionsPage() {
     setLoading(false);
   };
 
+  const handleSort = () => {
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+  };
+
+  const sortedSubscriptions = [...subscriptions].sort((a, b) => {
+    if (!sortOrder) return 0;
+    return sortOrder === "asc"
+      ? a.userName.localeCompare(b.userName)
+      : b.userName.localeCompare(b.userName);
+  });
+
   useEffect(() => {
     refreshAll();
   }, []);
@@ -62,16 +74,32 @@ export default function SubscriptionsPage() {
           className="flex justify-between items-center mb-6"
         >
           <h1 className="text-3xl font-bold">Subscriptions</h1>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refreshAll}
-            disabled={loading}
-            className="hover:bg-blue-50"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            {loading ? "Refreshing..." : "Refresh"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSort}
+              className="hover:bg-blue-50"
+            >
+              <ArrowUpDown className="h-4 w-4 mr-2" />
+              Sort{" "}
+              {sortOrder === "asc"
+                ? "A-Z"
+                : sortOrder === "desc"
+                ? "Z-A"
+                : "Name"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshAll}
+              disabled={loading}
+              className="hover:bg-blue-50"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {loading ? "Refreshing..." : "Refresh"}
+            </Button>
+          </div>
         </motion.div>
         {error && (
           <motion.p
@@ -87,7 +115,7 @@ export default function SubscriptionsPage() {
             <CardHeader className="flex items-center">
               <DollarSign className="mr-2 text-blue-500" />
               <CardTitle className="text-xl">
-                All Subscriptions ({subscriptions.length as number} total)
+                All Subscriptions ({subscriptions.length} total)
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -112,8 +140,8 @@ export default function SubscriptionsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {subscriptions.length > 0 ? (
-                    subscriptions.map((sub) => (
+                  {sortedSubscriptions.length > 0 ? (
+                    sortedSubscriptions.map((sub) => (
                       <TableRow
                         key={sub.userId}
                         className="hover:bg-gray-50 dark:hover:bg-gray-800"

@@ -22,6 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { ArrowLeftIcon } from "lucide-react";
 
 type Params = Promise<{ fileId: string }>;
 
@@ -284,7 +285,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
 
   return (
     <div className="h-[90vh] grid grid-cols-2 gap-4">
-      <div className="fixed bottom-4 left-4 z-50">
+      <div className="fixed bottom-4 left-4 z-50 flex gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
             <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
@@ -319,6 +320,11 @@ export default function CalculatorPage({ params }: { params: Params }) {
             <p>Save your changes</p>
           </TooltipContent>
         </Tooltip>
+
+        <Button className="text-white flex items-center justify-center text-sm gap-1 p-2 bg-red-500">
+          <ArrowLeftIcon className="h-4" />
+          <p>You have unsaved changes!</p>
+        </Button>
       </div>
 
       <div className="flex flex-col gap-4 relative">
