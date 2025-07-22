@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
-import { motion, AnimatePresence } from "motion/react"; // Changed import
+import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -65,9 +65,10 @@ export default function ImportPage({ params }: { params: Params }) {
   const [isTableFullScreen, setIsTableFullScreen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [highlightColor, setHighlightColor] = useState("#ffa1ad");
+  const [isReadOnly, setIsReadOnly] = useState(false); // New state for read-only mode
 
   const {
-    fileName,
+    // fileName,
     setFileName,
     tables,
     setTables,
@@ -90,6 +91,8 @@ export default function ImportPage({ params }: { params: Params }) {
       !fileId ||
       hasFetched
     ) {
+      setError("Unauthorized or invalid file ID");
+      setLoading(false);
       return;
     }
 
@@ -106,7 +109,9 @@ export default function ImportPage({ params }: { params: Params }) {
           return;
         }
         const data: ClientFile = await response.json();
-        console.log(fileName);
+        console.log("Fetched data:", data); // Debug
+        // Set read-only if file was created by admin
+        setIsReadOnly(data.createdByRole === "admin");
         setTables(data.tablesData?.tables || []);
         setFields(data.fields || {});
         setFileName(data.fileName || "");
@@ -119,11 +124,19 @@ export default function ImportPage({ params }: { params: Params }) {
     };
 
     fetchFile();
-  }, [fileId, session, status, hasFetched, setTables, setFields]);
+  }, [fileId, session, status, hasFetched, setTables, setFields, setFileName]);
 
   const saveChanges = debounce(
     async () => {
-      if (!fileId || status !== "authenticated" || !session?.user?.id) return;
+      if (
+        !fileId ||
+        status !== "authenticated" ||
+        !session?.user?.id ||
+        isReadOnly
+      ) {
+        console.log("Skipping save due to read-only mode or invalid state");
+        return;
+      }
       try {
         const response = await fetch(`/api/files/${fileId}`, {
           method: "PATCH",
@@ -496,7 +509,7 @@ export default function ImportPage({ params }: { params: Params }) {
                         </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Zoom in on table</p>
+                        <p>{"Zoom in on table"}</p>
                       </TooltipContent>
                     </Tooltip>
 
@@ -519,7 +532,7 @@ export default function ImportPage({ params }: { params: Params }) {
                         </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Zoom out on table</p>
+                        <p>{"Zoom out on table"}</p>
                       </TooltipContent>
                     </Tooltip>
 
@@ -539,7 +552,7 @@ export default function ImportPage({ params }: { params: Params }) {
                         </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Exit full-screen mode</p>
+                        <p>{"Exit full-screen mode"}</p>
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -629,13 +642,15 @@ export default function ImportPage({ params }: { params: Params }) {
             <CardContent className="space-y-4">
               <div
                 className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center"
-                onDragOver={handleDragOver}
-                onDrop={handleFileChange}
+                onDragOver={isReadOnly ? undefined : handleDragOver}
+                onDrop={isReadOnly ? undefined : handleFileChange}
               >
                 <p className="text-gray-500 mb-2">
-                  Drop PDF Here or Click to Select
+                  {isReadOnly
+                    ? "File upload disabled for admin-created files"
+                    : "Drop PDF Here or Click to Select"}
                 </p>
-                <Button asChild>
+                <Button asChild disabled={isReadOnly}>
                   <label className="flex items-center gap-2 cursor-pointer">
                     Select File
                     <Upload className="h-4 w-4 high-contrast:text-white!" />
@@ -644,6 +659,7 @@ export default function ImportPage({ params }: { params: Params }) {
                       className="hidden"
                       accept="application/pdf"
                       onChange={handleFileChange}
+                      disabled={isReadOnly} // Disable file input
                     />
                   </label>
                 </Button>
@@ -655,7 +671,7 @@ export default function ImportPage({ params }: { params: Params }) {
               </div>
               <Button
                 onClick={handleUpload}
-                disabled={isTableLoading}
+                disabled={isTableLoading || isReadOnly}
                 className="w-full"
               >
                 {isTableLoading ? "Processing..." : "Upload"}
@@ -691,17 +707,17 @@ export default function ImportPage({ params }: { params: Params }) {
               className="flex justify-center gap-4"
             >
               <Button
-                className=" high-contrast:bg-white high-contrast:text-black"
+                className="high-contrast:bg-white high-contrast:text-black"
                 variant="default"
                 onClick={handleImport}
-                disabled={isTableLoading}
+                disabled={isTableLoading || isReadOnly}
               >
                 Import
               </Button>
               <Button
                 variant="outline"
                 onClick={handleCancel}
-                disabled={isTableLoading}
+                disabled={isTableLoading || isReadOnly}
               >
                 Clear
               </Button>
@@ -725,7 +741,7 @@ export default function ImportPage({ params }: { params: Params }) {
                 </span>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Zoom in on table</p>
+                <p>{"Zoom in on table"}</p>
               </TooltipContent>
             </Tooltip>
 
@@ -746,7 +762,7 @@ export default function ImportPage({ params }: { params: Params }) {
                 </span>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Zoom out on table</p>
+                <p>{"Zoom out on table"}</p>
               </TooltipContent>
             </Tooltip>
 

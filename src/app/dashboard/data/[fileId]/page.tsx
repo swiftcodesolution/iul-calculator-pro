@@ -35,8 +35,8 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isReadOnly, setIsReadOnly] = useState(false); // New state for read-only mode
 
-  // const [evenColumnColor, setEvenColumnColor] = useState("#e6f3ff");
   const [evenColumnColor, setEvenColumnColor] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("evenColumnColor") || "#e6f3ff";
@@ -44,7 +44,6 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
     return "#e6f3ff";
   });
 
-  // const [oddColumnColor, setOddColumnColor] = useState("#f0f0f0");
   const [oddColumnColor, setOddColumnColor] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("oddColumnColor") || "#f0f0f0";
@@ -52,7 +51,13 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
     return "#f0f0f0";
   });
 
-  const [highlightColor, setHighlightColor] = useState("#ffa1ad");
+  const [highlightColor, setHighlightColor] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("highlightColor") || "#ffa1ad";
+    }
+    return "#ffa1ad";
+  });
+
   const [zoomLevel, setZoomLevel] = useState(0.6);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -116,6 +121,10 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
         }
         const data: ClientFile = await response.json();
         console.log("Fetched data:", data); // Debug
+
+        // Set read-only if file was created by admin
+        setIsReadOnly(data.createdByRole === "admin");
+
         setBoxesData(data.boxesData || {});
         setTables(data.tablesData?.tables || []);
         setCombinedResults(data.combinedResults || []);
@@ -173,7 +182,15 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
   // Debounced save
   const saveChanges = debounce(
     async () => {
-      if (!fileId || status !== "authenticated" || !session?.user?.id) return;
+      if (
+        !fileId ||
+        status !== "authenticated" ||
+        !session?.user?.id ||
+        isReadOnly
+      ) {
+        console.log("Skipping save due to read-only mode or invalid state");
+        return;
+      }
       try {
         const response = await fetch(`/api/files/${fileId}`, {
           method: "PATCH",
@@ -667,13 +684,18 @@ export default function CombinedPlanTable({ params }: { params: Params }) {
                     clearStore();
                     router.push(`/dashboard/import/${fileId}`);
                   }}
+                  disabled={isReadOnly} // Disable Clear button
                 >
                   Clear
                 </Button>
               </span>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Clear the current data and return to import</p>
+              <p>{`${
+                isReadOnly
+                  ? "Cannot clear admin file"
+                  : "Clear the current data and return to import"
+              }`}</p>
             </TooltipContent>
           </Tooltip>
 
