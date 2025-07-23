@@ -67,6 +67,13 @@ export default function ImportPage({ params }: { params: Params }) {
   const [highlightColor, setHighlightColor] = useState("#ffa1ad");
   const [isReadOnly, setIsReadOnly] = useState(false); // New state for read-only mode
 
+  const [tablesDataFields, setTablesDataFields] = useState({
+    startingBalance: 0,
+    annualContributions: 0,
+    annualEmployerMatch: 0,
+    yearsRunOutOfMoney: 0,
+  });
+
   const {
     // fileName,
     setFileName,
@@ -113,6 +120,16 @@ export default function ImportPage({ params }: { params: Params }) {
         // Set read-only if file was created by admin
         setIsReadOnly(data.createdByRole === "admin");
         setTables(data.tablesData?.tables || []);
+
+        setTablesDataFields({
+          startingBalance: Number(data.tablesData?.startingBalance) || 0,
+          annualContributions:
+            Number(data.tablesData?.annualContributions) || 0,
+          annualEmployerMatch:
+            Number(data.tablesData?.annualEmployerMatch) || 0,
+          yearsRunOutOfMoney: Number(data.tablesData?.yearsRunOutOfMoney) || 0,
+        });
+
         setFields(data.fields || {});
         setFileName(data.fileName || "");
         setHasFetched(true);
@@ -141,7 +158,10 @@ export default function ImportPage({ params }: { params: Params }) {
         const response = await fetch(`/api/files/${fileId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tablesData: { tables }, fields }),
+          body: JSON.stringify({
+            tablesData: { tables, ...tablesDataFields },
+            fields,
+          }),
         });
         if (!response.ok) setError("Failed to save changes");
       } catch {
@@ -197,6 +217,18 @@ export default function ImportPage({ params }: { params: Params }) {
         setTables(response.data.tables);
         setFields(response.data.fields || {});
         toast(`Extracted ${response.data.tables.length} tables from PDF.`);
+
+        await fetch(`/api/files/${fileId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tablesData: {
+              tables: response.data.tables,
+              ...tablesDataFields, // Preserve all fields
+            },
+            fields: response.data.fields || {},
+          }),
+        });
       } else {
         setError(response.data.message || "No tables found.");
         toast(
