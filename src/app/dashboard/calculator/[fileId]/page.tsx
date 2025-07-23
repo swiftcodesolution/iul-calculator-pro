@@ -69,6 +69,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
     handleCellClick,
   } = useColumnHighlight();
 
+  /*
   // Fetch file data and determine read-only status
   useEffect(() => {
     if (status !== "authenticated" || !session?.user?.id || !fileId) {
@@ -174,6 +175,108 @@ export default function CalculatorPage({ params }: { params: Params }) {
             ? data.tablesData.yearsRunOutOfMoney
             : yearsRunOutOfMoney
         );
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setError("Error fetching file");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFile();
+  }, [
+    fileId,
+    session,
+    status,
+    setBoxesData,
+    setTables,
+    setStartingBalance,
+    setAnnualContributions,
+    setAnnualEmployerMatch,
+    setYearsRunOutOfMoney,
+  ]);
+  */
+
+  // Fetch file data and determine read-only status
+  useEffect(() => {
+    if (status !== "authenticated" || !session?.user?.id || !fileId) {
+      setError("Unauthorized or invalid file ID");
+      setLoading(false);
+      return;
+    }
+
+    const fetchFile = async () => {
+      try {
+        const response = await fetch(`/api/files/${fileId}`);
+        if (!response.ok) {
+          if (response.status === 400 || response.status === 404) {
+            clearEverythingForFreshFile();
+            setError("File not found");
+            notFound();
+          } else {
+            setError("Failed to fetch file");
+          }
+          return;
+        }
+        const data: ClientFile = await response.json();
+
+        console.log("Fetched data:", data); // Debug
+
+        // Set read-only if user is agent and file is Pro Sample Files
+        setIsReadOnly(
+          data.createdByRole === "admin" ||
+            (session.user.role === "agent" &&
+              data.category === "Pro Sample Files")
+        );
+
+        // Set boxesData with defaults for missing fields
+        setBoxesData(
+          data.boxesData && Object.keys(data.boxesData).length > 0
+            ? {
+                currentAge: data.boxesData.currentAge || "",
+                stopSavingAge: data.boxesData.stopSavingAge || "",
+                retirementAge: data.boxesData.retirementAge || "",
+                workingTaxRate: data.boxesData.workingTaxRate || "",
+                retirementTaxRate: data.boxesData.retirementTaxRate || "",
+                inflationRate: data.boxesData.inflationRate || "",
+                currentPlanFees: data.boxesData.currentPlanFees || "",
+                currentPlanROR: data.boxesData.currentPlanROR || "",
+                taxFreePlanROR:
+                  data.fields?.assumed_ror &&
+                  data.fields.assumed_ror.trim() !== ""
+                    ? parseFloat(
+                        data.fields.assumed_ror.replace("%", "")
+                      ).toString()
+                    : "",
+              }
+            : {
+                currentAge: "",
+                stopSavingAge: "",
+                retirementAge: "",
+                workingTaxRate: "",
+                retirementTaxRate: "",
+                inflationRate: "",
+                currentPlanFees: "",
+                currentPlanROR: "",
+                taxFreePlanROR: "",
+              }
+        );
+
+        // Set tables data
+        setTables(data.tablesData?.tables || []);
+
+        // Set fields to 0 if missing or undefined
+        setStartingBalance(data.tablesData?.startingBalance ?? 0);
+        setAnnualContributions(data.tablesData?.annualContributions ?? 0);
+        setAnnualEmployerMatch(data.tablesData?.annualEmployerMatch ?? 0);
+        setYearsRunOutOfMoney(data.tablesData?.yearsRunOutOfMoney ?? 0);
+
+        console.log("Set table data:", {
+          startingBalance: data.tablesData?.startingBalance ?? 0,
+          annualContributions: data.tablesData?.annualContributions ?? 0,
+          annualEmployerMatch: data.tablesData?.annualEmployerMatch ?? 0,
+          yearsRunOutOfMoney: data.tablesData?.yearsRunOutOfMoney ?? 0,
+        }); // Debug
       } catch (err) {
         console.error("Fetch error:", err);
         setError("Error fetching file");
