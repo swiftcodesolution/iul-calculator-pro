@@ -222,7 +222,9 @@ export async function POST(request: Request) {
             Email: ${user.email}
             Cell Phone: ${user.cellPhone}
             Office Phone: ${user.officePhone}
-            Signed Up At: ${user.createdAt.toLocaleString()}
+            Signed Up At: ${
+              user.createdAt ? user.createdAt.toLocaleString() : "Not available"
+            }
             Plan: ${plan}
             Start Date: ${new Date().toLocaleString()}
             Renewal Date: ${subscription.renewalDate?.toLocaleString()}
@@ -234,7 +236,9 @@ export async function POST(request: Request) {
             <p><strong>Email:</strong> ${user.email}</p>
             <p><strong>Cell Phone:</strong> ${user.cellPhone}</p>
             <p><strong>Office Phone:</strong> ${user.officePhone}</p>
-            <p><strong>Signed Up At:</strong> ${user.createdAt.toLocaleString()}</p>
+            <p><strong>Signed Up At:</strong> ${
+              user.createdAt ? user.createdAt.toLocaleString() : "Not available"
+            }</p>
             <p><strong>Plan:</strong> ${plan}</p>
             <p><strong>Start Date:</strong> ${new Date().toLocaleString()}</p>
             <p><strong>Renewal Date:</strong> ${subscription.renewalDate?.toLocaleString()}</p>
