@@ -246,6 +246,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
   ]);
   */
 
+  /*
   useEffect(() => {
     if (status !== "authenticated" || !session?.user?.id || !fileId) {
       setLoading(false);
@@ -315,6 +316,115 @@ export default function CalculatorPage({ params }: { params: Params }) {
                 currentPlanFees: "",
                 currentPlanROR: "",
                 taxFreePlanROR: "",
+              }
+        );
+
+        // Set tables data
+        setTables(data.tablesData?.tables || []);
+
+        // Set fields to 0 if missing or undefined
+        setStartingBalance(data.tablesData?.startingBalance ?? 0);
+        setAnnualContributions(data.tablesData?.annualContributions ?? 0);
+        setAnnualEmployerMatch(data.tablesData?.annualEmployerMatch ?? 0);
+        setYearsRunOutOfMoney(data.tablesData?.yearsRunOutOfMoney ?? 0);
+
+        console.log("Set table data:", {
+          startingBalance: data.tablesData?.startingBalance ?? 0,
+          annualContributions: data.tablesData?.annualContributions ?? 0,
+          annualEmployerMatch: data.tablesData?.annualEmployerMatch ?? 0,
+          yearsRunOutOfMoney: data.tablesData?.yearsRunOutOfMoney ?? 0,
+        }); // Debug
+      } catch (err) {
+        console.error("Fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFile();
+  }, [
+    fileId,
+    session,
+    status,
+    setBoxesData,
+    setTables,
+    setStartingBalance,
+    setAnnualContributions,
+    setAnnualEmployerMatch,
+    setYearsRunOutOfMoney,
+    clearEverythingForFreshFile,
+  ]);
+  */
+
+  useEffect(() => {
+    if (status !== "authenticated" || !session?.user?.id || !fileId) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchFile = async () => {
+      try {
+        const response = await fetch(`/api/files/${fileId}`);
+        if (!response.ok) {
+          if (response.status === 400 || response.status === 404) {
+            clearEverythingForFreshFile();
+            setBoxesData({
+              currentAge: "",
+              stopSavingAge: "",
+              retirementAge: "",
+              workingTaxRate: "",
+              retirementTaxRate: "",
+              inflationRate: "",
+              currentPlanFees: "",
+              currentPlanROR: "",
+              taxFreePlanROR: "", // Set to empty string for new file
+            });
+            setTables([]);
+            setStartingBalance(0);
+            setAnnualContributions(0);
+            setAnnualEmployerMatch(0);
+            setYearsRunOutOfMoney(0);
+            return;
+          } else {
+            console.error("Fetch failed:", response.status);
+            return;
+          }
+        }
+        const data: ClientFile = await response.json();
+
+        console.log("Fetched data:", data);
+        console.log("tablesData:", data.tablesData);
+
+        // Set boxesData with defaults for missing fields
+        setBoxesData(
+          data.boxesData && Object.keys(data.boxesData).length > 0
+            ? {
+                currentAge: data.boxesData.currentAge || "",
+                stopSavingAge: data.boxesData.stopSavingAge || "",
+                retirementAge: data.boxesData.retirementAge || "",
+                workingTaxRate: data.boxesData.workingTaxRate || "",
+                retirementTaxRate: data.boxesData.retirementTaxRate || "",
+                inflationRate: data.boxesData.inflationRate || "",
+                currentPlanFees: data.boxesData.currentPlanFees || "",
+                currentPlanROR: data.boxesData.currentPlanROR || "",
+                taxFreePlanROR:
+                  data.fields?.assumed_ror &&
+                  data.fields.assumed_ror.trim() !== ""
+                    ? parseFloat(
+                        data.fields.assumed_ror.replace("%", "")
+                      ).toString()
+                    : "", // Set to empty string if no assumed_ror or empty
+              }
+            : {
+                currentAge: "",
+                stopSavingAge: "",
+                retirementAge: "",
+                workingTaxRate: "",
+                retirementTaxRate: "",
+                inflationRate: "",
+                currentPlanFees: "",
+                currentPlanROR: "",
+                taxFreePlanROR: "", // Set to empty string for new file
               }
         );
 
