@@ -146,28 +146,59 @@ export default function AdminFilesSection() {
       } else if (action === "copy" && data?.id && data?.name) {
         const fileToCopy = adminFiles.find((file) => file.id === data.id);
         if (fileToCopy) {
-          const response = await fetch("/api/files", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              fileName: data.name,
-              category: "Pro Sample Files",
-            }),
-          });
-          if (response.ok) {
+          try {
+            // Fetch the original file's data
+            const fileResponse = await fetch(`/api/files/${data.id}`);
+            if (!fileResponse.ok) {
+              throw new Error("Failed to fetch file data");
+            }
+            const originalFile = await fileResponse.json();
+
+            // Create a new file
+            const response = await fetch("/api/files", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                fileName: data.name,
+                category: "Pro Sample Files",
+              }),
+            });
+            if (!response.ok) {
+              throw new Error("Failed to create file");
+            }
             const newFile = await response.json();
+
+            // Update the new file with the copied data
+            const updateResponse = await fetch(`/api/files/${newFile.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                boxesData: originalFile.boxesData,
+                tablesData: originalFile.tablesData,
+                combinedResults: originalFile.combinedResults,
+                fields: originalFile.fields,
+                category: "Pro Sample Files", // Explicitly ensure category
+              }),
+            });
+            if (!updateResponse.ok) {
+              throw new Error("Failed to update copied file");
+            }
+            const updatedFile = await updateResponse.json();
+
+            // Update state with the new file
             setAdminFiles((prev) =>
-              [...prev, newFile].sort(
+              [...prev, updatedFile].sort(
                 (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)
               )
             );
-            setSelectedFile(newFile);
-            setSelectedFileId(newFile.id);
+            setSelectedFile(updatedFile);
+            setSelectedFileId(updatedFile.id);
             setNewClientName("");
             setDialogAction(null);
-            return { fileId: newFile.id };
-          } else {
-            throw new Error("Failed to copy file");
+            return { fileId: updatedFile.id };
+          } catch (error) {
+            console.error("Failed to copy file:", error);
+            toast.error("Failed to copy file");
           }
         }
       } else if (action === "rename" && data?.id && data?.name) {
