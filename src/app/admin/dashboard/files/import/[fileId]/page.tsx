@@ -15,7 +15,14 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, ZoomIn, ZoomOut, Fullscreen, Minimize2 } from "lucide-react";
+import {
+  Upload,
+  ZoomIn,
+  ZoomOut,
+  Fullscreen,
+  Minimize2,
+  ArrowLeftIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useTableStore } from "@/lib/store";
 // import { useRouter } from "next/navigation";
@@ -75,6 +82,19 @@ export default function ImportPage({ params }: { params: Params }) {
   const [highlightColor, setHighlightColor] = useState("#ffa1ad");
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
 
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSavedData, setLastSavedData] = useState<{
+    tables: TableData[];
+    fields: ApiResponse["fields"];
+    tablesDataFields: {
+      startingBalance: number;
+      annualContributions: number;
+      annualEmployerMatch: number;
+      yearsRunOutOfMoney: number;
+    };
+    fileName: string;
+  } | null>(null);
+
   const [tablesDataFields, setTablesDataFields] = useState({
     startingBalance: 0,
     annualContributions: 0,
@@ -101,6 +121,7 @@ export default function ImportPage({ params }: { params: Params }) {
     handleColumnClick,
   } = useTableHighlight();
 
+  /*
   useEffect(() => {
     if (
       status !== "authenticated" ||
@@ -148,7 +169,83 @@ export default function ImportPage({ params }: { params: Params }) {
 
     fetchFile();
   }, [fileId, session, status, hasFetched, setTables, setFields]);
+  */
 
+  useEffect(() => {
+    if (
+      status !== "authenticated" ||
+      !session?.user?.id ||
+      !fileId ||
+      hasFetched
+    ) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchFile = async () => {
+      try {
+        const response = await fetch(`/api/files/${fileId}`);
+        if (!response.ok) {
+          if (response.status === 400 || response.status === 404) {
+            setError("File not found");
+            notFound();
+          } else {
+            setError("Failed to fetch file");
+          }
+          return;
+        }
+        const data: ClientFile = await response.json();
+        const newTables = data.tablesData?.tables || [];
+        const newTablesDataFields = {
+          startingBalance: Number(data.tablesData?.startingBalance) || 0,
+          annualContributions:
+            Number(data.tablesData?.annualContributions) || 0,
+          annualEmployerMatch:
+            Number(data.tablesData?.annualEmployerMatch) || 0,
+          yearsRunOutOfMoney: Number(data.tablesData?.yearsRunOutOfMoney) || 0,
+        };
+        const newFields = data.fields || {};
+        const newFileName = data.fileName || "";
+
+        setTables(newTables);
+        setTablesDataFields(newTablesDataFields);
+        setFields(newFields);
+        setFileName(newFileName);
+        setHasFetched(true);
+
+        // Initialize last saved data
+        setLastSavedData({
+          tables: newTables,
+          tablesDataFields: newTablesDataFields,
+          fields: newFields,
+          fileName: newFileName,
+        });
+
+        console.log("Fetched fileName:", newFileName);
+      } catch {
+        setError("Error fetching file");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFile();
+  }, [fileId, session, status, hasFetched, setTables, setFields, setFileName]);
+
+  useEffect(() => {
+    if (!lastSavedData) return;
+
+    const hasChanges =
+      JSON.stringify(tables) !== JSON.stringify(lastSavedData.tables) ||
+      JSON.stringify(fields) !== JSON.stringify(lastSavedData.fields) ||
+      JSON.stringify(tablesDataFields) !==
+        JSON.stringify(lastSavedData.tablesDataFields) ||
+      fileName !== lastSavedData.fileName;
+
+    setHasUnsavedChanges(hasChanges);
+  }, [tables, fields, tablesDataFields, fileName, lastSavedData]);
+
+  /*
   const saveChanges = async () => {
     if (!fileId || status !== "authenticated" || !session?.user?.id) {
       setError("Unauthorized or invalid file ID");
@@ -168,6 +265,42 @@ export default function ImportPage({ params }: { params: Params }) {
         toast("Failed to save changes");
       } else {
         setIsSaveDialogOpen(true); // Open dialog on successful save
+        toast("Changes saved successfully");
+      }
+    } catch {
+      setError("Error saving changes");
+      toast("Error saving changes");
+    }
+  };
+  */
+
+  const saveChanges = async () => {
+    if (!fileId || status !== "authenticated" || !session?.user?.id) {
+      setError("Unauthorized or invalid file ID");
+      return;
+    }
+    try {
+      const response = await fetch(`/api/files/${fileId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tablesData: { tables, ...tablesDataFields },
+          fields,
+          fileName,
+        }),
+      });
+      if (!response.ok) {
+        setError("Failed to save changes");
+        toast("Failed to save changes");
+      } else {
+        // Update last saved data
+        setLastSavedData({
+          tables: [...tables],
+          tablesDataFields: { ...tablesDataFields },
+          fields: { ...fields },
+          fileName,
+        });
+        setIsSaveDialogOpen(true);
         toast("Changes saved successfully");
       }
     } catch {
@@ -199,6 +332,7 @@ export default function ImportPage({ params }: { params: Params }) {
     }
   };
 
+  /*
   const handleUpload = async () => {
     if (!file) {
       setError("Please select a PDF file.");
@@ -225,6 +359,62 @@ export default function ImportPage({ params }: { params: Params }) {
             fields: response.data.fields,
           }),
         });
+      } else {
+        setError(response.data.message || "No tables found.");
+        toast(
+          response.data.message ||
+            "The PDF didn't contain any extractable tables."
+        );
+      }
+    } catch (err) {
+      const error = err as AxiosError<{ detail?: string }>;
+      const errorMessage =
+        error.response?.data?.detail || "Error uploading PDF.";
+      setError(errorMessage);
+      toast(errorMessage);
+    } finally {
+      setIsTableLoading(false);
+    }
+  };
+  */
+
+  const handleUpload = async () => {
+    if (!file) {
+      setError("Please select a PDF file.");
+      toast("Please select a PDF file.");
+      return;
+    }
+    setIsTableLoading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const response = await axios.post<ApiResponse>(API_ENDPOINT, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (response.data.tables) {
+        setTables(response.data.tables);
+        setFields(response.data.fields || {});
+        toast(`Extracted ${response.data.tables.length} tables from PDF.`);
+
+        const responsePatch = await fetch(`/api/files/${fileId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tablesData: { tables: response.data.tables },
+            fields: response.data.fields,
+            fileName: file.name,
+          }),
+        });
+
+        if (responsePatch.ok) {
+          // Update last saved data after successful upload
+          setLastSavedData({
+            tables: response.data.tables,
+            tablesDataFields: { ...tablesDataFields },
+            fields: response.data.fields || {},
+            fileName: file.name,
+          });
+        }
       } else {
         setError(response.data.message || "No tables found.");
         toast(
@@ -463,7 +653,7 @@ export default function ImportPage({ params }: { params: Params }) {
 
   return (
     <div className="grow h-full">
-      <div className="fixed bottom-4 left-4">
+      <div className="fixed bottom-4 left-4 flex gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
             <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
@@ -500,6 +690,13 @@ export default function ImportPage({ params }: { params: Params }) {
             <p>Save your changes</p>
           </TooltipContent>
         </Tooltip>
+
+        {hasUnsavedChanges && (
+          <Button className="text-white flex items-center justify-center text-sm gap-1 p-2 bg-red-500">
+            <ArrowLeftIcon className="h-4" />
+            <p>You have unsaved changes!</p>
+          </Button>
+        )}
       </div>
 
       <motion.div

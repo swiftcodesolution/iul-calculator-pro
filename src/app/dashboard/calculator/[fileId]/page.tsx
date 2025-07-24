@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { use, useEffect, useState } from "react";
@@ -24,6 +25,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { ArrowLeftIcon } from "lucide-react";
 
 type Params = Promise<{ fileId: string }>;
 
@@ -45,6 +47,18 @@ export default function CalculatorPage({ params }: { params: Params }) {
   });
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSavedData, setLastSavedData] = useState<{
+    boxesData: any;
+    tablesData: {
+      tables: any[];
+      startingBalance: number | string;
+      annualContributions: number | string;
+      annualEmployerMatch: number | string;
+      yearsRunOutOfMoney: number | string;
+    };
+  } | null>(null);
 
   const {
     boxesData,
@@ -197,6 +211,7 @@ export default function CalculatorPage({ params }: { params: Params }) {
   ]);
   */
 
+  /*
   // Fetch file data and determine read-only status
   useEffect(() => {
     if (status !== "authenticated" || !session?.user?.id || !fileId) {
@@ -297,7 +312,155 @@ export default function CalculatorPage({ params }: { params: Params }) {
     setAnnualEmployerMatch,
     setYearsRunOutOfMoney,
   ]);
+  */
 
+  // Update fetch useEffect to initialize lastSavedData
+  useEffect(() => {
+    if (status !== "authenticated" || !session?.user?.id || !fileId) {
+      setError("Unauthorized or invalid file ID");
+      setLoading(false);
+      return;
+    }
+
+    const fetchFile = async () => {
+      try {
+        const response = await fetch(`/api/files/${fileId}`);
+        if (!response.ok) {
+          if (response.status === 400 || response.status === 404) {
+            clearEverythingForFreshFile();
+            setError("File not found");
+            notFound();
+          } else {
+            setError("Failed to fetch file");
+          }
+          return;
+        }
+        const data: ClientFile = await response.json();
+
+        console.log("Fetched data:", data); // Debug
+
+        // Set read-only if user is agent and file is Pro Sample Files
+        setIsReadOnly(
+          data.createdByRole === "admin" ||
+            (session.user.role === "agent" &&
+              data.category === "Pro Sample Files")
+        );
+
+        // Set boxesData with defaults for missing fields
+        const newBoxesData =
+          data.boxesData && Object.keys(data.boxesData).length > 0
+            ? {
+                currentAge: data.boxesData.currentAge || "",
+                stopSavingAge: data.boxesData.stopSavingAge || "",
+                retirementAge: data.boxesData.retirementAge || "",
+                workingTaxRate: data.boxesData.workingTaxRate || "",
+                retirementTaxRate: data.boxesData.retirementTaxRate || "",
+                inflationRate: data.boxesData.inflationRate || "",
+                currentPlanFees: data.boxesData.currentPlanFees || "",
+                currentPlanROR: data.boxesData.currentPlanROR || "",
+                taxFreePlanROR:
+                  data.fields?.assumed_ror &&
+                  data.fields.assumed_ror.trim() !== ""
+                    ? parseFloat(
+                        data.fields.assumed_ror.replace("%", "")
+                      ).toString()
+                    : "",
+              }
+            : {
+                currentAge: "",
+                stopSavingAge: "",
+                retirementAge: "",
+                workingTaxRate: "",
+                retirementTaxRate: "",
+                inflationRate: "",
+                currentPlanFees: "",
+                currentPlanROR: "",
+                taxFreePlanROR: "",
+              };
+
+        const newTables = data.tablesData?.tables || [];
+        const newStartingBalance = data.tablesData?.startingBalance ?? 0;
+        const newAnnualContributions =
+          data.tablesData?.annualContributions ?? 0;
+        const newAnnualEmployerMatch =
+          data.tablesData?.annualEmployerMatch ?? 0;
+        const newYearsRunOutOfMoney = data.tablesData?.yearsRunOutOfMoney ?? 0;
+
+        setBoxesData(newBoxesData);
+        setTables(newTables);
+        setStartingBalance(newStartingBalance);
+        setAnnualContributions(newAnnualContributions);
+        setAnnualEmployerMatch(newAnnualEmployerMatch);
+        setYearsRunOutOfMoney(newYearsRunOutOfMoney);
+
+        // Initialize last saved data
+        setLastSavedData({
+          boxesData: newBoxesData,
+          tablesData: {
+            tables: newTables,
+            startingBalance: Number(newStartingBalance),
+            annualContributions: Number(newAnnualContributions),
+            annualEmployerMatch: Number(newAnnualEmployerMatch),
+            yearsRunOutOfMoney: Number(newYearsRunOutOfMoney),
+          },
+        });
+
+        console.log("Set table data:", {
+          startingBalance: newStartingBalance,
+          annualContributions: newAnnualContributions,
+          annualEmployerMatch: newAnnualEmployerMatch,
+          yearsRunOutOfMoney: newYearsRunOutOfMoney,
+        }); // Debug
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setError("Error fetching file");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFile();
+  }, [
+    fileId,
+    session,
+    status,
+    setBoxesData,
+    setTables,
+    setStartingBalance,
+    setAnnualContributions,
+    setAnnualEmployerMatch,
+    setYearsRunOutOfMoney,
+    clearEverythingForFreshFile,
+  ]);
+
+  useEffect(() => {
+    if (!lastSavedData || isReadOnly) {
+      setHasUnsavedChanges(false); // No unsaved changes in read-only mode
+      return;
+    }
+
+    const hasChanges =
+      JSON.stringify(boxesData) !== JSON.stringify(lastSavedData.boxesData) ||
+      JSON.stringify(tables) !==
+        JSON.stringify(lastSavedData.tablesData.tables) ||
+      startingBalance !== lastSavedData.tablesData.startingBalance ||
+      annualContributions !== lastSavedData.tablesData.annualContributions ||
+      annualEmployerMatch !== lastSavedData.tablesData.annualEmployerMatch ||
+      yearsRunOutOfMoney !== lastSavedData.tablesData.yearsRunOutOfMoney;
+
+    setHasUnsavedChanges(hasChanges);
+  }, [
+    boxesData,
+    tables,
+    startingBalance,
+    annualContributions,
+    annualEmployerMatch,
+    yearsRunOutOfMoney,
+    lastSavedData,
+    isReadOnly,
+  ]);
+
+  /*
   // Manual save function
   const saveChanges = async () => {
     if (
@@ -346,13 +509,73 @@ export default function CalculatorPage({ params }: { params: Params }) {
       setError("Error saving changes");
     }
   };
+  */
+
+  const saveChanges = async () => {
+    if (
+      !fileId ||
+      status !== "authenticated" ||
+      !session?.user?.id ||
+      isReadOnly
+    ) {
+      console.log("Skipping save due to read-only mode or invalid state");
+      setError("Cannot save: Unauthorized, invalid file ID, or read-only mode");
+      return;
+    }
+    try {
+      const response = await fetch(`/api/files/${fileId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          boxesData,
+          tablesData: {
+            tables,
+            startingBalance,
+            annualContributions,
+            annualEmployerMatch,
+            yearsRunOutOfMoney,
+          },
+        }),
+      });
+      if (!response.ok) {
+        console.error("Save failed:", response.status);
+        setError("Failed to save changes");
+      } else {
+        console.log("Saved data:", {
+          boxesData,
+          tablesData: {
+            tables,
+            startingBalance,
+            annualContributions,
+            annualEmployerMatch,
+            yearsRunOutOfMoney,
+          },
+        });
+        // Update last saved data
+        setLastSavedData({
+          boxesData: { ...boxesData },
+          tablesData: {
+            tables: [...tables],
+            startingBalance,
+            annualContributions,
+            annualEmployerMatch,
+            yearsRunOutOfMoney,
+          },
+        });
+        setIsSaveDialogOpen(true); // Open dialog on successful save
+      }
+    } catch (err) {
+      console.error("Save error:", err);
+      setError("Error saving changes");
+    }
+  };
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
   return (
     <div className="h-[90vh] grid grid-cols-2 gap-4">
-      <div className="fixed bottom-4 left-4">
+      <div className="fixed bottom-4 left-4 flex gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
             <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
@@ -392,6 +615,13 @@ export default function CalculatorPage({ params }: { params: Params }) {
             <p>Save your changes</p>
           </TooltipContent>
         </Tooltip>
+
+        {hasUnsavedChanges && !isReadOnly && (
+          <Button className="text-white flex items-center justify-center text-sm gap-1 p-2 bg-red-500">
+            <ArrowLeftIcon className="h-4" />
+            <p>You have unsaved changes!</p>
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col gap-4 relative">
