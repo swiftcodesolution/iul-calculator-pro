@@ -92,7 +92,6 @@ export default function ImportPage({ params }: { params: Params }) {
       annualEmployerMatch: number;
       yearsRunOutOfMoney: number;
     };
-    fileName: string;
   } | null>(null);
 
   const [tablesDataFields, setTablesDataFields] = useState({
@@ -102,15 +101,7 @@ export default function ImportPage({ params }: { params: Params }) {
     yearsRunOutOfMoney: 0,
   });
 
-  const {
-    fileName,
-    setFileName,
-    tables,
-    setTables,
-    fields,
-    setFields,
-    clearStore,
-  } = useTableStore();
+  const { tables, setTables, fields, setFields, clearStore } = useTableStore();
 
   // const router = useRouter();
 
@@ -205,12 +196,11 @@ export default function ImportPage({ params }: { params: Params }) {
           yearsRunOutOfMoney: Number(data.tablesData?.yearsRunOutOfMoney) || 0,
         };
         const newFields = data.fields || {};
-        const newFileName = data.fileName || "";
 
         setTables(newTables);
         setTablesDataFields(newTablesDataFields);
         setFields(newFields);
-        setFileName(newFileName);
+
         setHasFetched(true);
 
         // Initialize last saved data
@@ -218,10 +208,7 @@ export default function ImportPage({ params }: { params: Params }) {
           tables: newTables,
           tablesDataFields: newTablesDataFields,
           fields: newFields,
-          fileName: newFileName,
         });
-
-        console.log("Fetched fileName:", newFileName);
       } catch {
         setError("Error fetching file");
       } finally {
@@ -230,7 +217,7 @@ export default function ImportPage({ params }: { params: Params }) {
     };
 
     fetchFile();
-  }, [fileId, session, status, hasFetched, setTables, setFields, setFileName]);
+  }, [fileId, session, status, hasFetched, setTables, setFields]);
 
   useEffect(() => {
     if (!lastSavedData) return;
@@ -239,11 +226,10 @@ export default function ImportPage({ params }: { params: Params }) {
       JSON.stringify(tables) !== JSON.stringify(lastSavedData.tables) ||
       JSON.stringify(fields) !== JSON.stringify(lastSavedData.fields) ||
       JSON.stringify(tablesDataFields) !==
-        JSON.stringify(lastSavedData.tablesDataFields) ||
-      fileName !== lastSavedData.fileName;
+        JSON.stringify(lastSavedData.tablesDataFields);
 
     setHasUnsavedChanges(hasChanges);
-  }, [tables, fields, tablesDataFields, fileName, lastSavedData]);
+  }, [tables, fields, tablesDataFields, , lastSavedData]);
 
   /*
   const saveChanges = async () => {
@@ -286,7 +272,6 @@ export default function ImportPage({ params }: { params: Params }) {
         body: JSON.stringify({
           tablesData: { tables, ...tablesDataFields },
           fields,
-          fileName,
         }),
       });
       if (!response.ok) {
@@ -298,7 +283,6 @@ export default function ImportPage({ params }: { params: Params }) {
           tables: [...tables],
           tablesDataFields: { ...tablesDataFields },
           fields: { ...fields },
-          fileName,
         });
         setIsSaveDialogOpen(true);
         toast("Changes saved successfully");
@@ -320,13 +304,13 @@ export default function ImportPage({ params }: { params: Params }) {
     }
     if (selectedFile && selectedFile.type === "application/pdf") {
       setFile(selectedFile);
-      setFileName(selectedFile.name);
+
       setError(null);
       setZoomLevel(1);
       setIsTableFullScreen(false);
     } else {
       setFile(null);
-      setFileName("");
+
       setError("Please upload a valid PDF file.");
       toast("Please upload a valid PDF file.");
     }
@@ -402,7 +386,6 @@ export default function ImportPage({ params }: { params: Params }) {
           body: JSON.stringify({
             tablesData: { tables: response.data.tables },
             fields: response.data.fields,
-            fileName: file.name,
           }),
         });
 
@@ -412,7 +395,6 @@ export default function ImportPage({ params }: { params: Params }) {
             tables: response.data.tables,
             tablesDataFields: { ...tablesDataFields },
             fields: response.data.fields || {},
-            fileName: file.name,
           });
         }
       } else {
