@@ -15,13 +15,19 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, ZoomIn, ZoomOut, Fullscreen, Minimize2 } from "lucide-react";
+import {
+  Upload,
+  ZoomIn,
+  ZoomOut,
+  Fullscreen,
+  Minimize2,
+  ArrowLeftIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useTableStore } from "@/lib/store";
-import { useRouter } from "next/navigation";
 import { useTableHighlight } from "@/hooks/useTableHighlight";
 import { useSession } from "next-auth/react";
-import { cn, debounce } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import { ClientFile } from "@/lib/types";
 import {
@@ -29,6 +35,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 type TableData = {
   source: string;
@@ -65,7 +79,19 @@ export default function ImportPage({ params }: { params: Params }) {
   const [isTableFullScreen, setIsTableFullScreen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [highlightColor, setHighlightColor] = useState("#ffa1ad");
-  const [isReadOnly, setIsReadOnly] = useState(false); // New state for read-only mode
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(false); // Retained read-only state
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSavedData, setLastSavedData] = useState<{
+    tables: TableData[];
+    fields: ApiResponse["fields"];
+    tablesDataFields: {
+      startingBalance: number;
+      annualContributions: number;
+      annualEmployerMatch: number;
+      yearsRunOutOfMoney: number;
+    };
+  } | null>(null);
 
   const [tablesDataFields, setTablesDataFields] = useState({
     startingBalance: 0,
@@ -74,16 +100,8 @@ export default function ImportPage({ params }: { params: Params }) {
     yearsRunOutOfMoney: 0,
   });
 
-  const {
-    // fileName,
-    setFileName,
-    tables,
-    setTables,
-    fields,
-    setFields,
-    clearStore,
-  } = useTableStore();
-  const router = useRouter();
+  const { tables, setTables, fields, setFields, clearStore } = useTableStore();
+
   const {
     highlightedRows,
     highlightedColumns,
@@ -92,13 +110,12 @@ export default function ImportPage({ params }: { params: Params }) {
   } = useTableHighlight();
 
   useEffect(() => {
-    // Only proceed if the session is fully loaded
-    if (status === "loading") {
-      return; // Wait for session to load
-    }
-
-    if (status !== "authenticated" || !session?.user?.id || !fileId) {
-      setError("Unauthorized or invalid file ID");
+    if (
+      status !== "authenticated" ||
+      !session?.user?.id ||
+      !fileId ||
+      hasFetched
+    ) {
       setLoading(false);
       return;
     }
@@ -116,23 +133,30 @@ export default function ImportPage({ params }: { params: Params }) {
           return;
         }
         const data: ClientFile = await response.json();
-        console.log("Fetched data:", data); // Debug
-        // Set read-only if file was created by admin
-        setIsReadOnly(data.createdByRole === "admin");
-        setTables(data.tablesData?.tables || []);
-
-        setTablesDataFields({
+        setIsReadOnly(data.createdByRole === "admin"); // Set read-only for admin-created files
+        const newTables = data.tablesData?.tables || [];
+        const newTablesDataFields = {
           startingBalance: Number(data.tablesData?.startingBalance) || 0,
           annualContributions:
             Number(data.tablesData?.annualContributions) || 0,
           annualEmployerMatch:
             Number(data.tablesData?.annualEmployerMatch) || 0,
           yearsRunOutOfMoney: Number(data.tablesData?.yearsRunOutOfMoney) || 0,
-        });
+        };
+        const newFields = data.fields || {};
 
-        setFields(data.fields || {});
-        setFileName(data.fileName || "");
+        setTables(newTables);
+        setTablesDataFields(newTablesDataFields);
+        setFields(newFields);
+
         setHasFetched(true);
+
+        // Initialize last saved data
+        setLastSavedData({
+          tables: newTables,
+          tablesDataFields: newTablesDataFields,
+          fields: newFields,
+        });
       } catch {
         setError("Error fetching file");
       } finally {
@@ -141,42 +165,57 @@ export default function ImportPage({ params }: { params: Params }) {
     };
 
     fetchFile();
-  }, [fileId, session, status, hasFetched, setTables, setFields, setFileName]);
-
-  const saveChanges = debounce(
-    async () => {
-      if (
-        !fileId ||
-        status !== "authenticated" ||
-        !session?.user?.id ||
-        isReadOnly
-      ) {
-        console.log("Skipping save due to read-only mode or invalid state");
-        return;
-      }
-      try {
-        const response = await fetch(`/api/files/${fileId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tablesData: { tables, ...tablesDataFields },
-            fields,
-          }),
-        });
-        if (!response.ok) setError("Failed to save changes");
-      } catch {
-        setError("Error saving changes");
-      }
-    },
-    1000,
-    { leading: false, trailing: true }
-  );
+  }, [fileId, session, status, hasFetched, setTables, setFields]);
 
   useEffect(() => {
-    if (tables.length > 0 || Object.values(fields).some((v) => v !== null))
-      saveChanges();
-    return () => saveChanges.cancel();
-  }, [tables, fields, saveChanges]);
+    if (!lastSavedData) return;
+
+    const hasChanges =
+      JSON.stringify(tables) !== JSON.stringify(lastSavedData.tables) ||
+      JSON.stringify(fields) !== JSON.stringify(lastSavedData.fields) ||
+      JSON.stringify(tablesDataFields) !==
+        JSON.stringify(lastSavedData.tablesDataFields);
+
+    setHasUnsavedChanges(hasChanges);
+  }, [tables, fields, tablesDataFields, lastSavedData]);
+
+  const saveChanges = async () => {
+    if (
+      !fileId ||
+      status !== "authenticated" ||
+      !session?.user?.id ||
+      isReadOnly
+    ) {
+      setError("Unauthorized, invalid file ID, or read-only mode");
+      return;
+    }
+    try {
+      const response = await fetch(`/api/files/${fileId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tablesData: { tables, ...tablesDataFields },
+          fields,
+        }),
+      });
+      if (!response.ok) {
+        setError("Failed to save changes");
+        toast("Failed to save changes");
+      } else {
+        // Update last saved data
+        setLastSavedData({
+          tables: [...tables],
+          tablesDataFields: { ...tablesDataFields },
+          fields: { ...fields },
+        });
+        setIsSaveDialogOpen(true);
+        toast("Changes saved successfully");
+      }
+    } catch {
+      setError("Error saving changes");
+      toast("Error saving changes");
+    }
+  };
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>
@@ -189,7 +228,6 @@ export default function ImportPage({ params }: { params: Params }) {
     }
     if (selectedFile && selectedFile.type === "application/pdf") {
       setFile(selectedFile);
-      setFileName(selectedFile.name);
       setError(null);
       setZoomLevel(1);
       setIsTableFullScreen(false);
@@ -218,17 +256,23 @@ export default function ImportPage({ params }: { params: Params }) {
         setFields(response.data.fields || {});
         toast(`Extracted ${response.data.tables.length} tables from PDF.`);
 
-        await fetch(`/api/files/${fileId}`, {
+        const responsePatch = await fetch(`/api/files/${fileId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            tablesData: {
-              tables: response.data.tables,
-              ...tablesDataFields, // Preserve all fields
-            },
-            fields: response.data.fields || {},
+            tablesData: { tables: response.data.tables },
+            fields: response.data.fields,
           }),
         });
+
+        if (responsePatch.ok) {
+          // Update last saved data after successful upload
+          setLastSavedData({
+            tables: response.data.tables,
+            tablesDataFields: { ...tablesDataFields },
+            fields: response.data.fields || {},
+          });
+        }
       } else {
         setError(response.data.message || "No tables found.");
         toast(
@@ -252,48 +296,29 @@ export default function ImportPage({ params }: { params: Params }) {
     e.stopPropagation();
   };
 
-  const handleImport = () => {
-    if (!tables.length) return;
-    toast("Data imported successfully.");
-    router.push(`/dashboard/calculator/${fileId}`);
-  };
-
   const handleCancel = async () => {
     setFile(null);
     setError(null);
     setZoomLevel(1);
     setIsTableFullScreen(false);
 
-    if (fileId && status === "authenticated" && session?.user?.id) {
+    if (
+      fileId &&
+      status === "authenticated" &&
+      session?.user?.id &&
+      !isReadOnly
+    ) {
       try {
-        // Clear fields data
         const fieldsResponse = await fetch(`/api/files/${fileId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "clearFieldsData" }),
         });
-
         if (!fieldsResponse.ok) {
           setError("Failed to clear fields data");
           toast("Failed to clear fields data");
-          return;
         }
-
-        // Clear tables data
-        const tablesResponse = await fetch(`/api/files/${fileId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "clearTablesData" }),
-        });
-
-        if (!tablesResponse.ok) {
-          setError("Failed to clear tables data");
-          toast("Failed to clear tables data");
-          return;
-        }
-
-        clearStore(); // Clear local store after successful API calls
-        toast("Data cleared successfully");
+        clearStore();
       } catch {
         setError("Error clearing data");
         toast("Error clearing data");
@@ -326,7 +351,7 @@ export default function ImportPage({ params }: { params: Params }) {
 
   const renderTable = () => (
     <Card className="flex-1 flex flex-col h-[90vh]">
-      <CardHeader className="sticky top-0 z-10">
+      <CardHeader className="sticky top-0 z-10 bg-white dark:bg-black">
         <h3 className="text-lg font-semibold">Imported Data Preview</h3>
       </CardHeader>
       <CardContent
@@ -334,7 +359,7 @@ export default function ImportPage({ params }: { params: Params }) {
         onScroll={handleScroll}
       >
         {isScrolled && tables.length > 0 && (
-          <div className="sticky top-0 z-10 bg-white shadow-md w-full flex">
+          <div className="sticky top-0 z-10 bg-white shadow-md w-full">
             {tables.map((table, index) => {
               const columns = Object.keys(table.data[0] || {}).filter(
                 (key) => key !== "Source_Text" && key !== "Page_Number"
@@ -485,6 +510,55 @@ export default function ImportPage({ params }: { params: Params }) {
 
   return (
     <div className="grow h-full">
+      <div className="fixed bottom-4 left-4 flex gap-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  onClick={saveChanges}
+                  disabled={
+                    status !== "authenticated" ||
+                    !fileId ||
+                    isTableLoading ||
+                    isReadOnly
+                  }
+                  className="cursor-pointer high-contrast:bg-white high-contrast:text-black!"
+                  variant="default"
+                >
+                  Save
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Save Successful</DialogTitle>
+                  <DialogDescription className="high-contrast:text-gray-200">
+                    Your changes have been successfully saved!
+                  </DialogDescription>
+                </DialogHeader>
+                <Button
+                  onClick={() => setIsSaveDialogOpen(false)}
+                  variant="outline"
+                  className="mt-4"
+                >
+                  Close
+                </Button>
+              </DialogContent>
+            </Dialog>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Save your changes</p>
+          </TooltipContent>
+        </Tooltip>
+
+        {hasUnsavedChanges && (
+          <Button className="text-white flex items-center justify-center text-sm gap-1 p-2 bg-red-500">
+            <ArrowLeftIcon className="h-4" />
+            <p>You have unsaved changes!</p>
+          </Button>
+        )}
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -518,7 +592,7 @@ export default function ImportPage({ params }: { params: Params }) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
-              className="fixed inset-0 z-50 p-4 flex flex-col bg-black"
+              className="fixed inset-0 z-50 bg-white p-4 flex flex-col"
             >
               <div className="flex-1 flex flex-col">
                 <div className="flex justify-between items-center mb-4">
@@ -528,7 +602,7 @@ export default function ImportPage({ params }: { params: Params }) {
                       <TooltipTrigger asChild>
                         <span>
                           <Button
-                            className="high-contrast:bg-white"
+                            className=""
                             variant="outline"
                             onClick={handleZoomIn}
                             disabled={
@@ -541,7 +615,7 @@ export default function ImportPage({ params }: { params: Params }) {
                         </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>{"Zoom in on table"}</p>
+                        <p>Zoom in on table</p>
                       </TooltipContent>
                     </Tooltip>
 
@@ -549,7 +623,7 @@ export default function ImportPage({ params }: { params: Params }) {
                       <TooltipTrigger asChild>
                         <span>
                           <Button
-                            className="high-contrast:bg-white"
+                            className=""
                             variant="outline"
                             onClick={handleZoomOut}
                             disabled={
@@ -564,7 +638,7 @@ export default function ImportPage({ params }: { params: Params }) {
                         </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>{"Zoom out on table"}</p>
+                        <p>Zoom out on table</p>
                       </TooltipContent>
                     </Tooltip>
 
@@ -572,7 +646,6 @@ export default function ImportPage({ params }: { params: Params }) {
                       <TooltipTrigger asChild>
                         <span>
                           <Button
-                            className="high-contrast:bg-white"
                             variant="outline"
                             size="sm"
                             onClick={handleFullScreenToggle}
@@ -584,7 +657,7 @@ export default function ImportPage({ params }: { params: Params }) {
                         </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>{"Exit full-screen mode"}</p>
+                        <p>Exit full-screen mode</p>
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -602,8 +675,8 @@ export default function ImportPage({ params }: { params: Params }) {
           className="lg:w-[30%] w-full flex flex-col gap-4 lg:mt-auto"
         >
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="highlight-color">Highlight Color</Label>
+            <div className="flex gap-2 items-center">
+              <Label htmlFor="highlight-color grow">Highlight Color</Label>
               <input
                 id="highlight-color"
                 type="color"
@@ -612,8 +685,6 @@ export default function ImportPage({ params }: { params: Params }) {
                 className="w-8 h-8 border rounded"
               />
             </div>
-          </div>
-          <div className="space-y-2 flex-col gap-2">
             <div className="space-y-2 flex gap-2">
               <Label className="grow" htmlFor="illustration-date">
                 Illustration Date
@@ -645,17 +716,6 @@ export default function ImportPage({ params }: { params: Params }) {
                 id="assumed-ror"
                 disabled
                 value={fields.assumed_ror || ""}
-              />
-            </div>
-            <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="minimum-initial-pmt">
-                Minimum Initial Pmt
-              </Label>
-              <Input
-                className="w-2/4"
-                id="minimum-initial-pmt"
-                disabled
-                value={fields.minimum_initial_pmt || ""}
               />
             </div>
           </div>
@@ -691,16 +751,22 @@ export default function ImportPage({ params }: { params: Params }) {
                       className="hidden"
                       accept="application/pdf"
                       onChange={handleFileChange}
-                      disabled={isReadOnly} // Disable file input
+                      disabled={isReadOnly}
                     />
                   </label>
                 </Button>
-                {file && (
-                  <p className="mt-2 text-sm text-gray-600">
-                    Uploaded: {file.name}
-                  </p>
-                )}
               </div>
+
+              {file && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-sm flex gap-1 items-center justify-center"
+                >
+                  <Label>Uploaded File:</Label> {file.name}
+                </motion.div>
+              )}
               <Button
                 onClick={handleUpload}
                 disabled={isTableLoading || isReadOnly}
@@ -721,7 +787,7 @@ export default function ImportPage({ params }: { params: Params }) {
               {error}
             </motion.div>
           )}
-          {isTableLoading && (
+          {/* {isTableLoading && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -730,26 +796,19 @@ export default function ImportPage({ params }: { params: Params }) {
             >
               Processing...
             </motion.div>
-          )}
+          )} */}
           {tables.length > 0 && !isTableLoading && !error && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.3 }}
-              className="flex justify-center gap-4"
+              className="flex gap-4"
             >
-              <Button
-                className="high-contrast:bg-white high-contrast:text-black"
-                variant="default"
-                onClick={handleImport}
-                disabled={isTableLoading || isReadOnly}
-              >
-                Import
-              </Button>
               <Button
                 variant="outline"
                 onClick={handleCancel}
                 disabled={isTableLoading || isReadOnly}
+                className="flex-1"
               >
                 Clear
               </Button>
@@ -773,7 +832,7 @@ export default function ImportPage({ params }: { params: Params }) {
                 </span>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{"Zoom in on table"}</p>
+                <p>Zoom in on table</p>
               </TooltipContent>
             </Tooltip>
 
@@ -794,7 +853,7 @@ export default function ImportPage({ params }: { params: Params }) {
                 </span>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{"Zoom out on table"}</p>
+                <p>Zoom out on table</p>
               </TooltipContent>
             </Tooltip>
 
