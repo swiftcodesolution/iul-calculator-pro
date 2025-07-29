@@ -904,7 +904,7 @@ export function ComparisonTable({
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Select Age" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60">
                   {ageOptions.map((age) => (
                     <SelectItem key={age} value={String(age)}>
                       {age}
