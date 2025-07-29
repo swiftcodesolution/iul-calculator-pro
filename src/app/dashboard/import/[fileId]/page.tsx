@@ -179,6 +179,24 @@ export default function ImportPage({ params }: { params: Params }) {
     setHasUnsavedChanges(hasChanges);
   }, [tables, fields, tablesDataFields, lastSavedData]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        event.preventDefault();
+        event.returnValue = "";
+        return "You have unsaved changes. Are you sure you want to leave?";
+      }
+    };
+
+    if (hasUnsavedChanges) {
+      window.addEventListener("beforeunload", handleBeforeUnload);
+    }
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
   const saveChanges = async () => {
     if (
       !fileId ||
