@@ -183,15 +183,12 @@ export default function ImportPage({ params }: { params: Params }) {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       if (hasUnsavedChanges) {
         event.preventDefault();
-        event.returnValue = "";
-        return "You have unsaved changes. Are you sure you want to leave?";
+        event.returnValue =
+          "You have unsaved changes. Are you sure you want to leave?";
+        return event.returnValue;
       }
     };
-
-    if (hasUnsavedChanges) {
-      window.addEventListener("beforeunload", handleBeforeUnload);
-    }
-
+    window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
@@ -270,27 +267,10 @@ export default function ImportPage({ params }: { params: Params }) {
         headers: { "Content-Type": "multipart/form-data" },
       });
       if (response.data.tables) {
+        // Update state without saving to server
         setTables(response.data.tables);
         setFields(response.data.fields || {});
         toast(`Extracted ${response.data.tables.length} tables from PDF.`);
-
-        const responsePatch = await fetch(`/api/files/${fileId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tablesData: { tables: response.data.tables },
-            fields: response.data.fields,
-          }),
-        });
-
-        if (responsePatch.ok) {
-          // Update last saved data after successful upload
-          setLastSavedData({
-            tables: response.data.tables,
-            tablesDataFields: { ...tablesDataFields },
-            fields: response.data.fields || {},
-          });
-        }
       } else {
         setError(response.data.message || "No tables found.");
         toast(

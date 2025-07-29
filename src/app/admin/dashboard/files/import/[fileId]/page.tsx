@@ -334,7 +334,6 @@ export default function ImportPage({ params }: { params: Params }) {
     }
   };
 
-  /*
   const handleUpload = async () => {
     if (!file) {
       setError("Please select a PDF file.");
@@ -349,72 +348,10 @@ export default function ImportPage({ params }: { params: Params }) {
         headers: { "Content-Type": "multipart/form-data" },
       });
       if (response.data.tables) {
+        // Update state without saving to server
         setTables(response.data.tables);
         setFields(response.data.fields || {});
         toast(`Extracted ${response.data.tables.length} tables from PDF.`);
-
-        await fetch(`/api/files/${fileId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tablesData: { tables: response.data.tables },
-            fields: response.data.fields,
-          }),
-        });
-      } else {
-        setError(response.data.message || "No tables found.");
-        toast(
-          response.data.message ||
-            "The PDF didn't contain any extractable tables."
-        );
-      }
-    } catch (err) {
-      const error = err as AxiosError<{ detail?: string }>;
-      const errorMessage =
-        error.response?.data?.detail || "Error uploading PDF.";
-      setError(errorMessage);
-      toast(errorMessage);
-    } finally {
-      setIsTableLoading(false);
-    }
-  };
-  */
-
-  const handleUpload = async () => {
-    if (!file) {
-      setError("Please select a PDF file.");
-      toast("Please select a PDF file.");
-      return;
-    }
-    setIsTableLoading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    try {
-      const response = await axios.post<ApiResponse>(API_ENDPOINT, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      if (response.data.tables) {
-        setTables(response.data.tables);
-        setFields(response.data.fields || {});
-        toast(`Extracted ${response.data.tables.length} tables from PDF.`);
-
-        const responsePatch = await fetch(`/api/files/${fileId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tablesData: { tables: response.data.tables },
-            fields: response.data.fields,
-          }),
-        });
-
-        if (responsePatch.ok) {
-          // Update last saved data after successful upload
-          setLastSavedData({
-            tables: response.data.tables,
-            tablesDataFields: { ...tablesDataFields },
-            fields: response.data.fields || {},
-          });
-        }
       } else {
         setError(response.data.message || "No tables found.");
         toast(
@@ -437,12 +374,6 @@ export default function ImportPage({ params }: { params: Params }) {
     e.preventDefault();
     e.stopPropagation();
   };
-
-  // const handleImport = () => {
-  //   if (!tables.length) return;
-  //   toast("Data imported successfully.");
-  //   router.push(`/dashboard/calculator/${fileId}`);
-  // };
 
   const handleCancel = async () => {
     setFile(null);
