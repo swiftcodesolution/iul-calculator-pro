@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTableStore } from "@/lib/store";
-// import { useRouter } from "next/navigation";
 import { useTableHighlight } from "@/hooks/useTableHighlight";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -42,7 +41,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 type TableData = {
@@ -81,7 +79,7 @@ export default function ImportPage({ params }: { params: Params }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [highlightColor, setHighlightColor] = useState("#ffa1ad");
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
-
+  const [isSaveConfirmDialogOpen, setIsSaveConfirmDialogOpen] = useState(false); // New state for confirmation dialog
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSavedData, setLastSavedData] = useState<{
     tables: TableData[];
@@ -103,64 +101,12 @@ export default function ImportPage({ params }: { params: Params }) {
 
   const { tables, setTables, fields, setFields, clearStore } = useTableStore();
 
-  // const router = useRouter();
-
   const {
     highlightedRows,
     highlightedColumns,
     handleRowClick,
     handleColumnClick,
   } = useTableHighlight();
-
-  /*
-  useEffect(() => {
-    if (
-      status !== "authenticated" ||
-      !session?.user?.id ||
-      !fileId ||
-      hasFetched
-    ) {
-      return;
-    }
-
-    const fetchFile = async () => {
-      try {
-        const response = await fetch(`/api/files/${fileId}`);
-        if (!response.ok) {
-          if (response.status === 400 || response.status === 404) {
-            setError("File not found");
-            notFound();
-          } else {
-            setError("Failed to fetch file");
-          }
-          return;
-        }
-        const data: ClientFile = await response.json();
-        setTables(data.tablesData?.tables || []);
-
-        setTablesDataFields({
-          startingBalance: Number(data.tablesData?.startingBalance) || 0,
-          annualContributions:
-            Number(data.tablesData?.annualContributions) || 0,
-          annualEmployerMatch:
-            Number(data.tablesData?.annualEmployerMatch) || 0,
-          yearsRunOutOfMoney: Number(data.tablesData?.yearsRunOutOfMoney) || 0,
-        });
-
-        setFields(data.fields || {});
-        setFileName(data.fileName || "");
-        setHasFetched(true);
-        console.log(fileName);
-      } catch {
-        setError("Error fetching file");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFile();
-  }, [fileId, session, status, hasFetched, setTables, setFields]);
-  */
 
   useEffect(() => {
     if (
@@ -229,7 +175,7 @@ export default function ImportPage({ params }: { params: Params }) {
         JSON.stringify(lastSavedData.tablesDataFields);
 
     setHasUnsavedChanges(hasChanges);
-  }, [tables, fields, tablesDataFields, , lastSavedData]);
+  }, [tables, fields, tablesDataFields, lastSavedData]);
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -248,35 +194,6 @@ export default function ImportPage({ params }: { params: Params }) {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [hasUnsavedChanges]);
-
-  /*
-  const saveChanges = async () => {
-    if (!fileId || status !== "authenticated" || !session?.user?.id) {
-      setError("Unauthorized or invalid file ID");
-      return;
-    }
-    try {
-      const response = await fetch(`/api/files/${fileId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tablesData: { tables, ...tablesDataFields },
-          fields,
-        }),
-      });
-      if (!response.ok) {
-        setError("Failed to save changes");
-        toast("Failed to save changes");
-      } else {
-        setIsSaveDialogOpen(true); // Open dialog on successful save
-        toast("Changes saved successfully");
-      }
-    } catch {
-      setError("Error saving changes");
-      toast("Error saving changes");
-    }
-  };
-  */
 
   const saveChanges = async () => {
     if (!fileId || status !== "authenticated" || !session?.user?.id) {
@@ -302,7 +219,7 @@ export default function ImportPage({ params }: { params: Params }) {
           tablesDataFields: { ...tablesDataFields },
           fields: { ...fields },
         });
-        setIsSaveDialogOpen(true);
+        setIsSaveConfirmDialogOpen(true); // Open save success confirmation dialog
         toast("Changes saved successfully");
       }
     } catch {
@@ -322,13 +239,11 @@ export default function ImportPage({ params }: { params: Params }) {
     }
     if (selectedFile && selectedFile.type === "application/pdf") {
       setFile(selectedFile);
-
       setError(null);
       setZoomLevel(1);
       setIsTableFullScreen(false);
     } else {
       setFile(null);
-
       setError("Please upload a valid PDF file.");
       toast("Please upload a valid PDF file.");
     }
@@ -348,10 +263,11 @@ export default function ImportPage({ params }: { params: Params }) {
         headers: { "Content-Type": "multipart/form-data" },
       });
       if (response.data.tables) {
-        // Update state without saving to server
         setTables(response.data.tables);
         setFields(response.data.fields || {});
         toast(`Extracted ${response.data.tables.length} tables from PDF.`);
+        setHasUnsavedChanges(true); // Mark changes as unsaved
+        setIsSaveDialogOpen(true); // Open save prompt dialog
       } else {
         setError(response.data.message || "No tables found.");
         toast(
@@ -393,6 +309,8 @@ export default function ImportPage({ params }: { params: Params }) {
           toast("Failed to clear fields data");
         }
         clearStore();
+        setHasUnsavedChanges(true); // Mark changes as unsaved
+        setIsSaveDialogOpen(true); // Open save prompt dialog
       } catch {
         setError("Error clearing data");
         toast("Error clearing data");
@@ -587,35 +505,14 @@ export default function ImportPage({ params }: { params: Params }) {
       <div className="absolute bottom-4 left-4 z-50 flex gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  onClick={saveChanges}
-                  disabled={
-                    status !== "authenticated" || !fileId || isTableLoading
-                  }
-                  className="cursor-pointer high-contrast:bg-white high-contrast:text-black!"
-                  variant="default"
-                >
-                  Save
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Save Successful</DialogTitle>
-                  <DialogDescription className="high-contrast:text-gray-200">
-                    Your changes have been successfully saved!
-                  </DialogDescription>
-                </DialogHeader>
-                <Button
-                  onClick={() => setIsSaveDialogOpen(false)}
-                  variant="outline"
-                  className="mt-4"
-                >
-                  Close
-                </Button>
-              </DialogContent>
-            </Dialog>
+            <Button
+              onClick={saveChanges}
+              disabled={status !== "authenticated" || !fileId || isTableLoading}
+              className="cursor-pointer high-contrast:bg-white high-contrast:text-black!"
+              variant="default"
+            >
+              Save
+            </Button>
           </TooltipTrigger>
           <TooltipContent>
             <p>Save your changes</p>
@@ -628,6 +525,59 @@ export default function ImportPage({ params }: { params: Params }) {
             <p>You have unsaved changes!</p>
           </Button>
         )}
+
+        {/* Dialog to Prompt Saving Changes */}
+        <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Save Changes</DialogTitle>
+              <DialogDescription className="high-contrast:text-gray-200">
+                You have made changes to the data. Would you like to save them?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-4 justify-end mt-4">
+              <Button
+                onClick={() => setIsSaveDialogOpen(false)}
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  await saveChanges();
+                  setIsSaveDialogOpen(false);
+                }}
+                disabled={
+                  status !== "authenticated" || !fileId || isTableLoading
+                }
+              >
+                Save
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog to Confirm Save Success */}
+        <Dialog
+          open={isSaveConfirmDialogOpen}
+          onOpenChange={setIsSaveConfirmDialogOpen}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Save Successful</DialogTitle>
+              <DialogDescription className="high-contrast:text-gray-200">
+                Your changes have been successfully saved!
+              </DialogDescription>
+            </DialogHeader>
+            <Button
+              onClick={() => setIsSaveConfirmDialogOpen(false)}
+              variant="outline"
+              className="mt-4"
+            >
+              Close
+            </Button>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <motion.div
@@ -855,16 +805,6 @@ export default function ImportPage({ params }: { params: Params }) {
               {error}
             </motion.div>
           )}
-          {/* {isTableLoading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-              className="text-center text-gray-500"
-            >
-              Processing...
-            </motion.div>
-          )} */}
           {tables.length > 0 && !isTableLoading && !error && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}

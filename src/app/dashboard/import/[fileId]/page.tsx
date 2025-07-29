@@ -41,7 +41,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 type TableData = {
@@ -79,7 +78,10 @@ export default function ImportPage({ params }: { params: Params }) {
   const [isTableFullScreen, setIsTableFullScreen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [highlightColor, setHighlightColor] = useState("#ffa1ad");
-  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false); // For prompting to save changes
+  const [isSaveConfirmDialogOpen, setIsSaveConfirmDialogOpen] = useState(false); // For save success confirmation
+
   const [isReadOnly, setIsReadOnly] = useState(false); // Retained read-only state
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSavedData, setLastSavedData] = useState<{
@@ -194,6 +196,7 @@ export default function ImportPage({ params }: { params: Params }) {
     };
   }, [hasUnsavedChanges]);
 
+  /*
   const saveChanges = async () => {
     if (
       !fileId ||
@@ -231,6 +234,45 @@ export default function ImportPage({ params }: { params: Params }) {
       toast("Error saving changes");
     }
   };
+  */
+
+  const saveChanges = async () => {
+    if (
+      !fileId ||
+      status !== "authenticated" ||
+      !session?.user?.id ||
+      isReadOnly
+    ) {
+      setError("Unauthorized, invalid file ID, or read-only mode");
+      return;
+    }
+    try {
+      const response = await fetch(`/api/files/${fileId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tablesData: { tables, ...tablesDataFields },
+          fields,
+        }),
+      });
+      if (!response.ok) {
+        setError("Failed to save changes");
+        toast("Failed to save changes");
+      } else {
+        // Update last saved data
+        setLastSavedData({
+          tables: [...tables],
+          tablesDataFields: { ...tablesDataFields },
+          fields: { ...fields },
+        });
+        setIsSaveConfirmDialogOpen(true); // Open save success confirmation dialog
+        toast("Changes saved successfully");
+      }
+    } catch {
+      setError("Error saving changes");
+      toast("Error saving changes");
+    }
+  };
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>
@@ -253,6 +295,7 @@ export default function ImportPage({ params }: { params: Params }) {
     }
   };
 
+  /*
   const handleUpload = async () => {
     if (!file) {
       setError("Please select a PDF file.");
@@ -288,11 +331,81 @@ export default function ImportPage({ params }: { params: Params }) {
       setIsTableLoading(false);
     }
   };
+  */
+
+  const handleUpload = async () => {
+    if (!file) {
+      setError("Please select a PDF file.");
+      toast("Please select a PDF file.");
+      return;
+    }
+    setIsTableLoading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const response = await axios.post<ApiResponse>(API_ENDPOINT, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (response.data.tables) {
+        setTables(response.data.tables);
+        setFields(response.data.fields || {});
+        toast(`Extracted ${response.data.tables.length} tables from PDF.`);
+        setHasUnsavedChanges(true); // Mark changes as unsaved
+        setIsSaveDialogOpen(true); // Open save prompt dialog
+      } else {
+        setError(response.data.message || "No tables found.");
+        toast(
+          response.data.message ||
+            "The PDF didn't contain any extractable tables."
+        );
+      }
+    } catch (err) {
+      const error = err as AxiosError<{ detail?: string }>;
+      const errorMessage =
+        error.response?.data?.detail || "Error uploading PDF.";
+      setError(errorMessage);
+      toast(errorMessage);
+    } finally {
+      setIsTableLoading(false);
+    }
+  };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
   };
+
+  /*
+  const handleCancel = async () => {
+    setFile(null);
+    setError(null);
+    setZoomLevel(1);
+    setIsTableFullScreen(false);
+
+    if (
+      fileId &&
+      status === "authenticated" &&
+      session?.user?.id &&
+      !isReadOnly
+    ) {
+      try {
+        const fieldsResponse = await fetch(`/api/files/${fileId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "clearFieldsData" }),
+        });
+        if (!fieldsResponse.ok) {
+          setError("Failed to clear fields data");
+          toast("Failed to clear fields data");
+        }
+        clearStore();
+      } catch {
+        setError("Error clearing data");
+        toast("Error clearing data");
+      }
+    }
+  };
+  */
 
   const handleCancel = async () => {
     setFile(null);
@@ -317,6 +430,8 @@ export default function ImportPage({ params }: { params: Params }) {
           toast("Failed to clear fields data");
         }
         clearStore();
+        setHasUnsavedChanges(true); // Mark changes as unsaved
+        setIsSaveDialogOpen(true); // Open save prompt dialog
       } catch {
         setError("Error clearing data");
         toast("Error clearing data");
@@ -508,7 +623,7 @@ export default function ImportPage({ params }: { params: Params }) {
 
   return (
     <div className="grow h-full">
-      <div className="absolute bottom-4 left-4 z-50 flex gap-2">
+      {/* <div className="absolute bottom-4 left-4 z-50 flex gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
             <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
@@ -555,6 +670,92 @@ export default function ImportPage({ params }: { params: Params }) {
             <p>You have unsaved changes!</p>
           </Button>
         )}
+      </div> */}
+
+      <div className="absolute bottom-4 left-4 z-50 flex gap-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={saveChanges}
+              disabled={
+                status !== "authenticated" ||
+                !fileId ||
+                isTableLoading ||
+                isReadOnly
+              }
+              className="cursor-pointer high-contrast:bg-white high-contrast:text-black!"
+              variant="default"
+            >
+              Save
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Save your changes</p>
+          </TooltipContent>
+        </Tooltip>
+
+        {hasUnsavedChanges && (
+          <Button className="text-white flex items-center justify-center text-sm gap-1 p-2 bg-red-500">
+            <ArrowLeftIcon className="h-4" />
+            <p>You have unsaved changes!</p>
+          </Button>
+        )}
+
+        {/* Dialog to Prompt Saving Changes */}
+        <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Save Changes</DialogTitle>
+              <DialogDescription className="high-contrast:text-gray-200">
+                You have made changes to the data. Would you like to save them?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-4 justify-end mt-4">
+              <Button
+                onClick={() => setIsSaveDialogOpen(false)}
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  await saveChanges();
+                  setIsSaveDialogOpen(false);
+                }}
+                disabled={
+                  status !== "authenticated" ||
+                  !fileId ||
+                  isTableLoading ||
+                  isReadOnly
+                }
+              >
+                Save
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog to Confirm Save Success */}
+        <Dialog
+          open={isSaveConfirmDialogOpen}
+          onOpenChange={setIsSaveConfirmDialogOpen}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Save Successful</DialogTitle>
+              <DialogDescription className="high-contrast:text-gray-200">
+                Your changes have been successfully saved!
+              </DialogDescription>
+            </DialogHeader>
+            <Button
+              onClick={() => setIsSaveConfirmDialogOpen(false)}
+              variant="outline"
+              className="mt-4"
+            >
+              Close
+            </Button>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <motion.div
