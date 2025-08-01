@@ -54,6 +54,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
       annualEmployerMatch: number | string;
       yearsRunOutOfMoney: number | string;
     };
+    withdrawalAmount: number | string; // Added
+    calculatorAge: number | string; // Added
+    calculatorTaxRate: number | string; // Added
   } | null>(null);
 
   const {
@@ -70,6 +73,12 @@ export default function CalculatorPage({ params }: { params: Params }) {
     yearsRunOutOfMoney,
     setYearsRunOutOfMoney,
     clearEverythingForFreshFile,
+    withdrawalAmount,
+    setWithdrawalAmount,
+    calculatorAge,
+    setCalculatorAge,
+    calculatorTaxRate,
+    setCalculatorTaxRate,
   } = useTableStore();
 
   const {
@@ -527,6 +536,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
                 annualEmployerMatch: 0,
                 yearsRunOutOfMoney: 0,
               },
+              withdrawalAmount: 0, // Added
+              calculatorAge: 0, // Added
+              calculatorTaxRate: 0, // Added
             });
             return;
           } else {
@@ -582,6 +594,10 @@ export default function CalculatorPage({ params }: { params: Params }) {
         setAnnualEmployerMatch(newAnnualEmployerMatch);
         setYearsRunOutOfMoney(newYearsRunOutOfMoney);
 
+        setWithdrawalAmount(data.withdrawalAmount ?? 0); // Added
+        setCalculatorAge(data.calculatorAge ?? 0); // Added
+        setCalculatorTaxRate(data.calculatorTaxRate ?? 0); // Added
+
         // Set last saved data to match fetched data
         setLastSavedData({
           boxesData: newBoxesData,
@@ -592,6 +608,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
             annualEmployerMatch: Number(newAnnualEmployerMatch),
             yearsRunOutOfMoney: Number(newYearsRunOutOfMoney),
           },
+          withdrawalAmount: data.withdrawalAmount ?? 0, // Added
+          calculatorAge: data.calculatorAge ?? 0, // Added
+          calculatorTaxRate: data.calculatorTaxRate ?? 0, // Added
         });
       } catch (err) {
         console.error("Fetch error:", err);
@@ -611,6 +630,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
     setAnnualContributions,
     setAnnualEmployerMatch,
     setYearsRunOutOfMoney,
+    setWithdrawalAmount,
+    setCalculatorAge,
+    setCalculatorTaxRate,
     clearEverythingForFreshFile,
   ]);
 
@@ -624,7 +646,10 @@ export default function CalculatorPage({ params }: { params: Params }) {
       startingBalance !== lastSavedData.tablesData.startingBalance ||
       annualContributions !== lastSavedData.tablesData.annualContributions ||
       annualEmployerMatch !== lastSavedData.tablesData.annualEmployerMatch ||
-      yearsRunOutOfMoney !== lastSavedData.tablesData.yearsRunOutOfMoney;
+      yearsRunOutOfMoney !== lastSavedData.tablesData.yearsRunOutOfMoney ||
+      withdrawalAmount !== lastSavedData.withdrawalAmount || // Added
+      calculatorAge !== lastSavedData.calculatorAge || // Added
+      calculatorTaxRate !== lastSavedData.calculatorTaxRate; // Added
 
     setHasUnsavedChanges(hasChanges);
   }, [
@@ -634,6 +659,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
     annualContributions,
     annualEmployerMatch,
     yearsRunOutOfMoney,
+    withdrawalAmount,
+    calculatorAge,
+    calculatorTaxRate,
     lastSavedData,
   ]);
 
@@ -691,6 +719,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
             annualEmployerMatch,
             yearsRunOutOfMoney,
           },
+          withdrawalAmount, // Added
+          calculatorAge, // Added
+          calculatorTaxRate, // Added
         }),
       });
       if (!response.ok) {
@@ -716,6 +747,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
             annualEmployerMatch,
             yearsRunOutOfMoney,
           },
+          withdrawalAmount, // Added
+          calculatorAge, // Added
+          calculatorTaxRate, // Added
         });
         setIsSaveDialogOpen(true);
       }

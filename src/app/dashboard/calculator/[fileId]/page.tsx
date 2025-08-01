@@ -58,6 +58,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
       annualEmployerMatch: number | string;
       yearsRunOutOfMoney: number | string;
     };
+    withdrawalAmount: number | string; // Added
+    calculatorAge: number | string; // Added
+    calculatorTaxRate: number | string; // Added
   } | null>(null);
 
   const {
@@ -74,6 +77,12 @@ export default function CalculatorPage({ params }: { params: Params }) {
     yearsRunOutOfMoney,
     setYearsRunOutOfMoney,
     clearEverythingForFreshFile,
+    withdrawalAmount,
+    setWithdrawalAmount,
+    calculatorAge,
+    setCalculatorAge,
+    calculatorTaxRate,
+    setCalculatorTaxRate,
   } = useTableStore();
 
   const {
@@ -393,6 +402,10 @@ export default function CalculatorPage({ params }: { params: Params }) {
         setAnnualEmployerMatch(newAnnualEmployerMatch);
         setYearsRunOutOfMoney(newYearsRunOutOfMoney);
 
+        setWithdrawalAmount(data.withdrawalAmount ?? 0); // Added
+        setCalculatorAge(data.calculatorAge ?? 0); // Added
+        setCalculatorTaxRate(data.calculatorTaxRate ?? 0); // Added
+
         // Initialize last saved data
         setLastSavedData({
           boxesData: newBoxesData,
@@ -403,6 +416,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
             annualEmployerMatch: Number(newAnnualEmployerMatch),
             yearsRunOutOfMoney: Number(newYearsRunOutOfMoney),
           },
+          withdrawalAmount: data.withdrawalAmount ?? 0, // Added
+          calculatorAge: data.calculatorAge ?? 0, // Added
+          calculatorTaxRate: data.calculatorTaxRate ?? 0, // Added
         });
 
         console.log("Set table data:", {
@@ -430,6 +446,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
     setAnnualContributions,
     setAnnualEmployerMatch,
     setYearsRunOutOfMoney,
+    setWithdrawalAmount,
+    setCalculatorAge,
+    setCalculatorTaxRate,
     clearEverythingForFreshFile,
   ]);
 
@@ -446,7 +465,10 @@ export default function CalculatorPage({ params }: { params: Params }) {
       startingBalance !== lastSavedData.tablesData.startingBalance ||
       annualContributions !== lastSavedData.tablesData.annualContributions ||
       annualEmployerMatch !== lastSavedData.tablesData.annualEmployerMatch ||
-      yearsRunOutOfMoney !== lastSavedData.tablesData.yearsRunOutOfMoney;
+      yearsRunOutOfMoney !== lastSavedData.tablesData.yearsRunOutOfMoney ||
+      withdrawalAmount !== lastSavedData.withdrawalAmount || // Added
+      calculatorAge !== lastSavedData.calculatorAge || // Added
+      calculatorTaxRate !== lastSavedData.calculatorTaxRate; // Added
 
     setHasUnsavedChanges(hasChanges);
   }, [
@@ -456,6 +478,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
     annualContributions,
     annualEmployerMatch,
     yearsRunOutOfMoney,
+    withdrawalAmount,
+    calculatorAge,
+    calculatorTaxRate,
     lastSavedData,
     isReadOnly,
   ]);
@@ -535,6 +560,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
             annualEmployerMatch,
             yearsRunOutOfMoney,
           },
+          withdrawalAmount, // Added
+          calculatorAge, // Added
+          calculatorTaxRate, // Added
         }),
       });
       if (!response.ok) {
@@ -561,6 +589,9 @@ export default function CalculatorPage({ params }: { params: Params }) {
             annualEmployerMatch,
             yearsRunOutOfMoney,
           },
+          withdrawalAmount, // Added
+          calculatorAge, // Added
+          calculatorTaxRate, // Added
         });
         setIsSaveDialogOpen(true); // Open dialog on successful save
       }

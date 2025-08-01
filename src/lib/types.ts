@@ -80,6 +80,9 @@ export type ClientFile = {
   category: string;
   boxesData?: BoxesData;
   tablesData?: TablesData;
+  withdrawalAmount?: number;
+  calculatorAge?: number;
+  calculatorTaxRate?: number;
   combinedResults?: any;
   user?: {
     firstName?: string;

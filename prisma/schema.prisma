@@ -94,6 +94,9 @@ model ClientFile {
   category                  String   
   boxesData                 Json?    
   tablesData                Json?  
+  withdrawalAmount          Int?
+  calculatorAge             Int?
+  calculatorTaxRate         Int?
   combinedResults           Json?  
   fields                    Json?  
   createdAt                 DateTime @default(now())

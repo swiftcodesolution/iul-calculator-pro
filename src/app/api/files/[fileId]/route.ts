@@ -32,8 +32,17 @@ export async function PATCH(
   }
 
   const { fileId } = await params;
-  const { boxesData, tablesData, combinedResults, fields, category, fileName } =
-    await request.json();
+  const {
+    boxesData,
+    tablesData,
+    combinedResults,
+    fields,
+    category,
+    fileName,
+    withdrawalAmount,
+    calculatorAge,
+    calculatorTaxRate,
+  } = await request.json();
 
   const file = await prisma.clientFile.findUnique({ where: { id: fileId } });
   if (!file) {
@@ -60,6 +69,15 @@ export async function PATCH(
         ...(fields && { fields }),
         ...(category && { category }),
         ...(fileName && { fileName }),
+        ...(withdrawalAmount !== undefined && {
+          withdrawalAmount: parseFloat(withdrawalAmount) || 0,
+        }), // Added
+        ...(calculatorAge !== undefined && {
+          calculatorAge: parseFloat(calculatorAge) || 0,
+        }), // Added
+        ...(calculatorTaxRate !== undefined && {
+          calculatorTaxRate: parseFloat(calculatorTaxRate) || 0,
+        }), // Added
         updatedAt: new Date(),
       },
     });
