@@ -462,6 +462,7 @@ export default function ImportPage({ params }: { params: Params }) {
     return luminance > 0.5 ? "#000000" : "#FFFFFF";
   };
 
+  /*
   const renderTable = () => (
     <Card className="flex-1 flex flex-col h-[90vh]">
       <CardHeader className="sticky top-0 z-10 bg-white dark:bg-black">
@@ -539,6 +540,163 @@ export default function ImportPage({ params }: { params: Params }) {
                   key={index}
                   className={
                     tables.length === 2
+                      ? index === 0
+                        ? "w-[80%]"
+                        : "w-[20%]"
+                      : "grow"
+                  }
+                >
+                  <Table className="border table-fixed w-full">
+                    <TableHeader>
+                      <TableRow>
+                        {columns.map((header) => {
+                          const bgColor = highlightedColumns.has(header)
+                            ? highlightColor
+                            : "#FFFFFF";
+                          return (
+                            <TableHead
+                              key={header}
+                              className={cn(
+                                "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer"
+                              )}
+                              style={{
+                                width: `${100 / columns.length}%`,
+                                backgroundColor: bgColor,
+                                color: getContrastingTextColor(bgColor),
+                              }}
+                              onClick={() => handleColumnClick(header)}
+                            >
+                              {header}
+                            </TableHead>
+                          );
+                        })}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {table.data.map((row, rowIndex) => (
+                        <TableRow
+                          key={rowIndex}
+                          className={cn("min-h-[60px] cursor-pointer")}
+                          style={{
+                            backgroundColor: highlightedRows.has(rowIndex)
+                              ? highlightColor
+                              : "#FFFFFF",
+                          }}
+                          onClick={() => handleRowClick(rowIndex)}
+                        >
+                          {columns.map((col) => {
+                            const bgColor =
+                              highlightedColumns.has(col) ||
+                              highlightedRows.has(rowIndex)
+                                ? highlightColor
+                                : "#FFFFFF";
+                            return (
+                              <TableCell
+                                key={col}
+                                className={cn(
+                                  "border whitespace-normal break-words align-top"
+                                )}
+                                style={{
+                                  width: `${100 / columns.length}%`,
+                                  backgroundColor: bgColor,
+                                  color: getContrastingTextColor(bgColor),
+                                }}
+                              >
+                                {row[col] ?? "-"}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+  */
+
+  const renderTable = () => (
+    <Card className="flex-1 flex flex-col h-[90vh]">
+      <CardHeader className="sticky top-0 z-10 bg-white dark:bg-black">
+        <h3 className="text-lg font-semibold">Imported Data Preview</h3>
+      </CardHeader>
+      <CardContent
+        className="flex-1 overflow-auto relative"
+        onScroll={handleScroll}
+      >
+        {isScrolled && tables.length > 0 && (
+          <div className="sticky top-0 z-10 bg-white shadow-md w-full">
+            {tables.slice(0, 2).map((table, index) => {
+              const columns = Object.keys(table.data[0] || {}).filter(
+                (key) => key !== "Source_Text" && key !== "Page_Number"
+              );
+              return (
+                <div
+                  key={index}
+                  className={
+                    tables.length >= 2
+                      ? index === 0
+                        ? "w-[80%]"
+                        : "w-[20%]"
+                      : "grow"
+                  }
+                >
+                  <Table className="border table-fixed w-full">
+                    <TableHeader>
+                      <TableRow>
+                        {columns.map((header) => {
+                          const bgColor = highlightedColumns.has(header)
+                            ? highlightColor
+                            : "#FFFFFF";
+                          return (
+                            <TableHead
+                              key={header}
+                              className={cn(
+                                "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer"
+                              )}
+                              style={{
+                                width: `${100 / columns.length}%`,
+                                backgroundColor: bgColor,
+                                color: getContrastingTextColor(bgColor),
+                              }}
+                              onClick={() => handleColumnClick(header)}
+                            >
+                              {header}
+                            </TableHead>
+                          );
+                        })}
+                      </TableRow>
+                    </TableHeader>
+                  </Table>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <div
+          style={{
+            transform: `scale(${zoomLevel})`,
+            transformOrigin: "top left",
+            transition: "transform 0.3s ease",
+            width: "100%",
+          }}
+          className="relative"
+        >
+          <div className={tables.length >= 2 ? "flex gap-0" : "flex gap-0"}>
+            {tables.slice(0, 2).map((table, index) => {
+              const columns = Object.keys(table.data[0] || {}).filter(
+                (key) => key !== "Source_Text" && key !== "Page_Number"
+              );
+              return (
+                <div
+                  key={index}
+                  className={
+                    tables.length >= 2
                       ? index === 0
                         ? "w-[80%]"
                         : "w-[20%]"
