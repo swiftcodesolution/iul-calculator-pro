@@ -29,6 +29,7 @@ interface TableStore {
   tabs: TabContent[];
   setTabs: (tabs: TabContent[]) => void;
   fields: {
+    insurance_company: string | null;
     illustration_date: string | null;
     insured_name: string | null;
     initial_death_benefit: string | null;
@@ -100,6 +101,7 @@ export const useTableStore = create<TableStore>((set) => ({
     initial_death_benefit: null,
     assumed_ror: null,
     minimum_initial_pmt: null,
+    insurance_company: "",
   },
   setFields: (fields) => set({ fields, isDataPersisted: false }),
 
@@ -157,6 +159,7 @@ export const useTableStore = create<TableStore>((set) => ({
         initial_death_benefit: null,
         assumed_ror: null,
         minimum_initial_pmt: null,
+        insurance_company: "",
       },
       fileName: "",
     })),
@@ -170,6 +173,7 @@ export const useTableStore = create<TableStore>((set) => ({
         initial_death_benefit: null,
         assumed_ror: null,
         minimum_initial_pmt: null,
+        insurance_company: "",
       },
       fileName: "",
       yearsRunOutOfMoney: "",

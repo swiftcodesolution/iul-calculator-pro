@@ -57,6 +57,7 @@ type ApiResponse = {
     initial_death_benefit: string | null;
     assumed_ror: string | null;
     minimum_initial_pmt: string | null;
+    insurance_company: string | null;
   };
   message?: string | null;
 };
@@ -1054,14 +1055,14 @@ export default function ImportPage({ params }: { params: Params }) {
               />
             </div>
             <div className="space-y-2 flex gap-2">
-              <Label className="grow" htmlFor="insured-name">
-                Insured Name
+              <Label className="grow" htmlFor="insurance-company">
+                Insurance Company
               </Label>
               <Input
                 className="w-2/4"
-                id="insured-name"
+                id="insurance-company"
                 disabled
-                value={fields.insured_name || ""}
+                value={fields.insurance_company || ""}
               />
             </div>
             <div className="space-y-2 flex gap-2">

@@ -66,6 +66,7 @@ export type ClientFields = {
   initial_death_benefit: string | null;
   assumed_ror: string | null;
   minimum_initial_pmt: string | null;
+  insurance_company: string | null;
 };
 
 export type ClientFile = {
