@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "../ui/button";
 import { ChevronUp, ChevronDown, Pencil, Trash2, Upload } from "lucide-react";
@@ -59,6 +60,13 @@ export function ManageTabsDialog({
 }: ManageTabsDialogProps) {
   const { data: session, status } = useSession();
   const isAdmin = session?.user?.role === "admin";
+  const {
+    handleTabDragStart,
+    handleTabDrop,
+    handleTabDragOver,
+    dialogOpen,
+    setDialogOpen,
+  } = useDragAndDrop(tabs, setTabs);
 
   const adminTabs = tabs.filter(
     (tab) =>
@@ -82,9 +90,6 @@ export function ManageTabsDialog({
         "cagrChart",
       ].includes(tab.id)
   );
-
-  const { handleTabDragStart, handleTabDrop, handleTabDragOver } =
-    useDragAndDrop(tabs, setTabs);
 
   return (
     <>
@@ -113,16 +118,26 @@ export function ManageTabsDialog({
                   <motion.div
                     key={tab.id}
                     className={`flex items-center justify-between p-2 border rounded-md ${
-                      tab.id === "total-advantage" ? "" : "cursor-move"
+                      tab.createdByRole === "admin" && !isAdmin
+                        ? "cursor-default"
+                        : tab.id === "total-advantage"
+                        ? ""
+                        : "cursor-move"
                     }`}
-                    draggable={tab.id !== "total-advantage"}
+                    draggable={
+                      tab.id !== "total-advantage" &&
+                      (tab.createdByRole !== "admin" || isAdmin)
+                    }
                     onDragStartCapture={(e) =>
                       tab.id !== "total-advantage" &&
+                      (tab.createdByRole !== "admin" || isAdmin) &&
                       handleTabDragStart(e, tab.id)
                     }
                     onDragOver={handleTabDragOver}
                     onDrop={(e) =>
-                      tab.id !== "total-advantage" && handleTabDrop(e, tab.id)
+                      tab.id !== "total-advantage" &&
+                      (tab.createdByRole !== "admin" || isAdmin) &&
+                      handleTabDrop(e, tab.id)
                     }
                     whileDrag={{ scale: 1.05, opacity: 0.8 }}
                     aria-describedby={`drag-tab-${tab.id}`}
@@ -132,7 +147,8 @@ export function ManageTabsDialog({
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
                         className={
-                          ["total-advantage"].includes(tab.id)
+                          tab.id === "total-advantage" ||
+                          (tab.createdByRole === "admin" && !isAdmin)
                             ? "cursor-default"
                             : "cursor-grab"
                         }
@@ -177,7 +193,8 @@ export function ManageTabsDialog({
                             tab.id
                           ) ||
                           ["inflationCalculator"].includes(tab.id) ||
-                          ["cagrChart"].includes(tab.id)
+                          ["cagrChart"].includes(tab.id) ||
+                          (tab.createdByRole === "admin" && !isAdmin)
                         }
                         aria-label={`Move ${tab.name} up`}
                       >
@@ -196,7 +213,8 @@ export function ManageTabsDialog({
                             tab.id
                           ) ||
                           ["inflationCalculator"].includes(tab.id) ||
-                          ["cagrChart"].includes(tab.id)
+                          ["cagrChart"].includes(tab.id) ||
+                          (tab.createdByRole === "admin" && !isAdmin)
                         }
                         aria-label={`Move ${tab.name} down`}
                       >
@@ -390,6 +408,22 @@ export function ManageTabsDialog({
               Save
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+      {/* Dialog for non-admin attempting to reorder admin content */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Action Not Permitted</DialogTitle>
+          </DialogHeader>
+          <p className="text-gray-600">
+            Reordering of admin-uploaded content is restricted to administrators
+            only. You may check or uncheck admin content to toggle its
+            visibility.
+          </p>
+          <DialogFooter>
+            <Button onClick={() => setDialogOpen(false)}>OK</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

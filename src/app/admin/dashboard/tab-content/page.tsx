@@ -26,10 +26,11 @@ interface TabContent {
   createdByRole: string;
   userId: string;
   createdAt: string;
+  order?: number; // Add order field
   user: {
     firstName: string | null;
     email: string | null;
-  } | null; // Include user data
+  } | null;
 }
 
 export default function AdminTabContentPage() {
@@ -180,10 +181,62 @@ export default function AdminTabContentPage() {
     }
   };
 
-  const getIcon = (fileFormat: string | null, link: string | null) => {
-    if (link) {
-      return "/icons/link.png";
+  const handleTabDragStart = (
+    e: React.DragEvent<HTMLDivElement>,
+    id: string
+  ) => {
+    e.dataTransfer.setData("text/plain", id);
+  };
+
+  const handleTabDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleTabDrop = async (
+    e: React.DragEvent<HTMLDivElement>,
+    targetId: string
+  ) => {
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData("text/plain");
+    if (draggedId === targetId) return;
+
+    const draggedTab = ownTabContent.find((tab) => tab.id === draggedId);
+    if (!draggedTab || draggedTab.createdByRole !== "admin") return;
+
+    const draggedIndex = ownTabContent.findIndex((tab) => tab.id === draggedId);
+    const targetIndex = ownTabContent.findIndex((tab) => tab.id === targetId);
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const newTabs = [...ownTabContent];
+    [newTabs[draggedIndex], newTabs[targetIndex]] = [
+      newTabs[targetIndex],
+      newTabs[draggedIndex],
+    ];
+    setOwnTabContent(newTabs);
+
+    // Persist admin tab order to database
+    const updatedTabs = newTabs
+      .filter((tab) => tab.createdByRole === "admin")
+      .map((tab, index) => ({
+        id: tab.id,
+        order: index + 1,
+      }));
+
+    try {
+      const response = await fetch("/api/tab-content", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tabs: updatedTabs }),
+      });
+      if (!response.ok) throw new Error("Failed to reorder tabs");
+    } catch (error) {
+      console.error("Error reordering tabs:", error);
+      setError("Error reordering tabs");
     }
+  };
+
+  const getIcon = (fileFormat: string | null, link: string | null) => {
+    if (link) return "/icons/link.png";
     if (!fileFormat) return "/icons/file.png";
     if (fileFormat.startsWith("image/")) return fileFormat;
     if (fileFormat === "application/pdf") return "/icons/pdf.png";
@@ -266,7 +319,11 @@ export default function AdminTabContentPage() {
                   return (
                     <Card
                       key={item.id}
-                      className="hover:shadow-lg transition-shadow"
+                      className="hover:shadow-lg transition-shadow cursor-move"
+                      draggable={item.createdByRole === "admin"}
+                      onDragStart={(e) => handleTabDragStart(e, item.id)}
+                      onDragOver={handleTabDragOver}
+                      onDrop={(e) => handleTabDrop(e, item.id)}
                     >
                       <CardContent className="p-4">
                         <div className="flex flex-col items-center">
@@ -298,9 +355,11 @@ export default function AdminTabContentPage() {
                             {item.fileName || item.link || "No file"}
                           </p>
                           <p className="text-xs text-gray-500">
+                            Order: {item.order ?? "N/A"}
+                          </p>
+                          <p className="text-xs text-gray-500">
                             {new Date(item.createdAt).toLocaleDateString()}
                           </p>
-
                           <p className="text-xs text-gray-500">
                             Email: {item.user?.email || "N/A"}
                           </p>
@@ -325,6 +384,7 @@ export default function AdminTabContentPage() {
                                 </DialogHeader>
                                 <p>By: {item.user?.firstName || "Unknown"}</p>
                                 <p>Email: {item.user?.email || "N/A"}</p>
+                                <p>Order: {item.order ?? "N/A"}</p>
                                 {item.link && getEmbedUrl(item.link) ? (
                                   <iframe
                                     src={getEmbedUrl(item.link)!}

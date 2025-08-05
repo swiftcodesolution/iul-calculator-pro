@@ -237,6 +237,7 @@ export interface TabContent {
   link?: string | null;
   createdByRole?: string;
   userId?: string;
+  order?: number;
 }
 
 export type TotalAdvantage = {

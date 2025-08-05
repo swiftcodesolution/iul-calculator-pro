@@ -7,7 +7,6 @@ import { put } from "@vercel/blob";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -40,17 +39,27 @@ export async function POST(request: Request) {
       fileFormat = file.type;
     }
 
+    // Set order for admin-created content
+    const maxOrder =
+      session.user.role === "admin"
+        ? await prisma.tabContent.findFirst({
+            where: { createdByRole: "admin" },
+            orderBy: { order: "desc" },
+            select: { order: true },
+          })
+        : null;
+
     const tabContent = await prisma.tabContent.create({
       data: {
-        user: {
-          connect: { id: session.user.id },
-        },
+        user: { connect: { id: session.user.id } },
         tabName,
         fileName,
         filePath,
         fileFormat,
         link: link || null,
         createdByRole: session.user.role,
+        order:
+          session.user.role === "admin" ? (maxOrder?.order ?? 0) + 1 : null,
       },
     });
 
@@ -71,34 +80,32 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // If admin, fetch all tab content with user data
     if (session.user.role === "admin") {
       const tabContents = await prisma.tabContent.findMany({
         include: {
           user: {
-            select: {
-              firstName: true,
-              email: true,
-            },
+            select: { firstName: true, email: true },
           },
         },
+        orderBy: { order: "asc" }, // Sort admin content by order
       });
       return NextResponse.json(tabContents);
     }
 
-    // For non-admins, fetch only their own or admin-created content
     const tabContents = await prisma.tabContent.findMany({
       where: {
         OR: [{ userId: session.user.id }, { createdByRole: "admin" }],
       },
       include: {
         user: {
-          select: {
-            firstName: true,
-            email: true,
-          },
+          select: { firstName: true, email: true },
         },
       },
+      orderBy: [
+        { createdByRole: "asc" }, // Prioritize admin content
+        { order: "asc" }, // Sort admin content by order
+        { createdAt: "desc" }, // Sort user content by creation date
+      ],
     });
     return NextResponse.json(tabContents);
   } catch (error) {
@@ -112,7 +119,6 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   const session = await getServerSession(authOptions);
-
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -123,9 +129,7 @@ export async function PATCH(request: Request) {
   const file = formData.get("file") as File | null;
   const link = formData.get("link") as string | null;
 
-  const tabContent = await prisma.tabContent.findUnique({
-    where: { id },
-  });
+  const tabContent = await prisma.tabContent.findUnique({ where: { id } });
   if (
     !tabContent ||
     (tabContent.userId !== session.user.id && session.user.role !== "admin")
@@ -159,15 +163,38 @@ export async function PATCH(request: Request) {
       fileFormat = file.type;
     }
 
-    const updatedTabContent = await prisma.tabContent.update({
+    // const updatedTabContent = await prisma.tabContent.upsert({
+    //   where: { id },
+    //   data: {
+    //     tabName,
+    //     fileName,
+    //     filePath,
+    //     fileFormat,
+    //     link: link || undefined,
+    //     updatedAt: new Date(),
+    //   },
+    // });
+
+    const updatedTabContent = await prisma.tabContent.upsert({
       where: { id },
-      data: {
+      update: {
         tabName,
         fileName,
         filePath,
         fileFormat,
         link: link || undefined,
         updatedAt: new Date(),
+      },
+      create: {
+        tabName,
+        fileName,
+        filePath,
+        fileFormat,
+        link: link || undefined,
+        updatedAt: new Date(),
+        user: { connect: { id: session.user.id } },
+        createdByRole: session.user.role,
+        order: null, // or set appropriate default
       },
     });
 
@@ -183,16 +210,13 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   const session = await getServerSession(authOptions);
-
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await request.json();
 
-  const tabContent = await prisma.tabContent.findUnique({
-    where: { id },
-  });
+  const tabContent = await prisma.tabContent.findUnique({ where: { id } });
   if (
     !tabContent ||
     (tabContent.userId !== session.user.id && session.user.role !== "admin")
@@ -204,14 +228,50 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    await prisma.tabContent.delete({
-      where: { id },
-    });
+    await prisma.tabContent.delete({ where: { id } });
     return NextResponse.json({ message: "Tab content deleted" });
   } catch (error) {
     console.error("Error deleting tab content:", error);
     return NextResponse.json(
       { error: "Failed to delete tab content" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id || session.user.role !== "admin") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { tabs } = await request.json();
+
+  try {
+    await prisma.$transaction(
+      tabs.map((tab: { id: string; order: number }) =>
+        prisma.tabContent.upsert({
+          where: { id: tab.id },
+          update: { order: tab.order },
+          create: {
+            id: tab.id,
+            order: tab.order,
+            tabName: "Untitled",
+            fileName: null,
+            filePath: null,
+            fileFormat: null,
+            link: null,
+            user: { connect: { id: session.user.id } },
+            createdByRole: "admin",
+          },
+        })
+      )
+    );
+    return NextResponse.json({ message: "Tabs reordered successfully" });
+  } catch (error) {
+    console.error("Error reordering tabs:", error);
+    return NextResponse.json(
+      { error: "Failed to reorder tabs" },
       { status: 500 }
     );
   }

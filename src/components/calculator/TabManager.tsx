@@ -365,6 +365,7 @@ const TabManager = React.memo(function TabManager({
           link?: string | null;
           createdByRole?: string;
           userId?: string;
+          order?: number;
         }[] = await response.json();
 
         const filteredData = data.filter((item) => {
@@ -401,8 +402,24 @@ const TabManager = React.memo(function TabManager({
           isVisible: true,
           createdByRole: item.createdByRole,
           userId: item.userId,
+          order: item.order,
         }));
-        setTabs([...staticTabs, ...dynamicTabs]);
+
+        // Sort tabs: static tabs first, then admin tabs by order, then user tabs
+        const sortedDynamicTabs = dynamicTabs.sort((a, b) => {
+          if (a.createdByRole === "admin" && b.createdByRole === "admin") {
+            // Sort admin tabs by order (null/undefined last)
+            return (a.order ?? Infinity) - (b.order ?? Infinity);
+          } else if (a.createdByRole === "admin") {
+            return -1; // Admin tabs come before user tabs
+          } else if (b.createdByRole === "admin") {
+            return 1; // Admin tabs come before user tabs
+          } else {
+            return 0; // User tabs maintain relative order
+          }
+        });
+
+        setTabs([...staticTabs, ...sortedDynamicTabs]);
       } catch (err) {
         setError("Error loading tab content");
         console.error(err);
