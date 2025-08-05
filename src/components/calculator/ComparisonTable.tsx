@@ -342,6 +342,7 @@ export function ComparisonTable({
     lastInputYearsRunOut,
   ]);
 
+  /*
   const parseInput = (
     value: string | number | undefined | null,
     fallback: number
@@ -349,6 +350,19 @@ export function ComparisonTable({
     if (value == null || value === "") return fallback;
     if (typeof value === "number") return value;
     const parsed = parseFloat(value);
+    return isNaN(parsed) || parsed < 0 ? fallback : parsed;
+  };
+  */
+
+  const parseInput = (
+    value: string | number | undefined | null,
+    fallback: number
+  ): number => {
+    if (value == null || value === "") return fallback;
+    if (typeof value === "number") return value;
+    // Remove dollar signs, commas, and other non-numeric characters except decimal
+    const cleaned = value.replace(/[^0-9.]/g, "");
+    const parsed = parseFloat(cleaned);
     return isNaN(parsed) || parsed < 0 ? fallback : parsed;
   };
 
@@ -464,11 +478,21 @@ export function ComparisonTable({
     // futureAgeInput,
   ]);
 
+  /*
   const taxFreeResults = useMemo(() => {
-    const contributionNum = parseInput(annualContributions, 0);
+    // const contributionNum = parseInput(annualContributions, 0);
+    // const taxRateNum = parseInput(calculatorTaxRate, 0);
+    // const taxes = contributionNum * (taxRateNum / 100);
+    // const netContribution = contributionNum - taxes;
+
+    const taxFreeAnnualContribution =
+      tables[0]?.annualContributions !== undefined
+        ? parseInput(tables[0].annualContributions, 0)
+        : parseInput(annualContributions, 0);
+
     const taxRateNum = parseInput(calculatorTaxRate, 0);
-    const taxes = contributionNum * (taxRateNum / 100);
-    const netContribution = contributionNum - taxes;
+    const taxes = taxFreeAnnualContribution * (taxRateNum / 100);
+    const netContribution = taxFreeAnnualContribution - taxes;
 
     if (!tables || !tables[0]?.data || tables[0].data.length === 0) {
       return {
@@ -497,13 +521,124 @@ export function ComparisonTable({
     return {
       ...results,
       startingBalance: parseInput(iulStartingBalance, results.startingBalance),
+      annualContributions: netContribution, // Use updated netContribution
     };
   }, [
     tables,
     currentAge,
-    yearsRunOutOfMoneyInput,
     yearsRunOutOfMoneyNumber,
     iulStartingBalance,
+    annualContributions, // Ensure live updates
+    calculatorTaxRate, // Ensure tax rate changes trigger recalculation
+  ]);
+  */
+
+  /*
+  const taxFreeResults = useMemo(() => {
+    // Prioritize tables[0]?.data[0]?.["Premium Outlay"], fallback to annualContributions
+    const taxFreeAnnualContribution =
+      tables[0]?.data[0]?.["Premium Outlay"] !== undefined
+        ? parseInput(tables[0].data[0]["Premium Outlay"], 0)
+        : parseInput(annualContributions, 0);
+
+    const taxRateNum = parseInput(calculatorTaxRate, 0);
+    const taxes = taxFreeAnnualContribution * (taxRateNum / 100);
+    const netContribution = taxFreeAnnualContribution - taxes;
+
+    if (!tables || !tables[0]?.data || tables[0].data.length === 0) {
+      return {
+        startingBalance: parseInput(iulStartingBalance, 0),
+        annualContributions: netContribution,
+        annualEmployerMatch: 0,
+        annualFees: 0,
+        grossRetirementIncome: 0,
+        incomeTax: 0,
+        netRetirementIncome: 0,
+        cumulativeTaxesDeferred: 0,
+        cumulativeTaxesPaid: 0,
+        cumulativeFeesPaid: 0,
+        cumulativeNetIncome: 0,
+        cumulativeAccountBalance: 0,
+        taxesDue: 0,
+        deathBenefits: 0,
+        yearsRunOutOfMoney,
+      };
+    }
+    const results = extractTaxFreeResults(
+      tables,
+      currentAge,
+      yearsRunOutOfMoneyNumber
+    );
+    return {
+      ...results,
+      startingBalance: parseInput(iulStartingBalance, results.startingBalance),
+      annualContributions: netContribution, // Use updated netContribution
+    };
+  }, [
+    tables,
+    currentAge,
+    yearsRunOutOfMoneyNumber,
+    iulStartingBalance,
+    annualContributions, // Ensure live updates
+    calculatorTaxRate, // Ensure tax rate changes trigger recalculation
+  ]);
+  */
+
+  const taxFreeResults = useMemo(() => {
+    // Prioritize tables[0]?.data[0]?.["Premium Outlay"], fallback to annualContributions
+    const taxFreeAnnualContribution =
+      tables[0]?.data[0]?.["Premium Outlay"] !== undefined
+        ? parseInput(tables[0].data[0]["Premium Outlay"], 0)
+        : parseInput(annualContributions, 0);
+
+    // Debug log to verify data source and value
+    console.log("taxFreeAnnualContribution:", taxFreeAnnualContribution, {
+      premiumOutlay: tables[0]?.data[0]?.["Premium Outlay"],
+      annualContributions,
+      isTablesEmpty: !tables || !tables[0]?.data || tables[0].data.length === 0,
+    });
+
+    // Apply tax calculation only when falling back to annualContributions
+    const taxRateNum = parseInput(calculatorTaxRate, 0);
+    const taxes = taxFreeAnnualContribution * (taxRateNum / 100);
+    const netContribution = taxFreeAnnualContribution - taxes;
+
+    if (!tables || !tables[0]?.data || tables[0].data.length === 0) {
+      return {
+        startingBalance: parseInput(iulStartingBalance, 0),
+        annualContributions: netContribution, // Use tax-adjusted value when no table data
+        annualEmployerMatch: 0,
+        annualFees: 0,
+        grossRetirementIncome: 0,
+        incomeTax: 0,
+        netRetirementIncome: 0,
+        cumulativeTaxesDeferred: 0,
+        cumulativeTaxesPaid: 0,
+        cumulativeFeesPaid: 0,
+        cumulativeNetIncome: 0,
+        cumulativeAccountBalance: 0,
+        taxesDue: 0,
+        deathBenefits: 0,
+        yearsRunOutOfMoney,
+      };
+    }
+    const results = extractTaxFreeResults(
+      tables,
+      currentAge,
+      yearsRunOutOfMoneyNumber
+    );
+    return {
+      ...results,
+      startingBalance: parseInput(iulStartingBalance, results.startingBalance),
+      annualContributions: taxFreeAnnualContribution, // Use raw value when table data is present
+    };
+  }, [
+    tables,
+    currentAge,
+    yearsRunOutOfMoneyNumber,
+    iulStartingBalance,
+    annualContributions, // Ensure live updates from TabCalculator
+    calculatorTaxRate, // Ensure tax rate changes trigger recalculation
   ]);
 
   const handleYearsRunOutOfMoneyChange = (value: string) => {
