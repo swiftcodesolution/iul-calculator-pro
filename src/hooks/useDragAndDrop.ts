@@ -1,4 +1,3 @@
-// src/hooks/useDragAndDrop.ts
 import { useCallback, useState } from "react";
 import { useSession } from "next-auth/react";
 import { TabContent } from "@/lib/types";
@@ -9,7 +8,7 @@ export const useDragAndDrop = (
 ) => {
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
-  const [dialogOpen, setDialogOpen] = useState(false); // State for dialog
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleTabDragStart = useCallback(
     (e: React.DragEvent<HTMLDivElement>, id: string) => {
@@ -31,9 +30,32 @@ export const useDragAndDrop = (
       const targetTab = tabs.find((tab) => tab.id === targetId);
       if (!draggedTab || !targetTab) return;
 
-      // Show dialog for non-admins trying to reorder admin tabs
-      if (draggedTab.createdByRole === "admin" && !isAdmin) {
+      const staticTabIds = [
+        "total-advantage",
+        "calculator",
+        "inflationCalculator",
+        "annualContributionCalculatorForIUL",
+        "cagrChart",
+      ];
+
+      // Prevent non-admins from reordering admin or static tabs
+      if (
+        (draggedTab.createdByRole === "admin" ||
+          staticTabIds.includes(draggedTab.id)) &&
+        !isAdmin
+      ) {
         setDialogOpen(true);
+        return;
+      }
+
+      // Allow reordering only within same tab group (admin/static or user)
+      const draggedIsUserTab =
+        draggedTab.createdByRole !== "admin" &&
+        !staticTabIds.includes(draggedTab.id);
+      const targetIsUserTab =
+        targetTab.createdByRole !== "admin" &&
+        !staticTabIds.includes(targetTab.id);
+      if (draggedIsUserTab !== targetIsUserTab) {
         return;
       }
 
@@ -46,12 +68,23 @@ export const useDragAndDrop = (
         newTabs[targetIndex],
         newTabs[draggedIndex],
       ];
-      setTabs(newTabs);
 
-      // Persist admin tab order to database
-      if (isAdmin && draggedTab.createdByRole === "admin") {
-        const updatedTabs = newTabs
-          .filter((tab) => tab.createdByRole === "admin")
+      // Update order based on new positions
+      const updatedTabs = newTabs.map((tab, index) => ({
+        ...tab,
+        order: index,
+      }));
+      setTabs(updatedTabs);
+
+      // Persist user tab order to database
+      if (draggedIsUserTab && session?.user?.id) {
+        const userTabs = updatedTabs
+          .filter(
+            (tab) =>
+              tab.userId === session.user.id &&
+              tab.createdByRole !== "admin" &&
+              !staticTabIds.includes(tab.id)
+          )
           .map((tab, index) => ({
             id: tab.id,
             order: index + 1,
@@ -61,7 +94,7 @@ export const useDragAndDrop = (
           const response = await fetch("/api/tab-content", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ tabs: updatedTabs }),
+            body: JSON.stringify({ tabs: userTabs }),
           });
           if (!response.ok) throw new Error("Failed to reorder tabs");
         } catch (error) {
@@ -69,7 +102,7 @@ export const useDragAndDrop = (
         }
       }
     },
-    [tabs, setTabs, isAdmin]
+    [tabs, setTabs, isAdmin, session?.user?.id]
   );
 
   const handleTabDragOver = useCallback(

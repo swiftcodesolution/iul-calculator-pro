@@ -368,25 +368,9 @@ const TabManager = React.memo(function TabManager({
           order?: number;
         }[] = await response.json();
 
-        const filteredData = data.filter((item) => {
-          if (session?.user?.role === "admin") {
-            // Admins see only their own content
-            return (
-              item.createdByRole === "admin" &&
-              item.userId === session?.user?.id
-            );
-          } else {
-            // Non-admins see admin-uploaded content and their own content
-            return (
-              item.createdByRole === "admin" ||
-              item.userId === session?.user?.id
-            );
-          }
-        });
-
-        const dynamicTabs: TabContent[] = filteredData.map((item) => ({
+        const dynamicTabs: TabContent[] = data.map((item) => ({
           id: item.id,
-          name: item.tabName, // Map tabName to name
+          name: item.tabName,
           type: (item.link
             ? "link"
             : item.fileFormat?.startsWith("image/")
@@ -395,7 +379,7 @@ const TabManager = React.memo(function TabManager({
             ? "video"
             : item.fileFormat === "application/pdf"
             ? "pdf"
-            : "other") as TabContent["type"], // Explicitly cast to TabContent["type"]
+            : "other") as TabContent["type"],
           filePath: item.filePath,
           fileFormat: item.fileFormat,
           link: item.link,
@@ -405,21 +389,8 @@ const TabManager = React.memo(function TabManager({
           order: item.order,
         }));
 
-        // Sort tabs: static tabs first, then admin tabs by order, then user tabs
-        const sortedDynamicTabs = dynamicTabs.sort((a, b) => {
-          if (a.createdByRole === "admin" && b.createdByRole === "admin") {
-            // Sort admin tabs by order (null/undefined last)
-            return (a.order ?? Infinity) - (b.order ?? Infinity);
-          } else if (a.createdByRole === "admin") {
-            return -1; // Admin tabs come before user tabs
-          } else if (b.createdByRole === "admin") {
-            return 1; // Admin tabs come before user tabs
-          } else {
-            return 0; // User tabs maintain relative order
-          }
-        });
-
-        setTabs([...staticTabs, ...sortedDynamicTabs]);
+        // Initialize with static tabs first, then append dynamic tabs as fetched
+        setTabs([...staticTabs, ...dynamicTabs]);
       } catch (err) {
         setError("Error loading tab content");
         console.error(err);
@@ -567,16 +538,52 @@ const TabManager = React.memo(function TabManager({
 
   const handleMoveUp = (index: number) => {
     if (index <= staticTabs.length) return; // Prevent moving static tabs
+    const tab = tabs[index];
+    if (tab.createdByRole === "admin" && session?.user?.role !== "admin")
+      return;
+    const prevTab = tabs[index - 1];
+    if (prevTab.createdByRole !== tab.createdByRole) return; // Prevent crossing admin/user boundaries
     const newTabs = [...tabs];
     [newTabs[index], newTabs[index - 1]] = [newTabs[index - 1], newTabs[index]];
+    newTabs[index].order = index;
+    newTabs[index - 1].order = index - 1;
     setTabs(newTabs);
+    fetch("/api/tab-content", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tabs: newTabs
+          .filter(
+            (t) => t.userId === session?.user?.id && t.createdByRole !== "admin"
+          )
+          .map((t) => ({ id: t.id, order: t.order })),
+      }),
+    });
   };
 
   const handleMoveDown = (index: number) => {
-    if (index < staticTabs.length || index >= tabs.length - 1) return; // Prevent moving static tabs or last tab
+    if (index < staticTabs.length || index >= tabs.length - 1) return;
+    const tab = tabs[index];
+    if (tab.createdByRole === "admin" && session?.user?.role !== "admin")
+      return;
+    const nextTab = tabs[index + 1];
+    if (nextTab.createdByRole !== tab.createdByRole) return; // Prevent crossing admin/user boundaries
     const newTabs = [...tabs];
     [newTabs[index], newTabs[index + 1]] = [newTabs[index + 1], newTabs[index]];
+    newTabs[index].order = index;
+    newTabs[index + 1].order = index + 1;
     setTabs(newTabs);
+    fetch("/api/tab-content", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tabs: newTabs
+          .filter(
+            (t) => t.userId === session?.user?.id && t.createdByRole !== "admin"
+          )
+          .map((t) => ({ id: t.id, order: t.order })),
+      }),
+    });
   };
 
   const content = activeTab && tabs.find((tab) => tab.id === activeTab) && (

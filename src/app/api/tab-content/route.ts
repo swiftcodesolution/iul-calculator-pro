@@ -39,16 +39,6 @@ export async function POST(request: Request) {
       fileFormat = file.type;
     }
 
-    // Set order for admin-created content
-    const maxOrder =
-      session.user.role === "admin"
-        ? await prisma.tabContent.findFirst({
-            where: { createdByRole: "admin" },
-            orderBy: { order: "desc" },
-            select: { order: true },
-          })
-        : null;
-
     const tabContent = await prisma.tabContent.create({
       data: {
         user: { connect: { id: session.user.id } },
@@ -59,7 +49,9 @@ export async function POST(request: Request) {
         link: link || null,
         createdByRole: session.user.role,
         order:
-          session.user.role === "admin" ? (maxOrder?.order ?? 0) + 1 : null,
+          (await prisma.tabContent.count({
+            where: { userId: session.user.id, createdByRole: { not: "admin" } },
+          })) + 1,
       },
     });
 
@@ -241,7 +233,7 @@ export async function DELETE(request: Request) {
 
 export async function PUT(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id || session.user.role !== "admin") {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -250,20 +242,9 @@ export async function PUT(request: Request) {
   try {
     await prisma.$transaction(
       tabs.map((tab: { id: string; order: number }) =>
-        prisma.tabContent.upsert({
-          where: { id: tab.id },
-          update: { order: tab.order },
-          create: {
-            id: tab.id,
-            order: tab.order,
-            tabName: "Untitled",
-            fileName: null,
-            filePath: null,
-            fileFormat: null,
-            link: null,
-            user: { connect: { id: session.user.id } },
-            createdByRole: "admin",
-          },
+        prisma.tabContent.update({
+          where: { id: tab.id, userId: session.user.id },
+          data: { order: tab.order },
         })
       )
     );
