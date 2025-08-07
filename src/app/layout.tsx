@@ -18,6 +18,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "IUL Calculator Pro",
   description: "A modern SAAS platform for IUL and 401k comparisons",
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({
