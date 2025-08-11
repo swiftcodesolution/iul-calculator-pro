@@ -237,7 +237,7 @@ export interface TabContent {
   createdByRole?: string;
   userId?: string;
   order?: number;
-  userOrder: number | undefined | null;
+  userOrder?: number | undefined | null;
 }
 
 export type TotalAdvantage = {
