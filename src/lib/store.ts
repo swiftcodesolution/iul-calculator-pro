@@ -116,6 +116,12 @@ export const useTableStore = create<TableStore>((set) => ({
       isVisible: true,
     },
     {
+      id: "2025TaxBrackets",
+      name: "2025 Tax Brackets",
+      type: "2025TaxBrackets",
+      isVisible: true,
+    },
+    {
       id: "calculator",
       name: "Calculator",
       type: "calculator",
@@ -202,6 +208,12 @@ export const useTableStore = create<TableStore>((set) => ({
           id: "total-advantage",
           name: "Total Advantage",
           type: "totalAdvantage",
+          isVisible: true,
+        },
+        {
+          id: "2025TaxBrackets",
+          name: "2025 Tax Brackets",
+          type: "2025TaxBrackets",
           isVisible: true,
         },
         {

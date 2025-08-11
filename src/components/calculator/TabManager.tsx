@@ -27,6 +27,7 @@ import InflationCalculator from "../InflationCalculator";
 import CagrChart from "../CagrChart";
 import { useSession } from "next-auth/react";
 import AnnualContributionCalculatorForIUL from "../AnnualContributionCalculatorForIUL";
+import TaxBracketTab from "../TaxBracketTab";
 
 interface TabManagerProps {
   activeTab: string | null;
@@ -43,6 +44,13 @@ const staticTabs: TabContent[] = [
     id: "total-advantage",
     name: "Total Advantage",
     type: "totalAdvantage",
+    isVisible: true,
+    userOrder: undefined,
+  },
+  {
+    id: "2025TaxBrackets",
+    name: "2025 Tax Brackets",
+    type: "2025TaxBrackets",
     isVisible: true,
     userOrder: undefined,
   },
@@ -281,6 +289,11 @@ const TabContentRenderer = ({
               </Button>
             </div>
           </div>
+        </div>
+      )}
+      {tab.type === "2025TaxBrackets" && (
+        <div className="h-full w-full flex items-center justify-center gap-4 text-center">
+          <TaxBracketTab />
         </div>
       )}
       {tab.type === "calculator" && (

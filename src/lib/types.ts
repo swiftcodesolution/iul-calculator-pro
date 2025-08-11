@@ -221,6 +221,7 @@ export interface TabContent {
   name: string;
   type:
     | "totalAdvantage"
+    | "2025TaxBrackets"
     | "calculator"
     | "annualContributionCalculatorForIUL"
     | "inflationCalculator"

@@ -68,6 +68,7 @@ export function ManageTabsDialog({
 
   const staticTabIds = [
     "total-advantage",
+    "2025TaxBrackets",
     "calculator",
     "inflationCalculator",
     "annualContributionCalculatorForIUL",
