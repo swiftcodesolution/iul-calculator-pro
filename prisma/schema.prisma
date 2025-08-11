@@ -30,6 +30,7 @@ model User {
   TrainingVideos            TrainingVideos[]
   TrainingDocuments         TrainingDocuments[]
   TabContent                TabContent[]
+  UserTabContentOrders      UserTabContentOrder[]
   InsuranceCompany          InsuranceCompany[]
   InsuranceCompanyRequest   InsuranceCompanyRequest[]
   PasswordResetToken        PasswordResetToken[]
@@ -151,10 +152,21 @@ model TabContent {
   filePath                  String?
   fileFormat                String?
   link                      String?
-  createdByRole             String?
-  order                     Int?      @default(0)
+  createdByRole             String?   // "admin" or "user"
+  order                     Int?      @default(9999) // High default for new content
   createdAt                 DateTime  @default(now())
   updatedAt                 DateTime  @updatedAt
+  userTabContentOrders      UserTabContentOrder[] // Relation to user-specific orders
+}
+
+model UserTabContentOrder {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String     @db.ObjectId
+  tabContentId  String     @db.ObjectId
+  order         Int
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tabContent    TabContent @relation(fields: [tabContentId], references: [id], onDelete: Cascade)
+  @@unique([userId, tabContentId])
 }
 
 model InsuranceCompany {

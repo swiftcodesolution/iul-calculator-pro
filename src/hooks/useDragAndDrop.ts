@@ -7,7 +7,7 @@ export const useDragAndDrop = (
   setTabs: (tabs: TabContent[]) => void
 ) => {
   const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "admin";
+  // const isAdmin = session?.user?.role === "admin";
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleTabDragStart = useCallback(
@@ -38,24 +38,12 @@ export const useDragAndDrop = (
         "cagrChart",
       ];
 
-      // Prevent non-admins from reordering admin or static tabs
+      // Prevent reordering static tabs
       if (
-        (draggedTab.createdByRole === "admin" ||
-          staticTabIds.includes(draggedTab.id)) &&
-        !isAdmin
+        staticTabIds.includes(draggedTab.id) ||
+        staticTabIds.includes(targetTab.id)
       ) {
         setDialogOpen(true);
-        return;
-      }
-
-      // Allow reordering only within same tab group (admin/static or user)
-      const draggedIsUserTab =
-        draggedTab.createdByRole !== "admin" &&
-        !staticTabIds.includes(draggedTab.id);
-      const targetIsUserTab =
-        targetTab.createdByRole !== "admin" &&
-        !staticTabIds.includes(targetTab.id);
-      if (draggedIsUserTab !== targetIsUserTab) {
         return;
       }
 
@@ -69,32 +57,27 @@ export const useDragAndDrop = (
         newTabs[draggedIndex],
       ];
 
-      // Update order based on new positions
+      // Update userOrder based on new positions
       const updatedTabs = newTabs.map((tab, index) => ({
         ...tab,
-        order: index,
+        userOrder: index,
       }));
       setTabs(updatedTabs);
 
-      // Persist user tab order to database
-      if (draggedIsUserTab && session?.user?.id) {
-        const userTabs = updatedTabs
-          .filter(
-            (tab) =>
-              tab.userId === session.user.id &&
-              tab.createdByRole !== "admin" &&
-              !staticTabIds.includes(tab.id)
-          )
+      // Persist tab order to UserTabContentOrder
+      if (session?.user?.id) {
+        const tabsToSync = updatedTabs
+          .filter((tab) => !staticTabIds.includes(tab.id))
           .map((tab, index) => ({
             id: tab.id,
-            order: index + 1,
+            order: index,
           }));
 
         try {
-          const response = await fetch("/api/tab-content", {
+          const response = await fetch("/api/user-tab-content-order", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ tabs: userTabs }),
+            body: JSON.stringify({ tabs: tabsToSync }),
           });
           if (!response.ok) throw new Error("Failed to reorder tabs");
         } catch (error) {
@@ -102,7 +85,7 @@ export const useDragAndDrop = (
         }
       }
     },
-    [tabs, setTabs, isAdmin, session?.user?.id]
+    [tabs, setTabs, session?.user?.id]
   );
 
   const handleTabDragOver = useCallback(

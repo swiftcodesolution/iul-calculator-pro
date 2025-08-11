@@ -219,7 +219,6 @@ export interface SelectedRowData {
 export interface TabContent {
   id: string;
   name: string;
-
   type:
     | "totalAdvantage"
     | "calculator"
@@ -238,6 +237,7 @@ export interface TabContent {
   createdByRole?: string;
   userId?: string;
   order?: number;
+  userOrder: number | undefined | null;
 }
 
 export type TotalAdvantage = {

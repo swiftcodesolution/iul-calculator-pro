@@ -44,30 +44,35 @@ const staticTabs: TabContent[] = [
     name: "Total Advantage",
     type: "totalAdvantage",
     isVisible: true,
+    userOrder: undefined,
   },
   {
     id: "calculator",
     name: "Calculator",
     type: "calculator",
     isVisible: true,
+    userOrder: undefined,
   },
   {
     id: "annualContributionCalculatorForIUL",
     name: "Annual Contribution for IUL",
     type: "annualContributionCalculatorForIUL",
     isVisible: true,
+    userOrder: undefined,
   },
   {
     id: "inflationCalculator",
     name: "Inflation Calculator",
     type: "inflationCalculator",
     isVisible: true,
+    userOrder: undefined,
   },
   {
     id: "cagrChart",
     name: "CAGR Chart",
     type: "cagrChart",
     isVisible: true,
+    userOrder: undefined,
   },
 ];
 
@@ -84,6 +89,21 @@ const TabNavigation = ({
   <div className="flex gap-2 flex-wrap w-3/4">
     {tabs
       .filter((tab) => tab.isVisible)
+      .sort((a, b) => {
+        const aIsStatic = staticTabs.some((t) => t.id === a.id);
+        const bIsStatic = staticTabs.some((t) => t.id === b.id);
+        if (aIsStatic && bIsStatic) {
+          return (
+            staticTabs.findIndex((t) => t.id === a.id) -
+            staticTabs.findIndex((t) => t.id === b.id)
+          );
+        }
+        if (aIsStatic) return -1;
+        if (bIsStatic) return 1;
+        return (
+          (a.userOrder ?? a.order ?? 9999) - (b.userOrder ?? b.order ?? 9999)
+        );
+      })
       .map((tab, index) => (
         <motion.div
           key={tab.id}
@@ -157,7 +177,7 @@ const TabContentRenderer = ({
       ...activeButtons,
       [id]: !activeButtons[id],
     });
-    handleCellClick?.(id); // Trigger cell click to update highlightedRows
+    handleCellClick?.(id);
   };
 
   const getEmbedUrl = (link: string | null) => {
@@ -366,6 +386,7 @@ const TabManager = React.memo(function TabManager({
           createdByRole?: string;
           userId?: string;
           order?: number;
+          userOrder?: number; // New: User-specific order
         }[] = await response.json();
 
         const dynamicTabs: TabContent[] = data.map((item) => ({
@@ -387,9 +408,10 @@ const TabManager = React.memo(function TabManager({
           createdByRole: item.createdByRole,
           userId: item.userId,
           order: item.order,
+          userOrder: item.userOrder, // Include user-specific order
         }));
 
-        // Initialize with static tabs first, then append dynamic tabs as fetched
+        // Initialize with static tabs first, then append dynamic tabs
         setTabs([...staticTabs, ...dynamicTabs]);
       } catch (err) {
         setError("Error loading tab content");
@@ -426,12 +448,14 @@ const TabManager = React.memo(function TabManager({
         link?: string | null;
         createdByRole?: string;
         userId?: string;
+        order?: number;
+        userOrder?: number;
       } = await response.json();
       setTabs([
         ...tabs,
         {
           id: newTab.id,
-          name: newTab.tabName, // Map tabName to name
+          name: newTab.tabName,
           type: (newTab.link
             ? "link"
             : newTab.fileFormat?.startsWith("image/")
@@ -440,13 +464,15 @@ const TabManager = React.memo(function TabManager({
             ? "video"
             : newTab.fileFormat === "application/pdf"
             ? "pdf"
-            : "other") as TabContent["type"], // Explicitly cast to TabContent["type"]
+            : "other") as TabContent["type"],
           filePath: newTab.filePath,
           fileFormat: newTab.fileFormat,
           link: newTab.link,
           isVisible: true,
           createdByRole: session?.user?.role || "user",
           userId: session?.user?.id || "",
+          order: newTab.order,
+          userOrder: newTab.userOrder,
         },
       ]);
       setIsAddDialogOpen(false);
@@ -538,50 +564,36 @@ const TabManager = React.memo(function TabManager({
 
   const handleMoveUp = (index: number) => {
     if (index <= staticTabs.length) return; // Prevent moving static tabs
-    const tab = tabs[index];
-    if (tab.createdByRole === "admin" && session?.user?.role !== "admin")
-      return;
-    const prevTab = tabs[index - 1];
-    if (prevTab.createdByRole !== tab.createdByRole) return; // Prevent crossing admin/user boundaries
     const newTabs = [...tabs];
     [newTabs[index], newTabs[index - 1]] = [newTabs[index - 1], newTabs[index]];
-    newTabs[index].order = index;
-    newTabs[index - 1].order = index - 1;
+    newTabs[index].userOrder = index;
+    newTabs[index - 1].userOrder = index - 1;
     setTabs(newTabs);
-    fetch("/api/tab-content", {
+    fetch("/api/user-tab-content-order", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         tabs: newTabs
-          .filter(
-            (t) => t.userId === session?.user?.id && t.createdByRole !== "admin"
-          )
-          .map((t) => ({ id: t.id, order: t.order })),
+          .filter((t) => !staticTabs.some((st) => st.id === t.id))
+          .map((t) => ({ id: t.id, order: t.userOrder ?? t.order ?? 9999 })),
       }),
     });
   };
 
   const handleMoveDown = (index: number) => {
     if (index < staticTabs.length || index >= tabs.length - 1) return;
-    const tab = tabs[index];
-    if (tab.createdByRole === "admin" && session?.user?.role !== "admin")
-      return;
-    const nextTab = tabs[index + 1];
-    if (nextTab.createdByRole !== tab.createdByRole) return; // Prevent crossing admin/user boundaries
     const newTabs = [...tabs];
     [newTabs[index], newTabs[index + 1]] = [newTabs[index + 1], newTabs[index]];
-    newTabs[index].order = index;
-    newTabs[index + 1].order = index + 1;
+    newTabs[index].userOrder = index;
+    newTabs[index + 1].userOrder = index + 1;
     setTabs(newTabs);
-    fetch("/api/tab-content", {
+    fetch("/api/user-tab-content-order", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         tabs: newTabs
-          .filter(
-            (t) => t.userId === session?.user?.id && t.createdByRole !== "admin"
-          )
-          .map((t) => ({ id: t.id, order: t.order })),
+          .filter((t) => !staticTabs.some((st) => st.id === t.id))
+          .map((t) => ({ id: t.id, order: t.userOrder ?? t.order ?? 9999 })),
       }),
     });
   };

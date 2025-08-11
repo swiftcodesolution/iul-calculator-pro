@@ -48,10 +48,7 @@ export async function POST(request: Request) {
         fileFormat,
         link: link || null,
         createdByRole: session.user.role,
-        order:
-          (await prisma.tabContent.count({
-            where: { userId: session.user.id, createdByRole: { not: "admin" } },
-          })) + 1,
+        order: 9999, // New content appears at the end
       },
     });
 
@@ -79,7 +76,7 @@ export async function GET() {
             select: { firstName: true, email: true },
           },
         },
-        orderBy: { order: "asc" }, // Sort admin content by order
+        orderBy: { order: "asc" },
       });
       return NextResponse.json(tabContents);
     }
@@ -92,14 +89,27 @@ export async function GET() {
         user: {
           select: { firstName: true, email: true },
         },
+        userTabContentOrders: {
+          where: { userId: session.user.id },
+          select: { order: true },
+        },
       },
-      orderBy: [
-        { createdByRole: "asc" }, // Prioritize admin content
-        { order: "asc" }, // Sort admin content by order
-        { createdAt: "desc" }, // Sort user content by creation date
-      ],
+      orderBy: { order: "asc" },
     });
-    return NextResponse.json(tabContents);
+
+    const formattedTabs = tabContents.map((tab) => ({
+      id: tab.id,
+      tabName: tab.tabName,
+      filePath: tab.filePath,
+      fileFormat: tab.fileFormat,
+      link: tab.link,
+      createdByRole: tab.createdByRole,
+      userId: tab.userId,
+      order: tab.order,
+      userOrder: tab.userTabContentOrders[0]?.order, // Include user-specific order
+    }));
+
+    return NextResponse.json(formattedTabs);
   } catch (error) {
     console.error("Error fetching tab content:", error);
     return NextResponse.json(
@@ -154,18 +164,6 @@ export async function PATCH(request: Request) {
       filePath = blob.url;
       fileFormat = file.type;
     }
-
-    // const updatedTabContent = await prisma.tabContent.upsert({
-    //   where: { id },
-    //   data: {
-    //     tabName,
-    //     fileName,
-    //     filePath,
-    //     fileFormat,
-    //     link: link || undefined,
-    //     updatedAt: new Date(),
-    //   },
-    // });
 
     const updatedTabContent = await prisma.tabContent.upsert({
       where: { id },
@@ -233,7 +231,7 @@ export async function DELETE(request: Request) {
 
 export async function PUT(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  if (!session?.user?.id || session.user.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -243,7 +241,7 @@ export async function PUT(request: Request) {
     await prisma.$transaction(
       tabs.map((tab: { id: string; order: number }) =>
         prisma.tabContent.update({
-          where: { id: tab.id, userId: session.user.id },
+          where: { id: tab.id, createdByRole: "admin" },
           data: { order: tab.order },
         })
       )
