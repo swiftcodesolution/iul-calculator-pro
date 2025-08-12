@@ -16,7 +16,7 @@ export async function syncToZohoCRM(
     console.log("Access token obtained, calling CRM API");
     const zohoApiBaseUrl =
       process.env.ZOHO_API_BASE_URL || "https://www.zohoapis.com";
-    const moduleName = "IUL_Calculator_Pro_Leads";
+    const moduleName = "pro_leads_all";
     const response = await axios.post(
       `${zohoApiBaseUrl}/crm/v2/${moduleName}`,
       {
@@ -24,6 +24,9 @@ export async function syncToZohoCRM(
           {
             "IUL Calculator Pro Lead": "zoho test record",
             Email: user.email,
+            Name: `${user.firstName || "firstname"} ${
+              user.lastName || "lastname"
+            }`,
             First_Name: user.firstName || "firstname",
             Last_Name: user.lastName || "lastname",
             Subscription_Plan: subscription.planType,

@@ -12,18 +12,24 @@ import { syncToZohoCRM } from "@/lib/zoho";
 interface ZohoUserData {
   id: string;
   email: string;
+  name: string;
   firstName?: string;
   lastName?: string;
   iulCalculatorProLead?: string;
   subscriptionPlan?: string;
-  stripeCustomerId?: string;
+  stripeCustomerId: string; // Changed to allow null
   stripeSubscriptionId?: string;
+  agentName?: string; // Added for Agent_Name
+  createdBy?: string; // Added for Created_By
+  owner?: string; // Added for Owner
 }
 
 interface ZohoSubscriptionData {
   planType: string;
-  stripeCustomerId: string;
+  stripeCustomerId: string; // Changed to allow null
   stripeSubscriptionId: string;
+  startDate?: string; // Added formatted date string (YYYY-MM-DD)
+  renewalDate?: string; // Added formatted date string (YYYY-MM-DD)
 }
 
 const transporter = nodemailer.createTransport({
@@ -184,17 +190,25 @@ export async function POST(request: Request) {
           {
             id: user.id,
             email: user.email,
+            name: `${user.firstName ?? "first name"} ${
+              user.lastName ?? "last name"
+            }`,
             firstName: user.firstName ?? "first name",
             lastName: user.lastName ?? "last name",
             iulCalculatorProLead: "iul calculator pro lead",
             subscriptionPlan: plan,
-            stripeCustomerId: "",
+            stripeCustomerId: "", // Changed from "" to null
             stripeSubscriptionId: `trial-${user.id}`,
+            agentName: user.firstName ?? "Unknown", // Added for Agent_Name
+            createdBy: "System", // Added for Created_By
+            owner: "System", // Added for Owner
           } as ZohoUserData,
           {
-            planType: subscription.planType,
-            stripeCustomerId: subscription.stripeCustomerId ?? "",
-            stripeSubscriptionId: subscription.stripeSubscriptionId,
+            planType: plan,
+            stripeCustomerId: "", // Changed from "" to null
+            stripeSubscriptionId: `trial-${user.id}`,
+            startDate: subscription.startDate.toISOString().split("T")[0], // Added formatted date
+            renewalDate: subscription.renewalDate?.toISOString().split("T")[0], // Added formatted date
           } as ZohoSubscriptionData
         );
         console.log("Zoho CRM sync completed successfully");
@@ -202,6 +216,7 @@ export async function POST(request: Request) {
         console.error("Zoho sync failed, continuing with trial activation:", {
           message: zohoError.message,
           response: zohoError.response?.data,
+          details: zohoError.response?.data?.details, // Added detailed logging
           status: zohoError.response?.status,
         });
         // Continue despite Zoho failure
@@ -389,17 +404,25 @@ export async function POST(request: Request) {
           {
             id: user.id,
             email: user.email,
+            name: `${user.firstName ?? "first name"} ${
+              user.lastName ?? "last name"
+            }`,
             firstName: user.firstName ?? "first name",
             lastName: user.lastName ?? "last name",
             iulCalculatorProLead: "iul calculator pro lead",
             subscriptionPlan: plan,
-            stripeCustomerId: "",
+            stripeCustomerId: "", // Changed from "" to null
             stripeSubscriptionId: `trial-${user.id}`,
+            agentName: user.firstName ?? "Unknown", // Added for Agent_Name
+            createdBy: "System", // Added for Created_By
+            owner: "System", // Added for Owner
           } as ZohoUserData,
           {
             planType: plan,
-            stripeCustomerId: "",
+            stripeCustomerId: "", // Changed from "" to null
             stripeSubscriptionId: `trial-${user.id}`,
+            startDate: subscription?.startDate.toISOString().split("T")[0], // Added formatted date
+            renewalDate: subscription?.renewalDate?.toISOString().split("T")[0], // Added formatted date
           } as ZohoSubscriptionData
         );
         console.log("Zoho CRM sync completed successfully for trial update");
@@ -407,6 +430,7 @@ export async function POST(request: Request) {
         console.error("Zoho sync failed for trial update, continuing:", {
           message: zohoError.message,
           response: zohoError.response?.data,
+          details: zohoError.response?.data?.details, // Added detailed logging
           status: zohoError.response?.status,
         });
         // Continue despite Zoho failure
