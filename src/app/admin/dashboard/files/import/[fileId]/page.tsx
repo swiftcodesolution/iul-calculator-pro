@@ -354,163 +354,6 @@ export default function ImportPage({ params }: { params: Params }) {
       >
         {isScrolled && tables.length > 0 && (
           <div className="sticky top-0 z-10 bg-white shadow-md w-full">
-            {tables.map((table, index) => {
-              const columns = Object.keys(table.data[0] || {}).filter(
-                (key) => key !== "Source_Text" && key !== "Page_Number"
-              );
-              return (
-                <div
-                  key={index}
-                  className={
-                    tables.length === 2
-                      ? index === 0
-                        ? "w-[80%]"
-                        : "w-[20%]"
-                      : "grow"
-                  }
-                >
-                  <Table className="border table-fixed w-full">
-                    <TableHeader>
-                      <TableRow>
-                        {columns.map((header) => {
-                          const bgColor = highlightedColumns.has(header)
-                            ? highlightColor
-                            : "#FFFFFF";
-                          return (
-                            <TableHead
-                              key={header}
-                              className={cn(
-                                "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer"
-                              )}
-                              style={{
-                                width: `${100 / columns.length}%`,
-                                backgroundColor: bgColor,
-                                color: getContrastingTextColor(bgColor),
-                              }}
-                              onClick={() => handleColumnClick(header)}
-                            >
-                              {header}
-                            </TableHead>
-                          );
-                        })}
-                      </TableRow>
-                    </TableHeader>
-                  </Table>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        <div
-          style={{
-            transform: `scale(${zoomLevel})`,
-            transformOrigin: "top left",
-            transition: "transform 0.3s ease",
-            width: "100%",
-          }}
-          className="relative"
-        >
-          <div className={tables.length > 2 ? "flex gap-0" : "flex gap-0"}>
-            {tables.map((table, index) => {
-              const columns = Object.keys(table.data[0] || {}).filter(
-                (key) => key !== "Source_Text" && key !== "Page_Number"
-              );
-              return (
-                <div
-                  key={index}
-                  className={
-                    tables.length === 2
-                      ? index === 0
-                        ? "w-[80%]"
-                        : "w-[20%]"
-                      : "grow"
-                  }
-                >
-                  <Table className="border table-fixed w-full">
-                    <TableHeader>
-                      <TableRow>
-                        {columns.map((header) => {
-                          const bgColor = highlightedColumns.has(header)
-                            ? highlightColor
-                            : "#FFFFFF";
-                          return (
-                            <TableHead
-                              key={header}
-                              className={cn(
-                                "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer"
-                              )}
-                              style={{
-                                width: `${100 / columns.length}%`,
-                                backgroundColor: bgColor,
-                                color: getContrastingTextColor(bgColor),
-                              }}
-                              onClick={() => handleColumnClick(header)}
-                            >
-                              {header}
-                            </TableHead>
-                          );
-                        })}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {table.data.map((row, rowIndex) => (
-                        <TableRow
-                          key={rowIndex}
-                          className={cn("min-h-[60px] cursor-pointer")}
-                          style={{
-                            backgroundColor: highlightedRows.has(rowIndex)
-                              ? highlightColor
-                              : "#FFFFFF",
-                          }}
-                          onClick={() => handleRowClick(rowIndex)}
-                        >
-                          {columns.map((col) => {
-                            const bgColor =
-                              highlightedColumns.has(col) ||
-                              highlightedRows.has(rowIndex)
-                                ? highlightColor
-                                : "#FFFFFF";
-                            return (
-                              <TableCell
-                                key={col}
-                                className={cn(
-                                  "border whitespace-normal break-words align-top"
-                                )}
-                                style={{
-                                  width: `${100 / columns.length}%`,
-                                  backgroundColor: bgColor,
-                                  color: getContrastingTextColor(bgColor),
-                                }}
-                              >
-                                {row[col] ?? "-"}
-                              </TableCell>
-                            );
-                          })}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-  */
-
-  const renderTable = () => (
-    <Card className="flex-1 flex flex-col h-[90vh]">
-      <CardHeader className="sticky top-0 z-10 bg-white dark:bg-black">
-        <h3 className="text-lg font-semibold">Imported Data Preview</h3>
-      </CardHeader>
-      <CardContent
-        className="flex-1 overflow-auto relative"
-        onScroll={handleScroll}
-      >
-        {isScrolled && tables.length > 0 && (
-          <div className="sticky top-0 z-10 bg-white shadow-md w-full">
             {tables.slice(0, 2).map((table, index) => {
               const columns = Object.keys(table.data[0] || {}).filter(
                 (key) => key !== "Source_Text" && key !== "Page_Number"
@@ -655,6 +498,179 @@ export default function ImportPage({ params }: { params: Params }) {
       </CardContent>
     </Card>
   );
+  */
+
+  const renderTable = () => (
+    <Card
+      className={cn(
+        "flex-1 flex flex-col gap-0",
+        isTableFullScreen ? "h-auto" : "h-[90vh]" // dynamic height
+      )}
+    >
+      <CardHeader className="sticky top-0 z-10 bg-none">
+        <h3 className="text-lg font-semibold">Imported Data Preview</h3>
+      </CardHeader>
+
+      <CardContent
+        className="flex-1 relative overflow-auto" // scrollable content
+        onScroll={handleScroll}
+      >
+        {isScrolled && tables.length > 0 && (
+          <div className="sticky top-0 z-10 bg-white shadow-md w-full flex">
+            {tables.slice(0, 2).map((table, index) => {
+              const columns = Object.keys(table.data[0] || {}).filter(
+                (key) => key !== "Source_Text" && key !== "Page_Number"
+              );
+              return (
+                <div
+                  key={index}
+                  className={
+                    tables.length >= 2
+                      ? index === 0
+                        ? "w-[80%]"
+                        : "w-[20%]"
+                      : "grow"
+                  }
+                >
+                  <Table className="border table-fixed w-full">
+                    <TableHeader
+                      className={cn(
+                        isTableFullScreen &&
+                          "sticky top-0 z-10 bg-white dark:bg-black"
+                      )}
+                    >
+                      <TableRow>
+                        {columns.map((header) => {
+                          const bgColor = highlightedColumns.has(header)
+                            ? highlightColor
+                            : "#FFFFFF";
+                          return (
+                            <TableHead
+                              key={header}
+                              className={cn(
+                                "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer"
+                              )}
+                              style={{
+                                width: `${100 / columns.length}%`,
+                                backgroundColor: bgColor,
+                                color: getContrastingTextColor(bgColor),
+                              }}
+                              onClick={() => handleColumnClick(header)}
+                            >
+                              {header}
+                            </TableHead>
+                          );
+                        })}
+                      </TableRow>
+                    </TableHeader>
+                  </Table>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div
+          style={{
+            transform: `scale(${zoomLevel})`,
+            transformOrigin: "top left",
+            transition: "transform 0.3s ease",
+            width: "100%",
+          }}
+          className="relative"
+        >
+          <div className={tables.length >= 2 ? "flex gap-0" : "flex gap-0"}>
+            {tables.slice(0, 2).map((table, index) => {
+              const columns = Object.keys(table.data[0] || {}).filter(
+                (key) => key !== "Source_Text" && key !== "Page_Number"
+              );
+              return (
+                <div
+                  key={index}
+                  className={
+                    tables.length >= 2
+                      ? index === 0
+                        ? "w-[80%]"
+                        : "w-[20%]"
+                      : "grow"
+                  }
+                >
+                  <Table className="border table-fixed w-full">
+                    <TableHeader
+                      className={cn(
+                        isTableFullScreen &&
+                          "sticky top-0 z-10 bg-white dark:bg-black"
+                      )}
+                    >
+                      <TableRow>
+                        {columns.map((header) => {
+                          const bgColor = highlightedColumns.has(header)
+                            ? highlightColor
+                            : "#FFFFFF";
+                          return (
+                            <TableHead
+                              key={header}
+                              className={cn(
+                                "border whitespace-normal break-words min-h-[60px] align-top cursor-pointer"
+                              )}
+                              style={{
+                                width: `${100 / columns.length}%`,
+                                backgroundColor: bgColor,
+                                color: getContrastingTextColor(bgColor),
+                              }}
+                              onClick={() => handleColumnClick(header)}
+                            >
+                              {header}
+                            </TableHead>
+                          );
+                        })}
+                      </TableRow>
+                    </TableHeader>
+
+                    <TableBody>
+                      {table.data.map((row, rowIndex) => (
+                        <TableRow
+                          key={rowIndex}
+                          className="min-h-[60px] cursor-pointer"
+                          style={{
+                            backgroundColor: highlightedRows.has(rowIndex)
+                              ? highlightColor
+                              : "#FFFFFF",
+                          }}
+                          onClick={() => handleRowClick(rowIndex)}
+                        >
+                          {columns.map((col) => {
+                            const bgColor =
+                              highlightedColumns.has(col) ||
+                              highlightedRows.has(rowIndex)
+                                ? highlightColor
+                                : "#FFFFFF";
+                            return (
+                              <TableCell
+                                key={col}
+                                className="border whitespace-normal break-words align-top"
+                                style={{
+                                  width: `${100 / columns.length}%`,
+                                  backgroundColor: bgColor,
+                                  color: getContrastingTextColor(bgColor),
+                                }}
+                              >
+                                {row[col] ?? "-"}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -772,12 +788,12 @@ export default function ImportPage({ params }: { params: Params }) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
-              className="fixed inset-0 z-50 bg-white p-4 flex flex-col"
+              className="fixed inset-0 z-50 bg-white dark:bg-gray-900 high-contrast:bg-white p-4 flex flex-col overflow-auto"
             >
               <div className="flex-1 flex flex-col">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold"></h3>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span>
@@ -827,7 +843,6 @@ export default function ImportPage({ params }: { params: Params }) {
                         <span>
                           <Button
                             variant="outline"
-                            size="sm"
                             onClick={handleFullScreenToggle}
                             disabled={isTableLoading}
                             aria-label="Exit full-screen mode"
@@ -900,59 +915,62 @@ export default function ImportPage({ params }: { params: Params }) {
             </div>
           </div>
 
-          <Card className="border">
-            <CardHeader>
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.3 }}
-                className="text-xl font-bold text-center"
-              >
-                Import PDF Illustration
-              </motion.h2>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div
-                className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center"
-                onDragOver={handleDragOver}
-                onDrop={handleFileChange}
-              >
-                <p className="text-gray-500 mb-2">
-                  Drop PDF Here or Click to Select
-                </p>
-                <Button asChild>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    Select File
-                    <Upload className="h-4 w-4 high-contrast:text-white!" />
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="application/pdf"
-                      onChange={handleFileChange}
-                    />
-                  </label>
-                </Button>
-              </div>
-
-              {file && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
+          {/* Conditionally render the upload area based on tables.length */}
+          {(!tables.length || isTableLoading) && (
+            <Card className="border">
+              <CardHeader>
+                <motion.h2
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-sm flex gap-1 items-center justify-center"
+                  transition={{ delay: 0.1, duration: 0.3 }}
+                  className="text-xl font-bold text-center"
                 >
-                  <Label>Uploaded File:</Label> {file.name}
-                </motion.div>
-              )}
-              <Button
-                onClick={handleUpload}
-                disabled={isTableLoading}
-                className="w-full"
-              >
-                {isTableLoading ? "Processing..." : "Upload"}
-              </Button>
-            </CardContent>
-          </Card>
+                  Import PDF Illustration
+                </motion.h2>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center"
+                  onDragOver={handleDragOver}
+                  onDrop={handleFileChange}
+                >
+                  <p className="text-gray-500 mb-2">
+                    {"Drop PDF Here or Click to Select"}
+                  </p>
+                  <Button asChild>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      Select File
+                      <Upload className="h-4 w-4 high-contrast:text-white!" />
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="application/pdf"
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                  </Button>
+                </div>
+
+                {file && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-sm flex gap-1 items-center justify-center"
+                  >
+                    <Label>Uploaded File:</Label> {file.name}
+                  </motion.div>
+                )}
+                <Button
+                  onClick={handleUpload}
+                  disabled={isTableLoading || !file}
+                  className="w-full"
+                >
+                  {isTableLoading ? "Processing..." : "Upload"}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {error && (
             <motion.div
@@ -964,6 +982,8 @@ export default function ImportPage({ params }: { params: Params }) {
               {error}
             </motion.div>
           )}
+
+          {/* Conditionally render the Clear button and update its text */}
           {tables.length > 0 && !isTableLoading && !error && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -977,10 +997,11 @@ export default function ImportPage({ params }: { params: Params }) {
                 disabled={isTableLoading}
                 className="flex-1"
               >
-                Clear
+                {tables.length > 0 ? "Clear and Upload New" : "Clear"}
               </Button>
             </motion.div>
           )}
+
           <div className="flex gap-2">
             <Tooltip>
               <TooltipTrigger asChild>
