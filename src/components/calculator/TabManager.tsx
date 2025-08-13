@@ -158,7 +158,7 @@ const ToggleExpandButton = ({
     whileHover={{ scale: 1.1, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
     whileTap={{ scale: 0.95 }}
   >
-    <Button variant="outline" size="sm" onClick={onClick}>
+    <Button variant="outline" onClick={onClick}>
       {isExpanded ? (
         <Minimize2 className="h-4 w-4" />
       ) : (
@@ -213,7 +213,6 @@ const TabContentRenderer = ({
             <div className="w-full flex items-center justify-center gap-2">
               <Button
                 variant="outline"
-                size="sm"
                 className={`cursor-pointer p-6 min-w-1/5 
                   ${
                     activeButtons[8]
@@ -233,7 +232,6 @@ const TabContentRenderer = ({
               </Button>
               <Button
                 variant="outline"
-                size="sm"
                 className={`cursor-pointer p-6 min-w-1/5 ${
                   activeButtons[9]
                     ? "bg-red-300 hover:bg-red-300 dark:bg-red-300 dark:hover:bg-red-300 text-black dark:text-black"
@@ -251,7 +249,6 @@ const TabContentRenderer = ({
               </Button>
               <Button
                 variant="outline"
-                size="sm"
                 className={`cursor-pointer p-6 min-w-1/5 ${
                   activeButtons[10]
                     ? "bg-red-300 hover:bg-red-300 dark:bg-red-300 dark:hover:bg-red-300 text-black dark:text-black"
@@ -270,7 +267,6 @@ const TabContentRenderer = ({
               </Button>
               <Button
                 variant="outline"
-                size="sm"
                 className={`cursor-pointer p-6 min-w-1/5 ${
                   activeButtons[13]
                     ? "bg-red-300 hover:bg-red-300 dark:bg-red-300 dark:hover:bg-red-300 text-black dark:text-black"
