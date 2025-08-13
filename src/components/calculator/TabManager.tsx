@@ -381,6 +381,8 @@ const TabManager = React.memo(function TabManager({
   const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const staticTabIds = staticTabs.map((tab) => tab.id);
+
   useEffect(() => {
     async function fetchTabContent() {
       try {
@@ -576,7 +578,7 @@ const TabManager = React.memo(function TabManager({
   };
 
   const handleMoveUp = (index: number) => {
-    if (index <= staticTabs.length) return; // Prevent moving static tabs
+    if (index <= staticTabIds.length) return; // Prevent moving static tabs
     const newTabs = [...tabs];
     [newTabs[index], newTabs[index - 1]] = [newTabs[index - 1], newTabs[index]];
     newTabs[index].userOrder = index;
@@ -587,14 +589,17 @@ const TabManager = React.memo(function TabManager({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         tabs: newTabs
-          .filter((t) => !staticTabs.some((st) => st.id === t.id))
-          .map((t) => ({ id: t.id, order: t.userOrder ?? t.order ?? 9999 })),
+          .filter((t) => !staticTabIds.includes(t.id)) // Exclude static tabs
+          .map((t, index) => ({ id: t.id, order: index })), // Use index for order
       }),
+    }).catch((err) => {
+      console.error("Error updating tab order:", err);
+      setError("Failed to update tab order");
     });
   };
 
   const handleMoveDown = (index: number) => {
-    if (index < staticTabs.length || index >= tabs.length - 1) return;
+    if (index < staticTabIds.length || index >= tabs.length - 1) return;
     const newTabs = [...tabs];
     [newTabs[index], newTabs[index + 1]] = [newTabs[index + 1], newTabs[index]];
     newTabs[index].userOrder = index;
@@ -605,9 +610,12 @@ const TabManager = React.memo(function TabManager({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         tabs: newTabs
-          .filter((t) => !staticTabs.some((st) => st.id === t.id))
-          .map((t) => ({ id: t.id, order: t.userOrder ?? t.order ?? 9999 })),
+          .filter((t) => !staticTabIds.includes(t.id)) // Exclude static tabs
+          .map((t, index) => ({ id: t.id, order: index })), // Use index for order
       }),
+    }).catch((err) => {
+      console.error("Error updating tab order:", err);
+      setError("Failed to update tab order");
     });
   };
 

@@ -99,17 +99,20 @@ export function ManageTabsDialog({
 
   const handleSave = async () => {
     if (session?.user?.id) {
-      // Sync user-specific tab order to UserTabContentOrder
+      // Sync user-specific tab order to UserTabContentOrder, excluding static tabs
       const tabsToSync = combinedTabs
         .filter((t) => !staticTabIds.includes(t.id)) // Exclude static tabs
-        .map((t, index) => ({ id: t.id, order: index }));
+        .map((t, index) => ({ id: t.id, order: index })); // Use index for order
       try {
         const response = await fetch("/api/user-tab-content-order", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ tabs: tabsToSync }),
         });
-        if (!response.ok) throw new Error("Failed to save tab order");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to save tab order");
+        }
       } catch (error) {
         console.error("Error saving tab order:", error);
       }
