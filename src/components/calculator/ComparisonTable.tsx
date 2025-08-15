@@ -1152,7 +1152,8 @@ export function ComparisonTable({
       const cumulativeTaxesPaid = Math.abs(taxFreeTaxesPaid - currentTaxesPaid);
       const fees = currentFees - taxFreeFees;
       // const cumulativeIncome = taxFreeIncome - currentIncome;
-      const cumulativeIncome = currentTaxesPaid + currentIncome - taxFreeIncome;
+      const cumulativeIncome =
+        taxFreeIncome - (currentTaxesPaid + currentIncome);
       const deathBenefits = Math.abs(
         taxFreeDeathBenefits - currentDeathBenefits
       );
