@@ -624,7 +624,7 @@ export function runGrossRetirementIncomeLoop(
 
   let fixedGrossRetirementIncome = 0;
 
-  for (let age = currentAge; age < yearsRunOutOfMoney; age++) {
+  for (let age = currentAge; age <= yearsRunOutOfMoney; age++) {
     const year = startYear + (age - currentAge);
 
     let annualContrib = 0;
