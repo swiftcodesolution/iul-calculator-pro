@@ -10,10 +10,6 @@ const trainingResources = [
     link: "/dashboard/training-content",
   },
   { title: "Downloads", link: "/dashboard/downloads-content" },
-  {
-    title: "Download App",
-    link: "https://instantsolutionslab.site/testing/IULCalculatorPro.exe",
-  },
 ];
 
 export default function TrainingResourcesSection() {

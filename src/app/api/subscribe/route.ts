@@ -284,6 +284,7 @@ export async function POST(request: Request) {
         // Continue despite email failure
       }
 
+      /*
       const userSubject = "Welcome to IUL Calculator Pro - Trial Activated!";
       try {
         console.log("Sending user welcome and trial email");
@@ -317,6 +318,88 @@ export async function POST(request: Request) {
             <p><strong>Renewal Date:</strong> ${subscription.renewalDate?.toLocaleString()}</p>
             <p>Thank you for joining us!</p>
           `,
+        });
+        console.log("User welcome and trial email sent successfully");
+        await logEmailAttempt(
+          "signup_trial",
+          user.email,
+          userSubject,
+          "sent",
+          undefined,
+          subscription.id
+        );
+      } catch (emailError: any) {
+        console.error("User welcome and trial email failed:", {
+          message: emailError.message,
+          code: emailError.code,
+        });
+        await logEmailAttempt(
+          "signup_trial",
+          user.email,
+          userSubject,
+          "failed",
+          emailError.message,
+          subscription.id
+        );
+        // Continue despite email failure
+      }
+      */
+
+      const userSubject = "Welcome to Calculator Pro – You’re In!";
+      try {
+        console.log("Sending user welcome and trial email");
+        await transporter.sendMail({
+          from: `"IUL Calculator Pro" <${process.env.SMTP_USER}>`,
+          to: user.email,
+          subject: userSubject,
+          text: `
+      Hi ${user.firstName},
+
+      Welcome aboard! You now have full access to IUL Calculator Pro—our premium training and illustration tool built to help you close IUL sales with confidence.
+
+      Here’s the deal: You're on a 60-day complimentary trial. To keep Pro for free, you must:
+      1. Submit one IUL sale under our agency (TruChoice Financial)
+      2. Tell Shawn Van Stratten that you’re joining through "IUL Calculator Pro"—this step is required to qualify.
+
+      If no sale is submitted within 60 days, continued access is available for:
+      · $100/month, or
+      · $1,000/year (one-time payment)
+
+      To get appointed and stay eligible: 
+      📧 svanstratten@truchoicefinancial.com 
+      📞 561.472.9792 
+      🧾 Available Carriers: Allianz, Minnesota Life, LSW, North American, Nationwide, Penn Mutual, Symetra, Columbus Life 
+      ⚠️ Tell Shawn you're signing up under "IUL Calculator Pro" or your trial won't convert to free access.
+
+      ▶️ Watch the training walkthrough here
+
+      We’ll follow up at Day 30 and Day 50 to keep you on track.
+
+      – Steve
+    `,
+          html: `
+      <h2>Welcome to Calculator Pro – You’re In!</h2>
+      <p>Hi ${user.firstName},</p>
+      <p>Welcome aboard! You now have full access to IUL Calculator Pro—our premium training and illustration tool built to help you close IUL sales with confidence.</p>
+      <p>Here’s the deal: You're on a 60-day complimentary trial. To keep Pro for free, you must:</p>
+      <ol>
+        <li>Submit one IUL sale under our agency (TruChoice Financial)</li>
+        <li>Tell Shawn Van Stratten that you’re joining through "IUL Calculator Pro"—this step is required to qualify.</li>
+      </ol>
+      <p>If no sale is submitted within 60 days, continued access is available for:</p>
+      <ul>
+        <li>$100/month, or</li>
+        <li>$1,000/year (one-time payment)</li>
+      </ul>
+      <p><strong>To get appointed and stay eligible:</strong></p>
+      <p>📧 <a href="mailto:svanstratten@truchoicefinancial.com">svanstratten@truchoicefinancial.com</a><br>
+      📞 561.472.9792<br>
+      🧾 Available Carriers: Allianz, Minnesota Life, LSW, North American, Nationwide, Penn Mutual, Symetra, Columbus Life<br>
+      ⚠️ Tell Shawn you're signing up under "IUL Calculator Pro" or your trial won't convert to free access.</p>
+      <p>▶️ Watch the training walkthrough <a href="https://adilo.bigcommand.com/watch/opUQ_aSf">here</a></p>
+      <p>We’ll follow up at Day 30 and Day 50 to keep you on track.</p>
+      <p>– Steve</p>
+    `,
         });
         console.log("User welcome and trial email sent successfully");
         await logEmailAttempt(
