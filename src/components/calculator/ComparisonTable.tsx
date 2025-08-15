@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -97,8 +98,6 @@ export function ComparisonTable({
     setIulStartingBalance,
   } = useTableStore();
 
-  // const [hasInitializedIulBalance, setHasInitializedIulBalance] =
-  //   useState(false);
   const [lastInputYearsRunOut, setLastInputYearsRunOut] = useState<
     number | string
   >(yearsRunOutOfMoney);
@@ -107,14 +106,6 @@ export function ComparisonTable({
   >(yearsRunOutOfMoney);
   const [selectedRowData, setSelectedRowData] =
     useState<SelectedRowData | null>(null);
-  // const [futureAge, setFutureAge] = useState<number>(currentAge);
-  // const [futureAgeInput, setFutureAgeInput] = useState<number | string>(
-  //   futureAge
-  // );
-  // const [futureAgeError, setFutureAgeError] = useState<string | null>(null);
-  // const [activeInput, setActiveInput] = useState<
-  //   "futureAge" | "yearsRunOutOfMoney" | null
-  // >(null);
 
   const calculateNetWithdrawal = (amount: number | string): number => {
     const amountNum = typeof amount === "number" ? amount : 0;
@@ -138,119 +129,6 @@ export function ComparisonTable({
     setIulStartingBalance,
   ]);
 
-  // const isFutureAgeInvalid = (value: string | number): boolean => {
-  //   if (value === "") return true;
-  //   const numValue = Number(value);
-  //   if (isNaN(numValue)) return true;
-  //   if (numValue <= currentAge - 1) return true;
-  //   return false;
-  // };
-
-  // const onFutureAgeChange = (age: number) => {
-  //   if (!isNaN(age) || age > currentAge || tables[0]?.data?.length > 0) {
-  //     setFutureAge(age);
-  //     setFutureAgeInput(age);
-  //     setFutureAgeError(null);
-  //     const currentPlanTable = runGrossRetirementIncomeLoop(
-  //       parseInput(boxesData.currentAge, 0),
-  //       parseInput(yearsRunOutOfMoneyInput, 0),
-  //       parseInput(annualContributions, 0),
-  //       parseInput(boxesData.currentPlanROR, 0),
-  //       parseInput(boxesData.retirementTaxRate, 0),
-  //       parseInput(boxesData.currentPlanFees, 0),
-  //       parseInput(boxesData.workingTaxRate, 0),
-  //       parseInput(startingBalance, 0),
-  //       parseInput(annualEmployerMatch, 0),
-  //       parseInput(boxesData.retirementAge, 0),
-  //       parseInput(boxesData.stopSavingAge, 0)
-  //     );
-  //     const taxFreeTable = runTaxFreePlanLoop(tables, currentAge, age);
-  //     const currentRow = currentPlanTable.find((r) => r.age === age);
-  //     const taxFreeRow = taxFreeTable.find((r) => r.yearsRunOutOfMoney === age);
-  //
-  //     const taxesDueSum = currentPlanTable
-  //       .filter((row) => {
-  //         const inRange =
-  //           row.age >= age && row.age <= parseInput(yearsRunOutOfMoneyInput, 0);
-  //         console.log(
-  //           "Filter: Age",
-  //           row.age,
-  //           "InRange",
-  //           inRange,
-  //           "RetirementTaxes",
-  //           row.retirementTaxes
-  //         );
-  //         return inRange;
-  //       })
-  //       .reduce((sum, row) => sum + row.retirementTaxes, 0);
-  //     console.log(
-  //       "TaxesDueSum:",
-  //       taxesDueSum,
-  //       "FutureAge:",
-  //       age,
-  //       "YearsRunOut:",
-  //       yearsRunOutOfMoneyInput
-  //     );
-  //
-  //     if (currentRow && taxFreeRow) {
-  //       setSelectedRowData({
-  //         current: {
-  //           startingBalance: formatValue(startingBalance),
-  //           annualContributions: formatValue(annualContributions),
-  //           annualEmployerMatch: formatValue(annualEmployerMatch),
-  //           annualFees: formatValue(currentPlanResults.annualFees, true),
-  //           grossRetirementIncome: formatValue(
-  //             currentRow.grossRetirementIncome
-  //           ),
-  //           incomeTax: formatValue(currentRow.retirementTaxes),
-  //           netRetirementIncome: formatValue(currentRow.retirementIncome),
-  //           cumulativeTaxesDeferred: formatValue(
-  //             currentRow.cumulativeTaxesDeferred
-  //           ),
-  //           cumulativeTaxesPaid: formatValue(
-  //             currentRow.retirementTaxes *
-  //               (age - parseInput(boxesData.retirementAge, 0) + 1)
-  //           ),
-  //           cumulativeFeesPaid: formatValue(currentRow.cumulativeFees),
-  //           cumulativeNetIncome: formatValue(currentRow.cumulativeIncome),
-  //           cumulativeAccountBalance: formatValue(currentRow.endOfYearBalance),
-  //           taxesDue: formatValue(taxesDueSum),
-  //           deathBenefits: formatValue(currentRow.deathBenefit),
-  //           yearsRunOutOfMoney: formatValue(age),
-  //         },
-  //         taxFree: {
-  //           startingBalance: formatValue(iulStartingBalance),
-  //           annualContributions: formatValue(taxFreeRow.annualContributions),
-  //           annualEmployerMatch: formatValue(taxFreeRow.annualEmployerMatch),
-  //           annualFees: formatValue(taxFreeRow.annualFees),
-  //           grossRetirementIncome: formatValue(
-  //             taxFreeRow.grossRetirementIncome
-  //           ),
-  //           incomeTax: formatValue(taxFreeRow.incomeTax),
-  //           netRetirementIncome: formatValue(taxFreeRow.netRetirementIncome),
-  //           cumulativeTaxesDeferred: formatValue(
-  //             taxFreeRow.cumulativeTaxesDeferred
-  //           ),
-  //           cumulativeTaxesPaid: formatValue(taxFreeRow.cumulativeTaxesPaid),
-  //           cumulativeFeesPaid: formatValue(taxFreeRow.cumulativeFeesPaid),
-  //           cumulativeNetIncome: formatValue(taxFreeRow.cumulativeNetIncome),
-  //           cumulativeAccountBalance: formatValue(
-  //             taxFreeRow.cumulativeAccountBalance
-  //           ),
-  //           taxesDue: formatValue(taxFreeRow.taxesDue),
-  //           deathBenefits: formatValue(taxFreeRow.deathBenefits),
-  //           yearsRunOutOfMoney: age.toString(),
-  //         },
-  //       });
-  //     } else {
-  //       setSelectedRowData(null);
-  //     }
-  //   } else {
-  //     setSelectedRowData(null);
-  //     setFutureAgeInput(currentAge);
-  //   }
-  // };
-
   const ageOptions = useMemo(() => {
     const mainTable = tables[0]?.data || [];
     const ages = mainTable
@@ -259,49 +137,6 @@ export function ComparisonTable({
       .sort((a, b) => a - b);
     return [...new Set(ages)];
   }, [tables]);
-
-  // const futureAgeOptions = useMemo(() => {
-  //   const start = Number(boxesData.currentAge) || currentAge;
-  //   const end = Number(yearsRunOutOfMoney || yearsRunOutOfMoneyInput) || 0;
-  //   return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  // }, [
-  //   boxesData.currentAge,
-  //   yearsRunOutOfMoneyInput,
-  //   yearsRunOutOfMoney,
-  //   currentAge,
-  // ]);
-
-  // const handleFutureAgeChange = (value: string) => {
-  //   const age = Number(value);
-  //   if (!isNaN(age) && age >= 0) {
-  //     setFutureAge(age);
-  //     setFutureAgeInput(age);
-  //     onFutureAgeChange(age);
-  //     setActiveInput("futureAge");
-  //   }
-  // };
-
-  // const handleFutureAgeInputChange = (
-  //   e: React.ChangeEvent<HTMLInputElement>
-  // ) => {
-  //   const value = e.target.value;
-  //   setFutureAgeInput(value);
-  //   setActiveInput("futureAge");
-  //   if (value === "") {
-  //     setFutureAgeError("Future age cannot be empty");
-  //     setSelectedRowData(null);
-  //     return;
-  //   }
-  //   const numValue = Number(value);
-  //   if (isFutureAgeInvalid(numValue)) {
-  //     setFutureAgeError("Future age must be greater than current age");
-  //     setSelectedRowData(null);
-  //   } else {
-  //     setFutureAgeError(null);
-  //     setFutureAge(numValue);
-  //     onFutureAgeChange(numValue);
-  //   }
-  // };
 
   const yearsRunOutOfMoneyNumber = Number(yearsRunOutOfMoney);
 
@@ -342,25 +177,12 @@ export function ComparisonTable({
     lastInputYearsRunOut,
   ]);
 
-  /*
   const parseInput = (
     value: string | number | undefined | null,
     fallback: number
   ): number => {
     if (value == null || value === "") return fallback;
     if (typeof value === "number") return value;
-    const parsed = parseFloat(value);
-    return isNaN(parsed) || parsed < 0 ? fallback : parsed;
-  };
-  */
-
-  const parseInput = (
-    value: string | number | undefined | null,
-    fallback: number
-  ): number => {
-    if (value == null || value === "") return fallback;
-    if (typeof value === "number") return value;
-    // Remove dollar signs, commas, and other non-numeric characters except decimal
     const cleaned = value.replace(/[^0-9.]/g, "");
     const parsed = parseFloat(cleaned);
     return isNaN(parsed) || parsed < 0 ? fallback : parsed;
@@ -475,130 +297,20 @@ export function ComparisonTable({
     annualContributions,
     annualEmployerMatch,
     startingBalance,
-    // futureAgeInput,
   ]);
 
-  /*
   const taxFreeResults = useMemo(() => {
-    // const contributionNum = parseInput(annualContributions, 0);
-    // const taxRateNum = parseInput(calculatorTaxRate, 0);
-    // const taxes = contributionNum * (taxRateNum / 100);
-    // const netContribution = contributionNum - taxes;
-
-    const taxFreeAnnualContribution =
-      tables[0]?.annualContributions !== undefined
-        ? parseInput(tables[0].annualContributions, 0)
-        : parseInput(annualContributions, 0);
-
-    const taxRateNum = parseInput(calculatorTaxRate, 0);
-    const taxes = taxFreeAnnualContribution * (taxRateNum / 100);
-    const netContribution = taxFreeAnnualContribution - taxes;
-
-    if (!tables || !tables[0]?.data || tables[0].data.length === 0) {
-      return {
-        startingBalance: parseInput(iulStartingBalance, 0),
-        annualContributions: netContribution,
-        annualEmployerMatch: 0,
-        annualFees: 0,
-        grossRetirementIncome: 0,
-        incomeTax: 0,
-        netRetirementIncome: 0,
-        cumulativeTaxesDeferred: 0,
-        cumulativeTaxesPaid: 0,
-        cumulativeFeesPaid: 0,
-        cumulativeNetIncome: 0,
-        cumulativeAccountBalance: 0,
-        taxesDue: 0,
-        deathBenefits: 0,
-        yearsRunOutOfMoney,
-      };
-    }
-    const results = extractTaxFreeResults(
-      tables,
-      currentAge,
-      yearsRunOutOfMoneyNumber
-    );
-    return {
-      ...results,
-      startingBalance: parseInput(iulStartingBalance, results.startingBalance),
-      annualContributions: netContribution, // Use updated netContribution
-    };
-  }, [
-    tables,
-    currentAge,
-    yearsRunOutOfMoneyNumber,
-    iulStartingBalance,
-    annualContributions, // Ensure live updates
-    calculatorTaxRate, // Ensure tax rate changes trigger recalculation
-  ]);
-  */
-
-  /*
-  const taxFreeResults = useMemo(() => {
-    // Prioritize tables[0]?.data[0]?.["Premium Outlay"], fallback to annualContributions
     const taxFreeAnnualContribution =
       tables[0]?.data[0]?.["Premium Outlay"] !== undefined
         ? parseInput(tables[0].data[0]["Premium Outlay"], 0)
         : parseInput(annualContributions, 0);
 
-    const taxRateNum = parseInput(calculatorTaxRate, 0);
-    const taxes = taxFreeAnnualContribution * (taxRateNum / 100);
-    const netContribution = taxFreeAnnualContribution - taxes;
-
-    if (!tables || !tables[0]?.data || tables[0].data.length === 0) {
-      return {
-        startingBalance: parseInput(iulStartingBalance, 0),
-        annualContributions: netContribution,
-        annualEmployerMatch: 0,
-        annualFees: 0,
-        grossRetirementIncome: 0,
-        incomeTax: 0,
-        netRetirementIncome: 0,
-        cumulativeTaxesDeferred: 0,
-        cumulativeTaxesPaid: 0,
-        cumulativeFeesPaid: 0,
-        cumulativeNetIncome: 0,
-        cumulativeAccountBalance: 0,
-        taxesDue: 0,
-        deathBenefits: 0,
-        yearsRunOutOfMoney,
-      };
-    }
-    const results = extractTaxFreeResults(
-      tables,
-      currentAge,
-      yearsRunOutOfMoneyNumber
-    );
-    return {
-      ...results,
-      startingBalance: parseInput(iulStartingBalance, results.startingBalance),
-      annualContributions: netContribution, // Use updated netContribution
-    };
-  }, [
-    tables,
-    currentAge,
-    yearsRunOutOfMoneyNumber,
-    iulStartingBalance,
-    annualContributions, // Ensure live updates
-    calculatorTaxRate, // Ensure tax rate changes trigger recalculation
-  ]);
-  */
-
-  const taxFreeResults = useMemo(() => {
-    // Prioritize tables[0]?.data[0]?.["Premium Outlay"], fallback to annualContributions
-    const taxFreeAnnualContribution =
-      tables[0]?.data[0]?.["Premium Outlay"] !== undefined
-        ? parseInput(tables[0].data[0]["Premium Outlay"], 0)
-        : parseInput(annualContributions, 0);
-
-    // Debug log to verify data source and value
     console.log("taxFreeAnnualContribution:", taxFreeAnnualContribution, {
       premiumOutlay: tables[0]?.data[0]?.["Premium Outlay"],
       annualContributions,
       isTablesEmpty: !tables || !tables[0]?.data || tables[0].data.length === 0,
     });
 
-    // Apply tax calculation only when falling back to annualContributions
     const taxRateNum = parseInput(calculatorTaxRate, 0);
     const taxes = taxFreeAnnualContribution * (taxRateNum / 100);
     const netContribution = taxFreeAnnualContribution - taxes;
@@ -606,7 +318,7 @@ export function ComparisonTable({
     if (!tables || !tables[0]?.data || tables[0].data.length === 0) {
       return {
         startingBalance: parseInput(iulStartingBalance, 0),
-        annualContributions: netContribution, // Use tax-adjusted value when no table data
+        annualContributions: netContribution,
         annualEmployerMatch: 0,
         annualFees: 0,
         grossRetirementIncome: 0,
@@ -630,15 +342,15 @@ export function ComparisonTable({
     return {
       ...results,
       startingBalance: parseInput(iulStartingBalance, results.startingBalance),
-      annualContributions: taxFreeAnnualContribution, // Use raw value when table data is present
+      annualContributions: taxFreeAnnualContribution,
     };
   }, [
     tables,
     currentAge,
     yearsRunOutOfMoneyNumber,
     iulStartingBalance,
-    annualContributions, // Ensure live updates from TabCalculator
-    calculatorTaxRate, // Ensure tax rate changes trigger recalculation
+    annualContributions,
+    calculatorTaxRate,
   ]);
 
   const handleYearsRunOutOfMoneyChange = (value: string) => {
@@ -647,7 +359,6 @@ export function ComparisonTable({
       setYearsRunOutOfMoney(age);
       setYearsRunOutOfMoneyInput(age);
       setLastInputYearsRunOut(age);
-      // setActiveInput("yearsRunOutOfMoney");
       refreshResults();
     }
   };
@@ -697,8 +408,6 @@ export function ComparisonTable({
     const numValue = Number(value);
     if (!isNaN(numValue) && numValue > currentAge) {
       setYearsRunOutOfMoney(numValue);
-      // onFutureAgeChange(futureAge);
-      // setActiveInput("yearsRunOutOfMoney");
       refreshResults();
     }
   };
@@ -707,7 +416,6 @@ export function ComparisonTable({
     const ageToUse = Number(yearsRunOutOfMoneyInput);
 
     if (!isNaN(ageToUse) && ageToUse > currentAge) {
-      // setFutureAgeError(null);
       const currentPlanTable = runGrossRetirementIncomeLoop(
         parseInput(boxesData.currentAge, 0),
         ageToUse,
@@ -785,21 +493,6 @@ export function ComparisonTable({
         setSelectedRowData(null);
       }
     } else {
-      // setFutureAgeError(
-      //   activeInput === "futureAge"
-      //     ? isFutureAgeInvalid(futureAgeInput)
-      //       ? futureAgeInput === ""
-      //         ? "Future age cannot be empty"
-      //         : Number(futureAgeInput) <= currentAge
-      //         ? "Future age must be greater than current age"
-      //         : "Future age cannot exceed year run out of money"
-      //       : "Invalid future age"
-      //     : isYearsRunOutOfMoneyInvalid(yearsRunOutOfMoneyInput)
-      //     ? yearsRunOutOfMoneyInput === ""
-      //       ? "year run out of money cannot be empty"
-      //       : "year run out of money must be greater than current age"
-      //     : "Invalid year run out of money"
-      // );
       setSelectedRowData(null);
     }
   };
