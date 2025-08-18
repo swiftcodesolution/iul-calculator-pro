@@ -675,9 +675,10 @@ export function ComparisonTable({
       },
       {
         label: "Taxes Due",
-        current: selectedRowData
-          ? selectedRowData.current.taxesDue
-          : formatValue(currentPlanResults.taxesDue),
+        // current: selectedRowData
+        //   ? selectedRowData.current.taxesDue
+        //   : formatValue(currentPlanResults.taxesDue),
+        current: formatValue(0),
         taxes: selectedRowData
           ? selectedRowData.current.taxesDuePercentage
           : formatValue(currentPlanResults.taxesDuePercentage, true),
