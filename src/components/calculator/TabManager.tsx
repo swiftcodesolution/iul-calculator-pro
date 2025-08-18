@@ -204,11 +204,11 @@ const TabContentRenderer = ({
       {tab.type === "totalAdvantage" && (
         <div className="w-full">
           <div className="flex flex-col items-center justify-center p-4 text-center border-black border-2">
-            <h2 className="text-4xl font-bold mb-5">
+            <h2 className="text-2xl font-bold mb-5">
               Your Estimated - Total Advantage
             </h2>
-            <h2 className="text-4xl font-bold mb-5">
-              ${totalAdvantage.total.toLocaleString()}
+            <h2 className="text-3xl font-bold mb-5">
+              ${totalAdvantage.total.toLocaleString()} + Living Benefits
             </h2>
             <div className="w-full flex items-center justify-center gap-2">
               <Button
