@@ -21,6 +21,13 @@ import {
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Subscription {
   id: string;
@@ -65,14 +72,16 @@ export default function SubscriptionsPage() {
   >([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
+  const [sortField, setSortField] = useState<
+    "firstName" | "startDate" | "renewalDate"
+  >("firstName");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchSubscriptions = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch initial subscription data from /api/subscriptions
       const response = await fetch("/api/subscriptions", {
         method: "GET",
         headers: {
@@ -89,7 +98,6 @@ export default function SubscriptionsPage() {
         throw new Error("Invalid response format: Expected an array");
       }
 
-      // Enrich subscriptions with additional user and company data
       const enrichedSubscriptions: Subscription[] = await Promise.all(
         data.map(async (sub) => {
           const userDetails = await fetchUserDetails(sub.userId);
@@ -97,7 +105,7 @@ export default function SubscriptionsPage() {
           return {
             id: userDetails.subscription?.id || `sub_${sub.userId}`,
             userId: sub.userId,
-            stripeCustomerId: undefined, // Not provided by either API
+            stripeCustomerId: undefined,
             stripeSubscriptionId:
               userDetails.subscription?.id || `sub_${sub.userId}`,
             planType: sub.planType,
@@ -112,8 +120,8 @@ export default function SubscriptionsPage() {
               lastName: lastNameParts.join(" ") || undefined,
               cellPhone: userDetails.cellPhone,
               officePhone: userDetails.officePhone,
-              role: userDetails.role || "user", // Ensure role is string
-              status: userDetails.status || "unknown", // Ensure status is string
+              role: userDetails.role || "user",
+              status: userDetails.status || "unknown",
             },
             companyInfo: userDetails.companyInfo,
           };
@@ -132,7 +140,6 @@ export default function SubscriptionsPage() {
     }
   }, []);
 
-  // Fetch additional user and subscription details from /api/users/[userId]
   const fetchUserDetails = async (
     userId: string
   ): Promise<
@@ -196,7 +203,7 @@ export default function SubscriptionsPage() {
     await fetchSubscriptions();
   }, [fetchSubscriptions]);
 
-  const handleSort = () => {
+  const handleSortOrder = () => {
     setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
 
@@ -277,12 +284,22 @@ export default function SubscriptionsPage() {
   };
 
   const sortedSubscriptions = [...filteredSubscriptions].sort((a, b) => {
-    if (!sortOrder) return 0;
-    const aName = a.user.firstName ?? "";
-    const bName = b.user.firstName ?? "";
-    return sortOrder === "asc"
-      ? aName.localeCompare(bName)
-      : bName.localeCompare(aName);
+    if (sortField === "firstName") {
+      const aName = a.user.firstName ?? "";
+      const bName = b.user.firstName ?? "";
+      return sortOrder === "asc"
+        ? aName.localeCompare(bName)
+        : bName.localeCompare(aName);
+    } else if (sortField === "startDate") {
+      const aDate = new Date(a.startDate).getTime();
+      const bDate = new Date(b.startDate).getTime();
+      return sortOrder === "asc" ? aDate - bDate : bDate - aDate;
+    } else if (sortField === "renewalDate") {
+      const aDate = a.renewalDate ? new Date(a.renewalDate).getTime() : 0;
+      const bDate = b.renewalDate ? new Date(b.renewalDate).getTime() : 0;
+      return sortOrder === "asc" ? aDate - bDate : bDate - aDate;
+    }
+    return 0;
   });
 
   useEffect(() => {
@@ -309,19 +326,29 @@ export default function SubscriptionsPage() {
                 className="pl-8 w-64 focus:ring-2 focus:ring-blue-500"
               />
             </div>
+            <Select
+              value={sortField}
+              onValueChange={(
+                value: "firstName" | "startDate" | "renewalDate"
+              ) => setSortField(value)}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="firstName">First Name</SelectItem>
+                <SelectItem value="startDate">Start Date</SelectItem>
+                <SelectItem value="renewalDate">Renewal Date</SelectItem>
+              </SelectContent>
+            </Select>
             <Button
               variant="outline"
               size="sm"
-              onClick={handleSort}
+              onClick={handleSortOrder}
               className="hover:bg-blue-50"
             >
               <ArrowUpDown className="h-4 w-4 mr-2" />
-              Sort{" "}
-              {sortOrder === "asc"
-                ? "A-Z"
-                : sortOrder === "desc"
-                ? "Z-A"
-                : "First Name"}
+              {sortOrder === "asc" ? "Ascending" : "Descending"}
             </Button>
             <Button
               variant="outline"
