@@ -10,9 +10,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw, Eye } from "lucide-react";
+import { Download, RefreshCw, Eye, ArrowLeftIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface Resource {
   id: string;
@@ -27,6 +28,8 @@ export default function DownloadContentPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const router = useRouter();
 
   const fetchResources = async () => {
     setLoading(true);
@@ -65,6 +68,12 @@ export default function DownloadContentPage() {
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-4">
           <div>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/dashboard/home")}
+            >
+              <ArrowLeftIcon /> Home
+            </Button>
             <Image
               src="/logo.png"
               alt="IUL Pro Logo"

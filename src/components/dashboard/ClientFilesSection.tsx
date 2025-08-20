@@ -15,6 +15,7 @@ import DialogContentRenderer from "./DialogContentRenderer";
 import { useRouter } from "next/navigation";
 import { useFileContext } from "@/context/FileContext";
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 const newClientVariant: Variants = {
   hidden: { opacity: 0, scale: 0.8, y: 10 },
@@ -60,8 +61,8 @@ export default function ClientFilesSection({
   handleClientAction,
   handleDragStart,
   handleDrop,
-}: // isRefreshing,
-ClientFilesSectionProps) {
+  isRefreshing,
+}: ClientFilesSectionProps) {
   const router = useRouter();
   const { selectedFileId: contextFileId, setSelectedFileId } = useFileContext();
   const [dropWarningOpen, setDropWarningOpen] = useState(false);
@@ -79,36 +80,38 @@ ClientFilesSectionProps) {
   return (
     <Card className="h-full">
       <CardContent className="space-y-4 flex flex-col h-full">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
-          className="text-xl font-bold"
-        >
-          IUL Client Files
-        </motion.h2>
-        {/* <motion.div
-          whileHover={{ scale: 1.05, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
-          whileTap={{ scale: 0.95 }}
-          className="w-min"
-        >
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleClientAction("latest")}
-            disabled={isRefreshing}
-            className="flex items-center gap-2"
+        <div className="w-full flex items-center justify-between">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
+            className="text-xl font-bold"
           >
-            {isRefreshing ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Refreshing
-              </>
-            ) : (
-              "Get Latest"
-            )}
-          </Button>
-        </motion.div> */}
+            IUL Client Files
+          </motion.h2>
+          <motion.div
+            whileHover={{ scale: 1.05, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+            whileTap={{ scale: 0.95 }}
+            className="w-min"
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleClientAction("latest")}
+              disabled={isRefreshing}
+              className="flex items-center gap-2"
+            >
+              {isRefreshing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Refreshing
+                </>
+              ) : (
+                "Get Latest"
+              )}
+            </Button>
+          </motion.div>
+        </div>
         <div className="grid grid-cols-4 gap-2 flex-1">
           {[
             "Pro Sample Files",
