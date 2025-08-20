@@ -203,7 +203,7 @@ const TabContentRenderer = ({
     <div className="w-full h-full space-y-4">
       {tab.type === "totalAdvantage" && (
         <div className="w-full">
-          <div className="flex flex-col items-center justify-center p-4 text-center border-black border-2">
+          <div className="mb-5 flex flex-col items-center justify-center p-4 text-center border-black border-2">
             <h2 className="text-2xl font-bold mb-5">
               Your Estimated - Total Advantage
             </h2>
@@ -284,6 +284,15 @@ const TabContentRenderer = ({
                 {totalAdvantage.deathBenefits.toLocaleString()}
               </Button>
             </div>
+          </div>
+          <div className="flex flex-col items-center space-y-2 text-center">
+            <h2 className="text-xl font-bold mb-2">
+              IUL Built-In Living Benefit Protection - Can Your 401(k) Compete?
+            </h2>
+            <p>
+              Critical Illness|Chronic Illness|Long-Term Care|Lifetime
+              Income|Longevity Protection
+            </p>
           </div>
         </div>
       )}
