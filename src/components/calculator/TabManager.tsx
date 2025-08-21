@@ -211,7 +211,7 @@ const TabContentRenderer = ({
               ${totalAdvantage.total.toLocaleString()} + Living Benefits
             </h2>
             <div className="w-full flex items-center justify-center gap-2">
-              <Button
+              {/* <Button
                 variant="outline"
                 className={`cursor-pointer p-6 min-w-1/5 
                   ${
@@ -229,7 +229,7 @@ const TabContentRenderer = ({
               >
                 Taxes saved:
                 <br />${totalAdvantage.cumulativeTaxesPaid.toLocaleString()}
-              </Button>
+              </Button> */}
               <Button
                 variant="outline"
                 className={`cursor-pointer p-6 min-w-1/5 ${
