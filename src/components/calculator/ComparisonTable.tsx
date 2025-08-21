@@ -853,7 +853,8 @@ export function ComparisonTable({
       );
 
       const totalAdvantage: TotalAdvantage = {
-        total: cumulativeTaxesPaid + fees + cumulativeIncome + deathBenefits,
+        // total: cumulativeTaxesPaid + fees + cumulativeIncome + deathBenefits,
+        total: fees + cumulativeIncome + deathBenefits,
         cumulativeTaxesPaid,
         fees,
         cumulativeIncome,
