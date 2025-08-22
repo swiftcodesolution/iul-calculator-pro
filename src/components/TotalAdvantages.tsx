@@ -89,8 +89,8 @@ const TotalAdvantageTab = ({
             <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
               <h3 className="text-lg font-medium mb-2">Zero Taxes on Income</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Structured withdrawals and policy loans are designed to be
-                tax-free under current IRS guidelines.
+                Structured withdrawals and policy loans <br /> are designed to
+                be tax-free under current IRS guidelines.
               </p>
             </div>
             <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
@@ -98,22 +98,37 @@ const TotalAdvantageTab = ({
                 Zero Loss When Markets Crash
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Thanks to built-in floor protection, clients never lose
+                Thanks to built-in floor protection, <br /> clients never lose
                 principal due to market downturns.
               </p>
             </div>
           </div>
         </div>
         <div className="flex flex-col items-center">
-          <h2 className="text-xl font-semibold mb-4 text-center">
+          <h2 className="text-lg font-medium mb-2">
             Living Benefits Available Through Most Major IUL Providers
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
             Ask your agent for details
           </p>
           <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
-            Lifetime Income | Critical Illness | Chronic Illness | Terminal
-            Illness
+            Lifetime Income <span className="font-bold">|</span> Critical
+            Illness <span className="font-bold">|</span> Chronic Illness{" "}
+            <span className="font-bold">|</span> Terminal Illness
+          </p>
+        </div>
+        <div className="flex flex-col items-center">
+          <h2 className="text-xl font-semibold mb-4 text-center">
+            This Isn&apos;t a Loophole - It&apos;s a Legal Alternative
+          </h2>
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-300 max-w-4xl">
+            Unlike qualified plans like 401(k)s, which are governed by ERISA and
+            IRS contribution limits, Indexed Universal Life (IUL) is regulated
+            under TEFRA, DEFRA, and TAMRA, and must meet strict guidelines under
+            IRC Section 7702. When structured correctly, IUL offers tax-free
+            accumulation and access, with no age restrictions or required
+            minimum distributions. It&apos;s not a workaround - it&apos;s a
+            compliant, IRS-recognized strategy.
           </p>
         </div>
       </div>
