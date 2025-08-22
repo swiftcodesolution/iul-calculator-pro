@@ -28,6 +28,7 @@ import CagrChart from "../CagrChart";
 import { useSession } from "next-auth/react";
 import AnnualContributionCalculatorForIUL from "../AnnualContributionCalculatorForIUL";
 import TaxBracketTab from "../TaxBracketTab";
+import TotalAdvantageTab from "../TotalAdvantages";
 
 interface TabManagerProps {
   activeTab: string | null;
@@ -178,15 +179,15 @@ const TabContentRenderer = ({
   totalAdvantage: TotalAdvantage;
   handleCellClick?: (rowIndex: number) => void;
 }) => {
-  const { activeButtons, setActiveButtons } = useTableStore();
+  // const { activeButtons, setActiveButtons } = useTableStore();
 
-  const toggleButton = (id: number) => {
-    setActiveButtons({
-      ...activeButtons,
-      [id]: !activeButtons[id],
-    });
-    handleCellClick?.(id);
-  };
+  // const toggleButton = (id: number) => {
+  //   setActiveButtons({
+  //     ...activeButtons,
+  //     [id]: !activeButtons[id],
+  //   });
+  //   handleCellClick?.(id);
+  // };
 
   const getEmbedUrl = (link: string | null) => {
     if (!link) return null;
@@ -202,123 +203,10 @@ const TabContentRenderer = ({
   return (
     <div className="w-full h-full space-y-4">
       {tab.type === "totalAdvantage" && (
-        <div className="w-full">
-          <div className="mb-5 flex flex-col items-center justify-center p-4 text-center border-black border-2">
-            <h2 className="text-2xl font-bold mb-5">
-              Your Estimated - Total Advantage
-            </h2>
-            <h2 className="text-3xl font-bold mb-5">
-              ${totalAdvantage.total.toLocaleString()} + Living Benefits
-            </h2>
-            <div className="w-full flex items-center justify-center gap-2">
-              {/* <Button
-                variant="outline"
-                className={`cursor-pointer p-6 min-w-1/5 
-                  ${
-                    activeButtons[8]
-                      ? "bg-red-300 hover:bg-red-300 dark:bg-red-300 dark:hover:bg-red-300 text-black dark:text-black"
-                      : ""
-                  } 
-                  ${
-                    totalAdvantage.cumulativeTaxesPaid < 0
-                      ? "border-red-500 text-red-500  font-bold"
-                      : ""
-                  } 
-                `}
-                onClick={() => toggleButton?.(8)}
-              >
-                Taxes saved:
-                <br />${totalAdvantage.cumulativeTaxesPaid.toLocaleString()}
-              </Button> */}
-              <Button
-                variant="outline"
-                className={`cursor-pointer p-6 min-w-1/5 ${
-                  activeButtons[9]
-                    ? "bg-red-300 hover:bg-red-300 dark:bg-red-300 dark:hover:bg-red-300 text-black dark:text-black"
-                    : ""
-                }
-                ${
-                  totalAdvantage.fees < 0
-                    ? "border-red-500 text-red-500  font-bold"
-                    : ""
-                } 
-                `}
-                onClick={() => toggleButton?.(9)}
-              >
-                Fees Saved: <br /> ${totalAdvantage.fees.toLocaleString()}
-              </Button>
-              <Button
-                variant="outline"
-                className={`cursor-pointer p-6 min-w-1/5 ${
-                  activeButtons[10]
-                    ? "bg-red-300 hover:bg-red-300 dark:bg-red-300 dark:hover:bg-red-300 text-black dark:text-black"
-                    : ""
-                }
-                ${
-                  totalAdvantage.cumulativeIncome < 0
-                    ? "border-red-500 text-red-500  font-bold"
-                    : ""
-                } 
-                `}
-                onClick={() => toggleButton?.(10)}
-              >
-                Extra Income: <br /> $
-                {totalAdvantage.cumulativeIncome.toLocaleString()}
-              </Button>
-              <Button
-                variant="outline"
-                className={`cursor-pointer p-6 min-w-1/5 ${
-                  activeButtons[13]
-                    ? "bg-red-300 hover:bg-red-300 dark:bg-red-300 dark:hover:bg-red-300 text-black dark:text-black"
-                    : ""
-                }
-                ${
-                  totalAdvantage.deathBenefits < 0
-                    ? "border-red-500 text-red-500  font-bold"
-                    : ""
-                } 
-                `}
-                onClick={() => toggleButton?.(13)}
-              >
-                Death Benefit: <br /> $
-                {totalAdvantage.deathBenefits.toLocaleString()}
-              </Button>
-            </div>
-          </div>
-          <div className="flex flex-col items-center space-y-2 text-center">
-            <h2 className="text-xl font-bold mb-2">Plus, A Guarantee Of</h2>
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold mb-1">
-                  Zero Taxes on Income:
-                </h2>
-                <p>
-                  Structured withdrawals and policy loans are designed to be
-                  tax-free under current IRS guidelines.
-                </p>
-              </div>
-              <div>
-                <h2 className="text-lg font-bold mb-1">
-                  Zero Loss When Markets Crash:
-                </h2>
-                <p>
-                  Thanks to built-in floor protection, clients never lose
-                  principal due to market downturns.
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col items-center space-y-2 text-center">
-            <h2 className="text-xl font-bold mb-2">
-              Living Benefits Are Available Through Most Major IUl Providers
-              <br />
-              Ask Your Agent For Details
-            </h2>
-            <p>
-              Lifetime Income|Critical Illness|Chronic Illness|Terminal Illness
-            </p>
-          </div>
-        </div>
+        <TotalAdvantageTab
+          totalAdvantage={totalAdvantage}
+          handleCellClick={handleCellClick}
+        />
       )}
       {tab.type === "2025TaxBrackets" && (
         <div className="h-full w-full flex items-center justify-center gap-4 text-center">
