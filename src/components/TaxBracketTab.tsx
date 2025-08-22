@@ -26,7 +26,7 @@ export default function TaxBracketTab() {
     ["12%", "311,826 49,47%", "22,691 - 95,450", "$17,001 - -68,250"],
     ["22%", "$49,476 - 102,350", "969,911 $200,701", "$64,891 -122,330"],
     ["24%", "$103,991 - 197,300", "206,701 - $354,300", "103,291 - $197,300"],
-    ["32%", "$100,591 - 325,538", "501,081 - 751,900", "250,501  -636,390"],
+    ["32%", "$100,591 - 325,538", "501,081 - 751,900", "250,501  -636,390 "],
   ];
 
   return (
@@ -40,7 +40,7 @@ export default function TaxBracketTab() {
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800">
           <div className="max-h-[400px] overflow-y-auto">
             <table
-              className="w-full text-sm border-collapse"
+              className="w-full text-sm border-collapse border border-gray-800 dark:border-gray-700"
               role="grid"
               aria-label="Federal Tax Brackets Table"
             >
@@ -59,11 +59,11 @@ export default function TaxBracketTab() {
                       tabIndex={0}
                       role="columnheader"
                       className={cn(
-                        "p-3 text-center font-medium text-gray-700 dark:text-gray-200 cursor-pointer transition-colors",
+                        "border border-gray-900 p-3 text-center font-medium text-gray-700 dark:text-gray-200 cursor-pointer transition-colors",
                         "hover:bg-gray-100 dark:hover:bg-gray-700",
                         selectedColumn === i
                           ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
-                          : "border-b border-gray-200 dark:border-gray-700"
+                          : "border-b border-gray-900 dark:border-gray-700"
                       )}
                     >
                       {header}
@@ -85,7 +85,7 @@ export default function TaxBracketTab() {
                     tabIndex={0}
                     role="row"
                     className={cn(
-                      "transition-colors duration-200",
+                      "transition-colors duration-200 border border-b border-gray-700 dark:border-gray-700 cursor-pointer",
                       selectedYear === row[0]
                         ? "bg-blue-50 dark:bg-blue-900/50"
                         : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
@@ -95,7 +95,7 @@ export default function TaxBracketTab() {
                       <td
                         key={j}
                         className={cn(
-                          "p-3 border-t border-gray-100 dark:border-gray-700",
+                          "p-3 border-t border-gray-900 dark:border-gray-700 border",
                           selectedColumn === j
                             ? "bg-blue-100/50 dark:bg-blue-800/50"
                             : ""

@@ -286,12 +286,36 @@ const TabContentRenderer = ({
             </div>
           </div>
           <div className="flex flex-col items-center space-y-2 text-center">
+            <h2 className="text-xl font-bold mb-2">Plus, A Guarantee Of</h2>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold mb-1">
+                  Zero Taxes on Income:
+                </h2>
+                <p>
+                  Structured withdrawals and policy loans are designed to be
+                  tax-free under current IRS guidelines.
+                </p>
+              </div>
+              <div>
+                <h2 className="text-lg font-bold mb-1">
+                  Zero Loss When Markets Crash:
+                </h2>
+                <p>
+                  Thanks to built-in floor protection, clients never lose
+                  principal due to market downturns.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col items-center space-y-2 text-center">
             <h2 className="text-xl font-bold mb-2">
-              IUL Built-In Living Benefit Protection - Can Your 401(k) Compete?
+              Living Benefits Are Available Through Most Major IUl Providers
+              <br />
+              Ask Your Agent For Details
             </h2>
             <p>
-              Critical Illness|Chronic Illness|Long-Term Care|Lifetime
-              Income|Longevity Protection
+              Lifetime Income|Critical Illness|Chronic Illness|Terminal Illness
             </p>
           </div>
         </div>
