@@ -24,12 +24,12 @@ const TotalAdvantageTab = ({
   };
 
   return (
-    <div className="w-full h-full space-y-6">
-      <div className="flex flex-col items-center justify-center p-6 text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg">
-        <h2 className="text-2xl font-semibold mb-4">
+    <div className="w-full h-full space-y-2">
+      <div className="flex flex-col items-center justify-center p-4 text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg">
+        <h2 className="text-xl font-semibold mb-2">
           Your Estimated - Total Advantage
         </h2>
-        <h2 className="text-3xl font-bold mb-6">
+        <h2 className="text-2xl font-bold mb-2">
           ${totalAdvantage.total.toLocaleString()} + Living Benefits
         </h2>
         <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -82,19 +82,19 @@ const TotalAdvantageTab = ({
           </Button>
         </div>
       </div>
-      <div className="space-y-6 text-center">
+      <div className="space-y-2 text-center">
         <div className="flex flex-col items-center">
-          <h2 className="text-xl font-semibold mb-4">Plus, A Guarantee Of</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full">
-            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
-              <h3 className="text-lg font-medium mb-2">Zero Taxes on Income</h3>
+          <h2 className="text-xl font-semibold mb-2">Plus, A Guarantee Of</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl w-full">
+            <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
+              <h3 className="text-lg font-medium mb-1">Zero Taxes on Income</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
                 Structured withdrawals and policy loans <br /> are designed to
                 be tax-free under current IRS guidelines.
               </p>
             </div>
-            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
-              <h3 className="text-lg font-medium mb-2">
+            <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
+              <h3 className="text-lg font-medium mb-1">
                 Zero Loss When Markets Crash
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
