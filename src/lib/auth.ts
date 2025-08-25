@@ -208,7 +208,7 @@ export const authOptions: NextAuthOptions = {
         // Fetch subscription status
         try {
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/subscription`,
+            `${process.env.NEXT_PUBLIC_APP_URL}/api/subscription`,
             {
               headers: { Authorization: `Bearer ${token.jti}` },
             }
