@@ -38,6 +38,7 @@ interface Subscription {
   status: string;
   startDate: string;
   renewalDate?: string;
+  remainingDays?: number;
   user: {
     id: string;
     email: string;
@@ -61,6 +62,7 @@ interface SubscriptionApiResponse {
   status: string;
   planType: string;
   endDate?: string;
+  remainingDays?: number;
   userEmail: string;
   userName: string;
 }
@@ -73,7 +75,7 @@ export default function SubscriptionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sortField, setSortField] = useState<
-    "firstName" | "startDate" | "renewalDate"
+    "firstName" | "startDate" | "renewalDate" | "remainingDays"
   >("firstName");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [searchQuery, setSearchQuery] = useState("");
@@ -113,6 +115,7 @@ export default function SubscriptionsPage() {
             startDate:
               userDetails.subscription?.startDate || new Date().toISOString(),
             renewalDate: sub.endDate,
+            remainingDays: sub.remainingDays,
             user: {
               id: sub.userId,
               email: sub.userEmail,
@@ -298,6 +301,10 @@ export default function SubscriptionsPage() {
       const aDate = a.renewalDate ? new Date(a.renewalDate).getTime() : 0;
       const bDate = b.renewalDate ? new Date(b.renewalDate).getTime() : 0;
       return sortOrder === "asc" ? aDate - bDate : bDate - aDate;
+    } else if (sortField === "remainingDays") {
+      const aDays = a.remainingDays ?? Infinity;
+      const bDays = b.remainingDays ?? Infinity;
+      return sortOrder === "asc" ? aDays - bDays : bDays - aDays;
     }
     return 0;
   });
@@ -339,6 +346,7 @@ export default function SubscriptionsPage() {
                 <SelectItem value="firstName">First Name</SelectItem>
                 <SelectItem value="startDate">Start Date</SelectItem>
                 <SelectItem value="renewalDate">Renewal Date</SelectItem>
+                <SelectItem value="remainingDays">Remaining Days</SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -438,6 +446,9 @@ export default function SubscriptionsPage() {
                     <TableHead className="text-sm high-contrast:text-black">
                       Renewal Date
                     </TableHead>
+                    <TableHead className="text-sm high-contrast:text-black">
+                      Remaining Days
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -501,6 +512,11 @@ export default function SubscriptionsPage() {
                         <TableCell className="text-sm">
                           {sub.renewalDate
                             ? new Date(sub.renewalDate).toLocaleDateString()
+                            : "N/A"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {sub.remainingDays !== undefined
+                            ? sub.remainingDays
                             : "N/A"}
                         </TableCell>
                       </TableRow>

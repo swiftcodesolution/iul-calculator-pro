@@ -35,16 +35,40 @@ export async function GET() {
     });
 
     return NextResponse.json(
-      subscriptions.map((sub) => ({
-        userId: sub.userId,
-        status: sub.status,
-        planType: sub.planType,
-        endDate: sub.renewalDate?.toISOString(),
-        userEmail: sub.user?.email,
-        userName:
-          `${sub.user?.firstName || ""} ${sub.user?.lastName || ""}`.trim() ||
-          "Unknown",
-      }))
+      // subscriptions.map((sub) => ({
+      //   userId: sub.userId,
+      //   status: sub.status,
+      //   planType: sub.planType,
+      //   endDate: sub.renewalDate?.toISOString(),
+      //   userEmail: sub.user?.email,
+      //   userName:
+      //     `${sub.user?.firstName || ""} ${sub.user?.lastName || ""}`.trim() ||
+      //     "Unknown",
+      // }))
+      subscriptions.map((sub) => {
+        const endDate = sub.renewalDate?.toISOString();
+        const remainingDays = endDate
+          ? Math.max(
+              0,
+              Math.ceil(
+                (new Date(endDate).getTime() - Date.now()) /
+                  (1000 * 60 * 60 * 24)
+              )
+            )
+          : null;
+
+        return {
+          userId: sub.userId,
+          status: sub.status,
+          planType: sub.planType,
+          endDate,
+          remainingDays, // 👈 added
+          userEmail: sub.user?.email,
+          userName:
+            `${sub.user?.firstName || ""} ${sub.user?.lastName || ""}`.trim() ||
+            "Unknown",
+        };
+      })
     );
   } catch (error) {
     console.error("Subscription fetch error:", error);
