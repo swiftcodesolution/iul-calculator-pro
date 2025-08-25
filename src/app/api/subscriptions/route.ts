@@ -13,6 +13,12 @@ export async function GET() {
 
   try {
     const subscriptions = await prisma.subscription.findMany({
+      where: {
+        user: {
+          // only include subscriptions where a related user exists
+          isNot: null,
+        },
+      },
       select: {
         userId: true,
         status: true,
@@ -34,9 +40,9 @@ export async function GET() {
         status: sub.status,
         planType: sub.planType,
         endDate: sub.renewalDate?.toISOString(),
-        userEmail: sub.user.email,
+        userEmail: sub.user?.email,
         userName:
-          `${sub.user.firstName || ""} ${sub.user.lastName || ""}`.trim() ||
+          `${sub.user?.firstName || ""} ${sub.user?.lastName || ""}`.trim() ||
           "Unknown",
       }))
     );

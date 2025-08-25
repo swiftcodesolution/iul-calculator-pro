@@ -38,7 +38,6 @@ interface Subscription {
   status: string;
   startDate: string;
   renewalDate?: string;
-  trialEndDate?: string | null;
   user: {
     id: string;
     email: string;
@@ -74,14 +73,7 @@ export default function SubscriptionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sortField, setSortField] = useState<
-    | "firstName"
-    | "email"
-    | "businessName"
-    | "planType"
-    | "status"
-    | "startDate"
-    | "renewalDate"
-    | "trialEndDate"
+    "firstName" | "startDate" | "renewalDate"
   >("firstName");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [searchQuery, setSearchQuery] = useState("");
@@ -121,7 +113,6 @@ export default function SubscriptionsPage() {
             startDate:
               userDetails.subscription?.startDate || new Date().toISOString(),
             renewalDate: sub.endDate,
-            trialEndDate: userDetails.trialEndDate,
             user: {
               id: sub.userId,
               email: sub.userEmail,
@@ -158,7 +149,6 @@ export default function SubscriptionsPage() {
         id: string;
         startDate: string;
       };
-      trialEndDate?: string | null;
     }
   > => {
     try {
@@ -197,7 +187,6 @@ export default function SubscriptionsPage() {
               startDate: data.subscription.startDate,
             }
           : undefined,
-        trialEndDate: data.trialToken?.expiresAt,
       };
     } catch (err) {
       console.error(`Error fetching user ${userId}:`, err);
@@ -232,15 +221,6 @@ export default function SubscriptionsPage() {
     setFilteredSubscriptions(filtered);
   };
 
-  const formatTrialTimeRemaining = (trialEndDate?: string | null) => {
-    if (!trialEndDate) return "N/A";
-    const endDate = new Date(trialEndDate);
-    const today = new Date();
-    const diffTime = endDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return `${endDate.toLocaleDateString()} (+${diffDays} days)`;
-  };
-
   const downloadCSV = () => {
     const headers = [
       "Subscription ID",
@@ -260,7 +240,6 @@ export default function SubscriptionsPage() {
       "Subscription Status",
       "Start Date",
       "Renewal Date",
-      "Trial Time Remaining",
     ];
     const csvRows = [
       headers.join(","),
@@ -285,7 +264,6 @@ export default function SubscriptionsPage() {
           sub.renewalDate
             ? new Date(sub.renewalDate).toLocaleDateString()
             : "N/A",
-          formatTrialTimeRemaining(sub.trialEndDate),
         ].join(",")
       ),
     ];
@@ -312,24 +290,6 @@ export default function SubscriptionsPage() {
       return sortOrder === "asc"
         ? aName.localeCompare(bName)
         : bName.localeCompare(aName);
-    } else if (sortField === "email") {
-      return sortOrder === "asc"
-        ? a.user.email.localeCompare(b.user.email)
-        : b.user.email.localeCompare(a.user.email);
-    } else if (sortField === "businessName") {
-      const aBusiness = a.companyInfo?.businessName ?? "";
-      const bBusiness = b.companyInfo?.businessName ?? "";
-      return sortOrder === "asc"
-        ? aBusiness.localeCompare(bBusiness)
-        : bBusiness.localeCompare(aBusiness);
-    } else if (sortField === "planType") {
-      return sortOrder === "asc"
-        ? a.planType.localeCompare(b.planType)
-        : b.planType.localeCompare(a.planType);
-    } else if (sortField === "status") {
-      return sortOrder === "asc"
-        ? a.status.localeCompare(b.status)
-        : b.status.localeCompare(a.status);
     } else if (sortField === "startDate") {
       const aDate = new Date(a.startDate).getTime();
       const bDate = new Date(b.startDate).getTime();
@@ -337,10 +297,6 @@ export default function SubscriptionsPage() {
     } else if (sortField === "renewalDate") {
       const aDate = a.renewalDate ? new Date(a.renewalDate).getTime() : 0;
       const bDate = b.renewalDate ? new Date(b.renewalDate).getTime() : 0;
-      return sortOrder === "asc" ? aDate - bDate : bDate - aDate;
-    } else if (sortField === "trialEndDate") {
-      const aDate = a.trialEndDate ? new Date(a.trialEndDate).getTime() : 0;
-      const bDate = b.trialEndDate ? new Date(b.trialEndDate).getTime() : 0;
       return sortOrder === "asc" ? aDate - bDate : bDate - aDate;
     }
     return 0;
@@ -373,15 +329,7 @@ export default function SubscriptionsPage() {
             <Select
               value={sortField}
               onValueChange={(
-                value:
-                  | "firstName"
-                  | "email"
-                  | "businessName"
-                  | "planType"
-                  | "status"
-                  | "startDate"
-                  | "renewalDate"
-                  | "trialEndDate"
+                value: "firstName" | "startDate" | "renewalDate"
               ) => setSortField(value)}
             >
               <SelectTrigger className="w-[180px]">
@@ -389,13 +337,8 @@ export default function SubscriptionsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="firstName">First Name</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="businessName">Business Name</SelectItem>
-                <SelectItem value="planType">Plan Type</SelectItem>
-                <SelectItem value="status">Subscription Status</SelectItem>
                 <SelectItem value="startDate">Start Date</SelectItem>
                 <SelectItem value="renewalDate">Renewal Date</SelectItem>
-                <SelectItem value="trialEndDate">Trial End Date</SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -495,15 +438,12 @@ export default function SubscriptionsPage() {
                     <TableHead className="text-sm high-contrast:text-black">
                       Renewal Date
                     </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      Trial Time Remaining
-                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={16} className="text-sm text-center">
+                      <TableCell colSpan={15} className="text-sm text-center">
                         Loading...
                       </TableCell>
                     </TableRow>
@@ -563,14 +503,11 @@ export default function SubscriptionsPage() {
                             ? new Date(sub.renewalDate).toLocaleDateString()
                             : "N/A"}
                         </TableCell>
-                        <TableCell className="text-sm">
-                          {formatTrialTimeRemaining(sub.trialEndDate)}
-                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={16} className="text-sm text-center">
+                      <TableCell colSpan={15} className="text-sm text-center">
                         No subscriptions available
                       </TableCell>
                     </TableRow>
