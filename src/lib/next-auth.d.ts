@@ -19,6 +19,7 @@ interface CustomUser {
   deviceFingerprint?: string | null;
   role: string;
   status: string;
+  subscriptionStatus?: string;
 }
 
 // Extend next-auth types for Session and User

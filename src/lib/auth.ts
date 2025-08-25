@@ -194,11 +194,37 @@ export const authOptions: NextAuthOptions = {
         throw new Error("Invalid session: token blacklisted");
       }
 
+      // if (session.user) {
+      //   session.user.id = token.id as string;
+      //   // session.user.deviceFingerprint = token.deviceFingerprint as string;
+      //   session.user.role = token.role as string;
+      // }
+
       if (session.user) {
         session.user.id = token.id as string;
-        // session.user.deviceFingerprint = token.deviceFingerprint as string;
         session.user.role = token.role as string;
+        session.user.status = token.status as string;
+
+        // Fetch subscription status
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/subscription`,
+            {
+              headers: { Authorization: `Bearer ${token.jti}` },
+            }
+          );
+          if (res.ok) {
+            const { status } = await res.json();
+            session.user.subscriptionStatus = status;
+          } else {
+            session.user.subscriptionStatus = "inactive";
+          }
+        } catch (error) {
+          console.error("Session subscription fetch error:", error);
+          session.user.subscriptionStatus = "inactive";
+        }
       }
+
       return session;
     },
 

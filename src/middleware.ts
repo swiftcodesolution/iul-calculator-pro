@@ -1,3 +1,4 @@
+// middleware.ts
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
@@ -7,8 +8,7 @@ export default withAuth(
     const pathname = req.nextUrl.pathname;
     const token = req.nextauth?.token;
     const sessionToken = req.cookies.get("next-auth.session-token")?.value;
-    const userRole = req.cookies.get("user-role")?.value || "user";
-    const subscriptionStatus = req.cookies.get("subscription-status")?.value;
+    const userRole = token?.role || "user";
 
     // Log for debugging
     console.log("Middleware:", {
@@ -16,6 +16,7 @@ export default withAuth(
       isAuthenticated: !!token,
       role: token?.role,
       status: token?.status,
+      subscriptionStatus: token?.subscriptionStatus,
       sessionToken,
     });
 
@@ -34,10 +35,10 @@ export default withAuth(
       }
     }
 
-    // Check subscription status from cookie
+    // Check subscription status from token
     if (
       token &&
-      (token.status === "suspended" || subscriptionStatus !== "active")
+      (token.status === "suspended" || token.subscriptionStatus !== "active")
     ) {
       const redirectUrl = new URL("/subscribe", req.url);
       redirectUrl.searchParams.set("callbackUrl", pathname);
@@ -75,9 +76,6 @@ export default withAuth(
     callbacks: {
       authorized: ({ req, token }) => {
         const pathname = req.nextUrl.pathname;
-        const subscriptionStatus = req.cookies.get(
-          "subscription-status"
-        )?.value;
 
         // Allow public pages
         if (
@@ -94,7 +92,7 @@ export default withAuth(
             !!token &&
             token.role === "agent" &&
             token.status === "active" &&
-            subscriptionStatus === "active"
+            token.subscriptionStatus === "active"
           );
         }
 
@@ -104,7 +102,7 @@ export default withAuth(
             !!token &&
             token.role === "admin" &&
             token.status === "active" &&
-            subscriptionStatus === "active"
+            token.subscriptionStatus === "active"
           );
         }
 
