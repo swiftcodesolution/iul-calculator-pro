@@ -1,6 +1,7 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import prisma from "@/lib/connect";
 
 export default withAuth(
   async function middleware(req: NextRequest) {
@@ -13,11 +14,12 @@ export default withAuth(
       pathname,
       isAuthenticated: !!token,
       role: token?.role,
+      status: token?.status,
       sessionToken,
-
       cookies: req.cookies.getAll(),
     });
 
+    // Check if user is authenticated
     if (!token && !sessionToken) {
       if (
         pathname.startsWith("/dashboard") ||
@@ -33,10 +35,38 @@ export default withAuth(
       }
     }
 
-    // Allow unauthenticated access to login pages
-    if (pathname === "/" || pathname === "/admin") {
+    // Check user and subscription status
+    if (token) {
+      const subscription = await prisma.subscription.findFirst({
+        where: { userId: token.id as string },
+      });
+
+      const isSubscriptionExpired =
+        subscription?.status === "trialing" &&
+        subscription?.renewalDate &&
+        new Date(subscription.renewalDate) < new Date();
+
+      if (
+        token.status === "suspended" ||
+        (subscription &&
+          (isSubscriptionExpired || subscription.status !== "active"))
+      ) {
+        console.log(
+          "User is suspended or subscription is invalid, redirecting to /subscribe"
+        );
+        const redirectUrl = new URL("/subscribe", req.url);
+        redirectUrl.searchParams.set("callbackUrl", pathname);
+        return NextResponse.redirect(redirectUrl);
+      }
+    }
+
+    // Allow unauthenticated access to login and subscribe pages
+    if (
+      pathname === "/" ||
+      pathname === "/admin" ||
+      pathname === "/subscribe"
+    ) {
       if (token) {
-        // Redirect authenticated users based on role
         const redirectPath =
           token.role === "admin" ? "/admin/dashboard" : "/dashboard/home";
         console.log(`Redirecting to ${redirectPath}`);
@@ -53,7 +83,7 @@ export default withAuth(
     ) {
       console.log("Redirecting to /");
       const redirectUrl = new URL("/", req.url);
-      redirectUrl.searchParams.set("callbackUrl", pathname); // Preserve callbackUrl
+      redirectUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(redirectUrl);
     }
 
@@ -68,35 +98,63 @@ export default withAuth(
         console.log("Authorized callback:", {
           pathname,
           role: token?.role,
+          status: token?.status,
           sessionToken,
           token: token || "no token",
-        }); // Debug
+        });
 
-        // Allow access to login pages
-        if (pathname === "/" || pathname === "/admin") {
+        // Allow access to login and subscribe pages
+        if (
+          pathname === "/" ||
+          pathname === "/admin" ||
+          pathname === "/subscribe"
+        ) {
           return true;
+        }
+
+        // Check subscription status for protected routes
+        if (token) {
+          const subscription = await prisma.subscription.findFirst({
+            where: { userId: token.id as string },
+          });
+
+          const isSubscriptionExpired =
+            subscription?.status === "trialing" &&
+            subscription?.renewalDate &&
+            new Date(subscription.renewalDate) < new Date();
+
+          if (
+            token.status === "suspended" ||
+            (subscription &&
+              (isSubscriptionExpired || subscription.status !== "active"))
+          ) {
+            return false;
+          }
         }
 
         // Protect dashboard routes
         if (pathname.startsWith("/dashboard")) {
-          // return !!token; // Allow any authenticated user for testing
-          return !!token && token?.role === "agent"; // Re-enable for strict role check
+          return (
+            !!token && token?.role === "agent" && token?.status === "active"
+          );
         }
 
         // Protect admin dashboard routes
         if (pathname.startsWith("/admin/dashboard")) {
-          return !!token && token?.role === "admin";
+          return (
+            !!token && token?.role === "admin" && token?.status === "active"
+          );
         }
 
-        return false; // Deny other protected routes
+        return false;
       },
     },
     pages: {
-      signIn: "/", // Default sign-in page
+      signIn: "/",
     },
   }
 );
 
 export const config = {
-  matcher: ["/", "/admin", "/dashboard/:path*", "/admin/:path*"],
+  matcher: ["/", "/admin", "/dashboard/:path*", "/admin/:path*", "/subscribe"],
 };
