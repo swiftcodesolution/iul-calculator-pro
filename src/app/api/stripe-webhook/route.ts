@@ -1,22 +1,12 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import prisma from "@/lib/connect";
-import nodemailer from "nodemailer";
-
-// Configure Nodemailer transporter
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+import { createTransporter } from "@/lib/nodemailer";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(request: Request) {
+  const transporter = await createTransporter();
   const buf = await request.arrayBuffer();
   const sig = request.headers.get("stripe-signature")!;
 

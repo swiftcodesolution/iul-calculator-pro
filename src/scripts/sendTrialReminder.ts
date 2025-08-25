@@ -1,17 +1,8 @@
 import prisma from "@/lib/connect";
-import nodemailer from "nodemailer";
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+import { createTransporter } from "@/lib/nodemailer";
 
 async function sendTrialReminder() {
+  const transporter = await createTransporter();
   try {
     const trials = await prisma.trialToken.findMany({
       where: {

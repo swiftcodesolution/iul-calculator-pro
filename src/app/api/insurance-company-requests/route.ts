@@ -3,18 +3,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/connect";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import nodemailer from "nodemailer";
-
-// Configure Nodemailer transporter
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+import { createTransporter } from "@/lib/nodemailer";
 
 // POST: Submit a new insurance company request and send email
 export async function POST(request: Request) {
@@ -24,6 +13,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
+  const transporter = await createTransporter();
   const { name, website } = await request.json();
 
   if (!name) {

@@ -5,8 +5,8 @@ import { authOptions } from "@/lib/auth";
 import Stripe from "stripe";
 import prisma from "@/lib/connect";
 import { randomUUID } from "crypto";
-import nodemailer from "nodemailer";
 import { syncToZohoCRM } from "@/lib/zoho";
+import { createTransporter } from "@/lib/nodemailer";
 
 // Define interface for syncToZohoCRM parameters
 interface ZohoUserData {
@@ -32,27 +32,19 @@ interface ZohoSubscriptionData {
   renewalDate?: string; // Added formatted date string (YYYY-MM-DD)
 }
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
-
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(request: Request) {
   console.log("POST /api/subscribe started");
 
+  const transporter = await createTransporter();
+
   // Validate environment variables
   const requiredEnvVars = [
-    "SMTP_HOST",
-    "SMTP_PORT",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "GOOGLE_REFRESH_TOKEN",
     "SMTP_USER",
-    "SMTP_PASS",
     "ADMIN_EMAIL",
     "STRIPE_SECRET_KEY",
     "ZOHO_CLIENT_ID",
