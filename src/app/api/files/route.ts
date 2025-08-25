@@ -20,6 +20,15 @@ export async function POST(request: Request) {
   const category =
     session.user.role === "admin" ? "Pro Sample Files" : "Your Prospect Files";
 
+  let sortOrder = 1;
+  if (session.user.role === "admin") {
+    const lastAdminFile = await prisma.clientFile.findFirst({
+      where: { createdByRole: "admin" },
+      orderBy: { sortOrder: "desc" },
+    });
+    sortOrder = (lastAdminFile?.sortOrder || 0) + 1;
+  }
+
   const file = await prisma.clientFile.create({
     data: {
       userId: session.user.id,
@@ -27,6 +36,7 @@ export async function POST(request: Request) {
       fileName,
       createdByRole: session.user.role,
       category,
+      sortOrder,
       boxesData: null,
       tablesData: [],
       combinedResults: [],

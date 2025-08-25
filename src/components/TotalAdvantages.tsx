@@ -24,7 +24,30 @@ const TotalAdvantageTab = ({
   };
 
   return (
-    <div className="w-full h-full space-y-2">
+    <div className="w-full h-full space-y-10 py-4">
+      <div className="flex flex-col items-center">
+        <h2 className="text-xl font-semibold mb-2">
+          Includes a written, contractual &quot;Guarantee&quot; of...
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl w-full">
+          <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm text-center">
+            <h3 className="text-lg font-medium mb-1">Zero Taxes on Income</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Structured withdrawals and policy loans <br /> are designed to be
+              tax-free under current IRS guidelines.
+            </p>
+          </div>
+          <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm text-center">
+            <h3 className="text-lg font-medium mb-1">
+              Zero Loss When Markets Crash
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Thanks to built-in floor protection, <br /> clients never lose
+              principal due to market downturns.
+            </p>
+          </div>
+        </div>
+      </div>
       <div className="flex flex-col items-center justify-center p-4 text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg">
         <h2 className="text-xl font-semibold mb-2">
           Your Estimated - Total Advantage
@@ -32,7 +55,7 @@ const TotalAdvantageTab = ({
         <h2 className="text-2xl font-bold mb-2">
           ${totalAdvantage.total.toLocaleString()} + Living Benefits
         </h2>
-        <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="w-[70%] flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button
             variant="outline"
             className={`cursor-pointer p-6 w-full sm:w-1/3 ${
@@ -82,28 +105,7 @@ const TotalAdvantageTab = ({
           </Button>
         </div>
       </div>
-      <div className="space-y-2 text-center">
-        <div className="flex flex-col items-center">
-          <h2 className="text-xl font-semibold mb-2">Plus, A Guarantee Of</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl w-full">
-            <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
-              <h3 className="text-lg font-medium mb-1">Zero Taxes on Income</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Structured withdrawals and policy loans <br /> are designed to
-                be tax-free under current IRS guidelines.
-              </p>
-            </div>
-            <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
-              <h3 className="text-lg font-medium mb-1">
-                Zero Loss When Markets Crash
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Thanks to built-in floor protection, <br /> clients never lose
-                principal due to market downturns.
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="space-y-10 text-center">
         <div className="flex flex-col items-center">
           <h2 className="text-lg font-medium mb-2">
             Living Benefits Available Through Most Major IUL Providers
