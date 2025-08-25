@@ -29,7 +29,7 @@ interface User {
   lastName: string | null;
   cellPhone: string | null;
   officePhone: string | null;
-  role: string;
+  trialEndDate?: string | null;
   _count: {
     files: number;
     sessionHistory: number;
@@ -39,9 +39,10 @@ interface User {
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<
-    "most" | "least" | "asc" | "desc" | "none"
-  >("none");
+  const [sortField, setSortField] = useState<
+    "name" | "email" | "files" | "sessions" | "trialEndDate"
+  >("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -67,27 +68,45 @@ export default function UsersPage() {
       .toLowerCase();
     return (
       fullName.includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchQuery.toLowerCase())
+      user.email.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 
   const sortedUsers = [...filteredUsers].sort((a, b) => {
-    if (sortOrder === "most") {
-      return b._count.sessionHistory - a._count.sessionHistory;
-    } else if (sortOrder === "least") {
-      return a._count.sessionHistory - b._count.sessionHistory;
-    } else if (sortOrder === "asc") {
+    if (sortField === "name") {
       const nameA = `${a.firstName || ""} ${a.lastName || ""}`.trim() || "N/A";
       const nameB = `${b.firstName || ""} ${b.lastName || ""}`.trim() || "N/A";
-      return nameA.localeCompare(nameB);
-    } else if (sortOrder === "desc") {
-      const nameA = `${a.firstName || ""} ${a.lastName || ""}`.trim() || "N/A";
-      const nameB = `${b.firstName || ""} ${b.lastName || ""}`.trim() || "N/A";
-      return nameB.localeCompare(nameA);
+      return sortOrder === "asc"
+        ? nameA.localeCompare(nameB)
+        : nameB.localeCompare(nameA);
+    } else if (sortField === "email") {
+      return sortOrder === "asc"
+        ? a.email.localeCompare(b.email)
+        : b.email.localeCompare(a.email);
+    } else if (sortField === "files") {
+      return sortOrder === "asc"
+        ? a._count.files - b._count.files
+        : b._count.files - a._count.files;
+    } else if (sortField === "sessions") {
+      return sortOrder === "asc"
+        ? a._count.sessionHistory - b._count.sessionHistory
+        : b._count.sessionHistory - a._count.sessionHistory;
+    } else if (sortField === "trialEndDate") {
+      const aDate = a.trialEndDate ? new Date(a.trialEndDate).getTime() : 0;
+      const bDate = b.trialEndDate ? new Date(b.trialEndDate).getTime() : 0;
+      return sortOrder === "asc" ? aDate - bDate : bDate - aDate;
     }
     return 0;
   });
+
+  const formatTrialTimeRemaining = (trialEndDate?: string | null) => {
+    if (!trialEndDate) return "N/A";
+    const endDate = new Date(trialEndDate);
+    const today = new Date();
+    const diffTime = endDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return `${endDate.toLocaleDateString()} (+${diffDays} days)`;
+  };
 
   return (
     <div className="min-h-screen overflow-y-scroll">
@@ -106,25 +125,43 @@ export default function UsersPage() {
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
               <div className="flex flex-col sm:flex-row gap-4">
                 <Input
-                  placeholder="Search by name, email, or role"
+                  placeholder="Search by name or email"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="max-w-md"
                 />
                 <Select
+                  value={sortField}
                   onValueChange={(
-                    value: "most" | "least" | "asc" | "desc" | "none"
-                  ) => setSortOrder(value)}
+                    value:
+                      | "name"
+                      | "email"
+                      | "files"
+                      | "sessions"
+                      | "trialEndDate"
+                  ) => setSortField(value)}
                 >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">No Sorting</SelectItem>
-                    <SelectItem value="most">Most Active</SelectItem>
-                    <SelectItem value="least">Least Active</SelectItem>
-                    <SelectItem value="asc">Name (A-Z)</SelectItem>
-                    <SelectItem value="desc">Name (Z-A)</SelectItem>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="files">Total Files</SelectItem>
+                    <SelectItem value="sessions">Session History</SelectItem>
+                    <SelectItem value="trialEndDate">Trial End Date</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={sortOrder}
+                  onValueChange={(value: "asc" | "desc") => setSortOrder(value)}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Sort order" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="asc">Ascending</SelectItem>
+                    <SelectItem value="desc">Descending</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -151,9 +188,6 @@ export default function UsersPage() {
                       Email
                     </TableHead>
                     <TableHead className="high-contrast:text-black">
-                      Role
-                    </TableHead>
-                    <TableHead className="high-contrast:text-black">
                       Cell Phone
                     </TableHead>
                     <TableHead className="high-contrast:text-black">
@@ -161,6 +195,9 @@ export default function UsersPage() {
                     </TableHead>
                     <TableHead className="high-contrast:text-black">
                       Total Files
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
+                      Trial Time Remaining
                     </TableHead>
                     <TableHead className="high-contrast:text-black">
                       Actions
@@ -179,10 +216,12 @@ export default function UsersPage() {
                         }`.trim() || "N/A"}
                       </TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.role}</TableCell>
                       <TableCell>{user.cellPhone || "N/A"}</TableCell>
                       <TableCell>{user.officePhone || "N/A"}</TableCell>
                       <TableCell>{user._count.files || 0}</TableCell>
+                      <TableCell>
+                        {formatTrialTimeRemaining(user.trialEndDate)}
+                      </TableCell>
                       <TableCell>
                         <Link
                           href={`/admin/dashboard/users/${user.id}`}
