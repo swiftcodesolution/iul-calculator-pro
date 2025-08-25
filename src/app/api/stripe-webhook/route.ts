@@ -200,7 +200,7 @@ export async function POST(request: Request) {
         select: { userId: true, user: { select: { email: true } } },
       });
 
-      if (sub?.user.email) {
+      if (sub?.user?.email) {
         // Send email to admin
         await transporter.sendMail({
           from: `"IUL Calculator Pro" <${process.env.SMTP_USER}>`,
