@@ -1,39 +1,41 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/lib/auth.ts
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { NextAuthOptions } from "next-auth";
-// import bcrypt from "bcrypt";
+import type { JWT } from "next-auth/jwt"; // Import JWT from next-auth/jwt
 import prisma from "./connect";
 import { UAParser } from "ua-parser-js";
 import { NextApiResponse } from "next";
 
-// Sanitize IP address
 const sanitizeIpAddress = (ip: string): string => {
   const ipv4Regex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
   const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
   return ipv4Regex.test(ip) || ipv6Regex.test(ip) ? ip : "unknown";
 };
 
+// Define custom JWT interface
+interface CustomJWT extends JWT {
+  id?: string;
+  role?: string;
+  status?: string;
+  jti?: string;
+  subscriptionStatus?: string;
+}
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
-
-        // deviceFingerprint: { label: "Device Fingerprint", type: "text" },
-
         loginPath: { label: "Login Path", type: "text" },
       },
       async authorize(credentials, req) {
         if (
           !credentials?.email ||
           !credentials?.password ||
-          // !credentials?.deviceFingerprint ||
           !credentials.loginPath
         ) {
           console.log("Authorize: Missing credentials", credentials);
@@ -57,29 +59,6 @@ export const authOptions: NextAuthOptions = {
             console.log("Authorize: Invalid password", normalizedEmail);
             throw new Error("Invalid password");
           }
-
-          /*
-          if (user.role !== "admin") {
-            const finalFingerprint = credentials.deviceFingerprint;
-            if (!user.deviceFingerprint) {
-              await prisma.user.update({
-                where: { id: user.id },
-                data: { deviceFingerprint: finalFingerprint },
-              });
-              user.deviceFingerprint = finalFingerprint;
-            } else if (
-              user.deviceFingerprint !== credentials.deviceFingerprint
-            ) {
-              throw new Error(
-                "Login restricted to the device used for signup."
-              );
-            }
-          }
-
-          if (user.deviceFingerprint !== credentials.deviceFingerprint) {
-            throw new Error("Login restricted to the device used for signup.");
-          }
-          */
 
           if (loginPath === "/admin" && user.role !== "admin") {
             console.log("Authorize: Non-admin on admin path", normalizedEmail);
@@ -123,9 +102,6 @@ export const authOptions: NextAuthOptions = {
             data: {
               userId: user.id,
               sessionToken,
-
-              // deviceFingerprint: credentials.deviceFingerprint,
-
               ipAddress,
               userAgent,
               browserName: browser.name,
@@ -147,8 +123,6 @@ export const authOptions: NextAuthOptions = {
             lastName: user.lastName ?? undefined,
             role: user.role,
             status: user.status,
-
-            // deviceFingerprint: credentials.deviceFingerprint,
           };
           console.log("Authorize: Returning User", userReturn);
           return userReturn;
@@ -159,17 +133,13 @@ export const authOptions: NextAuthOptions = {
               ? "User not found"
               : error.message.includes("Invalid password")
               ? "Invalid password"
-              : error.message.includes("device")
-              ? "Device not authorized"
               : "Authentication failed"
           );
         }
       },
     }),
   ],
-
   session: { strategy: "jwt", maxAge: 3600 },
-
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -180,26 +150,22 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
-
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: CustomJWT }) {
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
-        session.user.status = token.status as string;
+        session.user.id = token.id ?? "";
+        session.user.role = token.role ?? "";
+        session.user.status = token.status ?? "";
 
         try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_APP_URL}/api/subscription`,
-            { headers: { Authorization: `Bearer ${token.jti}` } }
-          );
-          if (res.ok) {
-            const { status } = await res.json();
-            session.user.subscriptionStatus = status;
-            token.subscriptionStatus = status;
-          } else {
-            session.user.subscriptionStatus = "none";
-            token.subscriptionStatus = "none";
-          }
+          const subscription = await prisma.subscription.findFirst({
+            where: { userId: token.id },
+          });
+          session.user.subscriptionStatus = subscription
+            ? subscription.status
+            : "none";
+          token.subscriptionStatus = subscription
+            ? subscription.status
+            : "none";
         } catch {
           session.user.subscriptionStatus = "none";
           token.subscriptionStatus = "none";
@@ -207,14 +173,10 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-
-    // ✅ simplified redirect
     async redirect({ url, baseUrl }) {
-      // only allow same-origin redirects, otherwise fallback
       if (url.startsWith(baseUrl)) return url;
       return baseUrl;
     },
-
     async signIn({
       user,
       response,
@@ -229,12 +191,10 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
   },
-
   pages: {
     signIn: "/",
     error: "/api/auth/error",
   },
-
   events: {
     async signOut({ token }) {
       if (token?.jti) {

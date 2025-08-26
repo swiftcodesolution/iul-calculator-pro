@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/hooks/useAuthForm.ts
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -58,35 +57,22 @@ export function useAuthForm() {
           loginPath: pathname,
         });
 
-        console.log("signIn Result:", loginResult);
-
         if (loginResult?.ok) {
           const session = await getSession();
-          console.log("Session after signIn:", session);
-
           const userRole = session?.user?.role;
-          const subscriptionStatus = session?.user?.subscriptionStatus;
           const isAdminPage = pathname === "/admin";
 
           if (isAdminPage && userRole !== "admin") {
             throw new Error("Only admin accounts can log in here");
           }
-
           if (!isAdminPage && userRole === "admin") {
             throw new Error(
               "Admin accounts can only be logged in from admin login page"
             );
           }
 
-          // Redirect based on role and subscription status
           const redirectPath =
-            userRole === "admin"
-              ? "/admin/dashboard"
-              : subscriptionStatus === "active" ||
-                subscriptionStatus === "trialing"
-              ? "/dashboard/home"
-              : "/dashboard/subscribe";
-
+            userRole === "admin" ? "/admin/dashboard" : "/dashboard/subscribe";
           toast.success("Login successful");
           router.push(redirectPath);
         } else {
@@ -115,7 +101,6 @@ export function useAuthForm() {
         if (isAdminPage && userRole !== "admin") {
           throw new Error("Only admin accounts can log in here");
         }
-
         if (!isAdminPage && userRole === "admin") {
           throw new Error(
             "Admin accounts can only be logged in from admin login page"
@@ -135,9 +120,7 @@ export function useAuthForm() {
       }
     } catch (error: any) {
       console.error(`${type} error:`, error);
-
       let message = "Authentication failed. Please try again.";
-
       if (error.message.includes("Email already exists")) {
         message = "This email is already registered. Please log in instead.";
       } else if (error.message.includes("Cell phone")) {
@@ -161,7 +144,6 @@ export function useAuthForm() {
       ) {
         message = "Admin accounts must log in from the admin login page.";
       }
-
       toast.error(message);
     } finally {
       setIsSubmitting(false);
