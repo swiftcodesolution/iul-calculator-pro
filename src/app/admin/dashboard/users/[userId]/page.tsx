@@ -9,19 +9,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Building2, DollarSign } from "lucide-react";
+import { Users, Building2, DollarSign, File } from "lucide-react";
 import { use, useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox
+import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Pie } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-
-ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface SessionHistory {
   id: string;
@@ -73,7 +69,7 @@ interface User {
   officePhone: string | null;
   role: string;
   status: string;
-  foreverFree: boolean; // Added foreverFree
+  foreverFree: boolean;
   sessionHistory: SessionHistory[];
   companyInfo: CompanyInfo | null;
   subscription: Subscription | null;
@@ -99,7 +95,7 @@ export default function UserDetailsPage({
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
-  const [updatingForeverFree, setUpdatingForeverFree] = useState(false); // Added state for foreverFree
+  const [updatingForeverFree, setUpdatingForeverFree] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -154,38 +150,29 @@ export default function UserDetailsPage({
   const handleUpdateStatus = async () => {
     setUpdatingStatus(true);
     try {
-      // Toggle user status
       const newStatus = user?.status === "active" ? "suspended" : "active";
-
-      // Send PATCH request to backend
       const response = await fetch(`/api/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
 
-      // Handle errors from backend
       if (!response.ok) {
         const result = await response.json();
         throw new Error(result.error || "Failed to update user status");
       }
 
-      // Update local state with updated user
       const updatedUser = await response.json();
       setUser(updatedUser);
-
-      // Success toast
       toast.success(
         `User ${
           newStatus === "active" ? "activated" : "suspended"
         } successfully`
       );
     } catch (err) {
-      // Error toast
       toast.error("Failed to update user status");
       console.error("Update status error:", err);
     } finally {
-      // Always reset loading state
       setUpdatingStatus(false);
     }
   };
@@ -215,36 +202,6 @@ export default function UserDetailsPage({
     } finally {
       setUpdatingForeverFree(false);
     }
-  };
-
-  const pieData = {
-    labels: user?.filesByCategory?.map((entry) => entry.category) || [],
-    datasets: [
-      {
-        data: user?.filesByCategory?.map((entry) => entry.count) || [],
-        backgroundColor: [
-          "rgba(59, 130, 246, 0.5)",
-          "rgba(239, 68, 68, 0.5)",
-          "rgba(34, 197, 94, 0.5)",
-          "rgba(249, 115, 22, 0.5)",
-        ],
-        borderColor: [
-          "rgba(59, 130, 246, 1)",
-          "rgba(239, 68, 68, 1)",
-          "rgba(34, 197, 94, 1)",
-          "rgba(249, 115, 22, 1)",
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const pieOptions = {
-    responsive: true,
-    plugins: {
-      legend: { position: "top" as const },
-      title: { display: false },
-    },
   };
 
   if (!user && !error) return <div className="text-center">Loading...</div>;
@@ -472,14 +429,12 @@ export default function UserDetailsPage({
               )}
             </CardContent>
           </Card>
-        </div>
-        <Card className="mb-6 shadow-lg hover:shadow-xl transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg">File Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {user ? (
-              user.filesByCategory.length > 0 ? (
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <CardTitle className="text-lg">File Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {user ? (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -489,8 +444,38 @@ export default function UserDetailsPage({
                   <div>
                     <strong>Total Files:</strong> {user._count.files || 0}
                   </div>
-                  <div className="h-64">
-                    <Pie data={pieData} options={pieOptions} />
+                  <div>
+                    <strong>File Categories:</strong>
+                    {user.filesByCategory?.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                        {user.filesByCategory.map((entry, index) => (
+                          <motion.div
+                            key={entry.category}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.1 * index }}
+                            className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <File className="h-6 w-6 text-blue-500" />
+                              <div>
+                                <h3 className="text-md font-semibold">
+                                  {entry.category}
+                                </h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-300">
+                                  {entry.count}{" "}
+                                  {entry.count === 1 ? "file" : "files"}
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-600 dark:text-gray-400">
+                        No file categories available.
+                      </p>
+                    )}
                   </div>
                   <div>
                     <strong>Recent Files:</strong>
@@ -530,14 +515,13 @@ export default function UserDetailsPage({
                   </div>
                 </motion.div>
               ) : (
-                <p className="">No file information available.</p>
-              )
-            ) : (
-              <p className="">User not loaded.</p>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="shadow-lg hover:shadow-xl transition-shadow">
+                <p className="">User not loaded.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* <Card className="shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader>
             <CardTitle className="text-lg">Session History</CardTitle>
           </CardHeader>
@@ -588,7 +572,7 @@ export default function UserDetailsPage({
               <p className="">No session history available.</p>
             )}
           </CardContent>
-        </Card>
+        </Card> */}
       </main>
     </div>
   );
