@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DollarSign,
   RefreshCw,
@@ -28,32 +29,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 interface Subscription {
   id: string;
   userId: string;
-  stripeCustomerId?: string;
-  stripeSubscriptionId: string;
   planType: string;
   status: string;
   startDate: string;
   renewalDate?: string;
   remainingDays?: number;
+  iulSalesCount: number;
   user: {
     id: string;
+    name: string;
     email: string;
-    firstName?: string;
-    lastName?: string;
-    cellPhone?: string;
-    officePhone?: string;
-    role: string;
-    status: string;
-  };
-  companyInfo?: {
-    businessName: string;
-    agentName: string;
-    phone: string;
-    email: string;
+    foreverFree: boolean;
   };
 }
 
@@ -61,10 +52,13 @@ interface SubscriptionApiResponse {
   userId: string;
   status: string;
   planType: string;
+  startDate: string;
   endDate?: string;
   remainingDays?: number;
   userEmail: string;
   userName: string;
+  foreverFree: boolean;
+  iulSalesCount: number;
 }
 
 export default function SubscriptionsPage() {
@@ -75,21 +69,20 @@ export default function SubscriptionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sortField, setSortField] = useState<
-    "firstName" | "startDate" | "renewalDate" | "remainingDays"
-  >("firstName");
+    "name" | "startDate" | "renewalDate" | "remainingDays"
+  >("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [searchQuery, setSearchQuery] = useState("");
+  // const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [updatingForeverFree, setUpdatingForeverFree] = useState<string | null>(
+    null
+  );
 
   const fetchSubscriptions = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/subscriptions", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch("/api/subscriptions");
       if (!response.ok) {
         throw new Error(
           `Failed to fetch subscriptions: ${response.statusText}`
@@ -100,36 +93,22 @@ export default function SubscriptionsPage() {
         throw new Error("Invalid response format: Expected an array");
       }
 
-      const enrichedSubscriptions: Subscription[] = await Promise.all(
-        data.map(async (sub) => {
-          const userDetails = await fetchUserDetails(sub.userId);
-          const [firstName, ...lastNameParts] = (sub.userName || "").split(" ");
-          return {
-            id: userDetails.subscription?.id || `sub_${sub.userId}`,
-            userId: sub.userId,
-            stripeCustomerId: undefined,
-            stripeSubscriptionId:
-              userDetails.subscription?.id || `sub_${sub.userId}`,
-            planType: sub.planType,
-            status: sub.status,
-            startDate:
-              userDetails.subscription?.startDate || new Date().toISOString(),
-            renewalDate: sub.endDate,
-            remainingDays: sub.remainingDays,
-            user: {
-              id: sub.userId,
-              email: sub.userEmail,
-              firstName: firstName || undefined,
-              lastName: lastNameParts.join(" ") || undefined,
-              cellPhone: userDetails.cellPhone,
-              officePhone: userDetails.officePhone,
-              role: userDetails.role || "user",
-              status: userDetails.status || "unknown",
-            },
-            companyInfo: userDetails.companyInfo,
-          };
-        })
-      );
+      const enrichedSubscriptions: Subscription[] = data.map((sub) => ({
+        id: sub.userId, // Use userId as id for simplicity
+        userId: sub.userId,
+        planType: sub.planType,
+        status: sub.status,
+        startDate: sub.startDate,
+        renewalDate: sub.endDate,
+        remainingDays: sub.remainingDays,
+        iulSalesCount: sub.iulSalesCount,
+        user: {
+          id: sub.userId,
+          name: sub.userName,
+          email: sub.userEmail,
+          foreverFree: sub.foreverFree,
+        },
+      }));
 
       setSubscriptions(enrichedSubscriptions);
       setFilteredSubscriptions(enrichedSubscriptions);
@@ -143,130 +122,134 @@ export default function SubscriptionsPage() {
     }
   }, []);
 
-  const fetchUserDetails = async (
-    userId: string
-  ): Promise<
-    Partial<Subscription["user"]> & {
-      companyInfo?: Subscription["companyInfo"];
-      subscription?: {
-        id: string;
-        startDate: string;
-      };
+  /*
+  const handleUpdateStatus = async (userId: string, currentStatus: string) => {
+    setUpdatingStatus(userId);
+    try {
+      const newStatus = currentStatus === "active" ? "expired" : "active";
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "Failed to update subscription status");
+      }
+
+      setSubscriptions((prev) =>
+        prev.map((sub) =>
+          sub.userId === userId ? { ...sub, status: newStatus } : sub
+        )
+      );
+      setFilteredSubscriptions((prev) =>
+        prev.map((sub) =>
+          sub.userId === userId ? { ...sub, status: newStatus } : sub
+        )
+      );
+      toast.success(
+        `Subscription ${
+          newStatus === "active" ? "activated" : "expired"
+        } successfully`
+      );
+    } catch (err) {
+      toast.error("Failed to update subscription status");
+      console.error("Update status error:", err);
+    } finally {
+      setUpdatingStatus(null);
     }
-  > => {
+  };
+  */
+
+  const handleUpdateForeverFree = async (userId: string, checked: boolean) => {
+    setUpdatingForeverFree(userId);
     try {
       const response = await fetch(`/api/users/${userId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: subscriptions.find((sub) => sub.userId === userId)?.status,
+          foreverFree: checked,
+        }),
       });
+
       if (!response.ok) {
-        throw new Error(
-          `Failed to fetch user ${userId}: ${response.statusText}`
-        );
+        const result = await response.json();
+        throw new Error(result.error || "Failed to update forever free status");
       }
-      const data = await response.json();
-      return {
-        id: data.id,
-        email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        cellPhone: data.cellPhone,
-        officePhone: data.officePhone,
-        role: data.role,
-        status: data.status,
-        companyInfo: data.companyInfo
-          ? {
-              businessName: data.companyInfo.businessName,
-              agentName: data.companyInfo.agentName,
-              phone: data.companyInfo.phoneNumber,
-              email: data.companyInfo.email,
-            }
-          : undefined,
-        subscription: data.subscription
-          ? {
-              id: data.subscription.id,
-              startDate: data.subscription.startDate,
-            }
-          : undefined,
-      };
+
+      setSubscriptions((prev) =>
+        prev.map((sub) =>
+          sub.userId === userId
+            ? { ...sub, user: { ...sub.user, foreverFree: checked } }
+            : sub
+        )
+      );
+      setFilteredSubscriptions((prev) =>
+        prev.map((sub) =>
+          sub.userId === userId
+            ? { ...sub, user: { ...sub.user, foreverFree: checked } }
+            : sub
+        )
+      );
+      toast.success(
+        `User ${checked ? "marked" : "unmarked"} as forever free successfully`
+      );
     } catch (err) {
-      console.error(`Error fetching user ${userId}:`, err);
-      return {
-        id: userId,
-        email: "",
-        role: "unknown",
-        status: "unknown",
-      };
+      toast.error("Failed to update forever free status");
+      console.error("Update forever free error:", err);
+    } finally {
+      setUpdatingForeverFree(null);
     }
+  };
+
+  const handleSortOrder = () => {
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
 
   const refreshAll = useCallback(async () => {
     await fetchSubscriptions();
   }, [fetchSubscriptions]);
 
-  const handleSortOrder = () => {
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-  };
-
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     const trimmedQuery = query.trim().toLowerCase();
     const filtered = subscriptions.filter(
       (sub) =>
-        (sub.user.firstName?.toLowerCase().includes(trimmedQuery) ?? false) ||
-        (sub.user.lastName?.toLowerCase().includes(trimmedQuery) ?? false) ||
-        sub.user.email.toLowerCase().includes(trimmedQuery) ||
-        (sub.companyInfo?.businessName?.toLowerCase().includes(trimmedQuery) ??
-          false)
+        sub.user.name.toLowerCase().includes(trimmedQuery) ||
+        sub.user.email.toLowerCase().includes(trimmedQuery)
     );
     setFilteredSubscriptions(filtered);
   };
 
   const downloadCSV = () => {
     const headers = [
-      "Subscription ID",
-      "User ID",
-      "First Name",
-      "Last Name",
+      "Name",
       "Email",
-      "Cell Phone",
-      "Office Phone",
-      "Role",
-      "User Status",
-      "Business Name",
-      "Agent Name",
-      "Company Phone",
-      "Company Email",
+      "Forever Free",
       "Plan Type",
       "Subscription Status",
       "Start Date",
       "Renewal Date",
+      "Remaining Days",
+      "IUL Sales",
     ];
     const csvRows = [
       headers.join(","),
       ...sortedSubscriptions.map((sub) =>
         [
-          sub.id,
-          sub.userId,
-          `"${sub.user.firstName?.replace(/"/g, '""') ?? "N/A"}"`,
-          `"${sub.user.lastName?.replace(/"/g, '""') ?? "N/A"}"`,
+          `"${sub.user.name.replace(/"/g, '""')}"`,
           sub.user.email,
-          sub.user.cellPhone ?? "N/A",
-          sub.user.officePhone ?? "N/A",
-          sub.user.role,
-          sub.user.status,
-          `"${sub.companyInfo?.businessName?.replace(/"/g, '""') ?? "N/A"}"`,
-          `"${sub.companyInfo?.agentName?.replace(/"/g, '""') ?? "N/A"}"`,
-          sub.companyInfo?.phone ?? "N/A",
-          sub.companyInfo?.email ?? "N/A",
+          sub.user.foreverFree ? "Yes" : "No",
           sub.planType,
           sub.status,
           new Date(sub.startDate).toLocaleDateString(),
           sub.renewalDate
             ? new Date(sub.renewalDate).toLocaleDateString()
             : "N/A",
+          sub.remainingDays !== undefined ? sub.remainingDays : "N/A",
+          sub.iulSalesCount,
         ].join(",")
       ),
     ];
@@ -287,12 +270,10 @@ export default function SubscriptionsPage() {
   };
 
   const sortedSubscriptions = [...filteredSubscriptions].sort((a, b) => {
-    if (sortField === "firstName") {
-      const aName = a.user.firstName ?? "";
-      const bName = b.user.firstName ?? "";
+    if (sortField === "name") {
       return sortOrder === "asc"
-        ? aName.localeCompare(bName)
-        : bName.localeCompare(aName);
+        ? a.user.name.localeCompare(b.user.name)
+        : b.user.name.localeCompare(a.user.name);
     } else if (sortField === "startDate") {
       const aDate = new Date(a.startDate).getTime();
       const bDate = new Date(b.startDate).getTime();
@@ -322,12 +303,14 @@ export default function SubscriptionsPage() {
           transition={{ duration: 0.5 }}
           className="flex justify-between items-center mb-6"
         >
-          <h1 className="text-3xl font-bold">Subscriptions</h1>
+          <h1 className="text-3xl font-bold flex items-center">
+            <DollarSign className="mr-2 text-blue-500" /> Subscriptions
+          </h1>
           <div className="flex gap-2 items-center">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
               <Input
-                placeholder="Search by name, email, or business..."
+                placeholder="Search by name or email"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="pl-8 w-64 focus:ring-2 focus:ring-blue-500"
@@ -336,14 +319,14 @@ export default function SubscriptionsPage() {
             <Select
               value={sortField}
               onValueChange={(
-                value: "firstName" | "startDate" | "renewalDate"
+                value: "name" | "startDate" | "renewalDate" | "remainingDays"
               ) => setSortField(value)}
             >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="firstName">First Name</SelectItem>
+                <SelectItem value="name">Name</SelectItem>
                 <SelectItem value="startDate">Start Date</SelectItem>
                 <SelectItem value="renewalDate">Renewal Date</SelectItem>
                 <SelectItem value="remainingDays">Remaining Days</SelectItem>
@@ -389,150 +372,103 @@ export default function SubscriptionsPage() {
             {error}
           </motion.p>
         )}
-        <div className="grid grid-cols-1 gap-6">
-          <Card className="shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="flex items-center">
-              <DollarSign className="mr-2 text-blue-500" />
-              <CardTitle className="text-xl">
-                All Subscriptions ({filteredSubscriptions.length} total)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="overflow-x-auto">
-              <Table>
-                <TableHeader>
+        <Card className="shadow-lg hover:shadow-xl transition-shadow">
+          <CardHeader>
+            <CardTitle className="text-xl">
+              All Subscriptions ({filteredSubscriptions.length} total)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-sm high-contrast:text-black">
+                    Name
+                  </TableHead>
+                  <TableHead className="text-sm high-contrast:text-black">
+                    Email
+                  </TableHead>
+                  <TableHead className="text-sm high-contrast:text-black">
+                    Forever Free
+                  </TableHead>
+                  <TableHead className="text-sm high-contrast:text-black">
+                    Plan Type
+                  </TableHead>
+                  <TableHead className="text-sm high-contrast:text-black">
+                    Subscription Status
+                  </TableHead>
+                  <TableHead className="text-sm high-contrast:text-black">
+                    Start Date
+                  </TableHead>
+                  <TableHead className="text-sm high-contrast:text-black">
+                    Renewal Date
+                  </TableHead>
+                  <TableHead className="text-sm high-contrast:text-black">
+                    Remaining Days
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
                   <TableRow>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      First Name
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      Last Name
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      User Email
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      Cell Phone
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      Office Phone
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      User Role
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      User Status
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      Business Name
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      Agent Name
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      Company Phone
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      Company Email
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      Plan Type
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      Subscription Status
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      Start Date
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      Renewal Date
-                    </TableHead>
-                    <TableHead className="text-sm high-contrast:text-black">
-                      Remaining Days
-                    </TableHead>
+                    <TableCell colSpan={10} className="text-sm text-center">
+                      Loading...
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={15} className="text-sm text-center">
-                        Loading...
+                ) : sortedSubscriptions.length > 0 ? (
+                  sortedSubscriptions.map((sub) => (
+                    <TableRow
+                      key={sub.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
+                      <TableCell className="text-sm">
+                        <Link
+                          href={`/admin/dashboard/users/${sub.userId}`}
+                          className="text-blue-500 hover:underline"
+                        >
+                          {sub.user.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {sub.user.email}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        <Checkbox
+                          checked={sub.user.foreverFree}
+                          onCheckedChange={(checked) =>
+                            handleUpdateForeverFree(sub.userId, !!checked)
+                          }
+                          disabled={updatingForeverFree === sub.userId}
+                        />
+                      </TableCell>
+                      <TableCell className="text-sm">{sub.planType}</TableCell>
+                      <TableCell className="text-sm">{sub.status}</TableCell>
+                      <TableCell className="text-sm">
+                        {new Date(sub.startDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {sub.renewalDate
+                          ? new Date(sub.renewalDate).toLocaleDateString()
+                          : "N/A"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {sub.remainingDays !== undefined
+                          ? sub.remainingDays
+                          : "N/A"}
                       </TableCell>
                     </TableRow>
-                  ) : sortedSubscriptions.length > 0 ? (
-                    sortedSubscriptions.map((sub) => (
-                      <TableRow
-                        key={sub.id}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                      >
-                        <TableCell className="text-sm">
-                          <Link
-                            href={`/admin/dashboard/users/${sub.userId}`}
-                            className="text-blue-500 hover:underline"
-                          >
-                            {sub.user.firstName ?? "N/A"}
-                          </Link>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {sub.user.lastName ?? "N/A"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {sub.user.email}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {sub.user.cellPhone ?? "N/A"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {sub.user.officePhone ?? "N/A"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {sub.user.role}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {sub.user.status}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {sub.companyInfo?.businessName ?? "N/A"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {sub.companyInfo?.agentName ?? "N/A"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {sub.companyInfo?.phone ?? "N/A"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {sub.companyInfo?.email ?? "N/A"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {sub.planType}
-                        </TableCell>
-                        <TableCell className="text-sm">{sub.status}</TableCell>
-                        <TableCell className="text-sm">
-                          {new Date(sub.startDate).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {sub.renewalDate
-                            ? new Date(sub.renewalDate).toLocaleDateString()
-                            : "N/A"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {sub.remainingDays !== undefined
-                            ? sub.remainingDays
-                            : "N/A"}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={15} className="text-sm text-center">
-                        No subscriptions available
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={10} className="text-sm text-center">
+                      No subscriptions available
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

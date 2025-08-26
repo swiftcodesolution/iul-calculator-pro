@@ -1,4 +1,3 @@
-// src/app/api/subscriptions/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/connect";
 import { getServerSession } from "next-auth";
@@ -15,36 +14,32 @@ export async function GET() {
     const subscriptions = await prisma.subscription.findMany({
       where: {
         user: {
-          // only include subscriptions where a related user exists
           isNot: null,
         },
       },
       select: {
+        id: true,
         userId: true,
         status: true,
         planType: true,
+        startDate: true,
         renewalDate: true,
+        iulSales: {
+          where: { verified: true },
+          select: { id: true },
+        },
         user: {
           select: {
             email: true,
             firstName: true,
             lastName: true,
+            foreverFree: true,
           },
         },
       },
     });
 
     return NextResponse.json(
-      // subscriptions.map((sub) => ({
-      //   userId: sub.userId,
-      //   status: sub.status,
-      //   planType: sub.planType,
-      //   endDate: sub.renewalDate?.toISOString(),
-      //   userEmail: sub.user?.email,
-      //   userName:
-      //     `${sub.user?.firstName || ""} ${sub.user?.lastName || ""}`.trim() ||
-      //     "Unknown",
-      // }))
       subscriptions.map((sub) => {
         const endDate = sub.renewalDate?.toISOString();
         const remainingDays = endDate
@@ -61,12 +56,15 @@ export async function GET() {
           userId: sub.userId,
           status: sub.status,
           planType: sub.planType,
+          startDate: sub.startDate.toISOString(),
           endDate,
-          remainingDays, // 👈 added
+          remainingDays,
           userEmail: sub.user?.email,
           userName:
             `${sub.user?.firstName || ""} ${sub.user?.lastName || ""}`.trim() ||
             "Unknown",
+          foreverFree: sub.user?.foreverFree || false,
+          iulSalesCount: sub.iulSales.length,
         };
       })
     );
