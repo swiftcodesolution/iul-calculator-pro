@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/hooks/useAuthForm.ts
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -7,92 +8,10 @@ import { z } from "zod";
 import { loginSchema, signupSchema } from "@/lib/types";
 import { getSession, signIn } from "next-auth/react";
 
-// import FingerprintJS from "@fingerprintjs/fingerprintjs";
-
 export function useAuthForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
-
   const router = useRouter();
   const pathname = usePathname();
-
-  // const maxRetries = 100;
-
-  /*
-  useEffect(() => {
-    let retries = 0;
-
-    const initializeFingerprint = async () => {
-      try {
-        const fp = await FingerprintJS.load();
-
-        while (retries < maxRetries) {
-          try {
-            const result = await fp.get();
-            console.log("initial: ", result.visitorId);
-
-            setDeviceFingerprint(result.visitorId);
-
-            break;
-          } catch (error) {
-            retries++;
-
-            console.error(`FingerprintJS attempt ${retries} failed:`, error);
-
-            if (retries === maxRetries) {
-              toast.error(
-                "Failed to initialize device fingerprint after retries"
-              );
-            }
-          }
-        }
-      } catch (err) {
-        toast.error("FingerprintJS failed to load.");
-        console.error("FingerprintJS load error:", err);
-      }
-    };
-
-    initializeFingerprint();
-  }, []);
-  */
-
-  /*
-  const generateFingerprint = async () => {
-    try {
-      const fp = await FingerprintJS.load();
-
-      let retries = 0;
-
-      while (retries < maxRetries) {
-        try {
-          const result = await fp.get();
-          console.log("generated: ", result.visitorId);
-
-          const newFingerprint = result.visitorId;
-
-          setDeviceFingerprint(newFingerprint);
-
-          return newFingerprint;
-        } catch (error) {
-          retries++;
-
-          console.error(`FingerprintJS attempt ${retries} failed:`, error);
-          if (retries === maxRetries) {
-            toast.error("Failed to generate device fingerprint after retries");
-            return "";
-          }
-        }
-      }
-    } catch (err) {
-      toast.error("FingerprintJS failed to load.");
-      console.error("FingerprintJS load error:", err);
-      return "";
-    }
-
-    return "";
-  };
-  */
 
   const handleSubmit = async <
     T extends z.infer<typeof signupSchema> | z.infer<typeof loginSchema>
@@ -101,31 +20,15 @@ export function useAuthForm() {
     type: "signup" | "login",
     form: UseFormReturn<T>
   ) => {
-    /*
-    let currentFingerprint = deviceFingerprint;
-
-    if (!currentFingerprint) {
-      currentFingerprint = await generateFingerprint();
-      if (!currentFingerprint) {
-        toast.error("Cannot proceed without device fingerprint");
-        return;
-      }
-    }
-    */
-
     setIsSubmitting(true);
 
     try {
       if (type === "signup") {
         const signupData = data as z.infer<typeof signupSchema>;
 
-        // console.log("signup fp: ", currentFingerprint);
-
         const response = await fetch("/api/auth/signup", {
           method: "POST",
-
           headers: { "Content-Type": "application/json" },
-
           body: JSON.stringify({
             email: signupData.email.toLowerCase(),
             password: signupData.password,
@@ -133,7 +36,6 @@ export function useAuthForm() {
             lastName: signupData.lastName,
             cellPhone: signupData.cellPhone,
             officePhone: signupData.officePhone,
-            // deviceFingerprint: currentFingerprint,
           }),
         });
 
@@ -149,14 +51,10 @@ export function useAuthForm() {
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        // console.log("login fp: ", currentFingerprint);
-
         const loginResult = await signIn("credentials", {
           redirect: false,
-
           email: signupData.email.toLowerCase(),
           password: signupData.password,
-          // deviceFingerprint: currentFingerprint,
           loginPath: pathname,
         });
 
@@ -164,10 +62,10 @@ export function useAuthForm() {
 
         if (loginResult?.ok) {
           const session = await getSession();
-
           console.log("Session after signIn:", session);
 
           const userRole = session?.user?.role;
+          const subscriptionStatus = session?.user?.subscriptionStatus;
           const isAdminPage = pathname === "/admin";
 
           if (isAdminPage && userRole !== "admin") {
@@ -180,17 +78,17 @@ export function useAuthForm() {
             );
           }
 
-          // const redirectPath =
-          //   userRole === "admin" ? "/admin/dashboard" : "/dashboard/home";
+          // Redirect based on role and subscription status
+          const redirectPath =
+            userRole === "admin"
+              ? "/admin/dashboard"
+              : subscriptionStatus === "active" ||
+                subscriptionStatus === "trialing"
+              ? "/dashboard/home"
+              : "/dashboard/subscribe";
 
           toast.success("Login successful");
-
-          // router.push(redirectPath);
-          if (userRole !== "admin") {
-            router.push("/dashboard/subscribe");
-          } else {
-            router.push("/admin/dashboard");
-          }
+          router.push(redirectPath);
         } else {
           throw new Error(loginResult?.error || "Auto-login failed");
         }
@@ -198,14 +96,10 @@ export function useAuthForm() {
         const loginData = data as z.infer<typeof loginSchema>;
         const loginEmail = loginData.loginEmail.toLowerCase();
 
-        // console.log("Login fingerprint:", currentFingerprint);
-
         const result = await signIn("credentials", {
           redirect: false,
-
           email: loginEmail,
           password: loginData.loginPassword,
-          // deviceFingerprint: currentFingerprint,
           loginPath: pathname,
         });
 
@@ -215,6 +109,7 @@ export function useAuthForm() {
 
         const session = await getSession();
         const userRole = session?.user?.role;
+        const subscriptionStatus = session?.user?.subscriptionStatus;
         const isAdminPage = pathname === "/admin";
 
         if (isAdminPage && userRole !== "admin") {
@@ -228,13 +123,16 @@ export function useAuthForm() {
         }
 
         const redirectPath =
-          userRole === "admin" ? "/admin/dashboard" : "/dashboard/home";
+          userRole === "admin"
+            ? "/admin/dashboard"
+            : subscriptionStatus === "active" ||
+              subscriptionStatus === "trialing"
+            ? "/dashboard/home"
+            : "/dashboard/subscribe";
 
         toast.success("Login successful");
-
         router.push(redirectPath);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error(`${type} error:`, error);
 
@@ -271,6 +169,5 @@ export function useAuthForm() {
     }
   };
 
-  // return { isSubmitting, deviceFingerprint, handleSubmit };
   return { isSubmitting, handleSubmit };
 }

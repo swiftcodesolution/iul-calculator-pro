@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/lib/auth.ts
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -151,8 +152,6 @@ export const authOptions: NextAuthOptions = {
           };
           console.log("Authorize: Returning User", userReturn);
           return userReturn;
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
           console.log("Authorize: Error", error.message);
           throw new Error(
@@ -173,11 +172,8 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, user }) {
-      console.log("JWT Callback:", { token, user });
-
       if (user) {
         token.id = user.id;
-        // token.deviceFingerprint = user.deviceFingerprint;
         token.role = user.role;
         token.status = user.status;
         token.jti = crypto.randomUUID();
@@ -186,66 +182,43 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
-      console.log("JWT Callback:", { session, token });
-
-      if (!token) {
-        console.log("Session Callback: No token");
-
-        throw new Error("Invalid session: token blacklisted");
-      }
-
-      // if (session.user) {
-      //   session.user.id = token.id as string;
-      //   // session.user.deviceFingerprint = token.deviceFingerprint as string;
-      //   session.user.role = token.role as string;
-      // }
-
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.status = token.status as string;
 
-        // Fetch subscription status
         try {
           const res = await fetch(
             `${process.env.NEXT_PUBLIC_APP_URL}/api/subscription`,
-            {
-              headers: { Authorization: `Bearer ${token.jti}` },
-            }
+            { headers: { Authorization: `Bearer ${token.jti}` } }
           );
           if (res.ok) {
             const { status } = await res.json();
             session.user.subscriptionStatus = status;
+            token.subscriptionStatus = status;
           } else {
-            session.user.subscriptionStatus = "inactive";
+            session.user.subscriptionStatus = "none";
+            token.subscriptionStatus = "none";
           }
-        } catch (error) {
-          console.error("Session subscription fetch error:", error);
-          session.user.subscriptionStatus = "inactive";
+        } catch {
+          session.user.subscriptionStatus = "none";
+          token.subscriptionStatus = "none";
         }
       }
-
       return session;
     },
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async redirect({ url, baseUrl, token }: any) {
-      console.log("Redirect Callback:", { url, baseUrl, token });
-
-      if (url.includes("/api/auth/signout")) {
-        return token?.role === "admin" ? `${baseUrl}/admin` : `${baseUrl}/`;
-      }
-      if (url.includes("callbackUrl=%2Fadmin") || url.includes("/admin")) {
-        return `${baseUrl}/admin/dashboard/home`;
-      }
-      return url.startsWith(baseUrl) ? url : `${baseUrl}/dashboard/home`;
+    // ✅ simplified redirect
+    async redirect({ url, baseUrl }) {
+      // only allow same-origin redirects, otherwise fallback
+      if (url.startsWith(baseUrl)) return url;
+      return baseUrl;
     },
 
     async signIn({
       user,
       response,
     }: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       user: any;
       response?: NextApiResponse;
     }) {
