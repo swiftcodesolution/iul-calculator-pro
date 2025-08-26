@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -161,15 +160,21 @@ export default function UserDetailsPage({
 
       if (!response.ok) {
         const result = await response.json();
-        throw new Error(result.error || "Failed to update user status");
+        throw new Error(
+          result.error || "Failed to update user and subscription status"
+        );
       }
 
       const updatedUser = await response.json();
       setUser(updatedUser);
-      toast.success(`User ${newStatus} successfully`);
+      toast.success(
+        `User and subscription ${
+          newStatus === "active" ? "activated" : "suspended"
+        } successfully`
+      );
     } catch (err) {
-      toast.error("Failed to update user status");
-      console.error("Update user status error:", err);
+      toast.error("Failed to update user and subscription status");
+      console.error("Update status error:", err);
     } finally {
       setUpdatingStatus(false);
     }
@@ -271,8 +276,8 @@ export default function UserDetailsPage({
                     {updatingStatus
                       ? "Updating..."
                       : user?.status === "active"
-                      ? "Suspend"
-                      : "Activate"}
+                      ? "Suspend User & Subscription"
+                      : "Activate User & Subscription"}
                   </Button>
                 </div>
               </motion.div>

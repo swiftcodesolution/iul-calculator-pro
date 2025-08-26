@@ -42,17 +42,39 @@ export async function GET(request: Request) {
   try {
     const subscription = await prisma.subscription.findFirst({
       where: { userId },
+      include: { iulSales: { where: { verified: true } } }, // Include verified IUL sales
     });
 
-    const isSubscriptionExpired =
-      subscription?.status === "trialing" &&
-      subscription?.renewalDate &&
-      new Date(subscription.renewalDate) < new Date();
+    let status: string;
 
-    const status =
-      isSubscriptionExpired || subscription?.status !== "active"
-        ? "trialing" // Fixed typo: "trailing" → "trialing"
-        : "active";
+    if (!subscription) {
+      status = "none";
+    } else if (
+      subscription.status === "trialing" &&
+      subscription.renewalDate &&
+      new Date(subscription.renewalDate) < new Date() &&
+      subscription.iulSales.length === 0
+    ) {
+      // Trial expired and no verified sales
+      await prisma.subscription.update({
+        where: { id: subscription.id },
+        data: { status: "expired", updatedAt: new Date() },
+      });
+      status = "expired";
+    } else if (
+      subscription.iulSales.length > 0 &&
+      subscription.status !== "active"
+    ) {
+      // Grant free access for verified IUL sales
+      await prisma.subscription.update({
+        where: { id: subscription.id },
+        data: { status: "active", updatedAt: new Date() },
+      });
+      status = "active";
+    } else {
+      // Use existing subscription status (e.g., active, canceled, pending)
+      status = subscription.status;
+    }
 
     if (userData) {
       userData.subscriptionStatus = status;

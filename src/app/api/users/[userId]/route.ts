@@ -202,6 +202,7 @@ export async function DELETE(
   }
 }
 
+/*
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
@@ -332,6 +333,152 @@ export async function PATCH(
     console.error("Error updating user status:", error);
     return NextResponse.json(
       { error: "Failed to update user status" },
+      { status: 500 }
+    );
+  }
+}
+*/
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ userId: string }> }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id || session.user.role !== "admin") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
+  const { userId } = await params;
+  const { status } = await request.json();
+
+  if (!["active", "suspended"].includes(status)) {
+    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  }
+
+  try {
+    // Determine subscription status based on user status
+    const subscriptionStatus = status === "active" ? "active" : "expired";
+
+    // Update user and subscription in a transaction
+    const [user] = await prisma.$transaction([
+      prisma.user.update({
+        where: { id: userId },
+        data: { status },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          cellPhone: true,
+          officePhone: true,
+          role: true,
+          status: true,
+          sessionHistory: {
+            select: {
+              id: true,
+              sessionToken: true,
+              ipAddress: true,
+              userAgent: true,
+              browserName: true,
+              browserVersion: true,
+              osName: true,
+              osVersion: true,
+              deviceType: true,
+              deviceVendor: true,
+              deviceModel: true,
+              loginAt: true,
+              logoutAt: true,
+            },
+          },
+          TrialToken: {
+            select: {
+              token: true,
+              createdAt: true,
+              expiresAt: true,
+            },
+          },
+          AdminContact: {
+            select: {
+              id: true,
+              message: true,
+              createdAt: true,
+            },
+          },
+          Subscription: {
+            select: {
+              id: true,
+              planType: true,
+              status: true,
+              startDate: true,
+              renewalDate: true,
+              iulSales: {
+                select: {
+                  id: true,
+                  saleDate: true,
+                  verified: true,
+                  verifiedAt: true,
+                },
+              },
+            },
+          },
+          _count: {
+            select: { files: true },
+          },
+        },
+      }),
+      prisma.subscription.updateMany({
+        where: { userId },
+        data: { status: subscriptionStatus, updatedAt: new Date() },
+      }),
+    ]);
+
+    const companyInfo = await prisma.companyInfo.findFirst({
+      where: { userId },
+      select: {
+        id: true,
+        businessName: true,
+        agentName: true,
+        email: true,
+        phone: true,
+        logoSrc: true,
+        profilePicSrc: true,
+      },
+    });
+
+    return NextResponse.json({
+      ...user,
+      companyInfo: companyInfo
+        ? {
+            id: companyInfo.id,
+            businessName: companyInfo.businessName,
+            agentName: companyInfo.agentName,
+            email: companyInfo.email,
+            phoneNumber: companyInfo.phone,
+            companyLogo: companyInfo.logoSrc,
+            agentProfilePic: companyInfo.profilePicSrc,
+          }
+        : null,
+      subscription:
+        user.Subscription.length > 0
+          ? {
+              id: user.Subscription[0].id,
+              planType: user.Subscription[0].planType,
+              status: user.Subscription[0].status,
+              startDate: user.Subscription[0].startDate.toISOString(),
+              endDate: user.Subscription[0].renewalDate?.toISOString() || null,
+              iulSales: user.Subscription[0].iulSales.map((sale) => ({
+                id: sale.id,
+                saleDate: sale.saleDate.toISOString(),
+                verified: sale.verified,
+                verifiedAt: sale.verifiedAt?.toISOString() || null,
+              })),
+            }
+          : null,
+    });
+  } catch (error) {
+    console.error("Error updating user and subscription status:", error);
+    return NextResponse.json(
+      { error: "Failed to update user or subscription status" },
       { status: 500 }
     );
   }
