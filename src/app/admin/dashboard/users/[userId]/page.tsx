@@ -218,10 +218,10 @@ export default function UserDetailsPage({
   };
 
   const pieData = {
-    labels: user?.filesByCategory.map((entry) => entry.category) || [],
+    labels: user?.filesByCategory?.map((entry) => entry.category) || [],
     datasets: [
       {
-        data: user?.filesByCategory.map((entry) => entry.count) || [],
+        data: user?.filesByCategory?.map((entry) => entry.count) || [],
         backgroundColor: [
           "rgba(59, 130, 246, 0.5)",
           "rgba(239, 68, 68, 0.5)",
