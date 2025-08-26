@@ -15,6 +15,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Pie } from "react-chartjs-2";
@@ -72,6 +73,7 @@ interface User {
   officePhone: string | null;
   role: string;
   status: string;
+  foreverFree: boolean; // Added foreverFree
   sessionHistory: SessionHistory[];
   companyInfo: CompanyInfo | null;
   subscription: Subscription | null;
@@ -97,6 +99,7 @@ export default function UserDetailsPage({
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [updatingForeverFree, setUpdatingForeverFree] = useState(false); // Added state for foreverFree
   const router = useRouter();
 
   useEffect(() => {
@@ -151,32 +154,66 @@ export default function UserDetailsPage({
   const handleUpdateStatus = async () => {
     setUpdatingStatus(true);
     try {
+      // Toggle user status
       const newStatus = user?.status === "active" ? "suspended" : "active";
+
+      // Send PATCH request to backend
       const response = await fetch(`/api/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
 
+      // Handle errors from backend
       if (!response.ok) {
         const result = await response.json();
-        throw new Error(
-          result.error || "Failed to update user and subscription status"
-        );
+        throw new Error(result.error || "Failed to update user status");
+      }
+
+      // Update local state with updated user
+      const updatedUser = await response.json();
+      setUser(updatedUser);
+
+      // Success toast
+      toast.success(
+        `User ${
+          newStatus === "active" ? "activated" : "suspended"
+        } successfully`
+      );
+    } catch (err) {
+      // Error toast
+      toast.error("Failed to update user status");
+      console.error("Update status error:", err);
+    } finally {
+      // Always reset loading state
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handleUpdateForeverFree = async (checked: boolean) => {
+    setUpdatingForeverFree(true);
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: user?.status, foreverFree: checked }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "Failed to update forever free status");
       }
 
       const updatedUser = await response.json();
       setUser(updatedUser);
       toast.success(
-        `User and subscription ${
-          newStatus === "active" ? "activated" : "suspended"
-        } successfully`
+        `User ${checked ? "marked" : "unmarked"} as forever free successfully`
       );
     } catch (err) {
-      toast.error("Failed to update user and subscription status");
-      console.error("Update status error:", err);
+      toast.error("Failed to update forever free status");
+      console.error("Update forever free error:", err);
     } finally {
-      setUpdatingStatus(false);
+      setUpdatingForeverFree(false);
     }
   };
 
@@ -259,6 +296,20 @@ export default function UserDetailsPage({
                 <p>
                   <strong>Status:</strong> {user?.status || "N/A"}
                 </p>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="foreverFree"
+                    checked={user?.foreverFree || false}
+                    onCheckedChange={handleUpdateForeverFree}
+                    disabled={updatingForeverFree}
+                  />
+                  <label
+                    htmlFor="foreverFree"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Forever Free
+                  </label>
+                </div>
                 <div className="flex space-x-4 items-center">
                   <Button
                     variant="destructive"

@@ -30,6 +30,7 @@ interface User {
   cellPhone: string | null;
   officePhone: string | null;
   role: string;
+  foreverFree: boolean; // Added foreverFree
   _count: {
     files: number;
     sessionHistory: number;
@@ -163,6 +164,9 @@ export default function UsersPage() {
                       Total Files
                     </TableHead>
                     <TableHead className="high-contrast:text-black">
+                      Forever Free
+                    </TableHead>
+                    <TableHead className="high-contrast:text-black">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -183,6 +187,7 @@ export default function UsersPage() {
                       <TableCell>{user.cellPhone || "N/A"}</TableCell>
                       <TableCell>{user.officePhone || "N/A"}</TableCell>
                       <TableCell>{user._count.files || 0}</TableCell>
+                      <TableCell>{user.foreverFree ? "Yes" : "No"}</TableCell>
                       <TableCell>
                         <Link
                           href={`/admin/dashboard/users/${user.id}`}

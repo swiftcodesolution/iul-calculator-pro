@@ -1,3 +1,4 @@
+// users/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/connect";
 import { getServerSession } from "next-auth";
@@ -21,6 +22,7 @@ export async function GET(request: Request) {
         cellPhone: true,
         officePhone: true,
         role: true,
+        foreverFree: true,
         _count: {
           select: {
             files: true,
