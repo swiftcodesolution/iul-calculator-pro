@@ -1,18 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/connect";
-import nodemailer from "nodemailer";
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+import { createTransporter } from "@/lib/nodemailer"; // Import the createTransporter function
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -34,6 +25,9 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+
+    // Create the transporter using the same OAuth2 setup as the first snippet
+    const transporter = await createTransporter();
 
     await prisma.adminContact.create({
       data: {
@@ -70,8 +64,12 @@ export async function POST(request: Request) {
       { message: "Message sent to admin" },
       { status: 201 }
     );
-  } catch (error) {
-    console.error("Error sending admin message:", error);
+  } catch (error: any) {
+    console.error("Error sending admin message:", {
+      message: error.message,
+      code: error.code,
+      response: error.response,
+    });
     return NextResponse.json(
       { error: "Failed to send message" },
       { status: 500 }
