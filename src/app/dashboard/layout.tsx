@@ -26,6 +26,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(
     null
   );
+  const [foreverFree, setForeverFree] = useState<boolean | null>(null); // New state for foreverFree
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -37,9 +38,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           const response = await fetch("/api/subscription");
           const data = await response.json();
           setSubscriptionStatus(data.status);
+          // Fetch foreverFree status from user data
+          const userResponse = await fetch("/api/user"); // Adjust endpoint if needed
+          const userData = await userResponse.json();
+          setForeverFree(userData.foreverFree || false);
         } catch (error) {
-          console.error("Error fetching subscription:", error);
+          console.error("Error fetching subscription or user data:", error);
           setSubscriptionStatus(null);
+          setForeverFree(false);
         } finally {
           setIsLoading(false);
         }
@@ -56,9 +62,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     );
   }
 
-  // Skip subscription check for /dashboard/subscribe
+  // Skip subscription check for /dashboard/subscribe or if foreverFree is true
   if (
     pathname !== "/dashboard/subscribe" &&
+    !foreverFree && // Bypass dialog if foreverFree is true
     subscriptionStatus !== "active" &&
     subscriptionStatus !== "trialing"
   ) {

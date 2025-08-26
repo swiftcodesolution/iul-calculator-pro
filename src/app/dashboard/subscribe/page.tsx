@@ -9,6 +9,14 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { DollarSign, CheckCircle, Loader2, Info, Mail } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 export default function SubscriptionPage() {
   const router = useRouter();
@@ -17,6 +25,8 @@ export default function SubscriptionPage() {
   const [trialStatus, setTrialStatus] = useState<"active" | "expired" | "none">(
     "none"
   );
+  const [showContactDialog, setShowContactDialog] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -59,7 +69,6 @@ export default function SubscriptionPage() {
     },
   ].filter((plan) => plan.show);
 
-  /*
   const handleSubscribe = async (plan: string) => {
     if (status !== "authenticated") {
       toast.error("Please log in to subscribe.");
@@ -70,76 +79,7 @@ export default function SubscriptionPage() {
     setIsLoading(plan);
     try {
       if (plan === "contact-admin") {
-        const message = prompt("Enter your message to confirm IUL sale:");
-        if (!message) throw new Error("Message required");
-
-        const response = await fetch("/api/contact-admin", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message }),
-        });
-
-        const data = await response.json();
-        if (!response.ok)
-          throw new Error(data.error || "Failed to send message");
-
-        toast.success("Message sent to admin!");
-        router.push("/dashboard/home");
-      } else {
-        const response = await fetch("/api/subscribe", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plan }),
-        });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Subscription failed");
-
-        if (plan === "trial") {
-          toast.success("Trial activated! Complete 1 IUL sale every 2 months.");
-          router.push("/dashboard/home");
-        } else if (data.url) {
-          router.push(data.url);
-        } else {
-          throw new Error("No checkout URL");
-        }
-      }
-    } catch (error) {
-      console.error("Subscription error:", error);
-      const message =
-        error instanceof Error ? error.message : "Operation failed";
-      toast.error(message);
-    } finally {
-      setIsLoading(null);
-    }
-  };
-  */
-
-  const handleSubscribe = async (plan: string) => {
-    if (status !== "authenticated") {
-      toast.error("Please log in to subscribe.");
-      router.push("/");
-      return;
-    }
-
-    setIsLoading(plan);
-    try {
-      if (plan === "contact-admin") {
-        const message = prompt("Enter your message to confirm IUL sale:");
-        if (!message) throw new Error("Message required");
-
-        const response = await fetch("/api/contact-admin", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message }),
-        });
-
-        const data = await response.json();
-        if (!response.ok)
-          throw new Error(data.error || "Failed to send message");
-
-        toast.success("Message sent to admin!");
-        router.push("/dashboard/home");
+        setShowContactDialog(true); // Open dialog instead of prompt
       } else {
         const response = await fetch("/api/subscribe", {
           method: "POST",
@@ -170,6 +110,37 @@ export default function SubscriptionPage() {
       toast.error(message);
     } finally {
       setIsLoading(null);
+    }
+  };
+
+  const handleContactAdmin = async () => {
+    if (!message) {
+      toast.error("Message required");
+      return;
+    }
+
+    setIsLoading("contact-admin");
+    try {
+      const response = await fetch("/api/contact-admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Failed to send message");
+
+      toast.success("Message sent to admin!");
+      router.push("/dashboard/home");
+    } catch (error) {
+      console.error("Contact admin error:", error);
+      const message =
+        error instanceof Error ? error.message : "Operation failed";
+      toast.error(message);
+    } finally {
+      setIsLoading(null);
+      setShowContactDialog(false);
+      setMessage("");
     }
   };
 
@@ -249,6 +220,38 @@ export default function SubscriptionPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={showContactDialog} onOpenChange={setShowContactDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Contact Admin</DialogTitle>
+          </DialogHeader>
+          <Input
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Enter your message to confirm IUL sale"
+            className="w-full"
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowContactDialog(false);
+                setMessage("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleContactAdmin} disabled={!!isLoading}>
+              {isLoading === "contact-admin" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Send"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
