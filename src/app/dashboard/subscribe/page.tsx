@@ -37,6 +37,7 @@ export default function SubscriptionPage() {
     }
   }, [status]);
 
+  /*
   const plans = [
     {
       type: "trial",
@@ -66,6 +67,39 @@ export default function SubscriptionPage() {
       price: "Free",
       description: "Confirm IUL sale to extend trial or activate account.",
       show: trialStatus === "expired" || session?.user.status === "suspended",
+    },
+  ].filter((plan) => plan.show);
+  */
+
+  const plans = [
+    {
+      type: "trial",
+      name: "60-Day Trial",
+      price: "Free",
+      description:
+        "No charge with 1 IUL sale every 2 months. Auto-cancels otherwise.",
+      show: trialStatus === "none", // Only show for non-trial users
+    },
+    {
+      type: "monthly",
+      name: "Monthly",
+      price: "$89/month",
+      description: "Flexible billing with 60-day trial",
+      show: true, // Always show
+    },
+    {
+      type: "annual",
+      name: "Annual",
+      price: "$800/year",
+      description: "Best value with 60-day trial",
+      show: true, // Always show
+    },
+    {
+      type: "contact-admin",
+      name: "Connect with Admin",
+      price: "Free",
+      description: "Confirm IUL sale to extend trial or activate account.",
+      show: trialStatus === "expired" || session?.user.status === "suspended", // Explicitly show for expired or suspended
     },
   ].filter((plan) => plan.show);
 
