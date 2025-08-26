@@ -20,26 +20,30 @@ type DashboardLayoutProps = {
 };
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { status } = useSession();
+  const { status, data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(
     null
   );
-  const [foreverFree, setForeverFree] = useState<boolean | null>(null); // New state for foreverFree
+  const [foreverFree, setForeverFree] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/");
-    } else if (status === "authenticated") {
+    } else if (status === "authenticated" && session?.user?.id) {
       const fetchSubscription = async () => {
         try {
+          // Fetch subscription status
           const response = await fetch("/api/subscription");
+          if (!response.ok) throw new Error("Failed to fetch subscription");
           const data = await response.json();
           setSubscriptionStatus(data.status);
-          // Fetch foreverFree status from user data
-          const userResponse = await fetch("/api/user"); // Adjust endpoint if needed
+
+          // Fetch user data for foreverFree
+          const userResponse = await fetch(`/api/users/${session.user.id}`);
+          if (!userResponse.ok) throw new Error("Failed to fetch user data");
           const userData = await userResponse.json();
           setForeverFree(userData.foreverFree || false);
         } catch (error) {
@@ -52,7 +56,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       };
       fetchSubscription();
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   if (status === "loading" || isLoading) {
     return (
@@ -65,7 +69,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Skip subscription check for /dashboard/subscribe or if foreverFree is true
   if (
     pathname !== "/dashboard/subscribe" &&
-    !foreverFree && // Bypass dialog if foreverFree is true
+    !foreverFree &&
     subscriptionStatus !== "active" &&
     subscriptionStatus !== "trialing"
   ) {
