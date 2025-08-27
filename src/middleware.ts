@@ -24,12 +24,7 @@ export default withAuth(
     const callbackUrl = req.nextUrl.searchParams.get("callbackUrl");
     if (callbackUrl) {
       const url = new URL(
-        token.role === "admin"
-          ? "/admin/dashboard"
-          : token.subscriptionStatus === "active" ||
-            token.subscriptionStatus === "trialing"
-          ? "/dashboard/home"
-          : "/dashboard/subscribe",
+        token.role === "admin" ? "/admin/dashboard" : "/dashboard/home",
         req.url
       );
       url.searchParams.delete("callbackUrl");
@@ -41,8 +36,6 @@ export default withAuth(
       pathname,
       isAuthenticated: !!token,
       role: token?.role,
-      status: token?.status,
-      subscriptionStatus: token?.subscriptionStatus,
     });
 
     // Restrict admins from accessing /dashboard/*
@@ -55,11 +48,6 @@ export default withAuth(
       return NextResponse.next();
     }
 
-    // Redirect suspended users to /dashboard/subscribe
-    if (token.role === "agent" && token.status === "suspended") {
-      return NextResponse.redirect(new URL("/dashboard/subscribe", req.url));
-    }
-
     // Handle public pages
     if (
       pathname === "/" ||
@@ -68,30 +56,15 @@ export default withAuth(
     ) {
       if (token) {
         const redirectPath =
-          token.role === "admin"
-            ? "/admin/dashboard"
-            : token.subscriptionStatus === "active" ||
-              token.subscriptionStatus === "trialing"
-            ? "/dashboard/home"
-            : "/dashboard/subscribe";
+          token.role === "admin" ? "/admin/dashboard" : "/dashboard/home";
         return NextResponse.redirect(new URL(redirectPath, req.url));
       }
       return NextResponse.next();
     }
 
-    // Allow authenticated agents to access /dashboard/subscribe
-    if (token.role === "agent" && pathname === "/dashboard/subscribe") {
+    // Allow authenticated agents to access /dashboard/*
+    if (token.role === "agent" && pathname.startsWith("/dashboard")) {
       return NextResponse.next();
-    }
-
-    // Protect other /dashboard routes for agents
-    if (
-      token.role === "agent" &&
-      token.subscriptionStatus !== "active" &&
-      token.subscriptionStatus !== "trialing" &&
-      pathname.startsWith("/dashboard")
-    ) {
-      return NextResponse.redirect(new URL("/dashboard/subscribe", req.url));
     }
 
     return NextResponse.next();
@@ -125,19 +98,9 @@ export default withAuth(
           return false;
         }
 
-        // Allow agents to access /dashboard/subscribe
-        if (token.role === "agent" && pathname === "/dashboard/subscribe") {
-          return true;
-        }
-
-        // Protect other /dashboard routes for agents
+        // Allow agents to access /dashboard/*
         if (pathname.startsWith("/dashboard")) {
-          return (
-            token.role === "agent" &&
-            token.status === "active" &&
-            (token.subscriptionStatus === "active" ||
-              token.subscriptionStatus === "trialing")
-          );
+          return token.role === "agent";
         }
 
         return false;
