@@ -19,11 +19,14 @@ type DashboardLayoutProps = {
   children: React.ReactNode;
 };
 
+export const dynamic = "force-dynamic";
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { status, data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(
     null
   );
@@ -51,18 +54,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [session?.user?.id]);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/");
-    }
+    if (status === "unauthenticated") router.push("/");
   }, [status, router]);
 
   useEffect(() => {
-    if (status === "authenticated" && session?.user?.id) {
-      fetchSubscription();
-    }
+    if (status === "authenticated" && session?.user?.id) fetchSubscription();
   }, [status, session?.user?.id, fetchSubscription]);
 
-  // Re-fetch subscription status on redirect to /dashboard/home with success=true
   useEffect(() => {
     if (
       status === "authenticated" &&
@@ -75,55 +73,45 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [pathname, searchParams, status, session?.user?.id, fetchSubscription]);
 
-  if (
-    status === "loading" ||
-    isLoading ||
-    subscriptionStatus === null ||
-    foreverFree === null
-  ) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-sm text-center">
-        Loading...
-      </div>
-    );
-  }
-
-  // Skip subscription check for /dashboard/subscribe or if foreverFree is true
-  if (
-    pathname !== "/dashboard/subscribe" &&
-    !foreverFree &&
-    subscriptionStatus !== "active" &&
-    subscriptionStatus !== "trialing"
-  ) {
-    return (
-      <Dialog open={true}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Subscription Required</DialogTitle>
-            <DialogDescription>
-              Your subscription is not active. Please subscribe to continue
-              using the app.
-            </DialogDescription>
-          </DialogHeader>
-          <Button onClick={() => router.push("/dashboard/subscribe")}>
-            Go to Subscription Page
-          </Button>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
+  // Wrap the client hooks logic in Suspense
   return (
     <Suspense fallback={<div>Loading dashboard...</div>}>
       <DndProvider backend={HTML5Backend}>
-        <div className="min-h-screen w-full flex flex-col">
-          <main className="w-full min-h-[95vh] mx-auto p-4 flex flex-col">
-            {children}
-          </main>
-          <Suspense fallback={<div>Loading navigation...</div>}>
-            <NavBar />
-          </Suspense>
-        </div>
+        {status === "loading" ||
+        isLoading ||
+        subscriptionStatus === null ||
+        foreverFree === null ? (
+          <div className="min-h-screen flex items-center justify-center text-sm text-center">
+            Loading...
+          </div>
+        ) : pathname !== "/dashboard/subscribe" &&
+          !foreverFree &&
+          subscriptionStatus !== "active" &&
+          subscriptionStatus !== "trialing" ? (
+          <Dialog open={true}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Subscription Required</DialogTitle>
+                <DialogDescription>
+                  Your subscription is not active. Please subscribe to continue
+                  using the app.
+                </DialogDescription>
+              </DialogHeader>
+              <Button onClick={() => router.push("/dashboard/subscribe")}>
+                Go to Subscription Page
+              </Button>
+            </DialogContent>
+          </Dialog>
+        ) : (
+          <div className="min-h-screen w-full flex flex-col">
+            <main className="w-full min-h-[95vh] mx-auto p-4 flex flex-col">
+              {children}
+            </main>
+            <Suspense fallback={<div>Loading navigation...</div>}>
+              <NavBar />
+            </Suspense>
+          </div>
+        )}
       </DndProvider>
     </Suspense>
   );
