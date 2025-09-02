@@ -92,7 +92,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [status, session?.user?.id]);
 
-  if (status === "loading" || isLoading) {
+  if (
+    status === "loading" ||
+    isLoading ||
+    subscriptionStatus === null ||
+    foreverFree === null
+  ) {
     return (
       <div className="min-h-screen flex items-center justify-center text-sm text-center">
         Loading...
