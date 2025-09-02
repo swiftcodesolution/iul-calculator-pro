@@ -36,7 +36,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       const fetchSubscription = async () => {
         try {
           // Fetch subscription status
-          const response = await fetch("/api/subscription");
+          const response = await fetch("/api/subscribe");
           if (!response.ok) throw new Error("Failed to fetch subscription");
           const data = await response.json();
           setSubscriptionStatus(data.status);
