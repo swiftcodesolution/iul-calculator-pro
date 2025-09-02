@@ -32,6 +32,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/");
+    }
+  }, [status, router]);
+
+  /*
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/");
     } else if (status === "authenticated" && session?.user?.id) {
       const fetchSubscription = async () => {
         try {
@@ -57,6 +64,33 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       fetchSubscription();
     }
   }, [status, session, router]);
+  */
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.id) {
+      const fetchSubscription = async () => {
+        try {
+          const response = await fetch("/api/subscribe");
+          if (!response.ok) throw new Error("Failed to fetch subscription");
+          const data = await response.json();
+          setSubscriptionStatus(data.status);
+
+          const userResponse = await fetch(`/api/users/${session.user.id}`);
+          if (!userResponse.ok) throw new Error("Failed to fetch user data");
+          const userData = await userResponse.json();
+          setForeverFree(userData.foreverFree || false);
+        } catch (error) {
+          console.error("Error fetching subscription or user data:", error);
+          setSubscriptionStatus(null);
+          setForeverFree(false);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchSubscription();
+    }
+  }, [status, session?.user?.id]);
 
   if (status === "loading" || isLoading) {
     return (
