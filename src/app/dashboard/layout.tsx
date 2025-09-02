@@ -48,7 +48,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [session?.user?.id]); // Include session?.user?.id as a dependency
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -114,13 +114,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <Suspense>
+    <Suspense fallback={<div>Loading dashboard...</div>}>
       <DndProvider backend={HTML5Backend}>
         <div className="min-h-screen w-full flex flex-col">
           <main className="w-full min-h-[95vh] mx-auto p-4 flex flex-col">
             {children}
           </main>
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<div>Loading navigation...</div>}>
             <NavBar />
           </Suspense>
         </div>
