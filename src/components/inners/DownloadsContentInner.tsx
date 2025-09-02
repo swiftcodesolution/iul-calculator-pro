@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Download, RefreshCw, Eye, ArrowLeftIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import Image from "next/image";
 
 interface Resource {
@@ -26,6 +27,8 @@ interface Resource {
 
 export default function DownloadContentPageInner() {
   const [resources, setResources] = useState<Resource[]>([]);
+  const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -50,6 +53,7 @@ export default function DownloadContentPageInner() {
       });
 
       setResources(sortedResources);
+      setFilteredResources(sortedResources);
       setError(null);
     } catch (err) {
       setError("Error loading resources");
@@ -61,7 +65,16 @@ export default function DownloadContentPageInner() {
 
   useEffect(() => {
     fetchResources();
-  }, []); // optional: re-fetch if query params change
+  }, []); // Run once on mount
+
+  useEffect(() => {
+    const filtered = resources.filter(
+      (resource) =>
+        resource.fileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        resource.fileFormat.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredResources(filtered);
+  }, [searchTerm, resources]);
 
   return (
     <div className="h-[95vh] flex flex-col">
@@ -83,15 +96,24 @@ export default function DownloadContentPageInner() {
             />
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={fetchResources}
-          disabled={loading}
-        >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          {loading ? "Refreshing..." : "Refresh"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Input
+            type="text"
+            placeholder="Search by name or format..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-[200px]"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchResources}
+            disabled={loading}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            {loading ? "Refreshing..." : "Refresh"}
+          </Button>
+        </div>
       </div>
       <Card className="flex-1 flex flex-col">
         <CardHeader>
@@ -100,7 +122,7 @@ export default function DownloadContentPageInner() {
         <CardContent className="flex-1 overflow-hidden">
           {error ? (
             <p className="text-red-500">{error}</p>
-          ) : resources.length > 0 ? (
+          ) : filteredResources.length > 0 ? (
             <div className="h-full overflow-y-auto">
               <Table>
                 <TableHeader className="sticky top-0 bg-white z-10">
@@ -112,7 +134,7 @@ export default function DownloadContentPageInner() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {resources.map((resource) => (
+                  {filteredResources.map((resource) => (
                     <TableRow key={resource.id}>
                       <TableCell>{resource.fileName}</TableCell>
                       <TableCell>{resource.fileFormat}</TableCell>
