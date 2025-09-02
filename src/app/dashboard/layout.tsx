@@ -2,10 +2,10 @@
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import NavBar from "@/components/dashboard/NavBar";
 import { useSession } from "next-auth/react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -23,11 +23,32 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { status, data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(
     null
   );
   const [foreverFree, setForeverFree] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const fetchSubscription = useCallback(async () => {
+    try {
+      const response = await fetch("/api/subscribe");
+      if (!response.ok) throw new Error("Failed to fetch subscription");
+      const data = await response.json();
+      setSubscriptionStatus(data.status);
+
+      const userResponse = await fetch(`/api/users/${session?.user?.id}`);
+      if (!userResponse.ok) throw new Error("Failed to fetch user data");
+      const userData = await userResponse.json();
+      setForeverFree(userData.foreverFree || false);
+    } catch (error) {
+      console.error("Error fetching subscription or user data:", error);
+      setSubscriptionStatus(null);
+      setForeverFree(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [session?.user?.id]); // Include session?.user?.id as a dependency
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -35,62 +56,24 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [status, router]);
 
-  /*
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/");
-    } else if (status === "authenticated" && session?.user?.id) {
-      const fetchSubscription = async () => {
-        try {
-          // Fetch subscription status
-          const response = await fetch("/api/subscribe");
-          if (!response.ok) throw new Error("Failed to fetch subscription");
-          const data = await response.json();
-          setSubscriptionStatus(data.status);
-
-          // Fetch user data for foreverFree
-          const userResponse = await fetch(`/api/users/${session.user.id}`);
-          if (!userResponse.ok) throw new Error("Failed to fetch user data");
-          const userData = await userResponse.json();
-          setForeverFree(userData.foreverFree || false);
-        } catch (error) {
-          console.error("Error fetching subscription or user data:", error);
-          setSubscriptionStatus(null);
-          setForeverFree(false);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchSubscription();
-    }
-  }, [status, session, router]);
-  */
-
   useEffect(() => {
     if (status === "authenticated" && session?.user?.id) {
-      const fetchSubscription = async () => {
-        try {
-          const response = await fetch("/api/subscribe");
-          if (!response.ok) throw new Error("Failed to fetch subscription");
-          const data = await response.json();
-          setSubscriptionStatus(data.status);
-
-          const userResponse = await fetch(`/api/users/${session.user.id}`);
-          if (!userResponse.ok) throw new Error("Failed to fetch user data");
-          const userData = await userResponse.json();
-          setForeverFree(userData.foreverFree || false);
-        } catch (error) {
-          console.error("Error fetching subscription or user data:", error);
-          setSubscriptionStatus(null);
-          setForeverFree(false);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
       fetchSubscription();
     }
-  }, [status, session?.user?.id]);
+  }, [status, session?.user?.id, fetchSubscription]);
+
+  // Re-fetch subscription status on redirect to /dashboard/home with success=true
+  useEffect(() => {
+    if (
+      status === "authenticated" &&
+      session?.user?.id &&
+      pathname === "/dashboard/home" &&
+      searchParams.get("success") === "true"
+    ) {
+      setIsLoading(true);
+      fetchSubscription();
+    }
+  }, [pathname, searchParams, status, session?.user?.id, fetchSubscription]);
 
   if (
     status === "loading" ||

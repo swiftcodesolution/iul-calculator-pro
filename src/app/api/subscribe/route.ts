@@ -349,7 +349,7 @@ export async function POST(request: Request) {
         {
           message:
             plan === "trial" ? "Trial activated" : `Plan selected: ${plan}`,
-          redirect: "/dashboard/home",
+          redirect: "/dashboard/home?success=true",
         },
         { status: 201 }
       );
@@ -530,7 +530,10 @@ export async function POST(request: Request) {
 
       console.log("Trial update completed successfully");
       return NextResponse.json(
-        { message: `Plan selected: ${plan}`, redirect: "/dashboard/home" },
+        {
+          message: `Plan selected: ${plan}`,
+          redirect: "/dashboard/home?success=true",
+        },
         { status: 200 }
       );
     } catch (error: any) {
