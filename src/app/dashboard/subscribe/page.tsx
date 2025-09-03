@@ -95,6 +95,13 @@ export default function SubscriptionPage() {
       show: true, // Always show
     },
     {
+      type: "test",
+      name: "Test Plan",
+      price: "$1/month",
+      description: "This is a test plan for testing purposes.",
+      show: true, // Always show
+    },
+    {
       type: "contact-admin",
       name: "Connect with Admin",
       price: "Free",

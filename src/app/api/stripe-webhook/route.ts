@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     }
 
     // Validate plan against schema
-    const validPlans = ["trial", "monthly", "annual"];
+    const validPlans = ["trial", "monthly", "annual", "test"];
     if (!validPlans.includes(plan)) {
       console.error(`Invalid plan: ${plan}`);
       return NextResponse.json({ error: "Invalid plan type" }, { status: 400 });

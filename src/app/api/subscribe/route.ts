@@ -76,15 +76,16 @@ export async function POST(request: Request) {
   }
   console.log("Plan received:", plan);
 
-  const validPlans = ["trial", "monthly", "annual"] as const;
+  const validPlans = ["trial", "monthly", "annual", "test"] as const;
   if (!validPlans.includes(plan)) {
     console.error("Invalid plan:", plan);
     return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
   }
 
-  const planIds: Record<"monthly" | "annual", string> = {
+  const planIds: Record<"monthly" | "annual" | "test", string> = {
     monthly: "price_1RbOCrDjQSIXuLORKqGFNe0Y",
     annual: "price_1RbR2ADjQSIXuLORFc9tlyfY",
+    test: "price_1S3LWiDjQSIXuLORcxWRjwLJ",
   };
 
   const user = await prisma.user.findUnique({
