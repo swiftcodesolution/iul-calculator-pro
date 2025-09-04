@@ -302,7 +302,7 @@ export function ComparisonTable({
   const taxFreeResults = useMemo(() => {
     const taxFreeAnnualContribution =
       tables[0]?.data[0]?.["Premium Outlay"] !== undefined
-        ? parseInput(tables[0].data[0]["Premium Outlay"], 0)
+        ? parseInput(tables[0].data[6]["Premium Outlay"], 0)
         : parseInput(annualContributions, 0);
 
     console.log("taxFreeAnnualContribution:", taxFreeAnnualContribution, {
