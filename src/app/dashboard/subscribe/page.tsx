@@ -94,13 +94,13 @@ export default function SubscriptionPage() {
       description: "Best value with 60-day trial",
       show: true, // Always show
     },
-    {
-      type: "test",
-      name: "Test Plan",
-      price: "$1/month",
-      description: "This is a test plan for testing purposes.",
-      show: true, // Always show
-    },
+    // {
+    //   type: "test",
+    //   name: "Test Plan",
+    //   price: "$1/month",
+    //   description: "This is a test plan for testing purposes.",
+    //   show: true, // Always show
+    // },
     {
       type: "contact-admin",
       name: "Connect with Admin",
