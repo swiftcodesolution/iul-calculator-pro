@@ -263,3 +263,11 @@ model EmailLog {
   createdAt                 DateTime  @default(now())
   updatedAt                 DateTime  @updatedAt
 }
+
+model DatabaseLog {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  model      String?   // e.g., User, ClientFile
+  action     String    // e.g., create, update, delete
+  args       Json?     // Query arguments
+  createdAt  DateTime  @default(now())
+}
