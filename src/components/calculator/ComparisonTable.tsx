@@ -774,9 +774,10 @@ export function ComparisonTable({
         //     </div>
         //   </div>
         // ),
-        taxFree: selectedRowData
-          ? selectedRowData.taxFree.yearsRunOutOfMoney
-          : taxFreeResults.yearsRunOutOfMoney,
+        // taxFree: selectedRowData
+        //   ? selectedRowData.taxFree.yearsRunOutOfMoney
+        //   : taxFreeResults.yearsRunOutOfMoney,
+        taxFree: "IUL pays to age 119",
       },
     ],
     [
