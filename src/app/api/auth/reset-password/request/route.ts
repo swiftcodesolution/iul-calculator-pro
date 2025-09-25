@@ -1,17 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/connect";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+import { createTransporter } from "@/lib/nodemailer";
 
 export async function POST(request: Request) {
   const { email } = await request.json();
@@ -36,12 +26,15 @@ export async function POST(request: Request) {
       create: { userId: user.id, token, expiresAt },
     });
 
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password/${token}`;
+    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password/${token}?email=${email}`;
+    const subject = "Password Reset Request";
+
+    const transporter = await createTransporter();
 
     await transporter.sendMail({
       from: `"Support" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: "Password Reset Request",
+      subject,
       text: `You requested a password reset. Click the link below to set a new password:\n\n${resetUrl}`,
       html: `
         <h2>Password Reset Request</h2>
@@ -51,9 +44,45 @@ export async function POST(request: Request) {
       `,
     });
 
+    await prisma.emailLog.create({
+      data: {
+        userId: user.id,
+        emailType: "password_reset",
+        recipient: email,
+        subject,
+        status: "sent",
+        sentAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+
     return NextResponse.json({ message: "Reset email sent successfully" });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Reset email error:", error);
+
+    let errorMessage = "Unknown error";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (user) {
+      await prisma.emailLog.create({
+        data: {
+          userId: user.id,
+          emailType: "password_reset",
+          recipient: email,
+          subject: "Password Reset Request",
+          status: "failed",
+          errorMessage,
+          sentAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
+    }
+
     return NextResponse.json(
       { error: "Failed to send password reset email" },
       { status: 500 }

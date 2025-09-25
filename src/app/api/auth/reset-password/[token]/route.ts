@@ -3,11 +3,11 @@ import prisma from "@/lib/connect";
 
 export async function POST(request: NextRequest) {
   const url = new URL(request.url);
-  const token = url.pathname.split("/").pop(); // or use regex if route structure changes
+  const token = url.pathname.split("/").pop();
 
-  const { newPassword } = await request.json();
+  const { email, newPassword } = await request.json();
 
-  if (!token || !newPassword) {
+  if (!token || !email || !newPassword) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
@@ -17,7 +17,11 @@ export async function POST(request: NextRequest) {
       include: { user: true },
     });
 
-    if (!resetToken || resetToken.expiresAt < new Date()) {
+    if (
+      !resetToken ||
+      resetToken.expiresAt < new Date() ||
+      resetToken.user.email !== email
+    ) {
       return NextResponse.json(
         { error: "Token expired or invalid" },
         { status: 400 }

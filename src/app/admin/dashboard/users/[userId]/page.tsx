@@ -9,13 +9,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Building2, DollarSign, File } from "lucide-react";
+import { Users, Building2, DollarSign, File, Eye, EyeOff } from "lucide-react";
 import { use, useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
@@ -96,6 +98,11 @@ export default function UserDetailsPage({
   const [isDeleting, setIsDeleting] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [updatingForeverFree, setUpdatingForeverFree] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [updatingEmail, setUpdatingEmail] = useState(false);
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -108,6 +115,7 @@ export default function UserDetailsPage({
         }
         const data = await response.json();
         setUser(data);
+        setNewEmail(data.email); // Initialize with current email
       } catch (err) {
         setError("Error loading user details");
         console.error(err);
@@ -204,6 +212,71 @@ export default function UserDetailsPage({
     }
   };
 
+  const handleUpdateEmail = async () => {
+    if (!newEmail) {
+      toast.error("Email is required");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+      toast.error("Enter a valid email address");
+      return;
+    }
+
+    setUpdatingEmail(true);
+    try {
+      const response = await fetch(`/api/users/${userId}/update-email`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newEmail }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "Failed to update email");
+      }
+
+      const updatedUser = await response.json();
+      setUser(updatedUser);
+      toast.success("Email updated successfully");
+    } catch (err) {
+      toast.error("Failed to update email");
+      console.error("Update email error:", err);
+    } finally {
+      setUpdatingEmail(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!newPassword) {
+      toast.error("Password is required");
+      return;
+    }
+
+    setUpdatingPassword(true);
+    try {
+      const response = await fetch(`/api/users/${userId}/update-password`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPassword }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "Failed to update password");
+      }
+
+      const updatedUser = await response.json();
+      setUser(updatedUser);
+      toast.success("Password updated successfully");
+      setNewPassword(""); // Clear password field
+    } catch (err) {
+      toast.error("Failed to update password");
+      console.error("Update password error:", err);
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
+
   if (!user && !error) return <div className="text-center">Loading...</div>;
   if (error) return <div className="text-red-500 text-center">{error}</div>;
 
@@ -238,9 +311,59 @@ export default function UserDetailsPage({
                   {`${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
                     "N/A"}
                 </p>
-                <p>
-                  <strong>Email:</strong> {user?.email}
-                </p>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      id="email"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      placeholder="Enter new email"
+                    />
+                    <Button
+                      onClick={handleUpdateEmail}
+                      disabled={updatingEmail}
+                      className="hover:bg-blue-600"
+                    >
+                      {updatingEmail ? "Updating..." : "Update Email"}
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="password">New Password</Label>
+                  <div className="flex space-x-2">
+                    {/* input + toggle wrapper */}
+                    <div className="relative w-full">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* update password button */}
+                    <Button
+                      onClick={handleUpdatePassword}
+                      disabled={updatingPassword}
+                      className="hover:bg-blue-600"
+                    >
+                      {updatingPassword ? "Updating..." : "Update Password"}
+                    </Button>
+                  </div>
+                </div>
                 <p>
                   <strong>Role:</strong> {user?.role}
                 </p>
@@ -345,7 +468,7 @@ export default function UserDetailsPage({
                   )}
                 </motion.div>
               ) : (
-                <p className="">No company information available.</p>
+                <p>No company information available.</p>
               )}
             </CardContent>
           </Card>
@@ -385,23 +508,14 @@ export default function UserDetailsPage({
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="high-contrast:text-black">
-                              Sale Date
-                            </TableHead>
-                            <TableHead className="high-contrast:text-black">
-                              Verified
-                            </TableHead>
-                            <TableHead className="high-contrast:text-black">
-                              Verified At
-                            </TableHead>
+                            <TableHead>Sale Date</TableHead>
+                            <TableHead>Verified</TableHead>
+                            <TableHead>Verified At</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {user.subscription.iulSales.map((sale) => (
-                            <TableRow
-                              key={sale.id}
-                              className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                            >
+                            <TableRow key={sale.id}>
                               <TableCell>
                                 {new Date(sale.saleDate).toLocaleDateString()}
                               </TableCell>
@@ -420,12 +534,12 @@ export default function UserDetailsPage({
                         </TableBody>
                       </Table>
                     ) : (
-                      <p className="">No IUL sales recorded.</p>
+                      <p>No IUL sales recorded.</p>
                     )}
                   </div>
                 </motion.div>
               ) : (
-                <p className="">No subscription information available.</p>
+                <p>No subscription information available.</p>
               )}
             </CardContent>
           </Card>
@@ -472,9 +586,7 @@ export default function UserDetailsPage({
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-600 dark:text-gray-400">
-                        No file categories available.
-                      </p>
+                      <p>No file categories available.</p>
                     )}
                   </div>
                   <div>
@@ -483,23 +595,14 @@ export default function UserDetailsPage({
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="high-contrast:text-black">
-                              File Name
-                            </TableHead>
-                            <TableHead className="high-contrast:text-black">
-                              Category
-                            </TableHead>
-                            <TableHead className="high-contrast:text-black">
-                              Created At
-                            </TableHead>
+                            <TableHead>File Name</TableHead>
+                            <TableHead>Category</TableHead>
+                            <TableHead>Created At</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {user.recentFiles.map((file) => (
-                            <TableRow
-                              key={file.id}
-                              className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                            >
+                            <TableRow key={file.id}>
                               <TableCell>{file.fileName}</TableCell>
                               <TableCell>{file.category}</TableCell>
                               <TableCell>
@@ -510,69 +613,16 @@ export default function UserDetailsPage({
                         </TableBody>
                       </Table>
                     ) : (
-                      <p className="">No recent files available.</p>
+                      <p>No recent files available.</p>
                     )}
                   </div>
                 </motion.div>
               ) : (
-                <p className="">User not loaded.</p>
+                <p>User not loaded.</p>
               )}
             </CardContent>
           </Card>
         </div>
-
-        {/* <Card className="shadow-lg hover:shadow-xl transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg">Session History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {user?.sessionHistory && user.sessionHistory.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="high-contrast:text-black">
-                      Login Time
-                    </TableHead>
-                    <TableHead className="high-contrast:text-black">
-                      Browser
-                    </TableHead>
-                    <TableHead className="high-contrast:text-black">
-                      OS
-                    </TableHead>
-                    <TableHead className="high-contrast:text-black">
-                      IP Address
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {user.sessionHistory.map((session) => (
-                    <TableRow
-                      key={session.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                    >
-                      <TableCell>
-                        {new Date(session.loginAt).toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        {session.browserName && session.browserVersion
-                          ? `${session.browserName} ${session.browserVersion}`
-                          : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {session.osName && session.osVersion
-                          ? `${session.osName} ${session.osVersion}`
-                          : "N/A"}
-                      </TableCell>
-                      <TableCell>{session.ipAddress || "N/A"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="">No session history available.</p>
-            )}
-          </CardContent>
-        </Card> */}
       </main>
     </div>
   );

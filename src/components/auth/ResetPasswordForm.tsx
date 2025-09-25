@@ -1,4 +1,3 @@
-// app/reset-password/ResetPasswordForm.jsx
 "use client";
 
 import { useState } from "react";
@@ -32,7 +31,7 @@ export default function ResetPasswordForm() {
   });
 
   const onSubmit = async (data: ResetPasswordFormValues) => {
-    if (!token) {
+    if (!token || !email) {
       toast.error("Missing token or email");
       return;
     }

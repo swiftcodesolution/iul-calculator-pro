@@ -18,6 +18,17 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useTableStore } from "@/lib/store";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { toast } from "sonner";
 
 const imageUploadVariant: Variants = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -27,6 +38,18 @@ const imageUploadVariant: Variants = {
     transition: { duration: 0.4, type: "spring", stiffness: 120 },
   },
 };
+
+const resetPasswordSchema = z
+  .object({
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 interface CompanyInfoSectionProps {
   companyInfo: CompanyInfo;
@@ -66,8 +89,17 @@ export default function CompanyInfoSection({
 }: CompanyInfoSectionProps) {
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
 
   const { setDontWantLogo, setDontWantProfilePic } = useTableStore();
+
+  const resetForm = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
 
   const handleDeleteUpload = (type: "logo" | "profilePic") => {
     const field = type === "logo" ? "logoSrc" : "profilePicSrc";
@@ -115,6 +147,28 @@ export default function CompanyInfoSection({
       console.error("Error submitting form:", err);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const onResetSubmit = async (data: ResetPasswordFormValues) => {
+    try {
+      const res = await fetch("/api/user/update-password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: data.newPassword }),
+      });
+
+      if (!res.ok) {
+        const result = await res.json();
+        throw new Error(result.error || "Failed to update password");
+      }
+
+      toast.success("Password updated successfully");
+      setOpenDialog(false);
+      resetForm.reset();
+    } catch (err) {
+      toast.error("Failed to update password");
+      console.error("Update password error:", err);
     }
   };
 
@@ -579,8 +633,13 @@ export default function CompanyInfoSection({
                     className="grow"
                     size="sm"
                     onClick={() => {
-                      console.log("Cancel/Edit clicked, isEditing:", isEditing);
-                      form.reset(companyInfo);
+                      if (isEditing) {
+                        form.reset({
+                          ...companyInfo,
+                          email:
+                            form.getValues("email") || companyInfo.email || "",
+                        });
+                      }
                       toggleEdit();
                     }}
                     disabled={isSubmitting}
@@ -646,6 +705,59 @@ export default function CompanyInfoSection({
             </div>
           </form>
         </Form>
+        <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              Reset Password
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reset Password</DialogTitle>
+            </DialogHeader>
+            <Form {...resetForm}>
+              <form
+                onSubmit={resetForm.handleSubmit(onResetSubmit)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={resetForm.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>New Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={resetForm.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  disabled={resetForm.formState.isSubmitting}
+                >
+                  {resetForm.formState.isSubmitting
+                    ? "Resetting..."
+                    : "Reset Password"}
+                </Button>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

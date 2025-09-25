@@ -66,17 +66,35 @@ export default function DashboardPage() {
     originalImages,
   } = useImageCrop();
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { data: session, status } = useSession();
+
   const form = useForm<CompanyInfo>({
     resolver: zodResolver(companyInfoSchema),
-    defaultValues: companyInfo,
+    defaultValues: {
+      ...companyInfo,
+      email: companyInfo.email || session?.user?.email || "", // Initialize with session email
+    },
   });
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { data: session } = useSession();
-
   useEffect(() => {
-    form.reset(companyInfo);
-  }, [companyInfo, form]);
+    if (
+      status === "authenticated" &&
+      session?.user?.email &&
+      !companyInfo.email &&
+      !form.getValues("email")
+    ) {
+      form.setValue("email", session.user.email);
+    }
+    form.reset({
+      ...companyInfo,
+      email:
+        form.getValues("email") ||
+        companyInfo.email ||
+        session?.user?.email ||
+        "",
+    });
+  }, [companyInfo, session, status, form]);
 
   useEffect(() => {
     console.log("CropDialog state:", { cropDialogOpen, imageToCrop, cropType });
