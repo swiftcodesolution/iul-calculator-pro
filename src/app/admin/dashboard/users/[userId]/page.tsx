@@ -105,6 +105,25 @@ export default function UserDetailsPage({
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
+  // Reusable function to fetch full user data
+  const fetchUser = async () => {
+    try {
+      const response = await fetch(`/api/users/${userId}`);
+      if (!response.ok) {
+        if (response.status === 404) notFound();
+        throw new Error("Failed to fetch user");
+      }
+      const data = await response.json();
+      setUser(data);
+      setNewEmail(data.email); // Update email input with latest email
+      setError(null);
+    } catch (err) {
+      setError("Error loading user details");
+      console.error(err);
+    }
+  };
+
+  /*
   useEffect(() => {
     async function fetchUser() {
       try {
@@ -123,6 +142,44 @@ export default function UserDetailsPage({
     }
     fetchUser();
   }, [userId]);
+  */
+
+  useEffect(() => {
+    fetchUser();
+  }, [userId]);
+
+  /*
+  const handleDeleteUser = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this user? This will remove the user and their associated data."
+      )
+    ) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "Failed to delete user");
+      }
+
+      toast.success("User deleted successfully");
+      router.push("/admin/dashboard/users");
+    } catch (err) {
+      toast.error("Failed to delete user");
+      console.error("Delete user error:", err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  */
 
   const handleDeleteUser = async () => {
     if (
@@ -155,6 +212,7 @@ export default function UserDetailsPage({
     }
   };
 
+  /*
   const handleUpdateStatus = async () => {
     setUpdatingStatus(true);
     try {
@@ -184,7 +242,39 @@ export default function UserDetailsPage({
       setUpdatingStatus(false);
     }
   };
+  */
 
+  const handleUpdateStatus = async () => {
+    setUpdatingStatus(true);
+    try {
+      const newStatus = user?.status === "active" ? "suspended" : "active";
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "Failed to update user status");
+      }
+
+      // Refetch full user data
+      await fetchUser();
+      toast.success(
+        `User ${
+          newStatus === "active" ? "activated" : "suspended"
+        } successfully`
+      );
+    } catch (err) {
+      toast.error("Failed to update user status");
+      console.error("Update status error:", err);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  /*
   const handleUpdateForeverFree = async (checked: boolean) => {
     setUpdatingForeverFree(true);
     try {
@@ -211,7 +301,36 @@ export default function UserDetailsPage({
       setUpdatingForeverFree(false);
     }
   };
+  */
 
+  const handleUpdateForeverFree = async (checked: boolean) => {
+    setUpdatingForeverFree(true);
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: user?.status, foreverFree: checked }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "Failed to update forever free status");
+      }
+
+      // Refetch full user data
+      await fetchUser();
+      toast.success(
+        `User ${checked ? "marked" : "unmarked"} as forever free successfully`
+      );
+    } catch (err) {
+      toast.error("Failed to update forever free status");
+      console.error("Update forever free error:", err);
+    } finally {
+      setUpdatingForeverFree(false);
+    }
+  };
+
+  /*
   const handleUpdateEmail = async () => {
     if (!newEmail) {
       toast.error("Email is required");
@@ -245,7 +364,43 @@ export default function UserDetailsPage({
       setUpdatingEmail(false);
     }
   };
+  */
 
+  const handleUpdateEmail = async () => {
+    if (!newEmail) {
+      toast.error("Email is required");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+      toast.error("Enter a valid email address");
+      return;
+    }
+
+    setUpdatingEmail(true);
+    try {
+      const response = await fetch(`/api/users/${userId}/update-email`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newEmail }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "Failed to update email");
+      }
+
+      // Refetch full user data
+      await fetchUser();
+      toast.success("Email updated successfully");
+    } catch (err) {
+      toast.error("Failed to update email");
+      console.error("Update email error:", err);
+    } finally {
+      setUpdatingEmail(false);
+    }
+  };
+
+  /*
   const handleUpdatePassword = async () => {
     if (!newPassword) {
       toast.error("Password is required");
@@ -267,6 +422,38 @@ export default function UserDetailsPage({
 
       const updatedUser = await response.json();
       setUser(updatedUser);
+      toast.success("Password updated successfully");
+      setNewPassword(""); // Clear password field
+    } catch (err) {
+      toast.error("Failed to update password");
+      console.error("Update password error:", err);
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
+  */
+
+  const handleUpdatePassword = async () => {
+    if (!newPassword) {
+      toast.error("Password is required");
+      return;
+    }
+
+    setUpdatingPassword(true);
+    try {
+      const response = await fetch(`/api/users/${userId}/update-password`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPassword }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "Failed to update password");
+      }
+
+      // Refetch full user data
+      await fetchUser();
       toast.success("Password updated successfully");
       setNewPassword(""); // Clear password field
     } catch (err) {
