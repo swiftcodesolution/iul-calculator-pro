@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
-import { Trash2, Upload, Crop } from "lucide-react";
+import { Trash2, Upload, Crop, ExternalLink } from "lucide-react";
 import { CompanyInfo } from "@/lib/types";
 import { UseFormReturn } from "react-hook-form";
 import { useState } from "react";
@@ -21,6 +21,8 @@ import { useTableStore } from "@/lib/store";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -29,6 +31,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
+
+const MAX_FILE_SIZE_MB = 2;
+const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 const imageUploadVariant: Variants = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -90,6 +95,7 @@ export default function CompanyInfoSection({
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [showCompressDialog, setShowCompressDialog] = useState(false);
 
   const { setDontWantLogo, setDontWantProfilePic } = useTableStore();
 
@@ -191,480 +197,501 @@ export default function CompanyInfoSection({
   };
 
   return (
-    <Card className="flex-1 p-2 pt-18 gap-0 mb-2">
-      <CardContent className="p-0 space-y-2">
-        {(propError || submissionError) && (
-          <div className="text-red-500 text-sm">
-            {propError || submissionError}
-          </div>
-        )}
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
-            <div className="flex gap-2">
-              <div className="flex flex-col items-center w-full">
-                {form.watch("logoSrc") ? (
-                  <motion.div
-                    key={getImageKey(form.watch("logoSrc"))}
-                    variants={imageUploadVariant}
-                    initial="hidden"
-                    animate="visible"
-                    className="flex flex-col items-center"
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Image
-                        src={getImageSrc(form.watch("logoSrc"))}
-                        alt="Company Logo"
-                        width={300}
-                        height={300}
-                        className="object-contain w-[200px] h-[100px]"
-                      />
-                    </motion.div>
-                    {isEditing && (
-                      <div className="flex gap-2 mt-2 justify-center">
-                        <motion.div
-                          whileHover={{
-                            scale: 1.1,
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                          }}
-                        >
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDeleteUpload("logo")}
-                            type="button"
-                            disabled={isSubmitting}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </motion.div>
-                        <motion.div
-                          whileHover={{
-                            scale: 1.1,
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                          }}
-                        >
-                          <Button asChild variant="outline" size="sm">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              Replace
-                              <Upload className="h-4 w-4" />
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                id="logo-replace-upload"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0] || null;
-                                  console.log(
-                                    "Logo replace input file selected:",
-                                    file
-                                  );
-                                  handleFileUpload(
-                                    file,
-                                    "logo",
-                                    (field, value) => {
-                                      console.log(
-                                        `Setting form value: ${field}=`,
-                                        value
-                                      );
-                                      form.setValue(
-                                        field as keyof CompanyInfo,
-                                        value
-                                      );
-                                    }
-                                  );
-                                }}
-                                disabled={!isEditing || isSubmitting}
-                              />
-                            </label>
-                          </Button>
-                        </motion.div>
-                        <motion.div
-                          whileHover={{
-                            scale: 1.1,
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                          }}
-                        >
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            type="button"
-                            onClick={() => {
-                              const logoSrc = form.watch("logoSrc");
-                              if (typeof logoSrc === "string") {
-                                console.log(
-                                  "Opening crop dialog for existing logo:",
-                                  logoSrc
-                                );
-                                handleCropExistingImage("logo", logoSrc);
-                              }
-                            }}
-                            disabled={isSubmitting || !form.watch("logoSrc")}
-                          >
-                            <Crop className="h-4 w-4 mr-1" /> Crop
-                          </Button>
-                        </motion.div>
-                      </div>
-                    )}
-                  </motion.div>
-                ) : (
-                  <div>
-                    <motion.div
-                      whileHover={{ scale: 1.05, backgroundColor: "#e5e7eb" }}
-                      className="h-[100px] w-full bg-slate-200 flex items-center justify-center text-center rounded-sm"
-                    >
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        id="logo-upload"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0] || null;
-                          console.log("Logo input file selected:", file);
-                          handleFileUpload(file, "logo", (field, value) => {
-                            console.log(`Setting form value: ${field}=`, value);
-                            form.setValue(field as keyof CompanyInfo, value);
-                          });
-                        }}
-                        disabled={!isEditing || isSubmitting}
-                      />
-                      <label
-                        htmlFor="logo-upload"
-                        className={`cursor-pointer p-2 rounded text-sm font-bold text-gray-400 text-center ${
-                          !isEditing || isSubmitting
-                            ? "pointer-events-none opacity-50"
-                            : ""
-                        }`}
-                      >
-                        upload company logo
-                      </label>
-                    </motion.div>
-                    <label className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={useTableStore.getState().dontWantLogo}
-                        onChange={(e) => setDontWantLogo(e.target.checked)}
-                        disabled={!isEditing || isSubmitting}
-                      />
-                      Don&apos;t want to upload
-                    </label>
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col items-center w-full">
-                {form.watch("profilePicSrc") ? (
-                  <motion.div
-                    key={getImageKey(form.watch("profilePicSrc"))}
-                    variants={imageUploadVariant}
-                    initial="hidden"
-                    animate="visible"
-                    className="flex flex-col items-center"
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Image
-                        src={getImageSrc(form.watch("profilePicSrc"))}
-                        alt="Agent Profile"
-                        width={300}
-                        height={300}
-                        className="object-cover rounded-full w-[100px] h-[100px]"
-                      />
-                    </motion.div>
-                    {isEditing && (
-                      <div className="flex gap-2 mt-2 justify-center">
-                        <motion.div
-                          whileHover={{
-                            scale: 1.1,
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                          }}
-                        >
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDeleteUpload("profilePic")}
-                            type="button"
-                            disabled={isSubmitting}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </motion.div>
-                        <motion.div
-                          whileHover={{
-                            scale: 1.1,
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                          }}
-                        >
-                          <Button asChild variant="outline" size="sm">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              Replace
-                              <Upload className="h-4 w-4" />
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                id="profile-replace-upload"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0] || null;
-                                  console.log(
-                                    "Profile input file selected:",
-                                    file
-                                  );
-                                  handleFileUpload(
-                                    file,
-                                    "profilePic",
-                                    (field, value) => {
-                                      console.log(
-                                        `Setting form value: ${field}=`,
-                                        value
-                                      );
-                                      form.setValue(
-                                        field as keyof CompanyInfo,
-                                        value
-                                      );
-                                    }
-                                  );
-                                }}
-                                disabled={!isEditing || isSubmitting}
-                              />
-                            </label>
-                          </Button>
-                        </motion.div>
-                        <motion.div
-                          whileHover={{
-                            scale: 1.1,
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                          }}
-                        >
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            type="button"
-                            onClick={() => {
-                              const profilePicSrc = form.watch("profilePicSrc");
-                              if (typeof profilePicSrc === "string") {
-                                console.log(
-                                  "Opening crop dialog for existing profilePic:",
-                                  profilePicSrc
-                                );
-                                handleCropExistingImage(
-                                  "profilePic",
-                                  profilePicSrc
-                                );
-                              }
-                            }}
-                            disabled={
-                              isSubmitting || !form.watch("profilePicSrc")
-                            }
-                          >
-                            <Crop className="h-4 w-4 mr-1" /> Crop
-                          </Button>
-                        </motion.div>
-                      </div>
-                    )}
-                  </motion.div>
-                ) : (
-                  <div>
-                    <motion.div
-                      whileHover={{ scale: 1.05, backgroundColor: "#e5e7eb" }}
-                      className="h-[100px] w-full bg-slate-200 flex items-center justify-center text-center rounded-sm"
-                    >
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        id="profile-upload"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0] || null;
-                          console.log("Profile input file selected:", file);
-                          handleFileUpload(
-                            file,
-                            "profilePic",
-                            (field, value) => {
-                              console.log(
-                                `Setting form value: ${field}=`,
-                                value
-                              );
-                              form.setValue(field as keyof CompanyInfo, value);
-                            }
-                          );
-                        }}
-                        disabled={!isEditing || isSubmitting}
-                      />
-                      <label
-                        htmlFor="profile-upload"
-                        className={`cursor-pointer p-2 rounded text-sm font-bold text-gray-400 text-center ${
-                          !isEditing || isSubmitting
-                            ? "pointer-events-none opacity-50"
-                            : ""
-                        }`}
-                      >
-                        upload profile picture
-                      </label>
-                    </motion.div>
-                    <label className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={useTableStore.getState().dontWantProfilePic}
-                        onChange={(e) =>
-                          setDontWantProfilePic(e.target.checked)
-                        }
-                        disabled={!isEditing || isSubmitting}
-                      />
-                      Don&apos;t want to upload
-                    </label>
-                  </div>
-                )}
-              </div>
+    <>
+      <Card className="flex-1 p-2 pt-18 gap-0 mb-2">
+        <CardContent className="p-0 space-y-2">
+          {(propError || submissionError) && (
+            <div className="text-red-500 text-sm">
+              {propError || submissionError}
             </div>
-            <div className="space-y-2 mt-4">
-              <div className="flex gap-2 w-full">
-                <FormField
-                  control={form.control}
-                  name="businessName"
-                  render={({ field }) => (
-                    <FormItem className="grow">
-                      <FormLabel className="text-xs">Business Name</FormLabel>
-                      <FormControl>
-                        <motion.div
-                          whileFocus={{
-                            scale: 1.02,
-                            boxShadow: "0 0 0 2px #3b82f6",
-                          }}
-                        >
-                          <Input
-                            {...field}
-                            disabled={!isEditing || isSubmitting}
-                            className="h-6 text-xs"
-                          />
-                        </motion.div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="agentName"
-                  render={({ field }) => (
-                    <FormItem className="grow">
-                      <FormLabel className="text-xs">Agent Name</FormLabel>
-                      <FormControl>
-                        <motion.div
-                          whileFocus={{
-                            scale: 1.02,
-                            boxShadow: "0 0 0 2px #3b82f6",
-                          }}
-                        >
-                          <Input
-                            {...field}
-                            disabled={!isEditing || isSubmitting}
-                            className="h-6 text-xs"
-                          />
-                        </motion.div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="flex gap-2 w-full">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem className="grow">
-                      <FormLabel className="text-xs">Email</FormLabel>
-                      <FormControl>
-                        <motion.div
-                          whileFocus={{
-                            scale: 1.02,
-                            boxShadow: "0 0 0 2px #3b82f6",
-                          }}
-                        >
-                          <Input
-                            {...field}
-                            disabled={!isEditing || isSubmitting}
-                            className="h-6 text-xs"
-                          />
-                        </motion.div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem className="grow">
-                      <FormLabel className="text-xs">Phone Number</FormLabel>
-                      <FormControl>
-                        <motion.div
-                          whileFocus={{
-                            scale: 1.02,
-                            boxShadow: "0 0 0 2px #3b82f6",
-                          }}
-                        >
-                          <Input
-                            {...field}
-                            disabled={!isEditing || isSubmitting}
-                            className="h-6 text-xs"
-                          />
-                        </motion.div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="flex gap-2 w-full">
-                <motion.div
-                  whileHover={{
-                    scale: 1.1,
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <Button
-                    type="button"
-                    className="grow"
-                    size="sm"
-                    onClick={() => {
-                      if (isEditing) {
-                        form.reset({
-                          ...companyInfo,
-                          email:
-                            form.getValues("email") || companyInfo.email || "",
-                        });
-                      }
-                      toggleEdit();
-                    }}
-                    disabled={isSubmitting}
-                  >
-                    {isEditing ? "Cancel" : "Edit"}
-                  </Button>
-                </motion.div>
-                {isEditing && (
-                  <>
+          )}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+              <div className="flex gap-2">
+                <div className="flex flex-col items-center w-full">
+                  {form.watch("logoSrc") ? (
                     <motion.div
-                      whileHover={{
-                        scale: 1.1,
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                      }}
+                      key={getImageKey(form.watch("logoSrc"))}
+                      variants={imageUploadVariant}
+                      initial="hidden"
+                      animate="visible"
+                      className="flex flex-col items-center"
                     >
-                      <Button
-                        type="submit"
-                        className="grow"
-                        size="sm"
-                        disabled={isSubmitting}
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        {isSubmitting ? "Saving..." : "Save"}
-                      </Button>
+                        <Image
+                          src={getImageSrc(form.watch("logoSrc"))}
+                          alt="Company Logo"
+                          width={300}
+                          height={300}
+                          className="object-contain w-[200px] h-[100px]"
+                        />
+                      </motion.div>
+                      {isEditing && (
+                        <div className="flex gap-2 mt-2 justify-center">
+                          <motion.div
+                            whileHover={{
+                              scale: 1.1,
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            }}
+                          >
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteUpload("logo")}
+                              type="button"
+                              disabled={isSubmitting}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </motion.div>
+                          <motion.div
+                            whileHover={{
+                              scale: 1.1,
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            }}
+                          >
+                            <Button asChild variant="outline" size="sm">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                Replace
+                                <Upload className="h-4 w-4" />
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  id="logo-replace-upload"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0] || null;
+                                    if (file) {
+                                      if (file.size > MAX_FILE_SIZE) {
+                                        setShowCompressDialog(true);
+                                        toast.error(
+                                          `Replacement logo too large. Max ${MAX_FILE_SIZE_MB}MB allowed.`
+                                        );
+                                        e.target.value = "";
+                                        return;
+                                      }
+                                      console.log(
+                                        "Logo replace input file selected:",
+                                        file
+                                      );
+                                      handleFileUpload(
+                                        file,
+                                        "logo",
+                                        (field, value) => {
+                                          form.setValue(
+                                            field as keyof CompanyInfo,
+                                            value
+                                          );
+                                        }
+                                      );
+                                    }
+                                  }}
+                                  disabled={!isEditing || isSubmitting}
+                                />
+                              </label>
+                            </Button>
+                          </motion.div>
+                          <motion.div
+                            whileHover={{
+                              scale: 1.1,
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            }}
+                          >
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              type="button"
+                              onClick={() => {
+                                const logoSrc = form.watch("logoSrc");
+                                if (typeof logoSrc === "string") {
+                                  console.log(
+                                    "Opening crop dialog for existing logo:",
+                                    logoSrc
+                                  );
+                                  handleCropExistingImage("logo", logoSrc);
+                                }
+                              }}
+                              disabled={isSubmitting || !form.watch("logoSrc")}
+                            >
+                              <Crop className="h-4 w-4 mr-1" /> Crop
+                            </Button>
+                          </motion.div>
+                        </div>
+                      )}
                     </motion.div>
-                    {companyInfo.id && (
+                  ) : (
+                    <div>
+                      <motion.div
+                        whileHover={{ scale: 1.05, backgroundColor: "#e5e7eb" }}
+                        className="h-[100px] w-full bg-slate-200 flex items-center justify-center text-center rounded-sm"
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          id="logo-upload"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            if (file) {
+                              if (file.size > MAX_FILE_SIZE) {
+                                setShowCompressDialog(true);
+                                toast.error(
+                                  `Logo file too large. Max ${MAX_FILE_SIZE_MB}MB allowed.`
+                                );
+                                e.target.value = ""; // reset file input
+                                return;
+                              }
+                              console.log("Logo input file selected:", file);
+                              handleFileUpload(file, "logo", (field, value) => {
+                                form.setValue(
+                                  field as keyof CompanyInfo,
+                                  value
+                                );
+                              });
+                            }
+                          }}
+                          disabled={!isEditing || isSubmitting}
+                        />
+                        <label
+                          htmlFor="logo-upload"
+                          className={`cursor-pointer p-2 rounded text-sm font-bold text-gray-400 text-center ${
+                            !isEditing || isSubmitting
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }`}
+                        >
+                          upload company logo
+                        </label>
+                      </motion.div>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={useTableStore.getState().dontWantLogo}
+                          onChange={(e) => setDontWantLogo(e.target.checked)}
+                          disabled={!isEditing || isSubmitting}
+                        />
+                        Don&apos;t want to upload
+                      </label>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col items-center w-full">
+                  {form.watch("profilePicSrc") ? (
+                    <motion.div
+                      key={getImageKey(form.watch("profilePicSrc"))}
+                      variants={imageUploadVariant}
+                      initial="hidden"
+                      animate="visible"
+                      className="flex flex-col items-center"
+                    >
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Image
+                          src={getImageSrc(form.watch("profilePicSrc"))}
+                          alt="Agent Profile"
+                          width={300}
+                          height={300}
+                          className="object-cover rounded-full w-[100px] h-[100px]"
+                        />
+                      </motion.div>
+                      {isEditing && (
+                        <div className="flex gap-2 mt-2 justify-center">
+                          <motion.div
+                            whileHover={{
+                              scale: 1.1,
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            }}
+                          >
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteUpload("profilePic")}
+                              type="button"
+                              disabled={isSubmitting}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </motion.div>
+                          <motion.div
+                            whileHover={{
+                              scale: 1.1,
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            }}
+                          >
+                            <Button asChild variant="outline" size="sm">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                Replace
+                                <Upload className="h-4 w-4" />
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  id="profile-replace-upload"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0] || null;
+                                    if (file) {
+                                      if (file.size > MAX_FILE_SIZE) {
+                                        setShowCompressDialog(true);
+                                        toast.error(
+                                          `Replacement profile picture too large. Max ${MAX_FILE_SIZE_MB}MB allowed.`
+                                        );
+                                        e.target.value = "";
+                                        return;
+                                      }
+                                      console.log(
+                                        "Profile replace input file selected:",
+                                        file
+                                      );
+                                      handleFileUpload(
+                                        file,
+                                        "profilePic",
+                                        (field, value) => {
+                                          form.setValue(
+                                            field as keyof CompanyInfo,
+                                            value
+                                          );
+                                        }
+                                      );
+                                    }
+                                  }}
+                                  disabled={!isEditing || isSubmitting}
+                                />
+                              </label>
+                            </Button>
+                          </motion.div>
+                          <motion.div
+                            whileHover={{
+                              scale: 1.1,
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            }}
+                          >
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              type="button"
+                              onClick={() => {
+                                const profilePicSrc =
+                                  form.watch("profilePicSrc");
+                                if (typeof profilePicSrc === "string") {
+                                  console.log(
+                                    "Opening crop dialog for existing profilePic:",
+                                    profilePicSrc
+                                  );
+                                  handleCropExistingImage(
+                                    "profilePic",
+                                    profilePicSrc
+                                  );
+                                }
+                              }}
+                              disabled={
+                                isSubmitting || !form.watch("profilePicSrc")
+                              }
+                            >
+                              <Crop className="h-4 w-4 mr-1" /> Crop
+                            </Button>
+                          </motion.div>
+                        </div>
+                      )}
+                    </motion.div>
+                  ) : (
+                    <div>
+                      <motion.div
+                        whileHover={{ scale: 1.05, backgroundColor: "#e5e7eb" }}
+                        className="h-[100px] w-full bg-slate-200 flex items-center justify-center text-center rounded-sm"
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          id="profile-upload"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            if (file) {
+                              if (file.size > MAX_FILE_SIZE) {
+                                setShowCompressDialog(true);
+                                toast.error(
+                                  `Profile picture too large. Max ${MAX_FILE_SIZE_MB}MB allowed.`
+                                );
+                                e.target.value = "";
+                                return;
+                              }
+                              console.log("Profile input file selected:", file);
+                              handleFileUpload(
+                                file,
+                                "profilePic",
+                                (field, value) => {
+                                  form.setValue(
+                                    field as keyof CompanyInfo,
+                                    value
+                                  );
+                                }
+                              );
+                            }
+                          }}
+                          disabled={!isEditing || isSubmitting}
+                        />
+                        <label
+                          htmlFor="profile-upload"
+                          className={`cursor-pointer p-2 rounded text-sm font-bold text-gray-400 text-center ${
+                            !isEditing || isSubmitting
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }`}
+                        >
+                          upload profile picture
+                        </label>
+                      </motion.div>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={useTableStore.getState().dontWantProfilePic}
+                          onChange={(e) =>
+                            setDontWantProfilePic(e.target.checked)
+                          }
+                          disabled={!isEditing || isSubmitting}
+                        />
+                        Don&apos;t want to upload
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2 mt-4">
+                <div className="flex gap-2 w-full">
+                  <FormField
+                    control={form.control}
+                    name="businessName"
+                    render={({ field }) => (
+                      <FormItem className="grow">
+                        <FormLabel className="text-xs">Business Name</FormLabel>
+                        <FormControl>
+                          <motion.div
+                            whileFocus={{
+                              scale: 1.02,
+                              boxShadow: "0 0 0 2px #3b82f6",
+                            }}
+                          >
+                            <Input
+                              {...field}
+                              disabled={!isEditing || isSubmitting}
+                              className="h-6 text-xs"
+                            />
+                          </motion.div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="agentName"
+                    render={({ field }) => (
+                      <FormItem className="grow">
+                        <FormLabel className="text-xs">Agent Name</FormLabel>
+                        <FormControl>
+                          <motion.div
+                            whileFocus={{
+                              scale: 1.02,
+                              boxShadow: "0 0 0 2px #3b82f6",
+                            }}
+                          >
+                            <Input
+                              {...field}
+                              disabled={!isEditing || isSubmitting}
+                              className="h-6 text-xs"
+                            />
+                          </motion.div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="flex gap-2 w-full">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem className="grow">
+                        <FormLabel className="text-xs">Email</FormLabel>
+                        <FormControl>
+                          <motion.div
+                            whileFocus={{
+                              scale: 1.02,
+                              boxShadow: "0 0 0 2px #3b82f6",
+                            }}
+                          >
+                            <Input
+                              {...field}
+                              disabled={!isEditing || isSubmitting}
+                              className="h-6 text-xs"
+                            />
+                          </motion.div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem className="grow">
+                        <FormLabel className="text-xs">Phone Number</FormLabel>
+                        <FormControl>
+                          <motion.div
+                            whileFocus={{
+                              scale: 1.02,
+                              boxShadow: "0 0 0 2px #3b82f6",
+                            }}
+                          >
+                            <Input
+                              {...field}
+                              disabled={!isEditing || isSubmitting}
+                              className="h-6 text-xs"
+                            />
+                          </motion.div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="flex gap-2 w-full">
+                  <motion.div
+                    whileHover={{
+                      scale: 1.1,
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    }}
+                  >
+                    <Button
+                      type="button"
+                      className="grow"
+                      size="sm"
+                      onClick={() => {
+                        if (isEditing) {
+                          form.reset({
+                            ...companyInfo,
+                            email:
+                              form.getValues("email") ||
+                              companyInfo.email ||
+                              "",
+                          });
+                        }
+                        toggleEdit();
+                      }}
+                      disabled={isSubmitting}
+                    >
+                      {isEditing ? "Cancel" : "Edit"}
+                    </Button>
+                  </motion.div>
+                  {isEditing && (
+                    <>
                       <motion.div
                         whileHover={{
                           scale: 1.1,
@@ -672,93 +699,144 @@ export default function CompanyInfoSection({
                         }}
                       >
                         <Button
-                          variant="destructive"
+                          type="submit"
                           className="grow"
                           size="sm"
-                          onClick={async () => {
-                            setIsSubmitting(true);
-                            try {
-                              await deleteCompanyInfo();
-                              form.reset();
-                            } catch (err) {
-                              setSubmissionError(
-                                "Failed to delete company info"
-                              );
-                              console.error(
-                                "Error deleting company info:",
-                                err
-                              );
-                            } finally {
-                              setIsSubmitting(false);
-                            }
-                          }}
-                          type="button"
                           disabled={isSubmitting}
                         >
-                          Delete
+                          {isSubmitting ? "Saving..." : "Save"}
                         </Button>
                       </motion.div>
-                    )}
-                  </>
-                )}
+                      {companyInfo.id && (
+                        <motion.div
+                          whileHover={{
+                            scale: 1.1,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          <Button
+                            variant="destructive"
+                            className="grow"
+                            size="sm"
+                            onClick={async () => {
+                              setIsSubmitting(true);
+                              try {
+                                await deleteCompanyInfo();
+                                form.reset();
+                              } catch (err) {
+                                setSubmissionError(
+                                  "Failed to delete company info"
+                                );
+                                console.error(
+                                  "Error deleting company info:",
+                                  err
+                                );
+                              } finally {
+                                setIsSubmitting(false);
+                              }
+                            }}
+                            type="button"
+                            disabled={isSubmitting}
+                          >
+                            Delete
+                          </Button>
+                        </motion.div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          </form>
-        </Form>
-        <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              Reset Password
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Reset Password</DialogTitle>
-            </DialogHeader>
-            <Form {...resetForm}>
-              <form
-                onSubmit={resetForm.handleSubmit(onResetSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={resetForm.control}
-                  name="newPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>New Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={resetForm.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="submit"
-                  disabled={resetForm.formState.isSubmitting}
+            </form>
+          </Form>
+          <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                Reset Password
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Reset Password</DialogTitle>
+              </DialogHeader>
+              <Form {...resetForm}>
+                <form
+                  onSubmit={resetForm.handleSubmit(onResetSubmit)}
+                  className="space-y-4"
                 >
-                  {resetForm.formState.isSubmitting
-                    ? "Resetting..."
-                    : "Reset Password"}
-                </Button>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
+                  <FormField
+                    control={resetForm.control}
+                    name="newPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>New Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={resetForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={resetForm.formState.isSubmitting}
+                  >
+                    {resetForm.formState.isSubmitting
+                      ? "Resetting..."
+                      : "Reset Password"}
+                  </Button>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </CardContent>
+      </Card>
+
+      <Dialog open={showCompressDialog} onOpenChange={setShowCompressDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Image Too Large</DialogTitle>
+            <DialogDescription>
+              Your image exceeds the 2 MB upload limit. Please compress it using
+              this free tool before uploading again:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 flex items-center justify-between gap-2">
+            <a
+              href="https://imagecompressor.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                // Try to open a new window instead of a tab
+                window.open(
+                  "https://imagecompressor.com/",
+                  "_blank",
+                  "noopener,noreferrer,width=1000,height=800"
+                );
+              }}
+              className="flex items-center gap-2 text-primary hover:underline"
+            >
+              <ExternalLink size={16} />
+              Go to Image Compressor
+            </a>
+          </div>
+          <DialogFooter className="mt-6">
+            <Button onClick={() => setShowCompressDialog(false)}>OK</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
