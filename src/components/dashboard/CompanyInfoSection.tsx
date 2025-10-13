@@ -808,7 +808,7 @@ export default function CompanyInfoSection({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Image Too Large</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="high-contrast:text-white">
               Your image exceeds the 2 MB upload limit. Please compress it using
               this free tool before uploading again:
             </DialogDescription>
@@ -826,9 +826,9 @@ export default function CompanyInfoSection({
                   "noopener,noreferrer,width=1000,height=800"
                 );
               }}
-              className="flex items-center gap-2 text-primary hover:underline"
+              className="flex items-center gap-2 text-primary hover:underline high-contrast:text-white"
             >
-              <ExternalLink size={16} />
+              <ExternalLink size={16} className="high-contrast:text-white" />
               Go to Image Compressor
             </a>
           </div>
