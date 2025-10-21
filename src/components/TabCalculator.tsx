@@ -141,9 +141,11 @@ export default function TabCalculator() {
           <Checkbox
             checked={syncStartingBalance}
             onCheckedChange={handleCheckboxChange}
-            aria-label="Sync Tax-Free Starting Balance"
+            aria-label="Bypass tax calculation for this transfer"
           />
-          <Label className="grow">Savings Account</Label>
+          <Label className="grow">
+            Bypass tax calculation for this transfer
+          </Label>
         </div>
         <div className="flex justify-between">
           <span>Penalties</span>
