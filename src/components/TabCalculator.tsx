@@ -23,7 +23,6 @@ const parseInputValue = (value: string): number | string => {
 };
 
 export default function TabCalculator() {
-  // Changed to string | number to match InflationCalculator
   const {
     withdrawalAmount,
     startingBalance,
@@ -56,7 +55,7 @@ export default function TabCalculator() {
     setCalculatorTaxRate(taxRate);
   }, [age, taxRate, setCalculatorAge, setCalculatorTaxRate]);
 
-  // Handle amount input change
+  // Handle input changes
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInputValue(e.target.value);
     setAmount(value);
@@ -74,25 +73,23 @@ export default function TabCalculator() {
 
   const handleCheckboxChange = (checked: boolean | "indeterminate") => {
     if (checked === "indeterminate") {
-      // Handle indeterminate state if needed (e.g., ignore or set to false)
       setSyncStartingBalance(false);
       return;
     }
     setSyncStartingBalance(checked);
   };
 
-  // Convert amount to number for calculations, default to 0 if empty
-  // const amountNum = typeof amount === "number" ? amount : 0;
-  // const penalty = age < 59.5 ? amountNum * 0.1 : 0;
-  // const taxes = (amountNum - penalty) * (taxRate / 100);
-  // const netWithdrawal = amountNum - penalty - taxes;
-
+  // Conditional calculations
   const amountNum = typeof amount === "number" ? amount : 0;
   const ageNum = typeof age === "number" ? age : 0;
   const taxRateNum = typeof taxRate === "number" ? taxRate : 0;
-  const penalty = ageNum < 59.5 ? amountNum * 0.1 : 0;
-  const taxes = (amountNum - penalty) * (taxRateNum / 100);
-  const netWithdrawal = amountNum - penalty - taxes;
+  const penalty = syncStartingBalance ? 0 : ageNum < 59.5 ? amountNum * 0.1 : 0;
+  const taxes = syncStartingBalance
+    ? 0
+    : (amountNum - penalty) * (taxRateNum / 100);
+  const netWithdrawal = syncStartingBalance
+    ? amountNum
+    : amountNum - penalty - taxes;
 
   return (
     <div className="w-full mx-auto p-4 space-y-5">
@@ -105,7 +102,7 @@ export default function TabCalculator() {
             <Label className="grow">Amount to Withdraw</Label>
             <Input
               className="w-1/2"
-              type="text" // Changed to text for $ formatting
+              type="text"
               value={formatInputValue(amount)}
               onChange={handleAmountChange}
               placeholder="$0.00"
@@ -139,6 +136,7 @@ export default function TabCalculator() {
       <div className="space-y-2 border-t pt-4 text-right">
         <div className="flex items-center gap-4">
           <Checkbox
+            className="checkbox"
             checked={syncStartingBalance}
             onCheckedChange={handleCheckboxChange}
             aria-label="Bypass tax calculation for this transfer"
@@ -149,15 +147,33 @@ export default function TabCalculator() {
         </div>
         <div className="flex justify-between">
           <span>Penalties</span>
-          <span>${penalty.toLocaleString()}</span>
+          <span>
+            $
+            {penalty.toLocaleString(undefined, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 2,
+            })}
+          </span>
         </div>
         <div className="flex justify-between">
           <span>Taxes</span>
-          <span>${taxes.toLocaleString()}</span>
+          <span>
+            $
+            {taxes.toLocaleString(undefined, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 2,
+            })}
+          </span>
         </div>
         <div className="flex justify-between font-bold">
           <span>Net Withdrawal</span>
-          <span>${netWithdrawal.toLocaleString()}</span>
+          <span>
+            $
+            {netWithdrawal.toLocaleString(undefined, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 2,
+            })}
+          </span>
         </div>
       </div>
     </div>

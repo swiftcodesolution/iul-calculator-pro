@@ -80,80 +80,33 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 
-/* dark theme */
-/* .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
-} */
-
 .dark {
   --background: oklch(0 0 0); /* True black */
   --foreground: oklch(1 0 0); /* White text */
-
-  --card: oklch(19.125% 0.00002 271.152); /* Near black for cards */
+  --card: oklch(19.125% 0.00002 271.152);
   --card-foreground: oklch(1 0 0);
-
   --popover: oklch(0.1 0 0);
   --popover-foreground: oklch(1 0 0);
-
-  /* ✅ Buttons: white bg, black text/icons */
-  --primary: oklch(1 0 0); /* White button background */
-  --primary-foreground: oklch(0 0 0); /* Black text/icons */
-
-  --secondary: oklch(1 0 0); /* White secondary button */
-  --secondary-foreground: oklch(0 0 0); /* Black text/icons */
-
+  --primary: oklch(1 0 0);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(1 0 0);
+  --secondary-foreground: oklch(0 0 0);
   --muted: oklch(0.2 0 0);
   --muted-foreground: oklch(0.8 0 0);
-
-  --accent: oklch(1 0 0); /* White accent for outlines if used */
-  --accent-foreground: oklch(0 0 0); /* Black text/icons */
-
+  --accent: oklch(1 0 0);
+  --accent-foreground: oklch(0 0 0);
   --outline-bg: var(--accent);
   --outline-fg: var(--accent-foreground);
-
-  --destructive: oklch(0.6 0.25 27.325); /* Red destructive button */
-  --destructive-foreground: oklch(1 0 0); /* White text */
-
-  --border: oklch(0.3 0 0); /* Subtle borders */
-  --input: oklch(1 0 0); /* White inputs */
+  --destructive: oklch(0.6 0.25 27.325);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.3 0 0);
+  --input: oklch(1 0 0);
   --ring: oklch(1 0 0);
-
   --chart-1: oklch(0.7 0.25 70);
   --chart-2: oklch(0.7 0.25 150);
   --chart-3: oklch(0.7 0.25 250);
   --chart-4: oklch(0.7 0.25 350);
   --chart-5: oklch(0.7 0.25 30);
-
   --sidebar: oklch(0.05 0 0);
   --sidebar-foreground: oklch(1 0 0);
   --sidebar-primary: oklch(1 0 0);
@@ -163,49 +116,35 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(1 0 0);
 }
-/* dark theme */
 
-/* high contrast theme */
 .high-contrast {
   --background: oklch(0 0 0);
   --foreground: oklch(1 0 0);
-
   --card: oklch(1 0 0);
   --card-foreground: oklch(0 0 0);
-
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0 0 0);
-
-  --primary: oklch(0 0 0); /* Black background */
-  --primary-foreground: oklch(1 0 0); /* White text */
-
-  --secondary: oklch(0 0 0); /* Also black for consistency */
-  --secondary-foreground: oklch(1 0 0); /* White text */
-
+  --primary: oklch(0 0 0);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0 0 0);
+  --secondary-foreground: oklch(1 0 0);
   --muted: oklch(0.8 0 0);
   --muted-foreground: oklch(0.2 0 0);
-
   --accent: oklch(1 0 0);
   --accent-foreground: oklch(0 0 0);
-
   --link: oklch(0.8 0.25 230);
-
   --outline-bg: var(--accent);
   --outline-fg: var(--accent-foreground);
-
-  --destructive: oklch(0.6 0.25 27.325); /* danger button background */
-  --destructive-foreground: oklch(1 0 0); /* ensure text is white */
-
+  --destructive: oklch(0.6 0.25 27.325);
+  --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.5 0 0);
   --input: oklch(1 0 0);
   --ring: oklch(0.9 0.2 100);
-
   --chart-1: oklch(0.7 0.3 50);
   --chart-2: oklch(0.6 0.3 150);
   --chart-3: oklch(0.5 0.3 250);
   --chart-4: oklch(0.7 0.3 350);
   --chart-5: oklch(0.6 0.3 100);
-
   --sidebar: oklch(0 0 0);
   --sidebar-foreground: oklch(1 0 0);
   --sidebar-primary: oklch(1 0 0);
@@ -216,105 +155,84 @@
   --sidebar-ring: oklch(1 0 0);
 }
 
-/* Remove border radius from all elements */
 .high-contrast * {
   border-radius: 0 !important;
 }
 
-/* Force all buttons to black bg with white text except destructive/danger ones */
 .high-contrast button {
-  /* background-color: oklch(0 0 0) !important;
-  color: oklch(1 0 0) !important; */
   border-radius: 0 !important;
 }
 
 .high-contrast svg {
-  color: oklch(0 0 0) !important; /* Black icons */
-  /* fill: oklch(0 0 0) !important; 
-  stroke: oklch(0 0 0) !important; */
-}
-.high-contrast button[data-variant="outline"][data-size="icon"] {
-  background-color: oklch(1 0 0) !important; /* white background */
-  color: oklch(0 0 0) !important; /* black icon for contrast */
-  border-color: oklch(0 0 0) !important; /* black border */
+  color: oklch(0 0 0) !important;
 }
 
-/* Danger/destructive button retains its color */
+.high-contrast button[data-variant="outline"][data-size="icon"] {
+  background-color: oklch(1 0 0) !important;
+  color: oklch(0 0 0) !important;
+  border-color: oklch(0 0 0) !important;
+}
+
 .high-contrast button.danger,
 .high-contrast button[data-variant="destructive"] {
   background-color: oklch(0.6 0.25 27.325) !important;
   color: oklch(1 0 0) !important;
 }
-/* high contrast theme */
-
-/* cyberpunk theme */
-@custom-variant retro-cyberpunk (&:is(.retro-cyberpunk *));
 
 .retro-cyberpunk {
   --radius: 0.25rem;
-  --background: oklch(0.15 0.05 260); /* Deep indigo */
-  --foreground: oklch(0.9 0.1 190); /* Neon cyan text */
-
-  --card: oklch(0.2 0.06 260); /* Darker indigo */
-  --card-foreground: oklch(0.85 0.15 190); /* Bright cyan */
-
+  --background: oklch(0.15 0.05 260);
+  --foreground: oklch(0.9 0.1 190);
+  --card: oklch(0.2 0.06 260);
+  --card-foreground: oklch(0.85 0.15 190);
   --popover: oklch(0.2 0.06 260);
   --popover-foreground: oklch(0.85 0.15 190);
-
-  --primary: oklch(0.65 0.25 300); /* Vibrant magenta */
-  --primary-foreground: oklch(0.95 0.05 260); /* Near white */
-
-  --secondary: oklch(0.4 0.15 280); /* Muted purple */
-  --secondary-foreground: oklch(0.9 0.1 190); /* Cyan text */
-
-  --muted: oklch(0.3 0.08 260); /* Darker muted indigo */
-  --muted-foreground: oklch(0.7 0.1 190); /* Softer cyan */
-
-  --accent: oklch(0.75 0.2 160); /* Neon green */
-  --accent-foreground: oklch(0.15 0.05 260); /* Dark indigo */
-
-  --destructive: oklch(0.6 0.25 0); /* Bright red */
+  --primary: oklch(0.65 0.25 300);
+  --primary-foreground: oklch(0.95 0.05 260);
+  --secondary: oklch(0.4 0.15 280);
+  --secondary-foreground: oklch(0.9 0.1 190);
+  --muted: oklch(0.3 0.08 260);
+  --muted-foreground: oklch(0.7 0.1 190);
+  --accent: oklch(0.75 0.2 160);
+  --accent-foreground: oklch(0.15 0.05 260);
+  --destructive: oklch(0.6 0.25 0);
   --destructive-foreground: oklch(0.95 0.05 260);
-
-  --border: oklch(0.5 0.15 190); /* Cyan border */
-  --input: oklch(0.25 0.07 260); /* Dark input fields */
-  --ring: oklch(0.8 0.2 300); /* Magenta glow */
-
-  --chart-1: oklch(0.7 0.25 300); /* Magenta */
-  --chart-2: oklch(0.7 0.25 190); /* Cyan */
-  --chart-3: oklch(0.7 0.25 160); /* Green */
-  --chart-4: oklch(0.7 0.25 350); /* Pink */
-  --chart-5: oklch(0.7 0.25 260); /* Purple */
-
-  --sidebar: oklch(0.18 0.06 260); /* Slightly lighter indigo */
+  --border: oklch(0.5 0.15 190);
+  --input: oklch(0.25 0.07 260);
+  --ring: oklch(0.8 0.2 300);
+  --chart-1: oklch(0.7 0.25 300);
+  --chart-2: oklch(0.7 0.25 190);
+  --chart-3: oklch(0.7 0.25 160);
+  --chart-4: oklch(0.7 0.25 350);
+  --chart-5: oklch(0.7 0.25 260);
+  --sidebar: oklch(0.18 0.06 260);
   --sidebar-foreground: oklch(0.9 0.1 190);
-  --sidebar-primary: oklch(0.65 0.25 300); /* Magenta */
+  --sidebar-primary: oklch(0.65 0.25 300);
   --sidebar-primary-foreground: oklch(0.95 0.05 260);
-  --sidebar-accent: oklch(0.75 0.2 160); /* Neon green */
+  --sidebar-accent: oklch(0.75 0.2 160);
   --sidebar-accent-foreground: oklch(0.15 0.05 260);
-  --sidebar-border: oklch(0.5 0.15 190 / 0.5); /* Semi-transparent cyan */
-  --sidebar-ring: oklch(0.8 0.2 300); /* Magenta glow */
+  --sidebar-border: oklch(0.5 0.15 190 / 0.5);
+  --sidebar-ring: oklch(0.8 0.2 300);
 }
 
-/* Retro cyberpunk button styling */
 .retro-cyberpunk button {
-  background-color: oklch(0.65 0.25 300); /* Magenta buttons */
-  color: oklch(0.95 0.05 260); /* Near white text */
-  border: 2px solid oklch(0.8 0.2 190); /* Cyan border */
-  box-shadow: 0 0 10px oklch(0.8 0.2 300 / 0.5); /* Magenta glow */
+  background-color: oklch(0.65 0.25 300);
+  color: oklch(0.95 0.05 260);
+  border: 2px solid oklch(0.8 0.2 190);
+  box-shadow: 0 0 10px oklch(0.8 0.2 300 / 0.5);
   transition: box-shadow 0.2s ease;
 }
 
 .retro-cyberpunk button:hover {
-  box-shadow: 0 0 15px oklch(0.8 0.2 300 / 0.75); /* Brighter glow */
+  box-shadow: 0 0 15px oklch(0.8 0.2 300 / 0.75);
 }
 
 .retro-cyberpunk button.danger,
 .retro-cyberpunk button[data-variant="destructive"] {
-  background-color: oklch(0.6 0.25 0); /* Red */
+  background-color: oklch(0.6 0.25 0);
   color: oklch(0.95 0.05 260);
   border: 2px solid oklch(0.8 0.2 190);
-  box-shadow: 0 0 10px oklch(0.6 0.25 0 / 0.5); /* Red glow */
+  box-shadow: 0 0 10px oklch(0.6 0.25 0 / 0.5);
 }
 
 .retro-cyberpunk button.danger:hover,
@@ -322,25 +240,22 @@
   box-shadow: 0 0 15px oklch(0.6 0.25 0 / 0.75);
 }
 
-/* Neon glow for inputs */
 .retro-cyberpunk input,
 .retro-cyberpunk textarea {
   background-color: oklch(0.25 0.07 260);
   border: 1px solid oklch(0.5 0.15 190);
-  box-shadow: 0 0 5px oklch(0.8 0.2 190 / 0.3); /* Subtle cyan glow */
+  box-shadow: 0 0 5px oklch(0.8 0.2 190 / 0.3);
 }
 
 .retro-cyberpunk input:focus,
 .retro-cyberpunk textarea:focus {
-  box-shadow: 0 0 10px oklch(0.8 0.2 190 / 0.6); /* Brighter cyan glow */
+  box-shadow: 0 0 10px oklch(0.8 0.2 190 / 0.6);
 }
 
-/* Pixelated font for retro feel */
 .retro-cyberpunk * {
   font-family: "Courier New", var(--font-mono), monospace;
   text-rendering: pixelated;
 }
-/* cyberpunk theme */
 
 @layer base {
   * {
@@ -349,6 +264,79 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Checkbox base styles */
+  [role="checkbox"] {
+    @apply bg-background border border-border w-5 h-5 rounded-sm cursor-pointer;
+    background-color: var(--background);
+    border-color: var(--border);
+  }
+
+  [role="checkbox"][aria-checked="true"] {
+    @apply bg-primary text-primary-foreground;
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  [role="checkbox"]:focus {
+    @apply outline-none ring-2 ring-ring;
+  }
+
+  [role="checkbox"][aria-checked="true"]::after {
+    content: "✓";
+    @apply flex items-center justify-center text-center text-sm font-bold;
+  }
+
+  [role="checkbox"][aria-disabled="true"] {
+    @apply opacity-50 cursor-not-allowed;
+  }
+}
+
+/* Dark theme checkbox */
+.dark [role="checkbox"] {
+  background-color: oklch(0 0 0);
+  border-color: oklch(0.3 0 0);
+}
+
+.dark [role="checkbox"][aria-checked="true"] {
+  background-color: oklch(1 0 0);
+  color: oklch(0 0 0);
+}
+
+.dark [role="checkbox"]:focus {
+  @apply ring-ring;
+}
+
+/* High-contrast theme checkbox */
+.high-contrast [role="checkbox"] {
+  background-color: oklch(0 0 0);
+  border-color: oklch(0.5 0 0);
+}
+
+.high-contrast [role="checkbox"][aria-checked="true"] {
+  background-color: oklch(1 0 0);
+  color: oklch(0 0 0);
+}
+
+.high-contrast [role="checkbox"]:focus {
+  @apply ring-2 ring-ring;
+}
+
+/* Retro-cyberpunk theme checkbox */
+.retro-cyberpunk [role="checkbox"] {
+  background-color: oklch(0.25 0.07 260);
+  border: 2px solid oklch(0.5 0.15 190);
+  box-shadow: 0 0 5px oklch(0.8 0.2 190 / 0.3);
+}
+
+.retro-cyberpunk [role="checkbox"][aria-checked="true"] {
+  background-color: oklch(0.65 0.25 300);
+  color: oklch(0.95 0.05 260);
+  box-shadow: 0 0 10px oklch(0.8 0.2 300 / 0.5);
+}
+
+.retro-cyberpunk [role="checkbox"]:focus {
+  box-shadow: 0 0 10px oklch(0.8 0.2 190 / 0.6);
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
