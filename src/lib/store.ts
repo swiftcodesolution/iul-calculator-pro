@@ -56,6 +56,9 @@ interface TableStore {
   setDontWantLogo: (value: boolean) => void;
   dontWantProfilePic: boolean;
   setDontWantProfilePic: (value: boolean) => void;
+
+  syncStartingBalance: boolean;
+  setSyncStartingBalance: (value: boolean) => void;
 }
 
 export const useTableStore = create<TableStore>((set) => ({
@@ -250,4 +253,7 @@ export const useTableStore = create<TableStore>((set) => ({
   setActiveButtons: (buttons) => set({ activeButtons: buttons }),
   isDataPersisted: false,
   setIsDataPersisted: (value) => set({ isDataPersisted: value }),
+
+  syncStartingBalance: false,
+  setSyncStartingBalance: (value) => set({ syncStartingBalance: value }),
 }));

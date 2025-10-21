@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useTableStore } from "@/lib/store";
+import { Checkbox } from "./ui/checkbox";
 
 // Utility functions from InflationCalculator
 const formatInputValue = (value: string | number): string => {
@@ -31,6 +32,8 @@ export default function TabCalculator() {
     setWithdrawalAmount,
     setCalculatorAge,
     setCalculatorTaxRate,
+    syncStartingBalance,
+    setSyncStartingBalance,
   } = useTableStore();
 
   const [amount, setAmount] = useState<string | number>(withdrawalAmount);
@@ -67,6 +70,15 @@ export default function TabCalculator() {
   const handleTaxRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value) || "";
     setTaxRate(value);
+  };
+
+  const handleCheckboxChange = (checked: boolean | "indeterminate") => {
+    if (checked === "indeterminate") {
+      // Handle indeterminate state if needed (e.g., ignore or set to false)
+      setSyncStartingBalance(false);
+      return;
+    }
+    setSyncStartingBalance(checked);
   };
 
   // Convert amount to number for calculations, default to 0 if empty
@@ -125,6 +137,14 @@ export default function TabCalculator() {
         </CardContent>
       </Card>
       <div className="space-y-2 border-t pt-4 text-right">
+        <div className="flex items-center gap-4">
+          <Checkbox
+            checked={syncStartingBalance}
+            onCheckedChange={handleCheckboxChange}
+            aria-label="Sync Tax-Free Starting Balance"
+          />
+          <Label className="grow">Savings Account</Label>
+        </div>
         <div className="flex justify-between">
           <span>Penalties</span>
           <span>${penalty.toLocaleString()}</span>

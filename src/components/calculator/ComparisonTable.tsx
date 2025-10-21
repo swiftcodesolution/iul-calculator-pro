@@ -91,6 +91,7 @@ export function ComparisonTable({
     iulStartingBalance,
     calculatorAge,
     calculatorTaxRate,
+    syncStartingBalance,
     setYearsRunOutOfMoney,
     setStartingBalance,
     setAnnualContributions,
@@ -126,6 +127,24 @@ export function ComparisonTable({
     withdrawalAmount,
     calculatorAge,
     calculatorTaxRate,
+    setIulStartingBalance,
+  ]);
+
+  useEffect(() => {
+    if (syncStartingBalance) {
+      // Sync tax-free starting balance with current plan's starting balance
+      setIulStartingBalance(startingBalance);
+    } else {
+      // Use net withdrawal calculation when not syncing
+      const netWithdrawal = calculateNetWithdrawal(withdrawalAmount);
+      setIulStartingBalance(netWithdrawal);
+    }
+  }, [
+    withdrawalAmount,
+    calculatorAge,
+    calculatorTaxRate,
+    startingBalance,
+    syncStartingBalance,
     setIulStartingBalance,
   ]);
 
@@ -539,7 +558,11 @@ export function ComparisonTable({
         taxes: "0.00%",
         taxFree: selectedRowData
           ? selectedRowData.taxFree.startingBalance
-          : formatValue(taxFreeResults.startingBalance),
+          : formatValue(
+              syncStartingBalance
+                ? startingBalance
+                : taxFreeResults.startingBalance
+            ),
       },
       {
         label: "Annual Contributions",
@@ -794,6 +817,7 @@ export function ComparisonTable({
       // futureAge,
       // futureAgeInput,
       currentAge,
+      syncStartingBalance,
     ]
   );
 
