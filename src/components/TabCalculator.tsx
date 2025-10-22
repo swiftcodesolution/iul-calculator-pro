@@ -139,10 +139,10 @@ export default function TabCalculator() {
             className="checkbox"
             checked={syncStartingBalance}
             onCheckedChange={handleCheckboxChange}
-            aria-label="Bypass tax calculation for this transfer"
+            aria-label="Bypass tax calculation & penalties for this transfer"
           />
           <Label className="grow">
-            Bypass tax calculation for this transfer
+            Bypass tax calculation & penalties for this transfer
           </Label>
         </div>
         <div className="flex justify-between">
